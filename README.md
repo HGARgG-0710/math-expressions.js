@@ -5,17 +5,17 @@
 ### 1. exp()
 
 Firstly, it's the exp() function. With it you can execute a mathematical expression upon two numbers.
-By default uses "+" operator.
+By default uses + operator.
 
 ### 2. oneOperatorExp()
 
 This function allows you to perform an expression, that uses the same mathematic action, but different numbers.
-By default uses "+" operator.
+By default uses + operator.
 
 ### 3. manyOperatorsExp()
 
 This function allows you to perform different mathematic actions upon a bunch of different numbers.
-By default uses "**" and "*" operators.
+By default uses ** and * operators.
 
 #### Note:
 
