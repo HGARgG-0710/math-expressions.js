@@ -1,4 +1,7 @@
-# The official repository of expressions.js JavaScript library
+# Math-expressions.js
+
+Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.
+For now, the list of functions and classes provided is quite thin, but in the future library will become a REALLY powerful instrument to work with. And even now, when functionality is very limited, it's quite nice to use the lib.
 
 ## Functions
 
@@ -9,9 +12,13 @@
 5. average()
 6. min()
 7. max()
-8. middleNum()
+8. median()
 9. mostPopularNum()
 10. range()
+11. sort()
+12. copy()
+13. generate()
+14. find()
 
 ### 1. exp()
 
@@ -45,9 +52,9 @@ This function takes an array of numbers and returns the least value from it.
 
 This function takes an array of numbers and returns the biggest value from it.
 
-### 8. middleNum()
+### 8. median()
 
-This function takes an array of numbers, which length must be odd, and returns the middle value from it.
+This function takes an array of numbers, which length must be odd, and returns the middle value from it(a median).
 
 ### 9. mostPopularNum()
 
@@ -57,15 +64,33 @@ This function takes an array of numbers and returns one of them, that is the mos
 
 This function takes an array of numbers and returns the residual between the max and the min values.
 
+### 11. sort()
+
+This function takes a numeric array and returns it sorted from smallest to largest(or opposite, from largest to smallest) number, depending on second parameter(that is a boolean).
+
+### 12. copy()
+
+This function takes an array and returns a copy of it without referencing object of an original array. It might be useful, when doing a duplicate of row of data to work with it(change) and leaving an original array as a reserve copy.
+
+### 13. generate()
+
+This function allows you to generate a row of data by giving it three numbers: firstly - the start position(the smallest number in the row), secondly - the end position(the largest position in the row) and thirdly - step number or the difference between each of row's numbers.
+
+### 14. find()
+
+ This function takes a numeric array(one- or two-dimensional) and a number(or a one-dimensional array of numbers), that will be found in this array. Returns an array, that, if the value is found, contains true and a count of times this number was found, otherwise false and 0.
+
+
 ## Classes
 
 1. Statistics
+2. Surface
 
 ### 1. Statistics
 
-Constructor of this class takes an array of numbers, creates a Statistics object and returns it.
-This object has a statistic information about this array.
-For now this class only has a constructor and properties.
+Constructor of this class takes an array of numbers and creates a Statistics object.
+This object has a statistic information about passed number array.
+(For now, only, I hope) this class only has a constructor and properties.
 
 #### Class Properties:
 
@@ -73,18 +98,48 @@ For now this class only has a constructor and properties.
     Statistics.max: number;
 
     Statistics.range: number;
-    Statistics.averageNum: number;
     Statistics.arrLength: number;
 
-    Statistics.middleNum: string | number;
+    Statistics.median: number;
+    Statistics.averageNum: number;
     Statistics.mostPopularNum: string | number;
 
-Actually, Statistics.arrLength property is just a copy of Array.length property, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
+    Statistics.sorted: number[];
+
+Actually, Statistics.arrLength property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
+
+### 2. Surface
+
+Constructor of this class takes two objects(or arrays), that contain three values: start position, end position and step. Each of these numbers are taken and given to the generate() function to generate the limits of x and y axises for the Surface object.
+
+Surface object itself represents a surface on which geometric figures are placed.
+From the beginning this is an empty surface, that has width(x axis min and max numbers), height(y axis min and max numbers), two arrays for x and y axises, representing possible values, being placed on both of axises and a zero point in Surface.dots ([0, 0]).
+
+Class properties:
+    
+    Surface.x: number[];
+    Surface.y: number[];
+
+    Surface.width: number;
+    Surface.height: number;
+
+    Surface.dots: number[][];
+    Surface.lines: number[][][];
+    Surface.segments: number[][][];
+
+Class Methods:
+
+    Surface.prototype.inLimits(...dots: number[]): void
+    Surface.prototype.dot(...dots: number[]): void
+    Surface.prototype.line(...dots: number[]): void
+    Surface.prototype.segment(...dots: number[]): void
+
+
+
 
 ## Note:
 
-The full documentation for all of these functions and classes may be seen by you in the expression.js file.
+The full documentation for all of these functions and classes may be seen by you in the math-expression.js file.
 Also, you can find examples of how to use them in examples.js file.
 
-For now the library is only at the starting point of being created, so amount of its functionality is quite small.
-But in future it will become much bigger and more useful.
+For now the library is only at the starting point of being created, so I will be REALLY grateful if you give some help or suggestions about how to make the project even better.
