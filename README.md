@@ -13,7 +13,7 @@ For now, the list of functions and classes provided is quite thin, but in the fu
 6. [min()](#6.min())
 7. [max()](#7.max())
 8. [median()](#8.median())
-9. [mostPopularNum()](#9.mostPopularNum())
+9. [mostPopularNum()](#9.mostpopularnum())
 10. [range()](#10.range())
 11. [sort()](#11.sort())
 12. [copy()](#12.copy())
