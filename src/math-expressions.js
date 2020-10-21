@@ -45,7 +45,7 @@ function Surface(xLimits, yLimits) {
 /**
  * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
  * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(two-dimensional array) and has a bit unpredictable results.
- * @param {number[][]} dots A bunch of arrays with different dots' coordinates.
+ * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
  * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
  */
 Surface.prototype.inLimits = function (...dots) {
@@ -69,7 +69,7 @@ Surface.prototype.inLimits = function (...dots) {
 Surface.prototype.dot = function (...dots) {
 	if (this.inLimits(dots)) {
 		dots.forEach((dot) => {
-			if (!find(this.dots, dot)) {
+			if (!find(this.dots, dot)[0]) {
 				this.dots.push(dot)
 			}
 		})
@@ -87,7 +87,11 @@ Surface.prototype.dot = function (...dots) {
  */
 Surface.prototype.line = function (...dots) {
 	if (this.inLimits(dots)) {
-		if (dots.length == 2 && find(this.lines, dots)[1] <= 1 && find(this.dots, dots)[0]) {
+		if (
+			dots.length == 2 &&
+			find(this.lines, dots)[1] <= 1 &&
+			find(this.dots, dots)[0]
+		) {
 			this.lines.push(dots)
 			this.segments.push(dots)
 		} else {
@@ -392,9 +396,9 @@ function generate(start, end, step = 1) {
 }
 
 /**
- * Takes an array and a number(or a one-dimensional array of numbers), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
- * @param {number[] | number[][]} searchArr Array in which queried value is being searched.
- * @param {number | number[]} searchVal Searched value.
+ * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
+ * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
+ * @param {number | number[] | string} searchVal Searched value.
  * @returns {(boolean & number)[]} An array, containig boolean(was the needed number or numeric array found in searchArr or not) and a number(If it was found, then how many times).
  */
 function find(searchArr, searchVal) {
@@ -410,13 +414,50 @@ function find(searchArr, searchVal) {
 			)
 		)
 	} else {
-		searchArr.forEach((value) =>
-			value == searchVal ? ((result = true), foundTimes++) : null
-		)
+		if (typeof searchArr == "string") {
+			const str = searchArr.slice(0) // copying a string using String.prototype.slice()
+
+			for (let i = 0; i < str.length; i++) {
+				str[i] == searchVal ? ((result = true), foundTimes++) : null
+			}
+		} else {
+			searchArr.forEach((value) =>
+				value == searchVal ? ((result = true), foundTimes++) : null
+			)
+		}
 	}
 
 	return [result, foundTimes]
 }
+
+/**
+ * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
+ * @param {number} num A number, from which to make a better-looking version of it.
+*/
+function readable(num) {
+	const arr = num.toString().split("")
+	let changeStr = ""
+
+	while (arr.length % 3 > 0) {
+		changeStr += arr[0]
+
+		if ((arr.length - 1) % 3 == 0) {
+			changeStr += " "
+		}
+
+		arr.shift()
+	}
+
+	arr.forEach((number, index) => {
+		index % 3 == 0 && index > 0
+			? (changeStr += ` ${number}`)
+			: (changeStr += `${number}`)
+	})
+
+	return changeStr
+}
+
+find([1, 2, 3, 4, 5, 6], 0)[0]
 
 export {
 	Statistics,
@@ -435,4 +476,5 @@ export {
 	copy,
 	generate,
 	find,
+	readable,
 }

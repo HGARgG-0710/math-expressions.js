@@ -22,7 +22,7 @@ console.log(expjs.fullExp([40, 2, 10, 6], ["/", "*", "%"])) // 2
 // repeatExp() function examples
 console.log(expjs.repeatExp()) // 4
 console.log(expjs.repeatExp({ nums: [6, 9, 6, 10], operators: ["*", "+", "/"] }, 3)) // 18
-console.log(expjs.repeatExp({ nums: [4, 80, 2], operators: ["*", "/"] }, 3, "/")) // 0.625
+console.log(expjs.repeatExp({ nums: [4, 80, 2], operators: ["*", "/"] }, 3, "/")) // 0.00625
 
 // average() function examples
 console.log(expjs.average([5, 5, 5, 4])) // 4.75
@@ -39,8 +39,8 @@ console.log(expjs.max([-16, -8, 8, 16])) // 16
 
 // median() function examples
 console.log(expjs.median([1, 3, 5, 3, 1])) // 5
-console.log(expjs.median([4, 6, 8, 10, 12, 14])) // Uncaught Error
-console.log(expjs.median([3, 6, 9, 12, 15, 18], false)) // "None"
+console.log(expjs.median([4, 6, 8, 10, 12, 14])) // 9
+console.log(expjs.median([3, 6, 9, 12, 15, 18], false)) // 10.5
 
 // mostPopularNum() function examples
 console.log(expjs.mostPopularNum()) // "None"
@@ -52,8 +52,8 @@ console.log(expjs.range([100, 6, -1, -100])) // 200
 console.log(expjs.range([-10000, 0, 10000])) // 20000
 
 // sort() function examples
-expjs.sort([5, 2, 4, 9, 1, 8]) // [1, 2, 4, 5, 8, 9]
-expjs.sort([2, 7, 0, -1, 100], false) // [100, 7, 2, 0, -1]
+console.log(expjs.sort([5, 2, 4, 9, 1, 8])) // [1, 2, 4, 5, 8, 9]
+console.log(expjs.sort([2, 7, 0, -1, 100], false)) // [100, 7, 2, 0, -1]
 
 // copy() function examples
 const arr = [1, 2, 3]
@@ -69,6 +69,7 @@ console.log(generated) // [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65,
 // find() functon examples
 expjs.find([1, 2, 3, 4, 5], 6) // [false, 0]
 expjs.find([1, 5, 2, 5, 3, 5, 4, 5], 5) // [true, 4]
+expjs.find("Hello, World!", "l") // [true, 3]
 
 // Statistics class examples
 const numArr = [10, 50, -10]
@@ -87,8 +88,13 @@ console.log(surface) // Logs Surface object
 const dot1 = [2, 1]
 const dot2 = [-19, 31]
 
-surface.dot(dot1, dot2) // Adds two dots to the Surface.dots
+surface.dot(dot1, dot2) // Adds one dot to the Surface.dots
 console.log(surface) // Object changed
 
 surface.line(dot1, dot2) // Adds a line to the Surface.lines
 console.log(surface) // Object changed(again)
+
+// readable() function example
+console.log(expjs.readable(BigInt(1234027340287346230478))) // 1 234 027 340 287 346 212 864
+console.log(expjs.readable(123456)) // 123 456
+console.log(expjs.readable(45000000)) // 45 000 000
