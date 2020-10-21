@@ -87,8 +87,8 @@ This function takes a number and returns a string value of it, that is much bett
 
 ## Classes
 
-1. [Statistics](###1.Statistics)
-2. [Surface](###2.Surface)
+1. [Statistics](#1statistics)
+2. [Surface](#2surface)
 
 ### 1.Statistics
 
