@@ -3,6 +3,13 @@
 Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.
 For now, the list of functions and classes provided is quite thin, but in the future library will become a REALLY powerful instrument to work with. And even now, when functionality is very limited, it's quite nice to use the lib.
 
+## Installation
+
+Math-expressions.js can be installed using node.js.
+Install math-expressions.js using npm:
+
+    npm install math-expressions.js
+
 ## Functions
 
 1. [exp()](#1exp)
