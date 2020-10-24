@@ -10,6 +10,10 @@ Install math-expressions.js using npm:
 
     npm install math-expressions.js
 
+or
+
+    npm i math-expressions.js
+
 ## Functions
 
 1. [exp()](#1exp)
@@ -27,6 +31,9 @@ Install math-expressions.js using npm:
 13. [generate()](#13generate)
 14. [find()](#14find)
 15. [readable()](#15readable)
+16. [factorOut()](#16factorout)
+17. [truncate()](#17truncate)
+18. [leastCommonMultiple](#18leastcommonmultiple)
 
 ### 1.exp()
 
@@ -41,7 +48,7 @@ By default uses + operator.
 ### 3.fullExp()
 
 This function allows you to perform different mathematic actions upon a bunch of different numbers.
-By default uses \*_ and _ operators.
+By default uses \*\* and \* operators.
 
 ### 4.repeatExp()
 
@@ -50,7 +57,7 @@ operation upon all of its results and return the final result.
 
 ### 5.average()
 
-This function takes a numeric array and returns an average of all its values.
+This function takes a numeric array and returns an average of all its values. An average may be truncated or not, depending upon the fact was a second argument (a boolean) passed(as true) or not(or passed, but as false). This may be useful, when you want to get a truncated average.
 
 ### 6.min()
 
@@ -86,16 +93,33 @@ This function allows you to generate a row of data by giving it three numbers: f
 
 ### 14.find()
 
- This function takes a numeric array(one- or two-dimensional) or a string and a number(or a one-dimensional array of numbers) or a substring, that will be found in this array(or string). Returns an array, that, if the value is found, contains true and a count of times this number(or a one-dimensional array, or a substring) was found, otherwise false and 0.
+This function takes a numeric array(one- or two-dimensional) or a string and a number(or a one-dimensional array of numbers) or a substring, that will be found in this array(or string). Returns an array, that, if the value is found, contains true and a count of times this number(or a one-dimensional array, or a substring) was found, otherwise false and 0.
 
 ### 15.readable()
 
 This function takes a number and returns a string value of it, that is much better readable.
 
+### 16.factorOut()
+
+This function allows you to factor out a number to the prime numbers. It might be VE-E-ERY handy, but not quite productive. That's why it takes not only a number, that shall be factored out, but also a boolean, representing the state of the function call(should or should it not be productive). If the number you try to factor out is bigger, than 10000, then I GREATLY recommend you to pass true as the second argument to the function, because without it function's running too slow. 
+
+### 17.truncate()
+
+Truncates a passed numeric array(the first parameter) by count of numbers, that is equal function's second parameter(it is a number) multiplied by 2. Array is being truncated from it's "edges"(only stated count of percents of the biggest and the smallest numbers are deleted).
+
+#### Notice: 
+
+Before truncating an array truncate() function sorts it from smallest to largest way.
+
+### 18.leastCommonMultiple()
+
+Finds the least common multiple between two numbers(first and second arguments) in given search range(third argument). Search range is not a number to which the search will be continued, it is a number of iterations, each of which similiar value is searched(100 by default). If the search range is too small, then returns null, otherwise the least common multiple.
+
 ## Classes
 
 1. [Statistics](#1statistics)
 2. [Surface](#2surface)
+3. [Expression](#3expression)
 
 ### 1.Statistics
 
@@ -109,15 +133,17 @@ This object has a statistic information about passed number array.
     Statistics.max: number;
 
     Statistics.range: number;
-    Statistics.arrLength: number;
+    Statistics.interquartRange: number;
+    Statistics.countOfElements: number;
 
     Statistics.median: number;
-    Statistics.averageNum: number;
-    Statistics.mostPopularNum: string | number;
+    Statistics.average: number;
+    Statistics.truncatedAverage: number;
+    Statistics.mostPopular: string | number;
 
     Statistics.sorted: number[];
 
-Actually, Statistics.arrLength property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
+Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
 
 ### 2.Surface
 
@@ -126,8 +152,8 @@ Constructor of this class takes two objects(or arrays), that contain three value
 Surface object itself represents a surface on which geometric figures are placed.
 From the beginning this is an empty surface, that has width(x axis min and max numbers), height(y axis min and max numbers), two arrays for x and y axises, representing possible values, being placed on both of axises and a zero point in Surface.dots ([0, 0]).
 
-Class properties:
-    
+#### Class properties:
+
     Surface.x: number[];
     Surface.y: number[];
 
@@ -138,15 +164,24 @@ Class properties:
     Surface.lines: number[][][];
     Surface.segments: number[][][];
 
-Class Methods:
+#### Class Methods:
 
     Surface.prototype.inLimits(...dots: number[]): void
     Surface.prototype.dot(...dots: number[]): void
     Surface.prototype.line(...dots: number[]): void
     Surface.prototype.segment(...dots: number[]): void
 
+### 3.Expression
 
+Constructor of this class takes two arrays, one of which contains numbers of expression, that this object represents, other contains strings, containing operators of this expression.
 
+#### Class Properties:
+
+    Expression.nums: number[] | string[];
+    Expression.operators: string[];
+
+This class has no methods, but can be very comfortly used with functions, that work with math expressions.
+They are exp(), sameOperator(), fullExp() and repeatExp().
 
 ## Note:
 

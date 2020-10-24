@@ -10,11 +10,13 @@ function Statistics(nums = [1, 2, 3, 4, 5], toLarge = true) {
 	this.max = max(nums)
 
 	this.range = range(nums)
-	this.arrLength = nums.length
+	this.interquartRange = range(nums, true)
+	this.countOfElements = nums.length
 
 	this.median = median(nums, toLarge)
-	this.averageNum = average(nums)
-	this.mostPopularNum = mostPopularNum(nums)
+	this.average = average(nums)
+	this.truncatedAverage = average(nums, true)
+	this.mostPopular = mostPopularNum(nums)
 
 	this.sorted = sort(nums, toLarge)
 }
@@ -27,8 +29,6 @@ function Statistics(nums = [1, 2, 3, 4, 5], toLarge = true) {
  *
  * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is the number, that represents step, with which an array of numbers will be assembled.
  * @param {object | number[]} yLimits The same as xLimits, but for y axis of your surface.
- */
-/*
  */
 function Surface(xLimits, yLimits) {
 	this.x = generate(xLimits[0], xLimits[1], xLimits[2])
@@ -131,6 +131,16 @@ Surface.prototype.segment = function (...dots) {
 	}
 }
 
+/**
+ * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
+ * @param {number[] | string[]} nums An array, containing numbers of expression.
+ * @param {string[]} operators An array, containing operators of expression.
+ */
+function Expression(nums = [], operators = []) {
+	this.nums = nums
+	this.operators = operators
+}
+
 // Functions
 
 /**
@@ -168,31 +178,34 @@ function sameOperator(numbers = [], operator = "+") {
 }
 
 /**
- * 	Executes mathematical expression with different operators and numbers.
- * 	@param {number[] | string[] | any[]} numbers    An array of numbers(or strings) using which expression will be executed.
- * 	@param {string[]} operators  An array of strings, containing operators, with which expression will be executed.
+ * Executes mathematical expression with different operators and numbers.
+ *
+ * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length,
+ * ! but in this case the last element of the opperators[] array will be ignored.
+ *
+ * @param {object} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
-/*
- ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length,
- ! but in this case the last element of the opperators[] array will be ignored.
- */
-function fullExp(numbers, operators = ["**", "*"]) {
+function fullExp(expression = { nums: [2, 10, 2], operators: ["**", "*"] }) {
 	let result = 0
 	let tempRes = 0
 
-	if (numbers.length - operators.length > 1) {
+	if (expression.nums.length - expression.operators.length > 1) {
 		throw Error(
 			"Passed operators[] array length is less than passed number[] array for more than one element \
 (operators[] arr must be shorter for one element)."
 		)
 	} else {
-		for (let i = 0; i < numbers.length; i++) {
+		for (let i = 0; i < expression.nums.length; i++) {
 			if (i == 0) {
-				tempRes = exp(numbers[0], numbers[1], operators[0])
-			} else if (i == numbers.length - 1) {
+				tempRes = exp(
+					expression.nums[0],
+					expression.nums[1],
+					expression.operators[0]
+				)
+			} else if (i == expression.nums.length - 1) {
 				break
 			} else {
-				tempRes = exp(tempRes, numbers[i + 1], operators[i])
+				tempRes = exp(tempRes, expression.nums[i + 1], expression.operators[i])
 			}
 			result = tempRes
 		}
@@ -203,7 +216,7 @@ function fullExp(numbers, operators = ["**", "*"]) {
 
 /**
  * 	Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
- * 	@param {object} expression An object, that contains two key-value pairs, where value is an array. First array contains nums, second - operators.
+ * 	@param {object} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
  * 	@param {number} countOfRepeats   A number of repeats of ariphmetic operation.
  * 	@param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
@@ -221,11 +234,11 @@ function repeatExp(
 
 	if (expression.nums === undefined || expression.operators === undefined) {
 		throw Error(
-			"You have passed expression object with the wrong names of its keys in key-value pairs! \
-They must have next names: nums, operators."
+			'You have passed expression object with the wrong names of keys of key-value pairs! \
+They must have next names: "nums" form number array, "operators" for operators array.'
 		)
 	} else {
-		tempRes = fullExp(expression.nums, expression.operators)
+		tempRes = fullExp(expression)
 		result = tempRes
 
 		switch (repeatOperator) {
@@ -246,9 +259,12 @@ They must have next names: nums, operators."
 /**
  * Takes the number array and rerturns an average of it.
  * @param {number[]} nums An array of numbers passed to the function.
+ * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
+ * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums = [1, 2, 3, 4, 5]) {
-	return sameOperator(nums) / nums.length
+function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
+	const newArr = isTruncated ? truncate(nums, percents) : copy(nums)
+	return sameOperator(newArr) / newArr.length
 }
 
 /**
@@ -332,17 +348,19 @@ function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
 }
 
 /**
- * Returns the range of the numeric array (if passed [-5, 10] returns 15).
  * @param {number[]} nums An array of numbers passed to the function.
+ * @param {boolean} isInterquartile A boolean, representing shall the range to be gotten be interquartille or not. By deafault false.
+ * @returns the range of the numeric array (if passed [-5, 10] returns 15).
  */
-function range(nums = [1, 2, 3, 4, 5]) {
-	return max(nums) - min(nums)
+function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
+	const newArr = isInterquartile ? truncate(nums, 25) : copy(nums)
+	return max(newArr) - min(newArr)
 }
 
 /**
  * Takes an array of numbers and returns sorted version of it.
  * @param {number[]} nums An array of numbers, passed to the function to sort.
- * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least.
+ * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
 function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
 	let listArr = copy(nums)
@@ -433,7 +451,7 @@ function find(searchArr, searchVal) {
 /**
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
-*/
+ */
 function readable(num) {
 	const arr = num.toString().split("")
 	let changeStr = ""
@@ -457,9 +475,136 @@ function readable(num) {
 	return changeStr
 }
 
+/**
+ * Factors out a passed number to the prime numbers.
+ * @param {number} num Number, to be factored out.
+ * @param {boolean} isProductively A boolean, representing should or should not function work faster. By default false. Recommended to set true, when working with big numbers(bigger, than 10000).
+ * @returns {number[]} Prime factors array.
+ */
+function factorOut(num, isProductively = false) {
+	const fromOneToNum = [1]
+	const primes = []
+	const factors = []
+
+	let tempRes = num
+	let timesDivided = 1
+
+	for (let i = 2; i <= num; i++) {
+		fromOneToNum.push(i)
+	}
+
+	if (isProductively) {
+		const len = fromOneToNum.length
+
+		for (let i = 0; i < len; i++) {
+			timesDivided = 1
+
+			for (let j = 0; j < len; j++) {
+				fromOneToNum[i] % fromOneToNum[j] == 0 &&
+				fromOneToNum[i] > 1 &&
+				fromOneToNum[j] > 1
+					? timesDivided++
+					: null
+			}
+
+			timesDivided == 2 ? primes.push(fromOneToNum[i]) : null
+		}
+
+		const primesLen = primes.length
+
+		for (let i = 0; i < primesLen; i++) {
+			for (let j = 0; j < primesLen; j++) {
+				if (tempRes % primes[i] == 0 && tempRes > 1) {
+					tempRes /= primes[i]
+					factors.push(primes[i])
+				}
+			}
+		}
+	} else {
+		fromOneToNum.forEach((number) => {
+			timesDivided = 1
+
+			fromOneToNum.forEach((checkNum) => {
+				number % checkNum == 0 && number > 1 && checkNum > 1
+					? timesDivided++
+					: null
+			})
+
+			timesDivided == 2 ? primes.push(number) : null
+		})
+
+		primes.forEach((prime) => {
+			for (let i = 0; i < num; i++) {
+				if (tempRes % prime == 0 && tempRes > 1) {
+					tempRes /= prime
+					factors.push(prime)
+				}
+			}
+		})
+	}
+
+	return factors
+}
+
+/**
+ * Takes a numeric array and a number and truncates the passed array, using the second paramater as a count of percents of numbers, that shall be deleted.
+ * @param {number[]} nums An array to be truncated.
+ * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
+ */
+function truncate(nums, percents = 10) {
+	const shortened = sort(copy(nums))
+	const len = shortened.length
+	const toDelete = Number(((len / 100) * (2 * percents)).toFixed())
+
+	for (let i = 0; i < toDelete; i++) {
+		shortened.shift()
+		shortened.pop()
+	}
+
+	return shortened
+}
+
+/**
+ * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
+ * @param {number} firstNum First number.
+ * @param {number} secondNum Second number.
+ * @param {number} searchRange A number, representing range of searches(if you get null from this function, then try to make range bigger). By default 100.
+ */
+function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
+	const firstMultiples = []
+	const secondMultiples = []
+
+	let firstCount = firstNum
+	let secondCount = secondNum
+
+	let isEnd = false
+	let result = null
+
+	for (
+		let i = 0;
+		i < searchRange;
+		i++, firstCount += firstNum, secondCount += secondNum
+	) {
+		firstMultiples.push(firstCount)
+		secondMultiples.push(secondCount)
+	}
+
+	firstMultiples.forEach((multiple1) => {
+		secondMultiples.forEach((multiple2) => {
+			if (multiple1 == multiple2 && !isEnd) {
+				result = multiple1
+				isEnd = true
+			}
+		})
+	})
+
+	return result
+}
+
 export {
 	Statistics,
 	Surface,
+	Expression,
 	exp,
 	sameOperator,
 	fullExp,
@@ -475,4 +620,7 @@ export {
 	generate,
 	find,
 	readable,
+	factorOut,
+	truncate,
+	leastCommonMultiple,
 }

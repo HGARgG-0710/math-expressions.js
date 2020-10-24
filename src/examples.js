@@ -1,6 +1,7 @@
 import * as expjs from "./math-expressions"
 import { Statistics } from "./math-expressions"
 import { Surface } from "./math-expressions"
+import { Expression } from "./math-expressions"
 
 // exp() function examples
 console.log(expjs.exp("2", "3")) // 5
@@ -98,3 +99,27 @@ console.log(surface) // Object changed(again)
 console.log(expjs.readable(BigInt(1234027340287346230478))) // 1 234 027 340 287 346 212 864
 console.log(expjs.readable(123456)) // 123 456
 console.log(expjs.readable(45000000)) // 45 000 000
+
+// factorOut() function examples
+console.log(expjs.factorOut(1000)) // [2, 2, 2, 5, 5, 5]
+console.log(expjs.factorOut(50000)) // (Takes a minute time to run) [2, 2, 2, 2, 5, 5, 5, 5, 5]
+console.log(expjs.factorOut(50000, true)) //  (Takes 55 seconds to run) [2, 2, 2, 2, 5, 5, 5, 5]
+
+// truncate() function examples
+console.log(expjs.truncate([-100, -200, 1, 2, 3, 4, 5, 100, 200])) // [1, 2, 3, 4, 5]
+console.log(expjs.truncate([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 5)) // [1, 2, 3, 4, 5, 6, 7, 8]
+console.log(expjs.truncate([-1, 0, 200, 300, 400, 500, 600, 700, 1, 2]), 10) // [1, 2, 200, 300, 400, 500] Notice - truncate sorts array before truncating it.
+
+// leastCommonMultiply() function examples
+console.log(expjs.leastCommonMultiple(6, 8)) // 24
+console.log(expjs.leastCommonMultiple(423, 87, 200)) // 12267
+console.log(expjs.leastCommonMultiple(1521, 2842)) // null - This means the search range was too small
+console.log(expjs.leastCommonMultiple(1521, 2842, 4000)) // 4322682
+
+// Expression class examples
+const expression = new Expression([2, 3, 4], ["**", "**"])
+
+console.log(expjs.exp(expression.nums[0], expression.nums[2], expression.operators[1])) // 16
+console.log(expjs.sameOperator(expression.nums, expression.operators[0])) // 4096
+console.log(expjs.fullExp(expression)) // 4096 - Just shortened the last example.
+console.log(expjs.repeatExp(expression, 4)) // 16384
