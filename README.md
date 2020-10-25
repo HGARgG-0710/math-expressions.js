@@ -16,24 +16,26 @@ or
 
 ## Functions
 
-1. [exp()](#1exp)
-2. [sameOperator()](#2sameoperator)
-3. [fullExp()](#3fullexp)
-4. [repeatExp()](#4repeatexp)
-5. [average()](#5average)
-6. [min()](#6min)
-7. [max()](#7max)
-8. [median()](#8median)
-9. [mostPopularNum()](#9mostpopularnum)
-10. [range()](#10range)
-11. [sort()](#11sort)
-12. [copy()](#12copy)
-13. [generate()](#13generate)
-14. [find()](#14find)
-15. [readable()](#15readable)
-16. [factorOut()](#16factorout)
-17. [truncate()](#17truncate)
-18. [leastCommonMultiple](#18leastcommonmultiple)
+[1. exp()](#1exp)
+[2. sameOperator()](#2sameoperator)
+[3. fullExp()](#3fullexp)
+[4. repeatExp()](#4repeatexp)
+[5. average()](#5average)
+[6. min()](#6min)
+[7. max()](#7max)
+[8. median()](#8median)
+[9. mostPopularNum()](#9mostpopularnum)
+[10. range()](#10range)
+[11. sort()](#11sort)
+[12. copy()](#12copy)
+[13. generate()](#13generate)
+[14. find()](#14find)
+[15. readable()](#15readable)
+[16. factorOut()](#16factorout)
+[17. truncate()](#17truncate)
+[18. leastCommonMultiple()](#18leastcommonmultiple)
+[19. deviations()](#19deviations)
+[20. dispersion()](#20dispersion)
 
 ### 1.exp()
 
@@ -115,6 +117,14 @@ Before truncating an array truncate() function sorts it from smallest to largest
 
 Finds the least common multiple between two numbers(first and second arguments) in given search range(third argument). Search range is not a number to which the search will be continued, it is a number of iterations, each of which similiar value is searched(100 by default). If the search range is too small, then returns null, otherwise the least common multiple.
 
+### 19.deviations()
+
+Takes an array of numbers, a boolean and a number and returns an array of deviative numbers(comparing to the average) of the passed array. Boolean represents, should or should not array be truncated while searching for its average. The third parameter(number) represents count of percents, for which array should be truncated. It works only if second argument is true (by default it is false).
+
+### 20.dispersion()
+
+Takes an array of numbers, a boolean and another number array and returns a number - dispersion of a first argument. Second parameter represents the fact does the variance is sample variance or population variance. If it is false, then it is sample variance (by default second parameter is true). If it's false, then sample dispersion is returned, from the sample, made using numbers from the third argument, that represent needed indexes of the first argument.
+
 ## Classes
 
 1. [Statistics](#1statistics)
@@ -142,6 +152,8 @@ This object has a statistic information about passed number array.
     Statistics.mostPopular: string | number;
 
     Statistics.sorted: number[];
+    Statistics.deviations: number[];
+    Statistics.populationVarience: number;
 
 Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
 

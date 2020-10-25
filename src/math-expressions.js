@@ -19,6 +19,8 @@ function Statistics(nums = [1, 2, 3, 4, 5], toLarge = true) {
 	this.mostPopular = mostPopularNum(nums)
 
 	this.sorted = sort(nums, toLarge)
+	this.deviations = deviations(nums)
+	this.populationVarience = dispersion(nums)
 }
 
 /**
@@ -264,7 +266,7 @@ They must have next names: "nums" form number array, "operators" for operators a
  */
 function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
 	const newArr = isTruncated ? truncate(nums, percents) : copy(nums)
-	return sameOperator(newArr) / newArr.length
+	return Number((sameOperator(newArr) / newArr.length).toFixed(1))
 }
 
 /**
@@ -404,10 +406,11 @@ function copy(nums = [1, 2, 3, 4, 5]) {
  * @param {number} step Value, by which the count is incremented every iteration.
  */
 function generate(start, end, step = 1) {
-	let generated = []
+	const generated = []
+	const modif = Number.isInteger(step) ? 1 : 0.1
 
-	for (let i = start; i < end + 1; i += step) {
-		generated.push(i)
+	for (let i = start; i < end + modif; i += step) {
+		generated.push(Number(i.toFixed(1)))
 	}
 
 	return generated
@@ -554,7 +557,7 @@ function factorOut(num, isProductively = false) {
 function truncate(nums, percents = 10) {
 	const shortened = sort(copy(nums))
 	const len = shortened.length
-	const toDelete = Number(((len / 100) * (2 * percents)).toFixed())
+	const toDelete = Number(Math.trunc((len / 100) * percents))
 
 	for (let i = 0; i < toDelete; i++) {
 		shortened.shift()
@@ -601,6 +604,45 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 	return result
 }
 
+/**
+ * Takes an a array(or a row, if you prefer) and returns an array of all deviations from its average.
+ * @param {number[]} row An array, in which deviations should be found.
+ * @param {boolean} isTruncated A boolean, representing, should or should not an array be truncated, during the process of searching for its average. By default false.
+ * @param {number} percents A number, representing count of percents of numbers, for which this array shall be truncated, while searching for its average. Pased value will be doubled. Works only if isTruncated equals true. By default 10.
+ */
+function deviations(row, isTruncated = false, percents = 10) {
+	const rowAverage = average(row, isTruncated, percents)
+	const deviations = []
+
+	row.forEach((num) => {
+		if (exp(num, rowAverage, "-") != 0) {
+			deviations.push(Number(Math.abs(num - rowAverage).toFixed(1)))
+		}
+	})
+
+	return deviations
+}
+
+/**
+ * Returns a dispersion of a numeric array(or a row, if you prefer). It can be of a population variance or a sample variance, depending on the second parameter.
+ * @param {number[]} row A numeric array, dispersion for which is to be found and returned.
+ * @param {boolean} isGeneral A boolean value representing whether or not the variance returned is either the population or the sample. By default true.
+ * @param {number[]} indexes A numeric array of indexes, using which, inside of a first argument needed values will be taken for a sample population(only if second parameter is false).
+ */
+function dispersion(row, isGeneral = true, indexes = [0, 1, 2]) {
+	const newRow = []
+
+	!isGeneral
+		? row.forEach((num, index) => {
+				indexes.forEach((checkIndex) => {
+					index == checkIndex ? newRow.push(num) : null
+				})
+		  })
+		: row.forEach((num) => newRow.push(num))
+
+	return average(deviations(newRow))
+}
+
 export {
 	Statistics,
 	Surface,
@@ -623,4 +665,6 @@ export {
 	factorOut,
 	truncate,
 	leastCommonMultiple,
+	deviations,
+	dispersion,
 }

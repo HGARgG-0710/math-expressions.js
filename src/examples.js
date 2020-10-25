@@ -76,7 +76,6 @@ expjs.find("Hello, World!", "l") // [true, 3]
 const numArr = [10, 50, -10]
 const stats = new Statistics(numArr)
 
-console.log(stats.median) // 50
 console.log(stats.min) // -10
 console.log(stats.mostPopularNum) // "None"
 console.log(stats.range) // 60
@@ -123,3 +122,12 @@ console.log(expjs.exp(expression.nums[0], expression.nums[2], expression.operato
 console.log(expjs.sameOperator(expression.nums, expression.operators[0])) // 4096
 console.log(expjs.fullExp(expression)) // 4096 - Just shortened the last example.
 console.log(expjs.repeatExp(expression, 4)) // 16384
+
+// deviations() function examples
+console.log(expjs.deviations([1, 2, 2, 3, 4, 5])) // [1.8, 0.8, 0.8, 0.2, 1.2, 2.2]
+console.log(expjs.deviations([10, 10, 10, 9, 8, 7, 6, 5])) // [1.9, 1.9, 1.9, 0.9, 0.1, 1.1, 2.1, 3.1]
+
+// dispersion() function examples
+console.log(expjs.dispersion([1, 2, 2, 2, 2, 2, 3, 4, 5])) // 1
+console.log(expjs.dispersion([8, 8, 8, 9, 9, 9])) // 0.5
+console.log(expjs.dispersion([8, 8, 8, 9, 9, 9], false, [2, 3])) // 0.5 - Very representative! :)
