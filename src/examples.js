@@ -130,4 +130,4 @@ console.log(expjs.deviations([10, 10, 10, 9, 8, 7, 6, 5])) // [1.9, 1.9, 1.9, 0.
 // dispersion() function examples
 console.log(expjs.dispersion([1, 2, 2, 2, 2, 2, 3, 4, 5])) // 1
 console.log(expjs.dispersion([8, 8, 8, 9, 9, 9])) // 0.5
-console.log(expjs.dispersion([8, 8, 8, 9, 9, 9], false, [2, 3])) // 0.5 - Very representative! :)
+console.log(expjs.dispersion([8, 8, 8, 9, 9, 9], false, [2, 3])) // 2 - not very representative :)

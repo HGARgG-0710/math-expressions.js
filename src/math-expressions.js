@@ -55,7 +55,10 @@ Surface.prototype.inLimits = function (...dots) {
 
 	dots.forEach((dot) => {
 		dot.forEach((coordinate) => {
-			if (!find(this.x, coordinate[0])[0] || !find(this.y, coordinate[1])[0]) {
+			if (
+				!find(this.x, coordinate[0])[0] ||
+				!find(this.y, coordinate[1])[0]
+			) {
 				isHere = false
 			}
 		})
@@ -207,7 +210,11 @@ function fullExp(expression = { nums: [2, 10, 2], operators: ["**", "*"] }) {
 			} else if (i == expression.nums.length - 1) {
 				break
 			} else {
-				tempRes = exp(tempRes, expression.nums[i + 1], expression.operators[i])
+				tempRes = exp(
+					tempRes,
+					expression.nums[i + 1],
+					expression.operators[i]
+				)
 			}
 			result = tempRes
 		}
@@ -265,8 +272,16 @@ They must have next names: "nums" form number array, "operators" for operators a
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
 function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
-	const newArr = isTruncated ? truncate(nums, percents) : copy(nums)
-	return Number((sameOperator(newArr) / newArr.length).toFixed(1))
+	const len = nums.length
+	const newArr =
+		isTruncated && percents > 0 ? truncate(nums, percents) : copy(nums)
+
+	isTruncated && percents === 0
+		? newArr.filter((num) => num != undefined && num != null)
+		: null
+
+	const modif = len === newArr.length ? 0 : -1
+	return Number((sameOperator(newArr) / (len + modif)).toFixed(1))
 }
 
 /**
@@ -323,7 +338,7 @@ function median(nums = [1, 2, 3, 4, 5], fromLargeToSmall = true) {
  * @param {number[]} nums An array of numbers passed to the function.
  */
 function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
-	let repeats = []
+	const repeats = []
 	let sameNum = false
 	let countOfRepeats = 0
 
@@ -365,8 +380,8 @@ function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
  * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
 function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
-	let listArr = copy(nums)
-	let sortArr = []
+	const listArr = copy(nums)
+	const sortArr = []
 
 	if (fromSmallToLarge) {
 		for (let i = 0; i < nums.length; i++) {
@@ -393,7 +408,7 @@ function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
  * @returns {number[]} Copy of a passed array, without referencing its object.
  */
 function copy(nums = [1, 2, 3, 4, 5]) {
-	let copyArr = []
+	const copyArr = []
 	nums.forEach((num) => copyArr.push(num))
 
 	return copyArr
@@ -615,10 +630,12 @@ function deviations(row, isTruncated = false, percents = 10) {
 	const deviations = []
 
 	row.forEach((num) => {
-		if (exp(num, rowAverage, "-") != 0) {
+		if (num != undefined && exp(num, rowAverage, "-") != 0) {
 			deviations.push(Number(Math.abs(num - rowAverage).toFixed(1)))
 		}
 	})
+
+	deviations.length = row.length
 
 	return deviations
 }
@@ -640,7 +657,9 @@ function dispersion(row, isGeneral = true, indexes = [0, 1, 2]) {
 		  })
 		: row.forEach((num) => newRow.push(num))
 
-	return average(deviations(newRow))
+	newRow.length = row.length
+
+	return average(deviations(newRow), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY.
 }
 
 export {
