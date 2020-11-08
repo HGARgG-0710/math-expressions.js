@@ -178,7 +178,7 @@ From the beginning this is an empty surface, that has width(x axis min and max n
 
 #### Class Methods:
 
-    Surface.prototype.inLimits(...dots: number[]): void
+    Surface.prototype.inLimits(...dots: number[][][]): boolean
     Surface.prototype.dot(...dots: number[]): void
     Surface.prototype.line(...dots: number[]): void
     Surface.prototype.segment(...dots: number[]): void
@@ -194,6 +194,10 @@ Constructor of this class takes two arrays, one of which contains numbers of exp
 
 This class has no methods, but can be very comfortly used with functions, that work with math expressions.
 They are exp(), sameOperator(), fullExp() and repeatExp().
+
+#### Notice: 
+
+After defining an Expression object
 
 ## Note:
 

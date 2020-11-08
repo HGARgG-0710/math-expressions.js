@@ -1,149 +1,320 @@
 // Classes
+class Statistics {
+	#setCount = 0
 
-/**
- * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
- * @param {number[]} nums An array of numbers passed to the function.
- * @param {boolean} toLarge Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
- */
-function Statistics(nums = [1, 2, 3, 4, 5], toLarge = true) {
-	this.min = min(nums)
-	this.max = max(nums)
+	/**
+	 * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
+	 * @param {number[]} nums An array of numbers passed to the function.
+	 * @param {boolean} toLarge Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
+	 */
+	constructor(nums = [1, 2, 3, 4, 5], toLarge = true) {
+		this.min = min(nums)
+		this.max = max(nums)
 
-	this.range = range(nums)
-	this.interquartRange = range(nums, true)
-	this.countOfElements = nums.length
+		this.range = range(nums)
+		this.interquartRange = range(nums, true)
+		this.countOfElements = nums.length
 
-	this.median = median(nums, toLarge)
-	this.average = average(nums)
-	this.truncatedAverage = average(nums, true)
-	this.mostPopular = mostPopularNum(nums)
+		this.median = median(nums, toLarge)
+		this.average = average(nums)
+		this.truncatedAverage = average(nums, true)
+		this.mostPopular = mostPopularNum(nums)
 
-	this.sorted = sort(nums, toLarge)
-	this.deviations = deviations(nums)
-	this.populationVarience = dispersion(nums)
-}
+		this.sorted = sort(nums, toLarge)
+		this.deviations = deviations(nums)
+		this.populationVarience = dispersion(nums)
 
-/**
- * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
- *
- * !!! NOTE: Be careful, when choosing step in your limits objects(or arrays), because after Surface.x and Surface.y properties of your object are generated
- * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error.
- *
- * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is the number, that represents step, with which an array of numbers will be assembled.
- * @param {object | number[]} yLimits The same as xLimits, but for y axis of your surface.
- */
-function Surface(xLimits, yLimits) {
-	this.x = generate(xLimits[0], xLimits[1], xLimits[2])
-	this.y = generate(yLimits[0], yLimits[1], yLimits[2])
+		this.#setCount++
+	}
 
-	this.width = range(this.x)
-	this.height = range(this.y)
+	#set(what) {
+		if (this.#setCount === 0) {
+			what()
+		} else {
+			throw new Error("Properties of Statistics objects are immutable!")
+		}
+	}
 
-	this.dots = [[0, 0]]
-	this.lines = []
-	this.segments = []
-}
-
-/**
- * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
- * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(two-dimensional array) and has a bit unpredictable results.
- * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
- * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
- */
-Surface.prototype.inLimits = function (...dots) {
-	let isHere = true
-
-	dots.forEach((dot) => {
-		dot.forEach((coordinate) => {
-			if (
-				!find(this.x, coordinate[0])[0] ||
-				!find(this.y, coordinate[1])[0]
-			) {
-				isHere = false
-			}
+	set min(min) {
+		this.#set(() => {
+			this._min = min
 		})
-	})
+	}
 
-	return isHere
-}
+	get min() {
+		return this._min
+	}
 
-/**
- * Adds a dot coordinate to Surface.dots property array.
- * @param {number[]} dots A bunch of arrays with different dots' coordinates.
- */
-Surface.prototype.dot = function (...dots) {
-	if (this.inLimits(dots)) {
-		dots.forEach((dot) => {
-			if (!find(this.dots, dot)[0]) {
-				this.dots.push(dot)
-			}
+	set max(max) {
+		this.#set(() => {
+			this._max = max
 		})
-	} else {
-		throw Error(
-			"Provided coordinate is out of limits of x and y properties of your Surface object."
-		)
+	}
+
+	get max() {
+		return this._max
+	}
+
+	set range(range) {
+		this.#set(() => {
+			this._range = range
+		})
+	}
+
+	get range() {
+		return this._range
+	}
+
+	set interquartRange(inter) {
+		this.#set(() => {
+			this._interquartRange = inter
+		})
+	}
+
+	get interquartRange() {
+		return this._interquartRange
+	}
+
+	set countOfElements(length) {
+		this.#set(() => {
+			this._countOfElements = length
+		})
+	}
+
+	get countOfElements() {
+		return this._countOfElements
+	}
+
+	set median(median) {
+		this.#set(() => {
+			this._median = median
+		})
+	}
+
+	get median() {
+		return this._median
+	}
+
+	set average(aver) {
+		this.#set(() => {
+			this._average = aver
+		})
+	}
+
+	get average() {
+		return this._average
+	}
+
+	set truncatedAverage(truncAv) {
+		this.#set(() => {
+			this._truncatedAverage = truncAv
+		})
+	}
+
+	get truncatedAverage() {
+		return this._truncatedAverage
+	}
+
+	set mostPopular(mostPop) {
+		this.#set(() => {
+			this._mostPopular = mostPop
+		})
+	}
+
+	get mostPopular() {
+		return this._mostPopular
+	}
+
+	set sorted(sort) {
+		this.#set(() => {
+			this._sorted = sort
+		})
+	}
+
+	get sorted() {
+		return this._sorted
+	}
+
+	set deviations(devi) {
+		this.#set(() => {
+			this._deviations = devi
+		})
+	}
+
+	get deviations() {
+		return this._deviations
+	}
+
+	set populationVariance(disp) {
+		this.#set(() => {
+			this._populationVariance = disp
+		})
+	}
+
+	get populationVariance() {
+		return this._populationVariance
 	}
 }
 
-/**
- * Adds two dots' coordinates to Surface.lines(technically creates a straight line, that comes through these two dots).
- * !!! NOTE: If passed dots' coordinates are not in Surface.dots array, then line will not be added to the Surface.lines.
- * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
- */
-Surface.prototype.line = function (...dots) {
-	if (this.inLimits(dots)) {
-		if (
-			dots.length == 2 &&
-			find(this.lines, dots)[1] <= 1 &&
-			find(this.dots, dots)[0]
-		) {
-			this.lines.push(dots)
-			this.segments.push(dots)
+class Surface {
+	/**
+	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
+	 *
+	 * !!! NOTE: Be careful, when choosing step in your limits objects(or arrays), because after Surface.x and Surface.y properties of your object are generated
+	 * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error.
+	 *
+	 * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is the number, that represents step, with which an array of numbers will be assembled.
+	 * @param {object | number[]} yLimits The same as xLimits, but for y axis of your surface.
+	 */
+
+	constructor(xLimits, yLimits) {
+		this.x = generate(xLimits[0], xLimits[1], xLimits[2])
+		this.y = generate(yLimits[0], yLimits[1], yLimits[2])
+
+		this.width = range(this.x)
+		this.height = range(this.y)
+
+		this.dots = [[0, 0]]
+		this.lines = []
+		this.segments = []
+	}
+
+	/**
+	 * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
+	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(two-dimensional array) and has a bit unpredictable results.
+	 * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
+	 * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
+	 */
+	inLimits(...dots) {
+		let isHere = true
+
+		dots.forEach((dot) => {
+			dot.forEach((coordinate) => {
+				if (
+					!find(this.x, coordinate[0])[0] ||
+					!find(this.y, coordinate[1])[0]
+				) {
+					isHere = false
+				}
+			})
+		})
+
+		return isHere
+	}
+
+	/**
+	 * Adds a dot coordinate to Surface.dots property array.
+	 * @param {number[]} dots A bunch of arrays with different dots' coordinates.
+	 */
+	dot(...dots) {
+		if (this.inLimits(dots)) {
+			dots.forEach((dot) => {
+				if (!find(this.dots, dot)[0]) {
+					this.dots.push(dot)
+				}
+			})
 		} else {
 			throw Error(
-				`You have used use Surface.prototype.line method for adding 
+				"Provided coordinate is out of limits of x and y properties of your Surface object."
+			)
+		}
+	}
+
+	/**
+	 * Adds two dots' coordinates to Surface.lines(technically creates a straight line, that comes through these two dots).
+	 * !!! NOTE: If passed dots' coordinates are not in Surface.dots array, then line will not be added to the Surface.lines.
+	 * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
+	 */
+	line(...dots) {
+		if (this.inLimits(dots)) {
+			if (
+				dots.length == 2 &&
+				find(this.lines, dots)[1] <= 1 &&
+				find(this.dots, dots)[0]
+			) {
+				this.lines.push(dots)
+				this.segments.push(dots)
+			} else {
+				throw Error(
+					`You have used use Surface.prototype.line method for adding 
 				one(or zero) dot(dots) or line you're trying to add already exists 
 				or there are no needed dots declared in Surface.dots. 
 				If you've wanted to add only one dot, 
 				better use Surface.prorotype.dot() method instead of this one, 
 				otherwise add another dot's coordinates.`
+				)
+			}
+		} else {
+			throw Error(
+				"Provided coordinate is out of limits of x and y properties of your Surface object."
 			)
 		}
-	} else {
-		throw Error(
-			"Provided coordinate is out of limits of x and y properties of your Surface object."
-		)
+	}
+
+	/**
+	 * Adds one segment(two dots' coordinates - segment's beginning and end) to the Surface.segments array property.
+	 * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
+	 */
+	segment(...dots) {
+		if (this.inLimits(dots)) {
+			dots.length == 2
+				? this.segments.push(dots)
+				: () => {
+						throw Error(
+							"Coordinates of more or less, than two dots were passed to the Surface.prototype.segment. Only two dots for one segment allowed."
+						)
+				  }
+		} else {
+			throw Error(
+				"Provided coordinate is out of limits of x and y properties of your Surface object."
+			)
+		}
 	}
 }
 
-/**
- * Adds one segment(two dots' coordinates - segment's beginning and end) to the Surface.segments array property.
- * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
- */
-Surface.prototype.segment = function (...dots) {
-	if (this.inLimits(dots)) {
-		dots.length == 2
-			? this.segments.push(dots)
-			: () => {
-					throw Error(
-						"Coordinates of more or less, than two dots were passed to the Surface.prototype.segment. Only two dots for one segment allowed."
-					)
-			  }
-	} else {
-		throw Error(
-			"Provided coordinate is out of limits of x and y properties of your Surface object."
-		)
-	}
-}
+class Expression {
+	#setCount = [0, 0]
 
-/**
- * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
- * @param {number[] | string[]} nums An array, containing numbers of expression.
- * @param {string[]} operators An array, containing operators of expression.
- */
-function Expression(nums = [], operators = []) {
-	this.nums = nums
-	this.operators = operators
+	/**
+	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
+	 * @param {number[] | string[]} nums An array, containing numbers of expression.
+	 * @param {string[]} operators An array, containing operators of expression.
+	 */
+
+	constructor(nums = [], operators = []) {
+		this.nums = nums
+		this.operators = operators
+	}
+
+	get nums() {
+		return this._nums
+	}
+
+	set nums(nums) {
+		if (this.#setCount[0] === 0) {
+			this._nums = nums
+		} else {
+			throw new Error("You can't set nums property for the second time!")
+		}
+
+		this.#setCount[0]++
+	}
+
+	get operators() {
+		return this._operators
+	}
+
+	set operators(operators) {
+		if (this.#setCount[1] === 0) {
+			this._operators = operators
+		} else {
+			throw new Error(
+				"You can't set operators propery for the second time!"
+			)
+		}
+
+		this.#setCount[1]++
+	}
 }
 
 // Functions
@@ -155,7 +326,7 @@ function Expression(nums = [], operators = []) {
  *  @param {string} operator  String, containing an ariphmetic operator.
  *  @returns {number} Result of a mathematical expression.
  */
-function exp(firstNum, secondNum, operator = "+") {
+function exp(firstNum = 2, secondNum = 2, operator = "+") {
 	return eval(`${firstNum} ${operator} ${secondNum}`)
 }
 
@@ -186,7 +357,7 @@ function sameOperator(numbers = [], operator = "+") {
  * Executes mathematical expression with different operators and numbers.
  *
  * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length,
- * ! but in this case the last element of the opperators[] array will be ignored.
+ * ! but in this case the last element of the operators[] array will be ignored.
  *
  * @param {object} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
@@ -435,7 +606,7 @@ function generate(start, end, step = 1) {
  * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
  * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
  * @param {number | number[] | string} searchVal Searched value.
- * @returns {(boolean & number)[]} An array, containig boolean(was the needed number or numeric array found in searchArr or not) and a number(If it was found, then how many times).
+ * @returns {(boolean & number)[]} An array, containig boolean(was the needed number or numeric array found in searchArr or not) and a number(frequency).
  */
 function find(searchArr, searchVal) {
 	let result = false
