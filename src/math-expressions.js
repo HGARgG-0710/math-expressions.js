@@ -300,7 +300,7 @@ class Expression {
 
 	/**
 	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
-	 * @param {number[] | string[]} nums An array, containing numbers of expression.
+	 * @param {number[]} nums An array, containing numbers of expression.
 	 * @param {string[]} operators An array, containing operators of expression.
 	 */
 
@@ -344,8 +344,8 @@ class Expression {
 
 /**
  * 	Executes an expression with two numbers
- *  @param {number | string} firstNum  First number(or string).
- *  @param {number | string} secondNum Second number(or string).
+ *  @param {number} firstNum  First number(or string).
+ *  @param {number} secondNum Second number(or string).
  *  @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  *  @returns {number} Result of a mathematical expression.
  */
@@ -372,7 +372,7 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 
 /**
  * Executes mathematical expression with the same operator repeating, but different numbers.
- * @param {number[] | string[] | any[]} numbers An array of numbers(or strings) using which expression will be executed.
+ * @param {number[]} numbers An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
 function sameOperator(numbers = [], operator = "+") {
