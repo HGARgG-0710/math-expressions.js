@@ -113,7 +113,7 @@ console.log(expjs.truncate([-1, 0, 200, 300, 400, 500, 600, 700, 1, 2]), 10) // 
 console.log(expjs.leastCommonMultiple(6, 8)) // 24
 console.log(expjs.leastCommonMultiple(423, 87, 200)) // 12267
 console.log(expjs.leastCommonMultiple(1521, 2842)) // null - This means the search range was too small
-console.log(expjs.leastCommonMultiple(1521, 2842, 4000)) // 4322682
+console.log(expjs.leastCommonMultiple(1521, 2842, 2842)) // 4322682
 
 // Expression class examples
 const expression = new Expression([2, 3, 4], ["**", "**"])
@@ -128,6 +128,17 @@ console.log(expjs.deviations([1, 2, 2, 3, 4, 5])) // [1.8, 0.8, 0.8, 0.2, 1.2, 2
 console.log(expjs.deviations([10, 10, 10, 9, 8, 7, 6, 5])) // [1.9, 1.9, 1.9, 0.9, 0.1, 1.1, 2.1, 3.1]
 
 // dispersion() function examples
-console.log(expjs.dispersion([1, 2, 2, 2, 2, 2, 3, 4, 5])) // 1
+console.log(expjs.dispersion([1, 2, 2, 2, 2, 2, 3, 4, 5])) // 0.96296
 console.log(expjs.dispersion([8, 8, 8, 9, 9, 9])) // 0.5
-console.log(expjs.dispersion([8, 8, 8, 9, 9, 9], false, [2, 3])) // 2 - not very representative :)
+console.log(expjs.dispersion([8, 8, 8, 9, 9, 9], false, false, [2, 3])) // 2.04 - not very representative :)
+
+// standardDeviation() function examples
+console.log(expjs.standardDeviation([1, 2, 3, 4, 5])) // 1.41421
+console.log(expjs.standardDeviation([10, 30, 80, 1000])) // 416.47329
+console.log(expjs.standardDeviation([-140, 45, 80, 99, 1])) // 85.30182
+
+// standardError() function examples
+console.log(expjs.standardError([1,2,3,4,5], false)) // 0.63245
+console.log(expjs.standardError([1,2,3,4,5], true)) // 0.53666
+console.log(expjs.standardError([80, 180, -80, -180])) // 69.64194
+console.log(expjs.standardError([80, 180, -80, -180], true)) // 65

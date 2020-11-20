@@ -22,7 +22,10 @@ class Statistics {
 
 		this.sorted = sort(nums, toLarge)
 		this.deviations = deviations(nums)
+
 		this.populationVarience = dispersion(nums)
+		this.populationStandDev = standardDeviation(nums)
+		this.standardError = standardError(nums)
 
 		this.#setCount++
 	}
@@ -154,6 +157,26 @@ class Statistics {
 	get populationVariance() {
 		return this._populationVariance
 	}
+
+	set populationStandDev(popStandDev) {
+		this.#set(() => {
+			this._populationStandDev = popStandDev
+		})
+	}
+
+	get populationStandDev() {
+		return this._populationStandDev
+	}
+
+	set standardError(stdErr) {
+		this.#set(() => {
+			this._standardErr = stdErr
+		})
+	}
+
+	get standardError() {
+		return this._standardErr
+	}
 }
 
 class Surface {
@@ -228,7 +251,7 @@ class Surface {
 	line(...dots) {
 		if (this.inLimits(dots)) {
 			if (
-				dots.length == 2 &&
+				dots.length === 2 &&
 				find(this.lines, dots)[1] <= 1 &&
 				find(this.dots, dots)[0]
 			) {
@@ -257,7 +280,7 @@ class Surface {
 	 */
 	segment(...dots) {
 		if (this.inLimits(dots)) {
-			dots.length == 2
+			dots.length === 2
 				? this.segments.push(dots)
 				: () => {
 						throw Error(
@@ -323,11 +346,28 @@ class Expression {
  * 	Executes an expression with two numbers
  *  @param {number | string} firstNum  First number(or string).
  *  @param {number | string} secondNum Second number(or string).
- *  @param {string} operator  String, containing an ariphmetic operator.
+ *  @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  *  @returns {number} Result of a mathematical expression.
  */
 function exp(firstNum = 2, secondNum = 2, operator = "+") {
-	return eval(`${firstNum} ${operator} ${secondNum}`)
+	switch (operator) {
+		case "+":
+		case "-":
+		case "/":
+		case "*":
+		case "**":
+		case "%":
+			if (typeof firstNum === "number" && typeof secondNum === "number") {
+				return eval(`${firstNum} ${operator} ${secondNum}`)
+			} else {
+				throw new Error(
+					"First and second arguments of exp() function must be numbers!"
+				)
+			}
+
+		default:
+			throw new Error("Unknown airphmetic operator passed!")
+	}
 }
 
 /**
@@ -340,9 +380,9 @@ function sameOperator(numbers = [], operator = "+") {
 	let tempRes = 0
 
 	for (let i = 0; i < numbers.length; i++) {
-		if (i == 0) {
+		if (i === 0) {
 			tempRes = exp(numbers[0], numbers[1], operator)
-		} else if (i == numbers.length - 1) {
+		} else if (i === numbers.length - 1) {
 			break
 		} else {
 			tempRes = exp(tempRes, numbers[i + 1], operator)
@@ -372,13 +412,13 @@ function fullExp(expression = { nums: [2, 10, 2], operators: ["**", "*"] }) {
 		)
 	} else {
 		for (let i = 0; i < expression.nums.length; i++) {
-			if (i == 0) {
+			if (i === 0) {
 				tempRes = exp(
 					expression.nums[0],
 					expression.nums[1],
 					expression.operators[0]
 				)
-			} else if (i == expression.nums.length - 1) {
+			} else if (i === expression.nums.length - 1) {
 				break
 			} else {
 				tempRes = exp(
@@ -396,14 +436,14 @@ function fullExp(expression = { nums: [2, 10, 2], operators: ["**", "*"] }) {
 
 /**
  * 	Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
+ *
+ * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
+ * ! Wrong names of keys will cause an Error.
+ *
  * 	@param {object} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
  * 	@param {number} countOfRepeats   A number of repeats of ariphmetic operation.
  * 	@param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
-/*
-! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
-! Wrong names of keys will cause an Error. 
-*/
 function repeatExp(
 	expression = { nums: [2, 2], operators: ["*"] },
 	countOfRepeats = 1,
@@ -447,12 +487,12 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
 	const newArr =
 		isTruncated && percents > 0 ? truncate(nums, percents) : copy(nums)
 
-	isTruncated && percents === 0
-		? newArr.filter((num) => num != undefined && num != null)
+	percents === 0 && isTruncated
+		? newArr.filter((num) => num != null && num != undefined)
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
-	return Number((sameOperator(newArr) / (len + modif)).toFixed(1))
+	return Number((sameOperator(newArr) / (len + modif)).toFixed(5))
 }
 
 /**
@@ -489,14 +529,14 @@ function median(nums = [1, 2, 3, 4, 5], fromLargeToSmall = true) {
 			lessCount++
 		}
 
-		isStructured = !(lessCount == biggerCount && biggerCount > 0)
+		isStructured = !(lessCount === biggerCount && biggerCount > 0)
 	}
 
-	if (nums.length % 2 == 1 && isStructured) {
+	if (nums.length % 2 === 1 && isStructured) {
 		return nums[Math.round(nums.length / 2) - 1]
 	} else {
 		structured = isStructured ? nums : sort(nums, fromLargeToSmall)
-		return nums.length % 2 == 0
+		return nums.length % 2 === 0
 			? (structured[structured.length / 2 - 1] +
 					structured[structured.length / 2]) /
 					2
@@ -515,24 +555,24 @@ function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
 
 	for (let i = 0; i < nums.length; i++, countOfRepeats = 0) {
 		for (let j = i; j < nums.length; j++) {
-			if (nums[i] == nums[j]) {
+			if (nums[i] === nums[j]) {
 				countOfRepeats++
 			}
 
 			if (i < nums.length) {
-				sameNum = nums[i - 1] == nums[i] && nums[i] == nums[i + 1]
+				sameNum = nums[i - 1] === nums[i] && nums[i] === nums[i + 1]
 			} else {
-				sameNum = nums[i - 1] == nums[i]
+				sameNum = nums[i - 1] === nums[i]
 			}
 		}
 
-		if (!sameNum || i == nums.length - 1) {
+		if (!sameNum || i === nums.length - 1) {
 			repeats.push(countOfRepeats)
 		}
 	}
 
 	const maxNum = max(repeats)
-	return maxNum == 1 ? "None" : nums[repeats.indexOf(maxNum)]
+	return maxNum === 1 ? "None" : nums[repeats.indexOf(maxNum)]
 }
 
 /**
@@ -616,20 +656,20 @@ function find(searchArr, searchVal) {
 		searchVal.forEach((value) =>
 			searchArr.forEach((arr) =>
 				arr.forEach((num) =>
-					value == num ? ((result = true), foundTimes++) : null
+					value === num ? ((result = true), foundTimes++) : null
 				)
 			)
 		)
 	} else {
-		if (typeof searchArr == "string") {
+		if (typeof searchArr === "string") {
 			const str = searchArr.slice(0) // copying a string using String.prototype.slice()
 
 			for (let i = 0; i < str.length; i++) {
-				str[i] == searchVal ? ((result = true), foundTimes++) : null
+				str[i] === searchVal ? ((result = true), foundTimes++) : null
 			}
 		} else {
 			searchArr.forEach((value) =>
-				value == searchVal ? ((result = true), foundTimes++) : null
+				value === searchVal ? ((result = true), foundTimes++) : null
 			)
 		}
 	}
@@ -648,7 +688,7 @@ function readable(num) {
 	while (arr.length % 3 > 0) {
 		changeStr += arr[0]
 
-		if ((arr.length - 1) % 3 == 0) {
+		if ((arr.length - 1) % 3 === 0) {
 			changeStr += " "
 		}
 
@@ -656,7 +696,7 @@ function readable(num) {
 	}
 
 	arr.forEach((number, index) => {
-		index % 3 == 0 && index > 0
+		index % 3 === 0 && index > 0
 			? (changeStr += ` ${number}`)
 			: (changeStr += `${number}`)
 	})
@@ -689,21 +729,21 @@ function factorOut(num, isProductively = false) {
 			timesDivided = 1
 
 			for (let j = 0; j < len; j++) {
-				fromOneToNum[i] % fromOneToNum[j] == 0 &&
+				fromOneToNum[i] % fromOneToNum[j] === 0 &&
 				fromOneToNum[i] > 1 &&
 				fromOneToNum[j] > 1
 					? timesDivided++
 					: null
 			}
 
-			timesDivided == 2 ? primes.push(fromOneToNum[i]) : null
+			timesDivided === 2 ? primes.push(fromOneToNum[i]) : null
 		}
 
 		const primesLen = primes.length
 
 		for (let i = 0; i < primesLen; i++) {
 			for (let j = 0; j < primesLen; j++) {
-				if (tempRes % primes[i] == 0 && tempRes > 1) {
+				if (tempRes % primes[i] === 0 && tempRes > 1) {
 					tempRes /= primes[i]
 					factors.push(primes[i])
 				}
@@ -714,17 +754,17 @@ function factorOut(num, isProductively = false) {
 			timesDivided = 1
 
 			fromOneToNum.forEach((checkNum) => {
-				number % checkNum == 0 && number > 1 && checkNum > 1
+				number % checkNum === 0 && number > 1 && checkNum > 1
 					? timesDivided++
 					: null
 			})
 
-			timesDivided == 2 ? primes.push(number) : null
+			timesDivided === 2 ? primes.push(number) : null
 		})
 
 		primes.forEach((prime) => {
 			for (let i = 0; i < num; i++) {
-				if (tempRes % prime == 0 && tempRes > 1) {
+				if (tempRes % prime === 0 && tempRes > 1) {
 					tempRes /= prime
 					factors.push(prime)
 				}
@@ -780,7 +820,7 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 
 	firstMultiples.forEach((multiple1) => {
 		secondMultiples.forEach((multiple2) => {
-			if (multiple1 == multiple2 && !isEnd) {
+			if (multiple1 === multiple2 && !isEnd) {
 				result = multiple1
 				isEnd = true
 			}
@@ -793,17 +833,18 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 /**
  * Takes an a array(or a row, if you prefer) and returns an array of all deviations from its average.
  * @param {number[]} row An array, in which deviations should be found.
+ * @param {boolean} isSquare A boolean, representing should or should not every found deviation be powered by two or else it shall be absolute. By default false.
  * @param {boolean} isTruncated A boolean, representing, should or should not an array be truncated, during the process of searching for its average. By default false.
  * @param {number} percents A number, representing count of percents of numbers, for which this array shall be truncated, while searching for its average. Pased value will be doubled. Works only if isTruncated equals true. By default 10.
  */
-function deviations(row, isTruncated = false, percents = 10) {
+function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 	const rowAverage = average(row, isTruncated, percents)
 	const deviations = []
 
 	row.forEach((num) => {
-		if (num != undefined && exp(num, rowAverage, "-") != 0) {
-			deviations.push(Number(Math.abs(num - rowAverage).toFixed(1)))
-		}
+		isSquare
+			? deviations.push(Number(Math.pow(num - rowAverage, 2).toFixed(5)))
+			: deviations.push(Number(Math.abs(num - rowAverage).toFixed(5)))
 	})
 
 	deviations.length = row.length
@@ -814,23 +855,85 @@ function deviations(row, isTruncated = false, percents = 10) {
 /**
  * Returns a dispersion of a numeric array(or a row, if you prefer). It can be of a population variance or a sample variance, depending on the second parameter.
  * @param {number[]} row A numeric array, dispersion for which is to be found and returned.
+ * @param {boolean} isSquare A boolean, representing should or should not result of the deviations() function be found powering found deviations by two or not. If false(what is a default value), then instead of doing that it uses absolute values of found deviations.
  * @param {boolean} isGeneral A boolean value representing whether or not the variance returned is either the population or the sample. By default true.
  * @param {number[]} indexes A numeric array of indexes, using which, inside of a first argument needed values will be taken for a sample population(only if second parameter is false).
  */
-function dispersion(row, isGeneral = true, indexes = [0, 1, 2]) {
+function dispersion(
+	row = [1, 2, 3, 4, 5],
+	isSquare = false,
+	isGeneral = true,
+	indexes = [0, 1, 2]
+) {
 	const newRow = []
 
 	!isGeneral
 		? row.forEach((num, index) => {
 				indexes.forEach((checkIndex) => {
-					index == checkIndex ? newRow.push(num) : null
+					index === checkIndex ? newRow.push(num) : null
 				})
 		  })
 		: row.forEach((num) => newRow.push(num))
 
 	newRow.length = row.length
 
-	return average(deviations(newRow), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY.
+	return average(deviations(newRow, isSquare), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of deviations()).
+}
+
+/**
+ * Takes an array of numbers and returns (general or sample) standard deviation of it depending on the second parameter. (Indexes of sample, if it's a sample, are set using the last argument.)
+ * @param {number[]} row Row(or an array if you prefer) of numbers, (sample or population) standard deviation for which shall be found.
+ * @param {boolean} isPopulation A boolean, representing should function return the population standard deviation or sample standard deviation.
+ * @param {number[]} indexes An array of numbers, representing indexes of the sample, sample standard deviation deviation for which shall be found.
+ */
+function standardDeviation(
+	row = [1, 2, 3, 4, 5],
+	isPopulation = true,
+	indexes = [0, 1, 2]
+) {
+	return Number(
+		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(5)
+	)
+}
+
+/**
+ * Takes an array of numbers and returns the standard error of it.
+ * @param {number[]} row An array of numbers, standard error for which is to be found.
+ * @param {boolean} isDispersion A boolean, that characterizes, should it be dispersion, found through absolute values of diviations in the row or standard deviation(found common way). By default false(standard deviation is used).
+ * @param {boolean} isPopulation A boolean, representing should or not standart error be population(true) or sample(false). By default true.
+ * @param {number[]} indexes An array of numbers, representing indexes using which sample of the original row should be made. Works only if isPopulation equals true.
+ */
+function standardError(
+	row = [1, 2, 3, 4, 5],
+	isDispersion = false,
+	isPopulation = true,
+	indexes = [0, 1, 2]
+) {
+	const newArr = []
+
+	isPopulation
+		? row.forEach((num) => newArr.push(num))
+		: row.forEach((num, index) => {
+				indexes.forEach((checkIndex) => {
+					index === checkIndex ? newArr.push(num) : null
+				})
+		  })
+
+	return isDispersion
+		? Number(
+				exp(
+					dispersion(row, false),
+					Math.sqrt(newArr.length),
+					"/"
+				).toFixed(5)
+		  )
+		: Number(
+				exp(
+					standardDeviation(row),
+					Math.sqrt(newArr.length),
+					"/"
+				).toFixed(5)
+		  )
 }
 
 export {
@@ -857,4 +960,6 @@ export {
 	leastCommonMultiple,
 	deviations,
 	dispersion,
+	standardDeviation,
+	standardError,
 }

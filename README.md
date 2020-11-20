@@ -7,11 +7,8 @@ For now, the list of functions and classes provided is quite thin, but in the fu
 
 Math-expressions.js can be installed using node.js.
 Install math-expressions.js using npm:
-
     npm install math-expressions.js
-
 or
-
     npm i math-expressions.js
 
 ## Functions
@@ -36,6 +33,8 @@ or
 18. [leastCommonMultiple()](#18leastcommonmultiple)
 19. [deviations()](#19deviations)
 20. [dispersion()](#20dispersion)
+21. [standardDeviation()](#21standarddeviation)
+22. [standardError()](#22standarderror)
 
 ### 1.exp()
 
@@ -67,7 +66,7 @@ This function takes an array of numbers and returns the least value from it.
 
 ### 7.max()
 
-This function takes an array of numbers and returns the biggest value from it.
+This function takes an array of numbers and returns the largest value in it.
 
 ### 8.median()
 
@@ -119,11 +118,19 @@ Finds the least common multiple between two numbers(first and second arguments) 
 
 ### 19.deviations()
 
-Takes an array of numbers, a boolean and a number and returns an array of deviative numbers(comparing to the average) of the passed array. Boolean represents, should or should not array be truncated while searching for its average. The third parameter(number) represents count of percents, for which array should be truncated. It works only if second argument is true (by default it is false).
+Takes an array of numbers, two booleans and a number and returns an array of deviative numbers(comparing to the average) of the passed array. First boolean represents should or not all found deviations be powered by two or not. If it is false(what is a default value), then instead of powering all deviative numbers by two function just makes them an absolutes of original selves. Second boolean represents, should or should not array be truncated while searching for its average. The fourth parameter(number) represents count of percents, for which array should be truncated. It works only if third argument is true (by default it is false).
 
 ### 20.dispersion()
 
-Takes an array of numbers, a boolean and another number array and returns a number - dispersion of a first argument. Second parameter represents the fact does the variance is sample variance or population variance. If it is false, then it is sample variance (by default second parameter is true). If it's false, then sample dispersion is returned, from the sample, made using numbers from the third argument, that represent needed indexes of the first argument.
+Takes an array of numbers, two booleans and another number array and returns a number - dispersion of a first argument. Second parameter represents should, in process of finding the dispersion, deviations be powered by two or not. If false(what is a default value), then instead of doing that, while searching for dispersion, will just use absolute values of all the found deviations. Third parameter represents the fact does the variance is sample variance or population variance. If it is false, then it is sample variance (by default second parameter is true). If it's false, then sample dispersion is returned, from the sample, made using numbers from the third argument, that represent needed indexes of the first argument.
+
+### 21.standardDeviation()
+
+Takes an array of numbers, boolean, another array of numbers and returns standard deviation of the numeric array, passed as the first argument. Second argument represents should standard deviation be of population or sample (By default - true, population). Third argument represents indexes of the sample, standard deviation of which shall be found (Works only if second argument is true).
+
+### 22.standardError()
+
+Takes an array of numbers, two booleans, another array of numbers and returns standard error of the first numeric array. Second argument represents, should dispersion(found using absolute values of deviations) be used as a number, divided by the length of the sample(or the whole array, if it is population) (By default false, standard deviation). Third argument represents should the return value be the standard error of population or sample (By default true, standard error of population). Fourth argument represents an array of indexes, using which sample, standard error of which shall be found, will be constructed. (Works only if the third argument equals false).
 
 ## Classes
 
@@ -153,9 +160,16 @@ This object has a statistic information about passed number array.
 
     Statistics.sorted: number[];
     Statistics.deviations: number[];
+    
     Statistics.populationVarience: number;
+    Statistics.populationStandDev: number;
+    Statistics.standardError: number;
 
-Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and an array length property in one object.
+Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and a row(or an array, if you prefer) length property in one object.
+
+#### Notice:
+
+After defining a Statistics object all of its existing data is immutable by default. You can add new properties to it, though.
 
 ### 2.Surface
 
@@ -197,7 +211,7 @@ They are exp(), sameOperator(), fullExp() and repeatExp().
 
 #### Notice: 
 
-After defining an Expression object
+After defining an Expression object its data(already existing) is immutable by default. You can add new properties, though.
 
 ## Note:
 
