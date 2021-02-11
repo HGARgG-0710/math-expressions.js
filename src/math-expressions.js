@@ -331,12 +331,115 @@ class Expression {
 		if (this.#setCount[1] === 0) {
 			this._operators = operators
 		} else {
-			throw new Error(
-				"You can't set operators propery for the second time!"
-			)
+			throw new Error("You can't set operators propery for the second time!")
 		}
 
 		this.#setCount[1]++
+	}
+}
+
+class Tests {
+	static #tooLong(arr, size) {
+		if (arr.length != size) {
+			throw new Error(
+				`Expected ${size} elements inside of the passed array, got ${arr.length}.`
+			)
+		}
+	}
+
+	/**
+	 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
+	 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
+	 */
+	static t_Students_test(rows) {
+		Tests.#tooLong(rows, 2)
+
+		const averages = Object.freeze([average(rows[0]), average(rows[1])])
+		const errors = Object.freeze([
+			Math.pow(standardError(rows[0]), 2),
+			Math.pow(standardError(rows[1]), 2),
+		])
+
+		return Number(
+			exp(
+				Math.abs(exp(averages[0], averages[1], "-")),
+				Math.sqrt(exp(errors[0], errors[1])),
+				"/"
+			).toFixed(7)
+		)
+	}
+
+	/**
+	 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
+	 * @param {number[]} rows A two-dimensional array, containing two other number arrays, the equality of dispersions of which shall be found.
+	 */
+	static F_test(rows) {
+		Tests.#tooLong(rows, 2)
+
+		const dispersions = Object.freeze([
+			dispersion(rows[0], true),
+			dispersion(rows[1], true),
+		])
+
+		const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
+
+		const difference = exp(
+			dispersions[biggerDispersionIndex],
+			dispersions[Number(!biggerDispersionIndex)],
+			"/"
+		)
+
+		return Number(difference.toFixed(5))
+	}
+
+	/**
+	 *
+	 */
+	static U_test(rows) {
+		Tests.#tooLong(rows, 2)
+
+		let firstSum = 0
+		let secondSum = 0
+		let tempNum = 0
+
+		const general = []
+		const ranks = []
+		const united = `${rows[0]},${rows[1]}`.split(",")
+
+		united.forEach((str) => general.push(Number(str)))
+
+		const final = sort(general)
+
+		final.forEach((num, index) => {
+			if (num != final[index - 1] && num != final[index + 1]) {
+				ranks.push(index + 1)
+				tempNum = 0
+			} else {
+				if (num === final[index + 1]) {
+					ranks.push(index + 1.5)
+					tempNum = index + 1.5
+				} else {
+					ranks.push(tempNum)
+				}
+			}
+		})
+
+		final.forEach((num, index) => {
+			if (rows[0].includes(num)) firstSum += ranks[index]
+			if (rows[1].includes(num)) secondSum += ranks[index]
+		})
+
+		const firstResult =
+			rows[0].length * rows[1].length +
+			(rows[0].length * (rows[0].length + 1)) / 2 -
+			firstSum
+
+		const secondResult =
+			rows[0].length * rows[1].length +
+			(rows[1].length * (rows[1].length + 1)) / 2 -
+			secondSum
+
+		return min([firstResult, secondResult])
 	}
 }
 
@@ -592,25 +695,25 @@ function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
  */
 function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
 	const listArr = copy(nums)
-	const sortArr = []
+	const sorted = []
 
 	if (fromSmallToLarge) {
 		for (let i = 0; i < nums.length; i++) {
 			const least = min(listArr)
 
 			listArr.splice(listArr.indexOf(least), 1)
-			sortArr.push(least)
+			sorted.push(least)
 		}
 	} else {
 		for (let i = 0; i < nums.length; i++) {
 			const largest = max(listArr)
 
 			listArr.splice(listArr.indexOf(largest), 1)
-			sortArr.push(largest)
+			sorted.push(largest)
 		}
 	}
 
-	return sortArr
+	return sorted
 }
 
 /**
@@ -646,7 +749,7 @@ function generate(start, end, step = 1) {
  * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
  * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
  * @param {number | number[] | string} searchVal Searched value.
- * @returns {(boolean & number)[]} An array, containig boolean(was the needed number or numeric array found in searchArr or not) and a number(frequency).
+ * @returns {[boolean & number]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not) and a number(frequency).
  */
 function find(searchArr, searchVal) {
 	let result = false
@@ -891,9 +994,7 @@ function standardDeviation(
 	isPopulation = true,
 	indexes = [0, 1, 2]
 ) {
-	return Number(
-		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(5)
-	)
+	return Number(Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(5))
 }
 
 /**
@@ -921,18 +1022,10 @@ function standardError(
 
 	return isDispersion
 		? Number(
-				exp(
-					dispersion(row, false),
-					Math.sqrt(newArr.length),
-					"/"
-				).toFixed(5)
+				exp(dispersion(row, false), Math.sqrt(newArr.length), "/").toFixed(5)
 		  )
 		: Number(
-				exp(
-					standardDeviation(row),
-					Math.sqrt(newArr.length),
-					"/"
-				).toFixed(5)
+				exp(standardDeviation(row), Math.sqrt(newArr.length), "/").toFixed(5)
 		  )
 }
 
@@ -940,6 +1033,7 @@ export {
 	Statistics,
 	Surface,
 	Expression,
+	Tests,
 	exp,
 	sameOperator,
 	fullExp,
