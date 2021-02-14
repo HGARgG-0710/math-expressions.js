@@ -139,6 +139,6 @@ console.log(expjs.standardDeviation([-140, 45, 80, 99, 1])) // 85.30182
 
 // standardError() function examples
 console.log(expjs.standardError([1,2,3,4,5], false)) // 0.63245
-console.log(expjs.standardError([1,2,3,4,5], true)) // 0.53666
+console.log(expjs.standardError([1,2,3,4,5], true)) // 0.53665
 console.log(expjs.standardError([80, 180, -80, -180])) // 69.64194
 console.log(expjs.standardError([80, 180, -80, -180], true)) // 65

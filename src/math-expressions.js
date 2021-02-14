@@ -204,7 +204,7 @@ class Surface {
 
 	/**
 	 * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
-	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(two-dimensional array) and has a bit unpredictable results.
+	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(three-dimensional array) and has a bit unpredictable results.
 	 * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
 	 * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
 	 */
@@ -227,7 +227,7 @@ class Surface {
 
 	/**
 	 * Adds a dot coordinate to Surface.dots property array.
-	 * @param {number[]} dots A bunch of arrays with different dots' coordinates.
+	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates.
 	 */
 	dot(...dots) {
 		if (this.inLimits(dots)) {
@@ -246,7 +246,7 @@ class Surface {
 	/**
 	 * Adds two dots' coordinates to Surface.lines(technically creates a straight line, that comes through these two dots).
 	 * !!! NOTE: If passed dots' coordinates are not in Surface.dots array, then line will not be added to the Surface.lines.
-	 * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
+	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
 	 */
 	line(...dots) {
 		if (this.inLimits(dots)) {
@@ -276,7 +276,7 @@ class Surface {
 
 	/**
 	 * Adds one segment(two dots' coordinates - segment's beginning and end) to the Surface.segments array property.
-	 * @param {number[]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
+	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
 	 */
 	segment(...dots) {
 		if (this.inLimits(dots)) {
@@ -309,6 +309,22 @@ class Expression {
 		this.operators = operators
 	}
 
+	/**
+	 * Just a wrapper for fullExp() function. Watch documentation for it.
+	 */
+	execute() {
+		return fullExp(this)
+	}
+
+	/**
+	 * Wrapper for repeatExp() function. Watch documentation for it.
+	 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
+	 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
+	 */
+	repeat(times = 1, operator = "+") {
+		return repeatExp(this, times, operator)
+	}
+
 	get nums() {
 		return this._nums
 	}
@@ -331,7 +347,7 @@ class Expression {
 		if (this.#setCount[1] === 0) {
 			this._operators = operators
 		} else {
-			throw new Error("You can't set operators propery for the second time!")
+			throw new Error("You can't set operators property for the second time!")
 		}
 
 		this.#setCount[1]++
@@ -339,7 +355,17 @@ class Expression {
 }
 
 class Tests {
-	static #tooLong(arr, size) {
+	constructor() {
+		throw new TypeError("Tests is not a constructor")
+	}
+
+	/**
+	 * Takes an array and a number and checks if the length of the given array equals the given number. If not, throws new Error. Otherwise returns void.
+	 * @param {Array} arr An array, size of which is to be checked for being equal to size parameter.
+	 * @param {number} size A number, equality to which is checked.
+	 * @throws Error, if the length of given array is not equal to the size parameter.
+	 */
+	static checkArrSize(arr, size) {
 		if (arr.length != size) {
 			throw new Error(
 				`Expected ${size} elements inside of the passed array, got ${arr.length}.`
@@ -349,10 +375,10 @@ class Tests {
 
 	/**
 	 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
-	 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
+	 * @param {number[][]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
 	 */
 	static t_Students_test(rows) {
-		Tests.#tooLong(rows, 2)
+		Tests.checkArrSize(rows, 2)
 
 		const averages = Object.freeze([average(rows[0]), average(rows[1])])
 		const errors = Object.freeze([
@@ -371,10 +397,10 @@ class Tests {
 
 	/**
 	 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
-	 * @param {number[]} rows A two-dimensional array, containing two other number arrays, the equality of dispersions of which shall be found.
+	 * @param {number[][]} rows A two-dimensional array, containing two other number arrays, the equality of dispersions of which shall be found.
 	 */
 	static F_test(rows) {
-		Tests.#tooLong(rows, 2)
+		Tests.checkArrSize(rows, 2)
 
 		const dispersions = Object.freeze([
 			dispersion(rows[0], true),
@@ -389,14 +415,16 @@ class Tests {
 			"/"
 		)
 
-		return Number(difference.toFixed(5))
+		return Number(difference.toFixed(7))
 	}
 
 	/**
-	 *
+	 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
+	 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
+	 * @param {number[][]} rows A two-dimensional array, containing two other numerical arrays, using which the u-test is to be done.
 	 */
 	static U_test(rows) {
-		Tests.#tooLong(rows, 2)
+		Tests.checkArrSize(rows, 2)
 
 		let firstSum = 0
 		let secondSum = 0
@@ -404,9 +432,10 @@ class Tests {
 
 		const general = []
 		const ranks = []
-		const united = `${rows[0]},${rows[1]}`.split(",")
 
-		united.forEach((str) => general.push(Number(str)))
+		;`${rows[0]},${rows[1]}`
+			.split(",")
+			.forEach((str) => general.push(Number(str)))
 
 		const final = sort(general)
 
@@ -415,9 +444,10 @@ class Tests {
 				ranks.push(index + 1)
 				tempNum = 0
 			} else {
+				//! NOT WORKING! FIX!
 				if (num === final[index + 1]) {
-					ranks.push(index + 1.5)
-					tempNum = index + 1.5
+					ranks.push(index + 1.5) //! Reason is in this thing!
+					tempNum = index + 1.5 //! And in this one also. Instead of putting 1.5 here I need to somehow rank the repeating numbers the correct way (but how ???).
 				} else {
 					ranks.push(tempNum)
 				}
@@ -499,12 +529,12 @@ function sameOperator(numbers = [], operator = "+") {
 /**
  * Executes mathematical expression with different operators and numbers.
  *
- * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length,
- * ! but in this case the last element of the operators[] array will be ignored.
+ * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length
+ * ! (but in this case the last element of the operators[] array will be ignored).
  *
  * @param {object} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
-function fullExp(expression = { nums: [2, 10, 2], operators: ["**", "*"] }) {
+function fullExp(expression = { nums: [], operators: [] }) {
 	let result = 0
 	let tempRes = 0
 
@@ -552,8 +582,8 @@ function repeatExp(
 	countOfRepeats = 1,
 	repeatOperator = "+"
 ) {
-	let result
-	let tempRes
+	let result = 0
+	let tempRes = 0
 
 	if (expression.nums === undefined || expression.operators === undefined) {
 		throw Error(
@@ -617,34 +647,14 @@ function max(nums = [1, 2, 3, 4, 5]) {
 }
 
 /**
- * Takes an array of numbers, which length can be odd or even and returns the middle number in it.
- * @param {number[]} nums An array of numbers passed to the function.
- * @param {boolean} fromLargeToSmall A boolean, that points how to sort numeric array in case it is unstructured.
+ * Takes an array of numbers, which length can be odd or even and returns the median of it.
+ * @param {number[]} nums An array of numbers, passed to the function.
  */
-function median(nums = [1, 2, 3, 4, 5], fromLargeToSmall = true) {
-	let isStructured = true
-	let structured
-
-	for (let i = 0, biggerCount = 0, lessCount = 0; i < nums.length - 1; i++) {
-		if (nums[i + 1] >= nums[i]) {
-			biggerCount++
-		} else {
-			lessCount++
-		}
-
-		isStructured = !(lessCount === biggerCount && biggerCount > 0)
-	}
-
-	if (nums.length % 2 === 1 && isStructured) {
-		return nums[Math.round(nums.length / 2) - 1]
-	} else {
-		structured = isStructured ? nums : sort(nums, fromLargeToSmall)
-		return nums.length % 2 === 0
-			? (structured[structured.length / 2 - 1] +
-					structured[structured.length / 2]) /
-					2
-			: structured[Math.round(structured.length / 2) - 1]
-	}
+function median(nums = [1, 2, 3, 4, 5]) {
+	const sorted = Object.freeze(sort(nums))
+	return nums.length % 2 === 1
+		? sorted[Math.round(nums.length / 2) - 1]
+		: average([sorted[nums.length / 2 - 1], sorted[nums.length / 2]])
 }
 
 /**
@@ -662,11 +672,10 @@ function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
 				countOfRepeats++
 			}
 
-			if (i < nums.length) {
-				sameNum = nums[i - 1] === nums[i] && nums[i] === nums[i + 1]
-			} else {
-				sameNum = nums[i - 1] === nums[i]
-			}
+			sameNum =
+				i < nums.length
+					? (sameNum = nums[i - 1] === nums[i] && nums[i] === nums[i + 1])
+					: (sameNum = nums[i - 1] === nums[i])
 		}
 
 		if (!sameNum || i === nums.length - 1) {
@@ -675,6 +684,7 @@ function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
 	}
 
 	const maxNum = max(repeats)
+
 	return maxNum === 1 ? "None" : nums[repeats.indexOf(maxNum)]
 }
 
@@ -749,11 +759,12 @@ function generate(start, end, step = 1) {
  * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
  * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
  * @param {number | number[] | string} searchVal Searched value.
- * @returns {[boolean & number]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not) and a number(frequency).
+ * @returns {[boolean, number] | [boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
  */
 function find(searchArr, searchVal) {
 	let result = false
 	let foundTimes = 0
+	const foundIndexes = []
 
 	if (searchVal instanceof Array) {
 		searchVal.forEach((value) =>
@@ -768,16 +779,22 @@ function find(searchArr, searchVal) {
 			const str = searchArr.slice(0) // copying a string using String.prototype.slice()
 
 			for (let i = 0; i < str.length; i++) {
-				str[i] === searchVal ? ((result = true), foundTimes++) : null
+				str[i] === searchVal
+					? ((result = true), foundTimes++, foundIndexes.push(i))
+					: null
 			}
 		} else {
 			searchArr.forEach((value) =>
-				value === searchVal ? ((result = true), foundTimes++) : null
+				value === searchVal
+					? ((result = true), foundTimes++, foundIndexes.push(i))
+					: null
 			)
 		}
 	}
 
-	return [result, foundTimes]
+	return searchVal instanceof Array
+		? [result, foundTimes]
+		: [result, foundTimes, foundIndexes]
 }
 
 /**
@@ -980,7 +997,7 @@ function dispersion(
 
 	newRow.length = row.length
 
-	return average(deviations(newRow, isSquare), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of deviations()).
+	return average(deviations(newRow, isSquare), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of average()).
 }
 
 /**
@@ -994,7 +1011,7 @@ function standardDeviation(
 	isPopulation = true,
 	indexes = [0, 1, 2]
 ) {
-	return Number(Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(5))
+	return Number(Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(7))
 }
 
 /**
@@ -1022,10 +1039,10 @@ function standardError(
 
 	return isDispersion
 		? Number(
-				exp(dispersion(row, false), Math.sqrt(newArr.length), "/").toFixed(5)
+				exp(dispersion(row, false), Math.sqrt(newArr.length), "/").toFixed(7)
 		  )
 		: Number(
-				exp(standardDeviation(row), Math.sqrt(newArr.length), "/").toFixed(5)
+				exp(standardDeviation(row), Math.sqrt(newArr.length), "/").toFixed(7)
 		  )
 }
 

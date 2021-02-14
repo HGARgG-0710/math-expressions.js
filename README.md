@@ -5,10 +5,12 @@ For now, the list of functions and classes provided is quite thin, but in the fu
 
 ## Installation
 
-Math-expressions.js can be installed using node.js.
+Math-expressions.js can be installed using npm.
 Install math-expressions.js using npm:
+
     npm install math-expressions.js
 or
+
     npm i math-expressions.js
 
 ## Functions
@@ -137,6 +139,7 @@ Takes an array of numbers, two booleans, another array of numbers and returns st
 1. [Statistics](#1statistics)
 2. [Surface](#2surface)
 3. [Expression](#3expression)
+4. [Tests](#4tests)
 
 ### 1.Statistics
 
@@ -193,9 +196,9 @@ From the beginning this is an empty surface, that has width(x axis min and max n
 #### Class Methods:
 
     Surface.prototype.inLimits(...dots: number[][][]): boolean
-    Surface.prototype.dot(...dots: number[]): void
-    Surface.prototype.line(...dots: number[]): void
-    Surface.prototype.segment(...dots: number[]): void
+    Surface.prototype.dot(...dots: number[][]): void
+    Surface.prototype.line(...dots: number[][]): void
+    Surface.prototype.segment(...dots: number[][]): void
 
 ### 3.Expression
 
@@ -206,16 +209,44 @@ Constructor of this class takes two arrays, one of which contains numbers of exp
     Expression.nums: number[] | string[];
     Expression.operators: string[];
 
-This class has no methods, but can be very comfortly used with functions, that work with math expressions.
-They are exp(), sameOperator(), fullExp() and repeatExp().
+#### Class Methods:
+
+    Expression.execute(): number;
+    Expression.repeat(times: any, operator: any): number;
+
+This class can be very comfortly used with functions, that work with math expressions.
+These are exp(), sameOperator(), fullExp() and repeatExp(). Even though, I would recommend you using Expression.execute() and Expression.repeat() instead of the last two functions.
 
 #### Notice: 
 
 After defining an Expression object its data(already existing) is immutable by default. You can add new properties, though.
 
-## Note:
+### 4.Tests
+
+This class represents a bunch of statistics test(like f-test, for example).
+It can be called "fully static", 'cause all of its methods are static and so it has no constructor.
+
+##### Temporary note:
+
+If you want to try using this class, than be careful with the Tests.U_test() method, that is used for Mann-Whitney U-test, because for now it does not work with the arrays, that have repeating numbers in them. In future, I hope, it will be fixed. 
+
+
+#### Class Methods
+
+    Tests.checkArrSize(arr: arr[], size: number): void;
+
+    Tests.t_Students_test(rows: number[][]): number;
+    Tests.F_test(rows: number[][]): number;
+    Tests.U_test(rows: number[][]): number;
+
+## Notes:
+
+### 1. 
 
 The full documentation for all of these functions and classes may be seen by you in the math-expression.js file.
 Also, you can find examples of how to use them in examples.js file.
 
 For now the library is only at the starting point of being created, so I will be REALLY grateful if you give some help or suggestions about how to make the project even better.
+
+### 2.
+The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x.
