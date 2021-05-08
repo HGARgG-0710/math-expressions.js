@@ -148,13 +148,13 @@ class Statistics {
 		return this._deviations
 	}
 
-	set populationVariance(disp) {
+	set populationVarience(disp) {
 		this.#set(() => {
-			this._populationVariance = disp
+			this._populationVarience = disp
 		})
 	}
 
-	get populationVariance() {
+	get populationVarience() {
 		return this._populationVariance
 	}
 
@@ -204,7 +204,7 @@ class Surface {
 
 	/**
 	 * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
-	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(three-dimensional array) and has a bit unpredictable results.
+	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(three-dimensional array) and can have a bit unpredictable results.
 	 * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
 	 * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
 	 */
@@ -253,18 +253,21 @@ class Surface {
 			if (
 				dots.length === 2 &&
 				find(this.lines, dots)[1] <= 1 &&
-				find(this.dots, dots)[0]
+				find(this.dots, dots[0])[0] &&
+				find(this.dots, dots[1])[0]
 			) {
 				this.lines.push(dots)
 				this.segments.push(dots)
 			} else {
+				console.log(find(this.dots, dots)[0])
+				console.log(find(this.lines, dots)[1] <= 1)
 				throw Error(
 					`You have used use Surface.prototype.line method for adding 
 				one(or zero) dot(dots) or line you're trying to add already exists 
 				or there are no needed dots declared in Surface.dots. 
 				If you've wanted to add only one dot, 
 				better use Surface.prorotype.dot() method instead of this one, 
-				otherwise add another dot's coordinates.`
+				otherwise you'll have to add another dot's coordinates.`
 				)
 			}
 		} else {
@@ -784,7 +787,7 @@ function find(searchArr, searchVal) {
 					: null
 			}
 		} else {
-			searchArr.forEach((value) =>
+			searchArr.forEach((value, i) =>
 				value === searchVal
 					? ((result = true), foundTimes++, foundIndexes.push(i))
 					: null
@@ -1046,6 +1049,20 @@ function standardError(
 		  )
 }
 
+/**
+ * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
+ * @param {number[][]} numRows A two-dimesional array, containing number arrays for which the degree of freedom is to be found.
+ */
+function degreeOfFreedom(...numRows) {
+	let lenSum = 0
+
+	for (let i = 0; i < numRows.length; i++) {
+		lenSum += numRows[i].length
+	}
+
+	return lenSum - numRows.length
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1073,4 +1090,5 @@ export {
 	dispersion,
 	standardDeviation,
 	standardError,
+	degreeOfFreedom,
 }

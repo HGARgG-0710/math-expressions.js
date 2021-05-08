@@ -134,6 +134,10 @@ Takes an array of numbers, boolean, another array of numbers and returns standar
 
 Takes an array of numbers, two booleans, another array of numbers and returns standard error of the first numeric array. Second argument represents, should dispersion(found using absolute values of deviations) be used as a number, divided by the length of the sample(or the whole array, if it is population) (By default false, standard deviation). Third argument represents should the return value be the standard error of population or sample (By default true, standard error of population). Fourth argument represents an array of indexes, using which sample, standard error of which shall be found, will be constructed. (Works only if the third argument equals false).
 
+### 23.degreeOfFreedom()
+
+Takes a two-dimensional array of numbers and returns the degree of freedom for it. 
+
 ## Classes
 
 1. [Statistics](#1statistics)
@@ -249,4 +253,4 @@ Also, you can find examples of how to use them in examples.js file.
 For now the library is only at the starting point of being created, so I will be REALLY grateful if you give some help or suggestions about how to make the project even better.
 
 ### 2.
-The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x.
+The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher.

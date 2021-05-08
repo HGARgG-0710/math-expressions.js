@@ -1,24 +1,24 @@
-import * as expjs from "./math-expressions"
-import { Statistics } from "./math-expressions"
-import { Surface } from "./math-expressions"
-import { Expression } from "./math-expressions"
+import * as expjs from "./math-expressions.js"
+import { Statistics } from "./math-expressions.js"
+import { Surface } from "./math-expressions.js"
+import { Expression } from "./math-expressions.js"
 
 // exp() function examples
-console.log(expjs.exp("2", "3")) // 5
+console.log(expjs.exp(2, 3)) // 5
 console.log(expjs.exp(5, 3)) // 8
 console.log(expjs.exp(2, 7, "**")) // 128
 console.log(expjs.exp(10, 10, "/")) // 1
 console.log(expjs.exp(3, 2, "%")) // 1
 
 // sameOperator() function examples
-console.log(expjs.sameOperator(["4", "5", "6"])) // 15
+console.log(expjs.sameOperator([4, 5, 6])) // 15
 console.log(expjs.sameOperator([10, 2, 5, 9], "*")) // 900
 console.log(expjs.sameOperator([27, 3, 9], "/")) // 1
 
 // fullExp() fucntion examples
-console.log(expjs.fullExp(["2", "3", "5"])) // 40
-console.log(expjs.fullExp([5, 90, 30], ["+", "-"])) // 65
-console.log(expjs.fullExp([40, 2, 10, 6], ["/", "*", "%"])) // 2
+console.log(expjs.fullExp({ nums: [2, 3, 5], operators: ["+", "+"] })) // 40
+console.log(expjs.fullExp({ nums: [5, 90, 30], operators: ["+", "-"] })) // 65
+console.log(expjs.fullExp({ nums: [40, 2, 10, 6], operators: ["/", "*", "%"] })) // 2
 
 // repeatExp() function examples
 console.log(expjs.repeatExp()) // 4
@@ -68,16 +68,16 @@ const generated = expjs.generate(0, 100, 5)
 console.log(generated) // [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 
 // find() functon examples
-expjs.find([1, 2, 3, 4, 5], 6) // [false, 0]
-expjs.find([1, 5, 2, 5, 3, 5, 4, 5], 5) // [true, 4]
-expjs.find("Hello, World!", "l") // [true, 3]
+console.log(expjs.find([1, 2, 3, 4, 5], 6)) // [false, 0, []]
+console.log(expjs.find([1, 5, 2, 5, 3, 5, 4, 5], 5)) // [true, 4, [1, 3, 5, 7]]
+console.log(expjs.find("Hello, World!", "l")) // [true, 3, [2, 3, 10]]
 
 // Statistics class examples
 const numArr = [10, 50, -10]
 const stats = new Statistics(numArr)
 
 console.log(stats.min) // -10
-console.log(stats.mostPopularNum) // "None"
+console.log(stats.mostPopular) // "None"
 console.log(stats.range) // 60
 console.log(stats) // Logs Statistics object
 
@@ -102,7 +102,7 @@ console.log(expjs.readable(45000000)) // 45 000 000
 // factorOut() function examples
 console.log(expjs.factorOut(1000)) // [2, 2, 2, 5, 5, 5]
 console.log(expjs.factorOut(50000)) // (Takes a minute time to run) [2, 2, 2, 2, 5, 5, 5, 5, 5]
-console.log(expjs.factorOut(50000, true)) //  (Takes 55 seconds to run) [2, 2, 2, 2, 5, 5, 5, 5]
+console.log(expjs.factorOut(50000, true)) //  (Takes around 50 +- 5 seconds to run) [2, 2, 2, 2, 5, 5, 5, 5]
 
 // truncate() function examples
 console.log(expjs.truncate([-100, -200, 1, 2, 3, 4, 5, 100, 200])) // [1, 2, 3, 4, 5]
@@ -118,7 +118,9 @@ console.log(expjs.leastCommonMultiple(1521, 2842, 2842)) // 4322682
 // Expression class examples
 const expression = new Expression([2, 3, 4], ["**", "**"])
 
-console.log(expjs.exp(expression.nums[0], expression.nums[2], expression.operators[1])) // 16
+console.log(
+	expjs.exp(expression.nums[0], expression.nums[2], expression.operators[1])
+) // 16
 console.log(expjs.sameOperator(expression.nums, expression.operators[0])) // 4096
 console.log(expjs.fullExp(expression)) // 4096 - Just shortened the last example.
 console.log(expjs.repeatExp(expression, 4)) // 16384
@@ -138,7 +140,7 @@ console.log(expjs.standardDeviation([10, 30, 80, 1000])) // 416.47329
 console.log(expjs.standardDeviation([-140, 45, 80, 99, 1])) // 85.30182
 
 // standardError() function examples
-console.log(expjs.standardError([1,2,3,4,5], false)) // 0.63245
-console.log(expjs.standardError([1,2,3,4,5], true)) // 0.53665
+console.log(expjs.standardError([1, 2, 3, 4, 5], false)) // 0.63245
+console.log(expjs.standardError([1, 2, 3, 4, 5], true)) // 0.53665
 console.log(expjs.standardError([80, 180, -80, -180])) // 69.64194
 console.log(expjs.standardError([80, 180, -80, -180], true)) // 65
