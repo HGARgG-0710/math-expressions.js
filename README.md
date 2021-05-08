@@ -9,6 +9,7 @@ Math-expressions.js can be installed using npm.
 Install math-expressions.js using npm:
 
     npm install math-expressions.js
+
 or
 
     npm i math-expressions.js
@@ -37,11 +38,12 @@ or
 20. [dispersion()](#20dispersion)
 21. [standardDeviation()](#21standarddeviation)
 22. [standardError()](#22standarderror)
+23. [degreeOfFreedom()](#23degreeoffreedom)
+24. [expectedValue()](#24expectedvalue)
 
 ### 1.exp()
 
-Firstly, it's the exp() function. With it you can execute a mathematical expression upon two numbers.
-By default uses + operator.
+With it you can execute a mathematical expression upon two numbers. Takes two numbers and a string with an operator. By default uses + operator.
 
 ### 2.sameOperator()
 
@@ -104,13 +106,13 @@ This function takes a number and returns a string value of it, that is much bett
 
 ### 16.factorOut()
 
-This function allows you to factor out a number to the prime numbers. It might be VE-E-ERY handy, but not quite productive. That's why it takes not only a number, that shall be factored out, but also a boolean, representing the state of the function call(should or should it not be productive). If the number you try to factor out is bigger, than 10000, then I GREATLY recommend you to pass true as the second argument to the function, because without it function's running too slow. 
+This function allows you to factor numbers. It might be very handy, but not very productive, so I don't recommend you using it with numbers, that are bigger than 50000 if time is what's needed very much in your application. With even bigger numbers it might get stuck for around a minute or so.
 
 ### 17.truncate()
 
 Truncates a passed numeric array(the first parameter) by count of numbers, that is equal function's second parameter(it is a number) multiplied by 2. Array is being truncated from it's "edges"(only stated count of percents of the biggest and the smallest numbers are deleted).
 
-#### Notice: 
+#### Notice:
 
 Before truncating an array truncate() function sorts it from smallest to largest way.
 
@@ -136,7 +138,11 @@ Takes an array of numbers, two booleans, another array of numbers and returns st
 
 ### 23.degreeOfFreedom()
 
-Takes a two-dimensional array of numbers and returns the degree of freedom for it. 
+Takes a two-dimensional array of numbers and returns the degree of freedom for it.
+
+## 24.expectedValue()
+
+Takes two number arrays(first of whicn is for numbers and the second is for their probabilities to appear) and returns an expected value based on this data.
 
 ## Classes
 
@@ -167,7 +173,7 @@ This object has a statistic information about passed number array.
 
     Statistics.sorted: number[];
     Statistics.deviations: number[];
-    
+
     Statistics.populationVarience: number;
     Statistics.populationStandDev: number;
     Statistics.standardError: number;
@@ -221,7 +227,7 @@ Constructor of this class takes two arrays, one of which contains numbers of exp
 This class can be very comfortly used with functions, that work with math expressions.
 These are exp(), sameOperator(), fullExp() and repeatExp(). Even though, I would recommend you using Expression.execute() and Expression.repeat() instead of the last two functions.
 
-#### Notice: 
+#### Notice:
 
 After defining an Expression object its data(already existing) is immutable by default. You can add new properties, though.
 
@@ -232,8 +238,7 @@ It can be called "fully static", 'cause all of its methods are static and so it 
 
 ##### Temporary note:
 
-If you want to try using this class, than be careful with the Tests.U_test() method, that is used for Mann-Whitney U-test, because for now it does not work with the arrays, that have repeating numbers in them. In future, I hope, it will be fixed. 
-
+If you want to try using this class, than be careful with the Tests.U_test() method, that is used for Mann-Whitney U-test, because for now it does not work with the arrays, that have repeating numbers in them. In future, I hope, it will be fixed. (Even though it works perfectly with arrays that have no repeating number in them).
 
 #### Class Methods
 
@@ -242,10 +247,11 @@ If you want to try using this class, than be careful with the Tests.U_test() met
     Tests.t_Students_test(rows: number[][]): number;
     Tests.F_test(rows: number[][]): number;
     Tests.U_test(rows: number[][]): number;
+    Test.Z_score(testedNum: number, numbers: number[]): number;
 
 ## Notes:
 
-### 1. 
+### 1.
 
 The full documentation for all of these functions and classes may be seen by you in the math-expression.js file.
 Also, you can find examples of how to use them in examples.js file.
@@ -253,4 +259,5 @@ Also, you can find examples of how to use them in examples.js file.
 For now the library is only at the starting point of being created, so I will be REALLY grateful if you give some help or suggestions about how to make the project even better.
 
 ### 2.
-The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher.
+
+The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead.

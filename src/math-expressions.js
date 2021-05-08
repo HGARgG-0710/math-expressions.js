@@ -350,7 +350,9 @@ class Expression {
 		if (this.#setCount[1] === 0) {
 			this._operators = operators
 		} else {
-			throw new Error("You can't set operators property for the second time!")
+			throw new Error(
+				"You can't set operators property for the second time!"
+			)
 		}
 
 		this.#setCount[1]++
@@ -473,6 +475,19 @@ class Tests {
 			secondSum
 
 		return min([firstResult, secondResult])
+	}
+
+	/**
+	 * Takes a number and an array of numbers and returns the Z-score for the given number.
+	 * @param {number} testedNum A number for which the Z-score is to be found.
+	 * @param {number[]} numbers An array of numbers, required to calculate the Z-score for the given number.
+	 */
+	static Z_score(testedNum, numbers) {
+		return exp(
+			testedNum - average(numbers),
+			standardDeviation(numbers),
+			"/"
+		)
 	}
 }
 
@@ -677,7 +692,8 @@ function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
 
 			sameNum =
 				i < nums.length
-					? (sameNum = nums[i - 1] === nums[i] && nums[i] === nums[i + 1])
+					? (sameNum =
+							nums[i - 1] === nums[i] && nums[i] === nums[i + 1])
 					: (sameNum = nums[i - 1] === nums[i])
 		}
 
@@ -830,70 +846,36 @@ function readable(num) {
 /**
  * Factors out a passed number to the prime numbers.
  * @param {number} num Number, to be factored out.
- * @param {boolean} isProductively A boolean, representing should or should not function work faster. By default false. Recommended to set true, when working with big numbers(bigger, than 10000).
  * @returns {number[]} Prime factors array.
  */
-function factorOut(num, isProductively = false) {
-	const fromOneToNum = [1]
+function factorOut(num) {
+	const fromOneToNum = generate(1, num + 1, 1)
 	const primes = []
 	const factors = []
 
 	let tempRes = num
-	let timesDivided = 1
+	let timesDivided
 
-	for (let i = 2; i <= num; i++) {
-		fromOneToNum.push(i)
-	}
+	fromOneToNum.forEach((number) => {
+		timesDivided = 1
 
-	if (isProductively) {
-		const len = fromOneToNum.length
-
-		for (let i = 0; i < len; i++) {
-			timesDivided = 1
-
-			for (let j = 0; j < len; j++) {
-				fromOneToNum[i] % fromOneToNum[j] === 0 &&
-				fromOneToNum[i] > 1 &&
-				fromOneToNum[j] > 1
-					? timesDivided++
-					: null
-			}
-
-			timesDivided === 2 ? primes.push(fromOneToNum[i]) : null
-		}
-
-		const primesLen = primes.length
-
-		for (let i = 0; i < primesLen; i++) {
-			for (let j = 0; j < primesLen; j++) {
-				if (tempRes % primes[i] === 0 && tempRes > 1) {
-					tempRes /= primes[i]
-					factors.push(primes[i])
-				}
-			}
-		}
-	} else {
-		fromOneToNum.forEach((number) => {
-			timesDivided = 1
-
-			fromOneToNum.forEach((checkNum) => {
-				number % checkNum === 0 && number > 1 && checkNum > 1
-					? timesDivided++
-					: null
-			})
-
-			timesDivided === 2 ? primes.push(number) : null
+		fromOneToNum.forEach((checkNum) => {
+			number % checkNum === 0 && number > 1 && checkNum > 1
+				? timesDivided++
+				: null
 		})
 
-		primes.forEach((prime) => {
-			for (let i = 0; i < num; i++) {
-				if (tempRes % prime === 0 && tempRes > 1) {
-					tempRes /= prime
-					factors.push(prime)
-				}
+		timesDivided === 2 ? primes.push(number) : null
+	})
+
+	primes.forEach((prime) => {
+		for (let i = 0; i < num; i++) {
+			if (tempRes % prime === 0 && tempRes > 1) {
+				tempRes /= prime
+				factors.push(prime)
 			}
-		})
-	}
+		}
+	})
 
 	return factors
 }
@@ -1014,7 +996,9 @@ function standardDeviation(
 	isPopulation = true,
 	indexes = [0, 1, 2]
 ) {
-	return Number(Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(7))
+	return Number(
+		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(7)
+	)
 }
 
 /**
@@ -1042,10 +1026,18 @@ function standardError(
 
 	return isDispersion
 		? Number(
-				exp(dispersion(row, false), Math.sqrt(newArr.length), "/").toFixed(7)
+				exp(
+					dispersion(row, false),
+					Math.sqrt(newArr.length),
+					"/"
+				).toFixed(7)
 		  )
 		: Number(
-				exp(standardDeviation(row), Math.sqrt(newArr.length), "/").toFixed(7)
+				exp(
+					standardDeviation(row),
+					Math.sqrt(newArr.length),
+					"/"
+				).toFixed(7)
 		  )
 }
 
@@ -1061,6 +1053,27 @@ function degreeOfFreedom(...numRows) {
 	}
 
 	return lenSum - numRows.length
+}
+
+/**
+ * Takes a numbers array and an array of probabilities for each of the given numbers to appear and returns expected value for them.
+ * @param {number[]} numbers A number array, expected value for which is to be found.
+ * @param {number[]} probabilities An array of probabilitiles for certain numbers from numbers array to appear.
+ */
+function expectedValue(numbers, probabilities) {
+	const values = []
+
+	if (numbers.length > probabilities.length) {
+		throw new Error(
+			"The length of probability array is smaller than the length of the numbers array. Cannot compute the expectedValue."
+		)
+	}
+
+	for (let i = 0; i < numbers.length; i++) {
+		values.push(numbers[i] * probabilities[i])
+	}
+
+	return sameOperator(values)
 }
 
 export {
@@ -1091,4 +1104,5 @@ export {
 	standardDeviation,
 	standardError,
 	degreeOfFreedom,
+	expectedValue,
 }
