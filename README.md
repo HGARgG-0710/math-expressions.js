@@ -140,7 +140,7 @@ Takes an array of numbers, two booleans, another array of numbers and returns st
 
 Takes a two-dimensional array of numbers and returns the degree of freedom for it.
 
-## 24.expectedValue()
+### 24.expectedValue()
 
 Takes two number arrays(first of whicn is for numbers and the second is for their probabilities to appear) and returns an expected value based on this data.
 
@@ -233,7 +233,7 @@ After defining an Expression object its data(already existing) is immutable by d
 
 ### 4.Tests
 
-This class represents a bunch of statistics test(like f-test, for example).
+This class represents a bunch of statistics test(like Fisher's f-test, for example).
 It can be called "fully static", 'cause all of its methods are static and so it has no constructor.
 
 ##### Temporary note:
@@ -244,9 +244,9 @@ If you want to try using this class, than be careful with the Tests.U_test() met
 
     Tests.checkArrSize(arr: arr[], size: number): void;
 
-    Tests.t_Students_test(rows: number[][]): number;
-    Tests.F_test(rows: number[][]): number;
-    Tests.U_test(rows: number[][]): number;
+    Tests.t_Students_test(...rows: number[]): number;
+    Tests.F_test(...rows: number[]): number;
+    Tests.U_test(...rows: number[]): number;
     Test.Z_score(testedNum: number, numbers: number[]): number;
 
 ## Notes:

@@ -1,7 +1,5 @@
 import * as expjs from "./math-expressions.js"
-import { Statistics } from "./math-expressions.js"
-import { Surface } from "./math-expressions.js"
-import { Expression } from "./math-expressions.js"
+import { Statistics, Expression, Surface, Tests } from "./math-expressions.js"
 
 // exp() function examples
 console.log(expjs.exp(2, 3)) // 5
@@ -22,8 +20,12 @@ console.log(expjs.fullExp({ nums: [40, 2, 10, 6], operators: ["/", "*", "%"] }))
 
 // repeatExp() function examples
 console.log(expjs.repeatExp()) // 4
-console.log(expjs.repeatExp({ nums: [6, 9, 6, 10], operators: ["*", "+", "/"] }, 3)) // 18
-console.log(expjs.repeatExp({ nums: [4, 80, 2], operators: ["*", "/"] }, 3, "/")) // 0.00625
+console.log(
+	expjs.repeatExp({ nums: [6, 9, 6, 10], operators: ["*", "+", "/"] }, 3)
+) // 18
+console.log(
+	expjs.repeatExp({ nums: [4, 80, 2], operators: ["*", "/"] }, 3, "/")
+) // 0.00625
 
 // average() function examples
 console.log(expjs.average([5, 5, 5, 4])) // 4.75
@@ -144,3 +146,21 @@ console.log(expjs.standardError([1, 2, 3, 4, 5], false)) // 0.63245
 console.log(expjs.standardError([1, 2, 3, 4, 5], true)) // 0.53665
 console.log(expjs.standardError([80, 180, -80, -180])) // 69.64194
 console.log(expjs.standardError([80, 180, -80, -180], true)) // 65
+
+// Tests class example
+// t_Students_test() method
+console.log(Tests.t_Students_test([1, 2, 3, 4, 5], [6, 7, 8, 9, 10])) // 5.5901702
+console.log(
+	Tests.t_Students_test([60, 70, 10, 20, 30, 40, 80], [11, 56, 40, 80])
+) // 0.1583112
+
+// F_test() method
+console.log(Tests.F_test([11, 22, 34, 50], [32, 42, 88])) // 2.8359662
+console.log(Tests.F_test([30, 40, 50], [300, 80, 9])) // 230.2033332
+
+// Z_score() method
+console.log(Tests.Z_score(30, [10, 20, 30, 40, 50])) // 0
+console.log(Tests.Z_score(40, [5, 5, 8, 9, 22])) // 4.789429177909865
+
+// U_test() method
+console.log(Tests.U_test([200, 40, 70], [11, 450, 30])) // 3

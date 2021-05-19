@@ -1,3 +1,5 @@
+export const fixedSize = 7 // * This variable characterizes how many fixed numbers are outputted.
+
 // Classes
 class Statistics {
 	#setCount = 0
@@ -366,7 +368,7 @@ class Tests {
 
 	/**
 	 * Takes an array and a number and checks if the length of the given array equals the given number. If not, throws new Error. Otherwise returns void.
-	 * @param {Array} arr An array, size of which is to be checked for being equal to size parameter.
+	 * @param {any[]} arr An array, size of which is to be checked for being equal to size parameter.
 	 * @param {number} size A number, equality to which is checked.
 	 * @throws Error, if the length of given array is not equal to the size parameter.
 	 */
@@ -380,9 +382,9 @@ class Tests {
 
 	/**
 	 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
-	 * @param {number[][]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
+	 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
 	 */
-	static t_Students_test(rows) {
+	static t_Students_test(...rows) {
 		Tests.checkArrSize(rows, 2)
 
 		const averages = Object.freeze([average(rows[0]), average(rows[1])])
@@ -396,15 +398,15 @@ class Tests {
 				Math.abs(exp(averages[0], averages[1], "-")),
 				Math.sqrt(exp(errors[0], errors[1])),
 				"/"
-			).toFixed(7)
+			).toFixed(fixedSize)
 		)
 	}
 
 	/**
 	 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
-	 * @param {number[][]} rows A two-dimensional array, containing two other number arrays, the equality of dispersions of which shall be found.
+	 * @param {number[]} rows Two one-dimensional arrays, the equality of dispersions of which shall be found.
 	 */
-	static F_test(rows) {
+	static F_test(...rows) {
 		Tests.checkArrSize(rows, 2)
 
 		const dispersions = Object.freeze([
@@ -420,15 +422,15 @@ class Tests {
 			"/"
 		)
 
-		return Number(difference.toFixed(7))
+		return Number(difference.toFixed(fixedSize))
 	}
 
 	/**
 	 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
 	 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
-	 * @param {number[][]} rows A two-dimensional array, containing two other numerical arrays, using which the u-test is to be done.
+	 * @param {number[]} rows Two one-dimensional arrays, using which the u-test is to be done.
 	 */
-	static U_test(rows) {
+	static U_test(...rows) {
 		Tests.checkArrSize(rows, 2)
 
 		let firstSum = 0
@@ -643,7 +645,7 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
-	return Number((sameOperator(newArr) / (len + modif)).toFixed(5))
+	return Number((sameOperator(newArr) / (len + modif)).toFixed(fixedSize))
 }
 
 /**
@@ -948,8 +950,12 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 
 	row.forEach((num) => {
 		isSquare
-			? deviations.push(Number(Math.pow(num - rowAverage, 2).toFixed(5)))
-			: deviations.push(Number(Math.abs(num - rowAverage).toFixed(5)))
+			? deviations.push(
+					Number(Math.pow(num - rowAverage, 2).toFixed(fixedSize))
+			  )
+			: deviations.push(
+					Number(Math.abs(num - rowAverage).toFixed(fixedSize))
+			  )
 	})
 
 	deviations.length = row.length
@@ -997,7 +1003,9 @@ function standardDeviation(
 	indexes = [0, 1, 2]
 ) {
 	return Number(
-		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(7)
+		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(
+			fixedSize
+		)
 	)
 }
 
@@ -1030,14 +1038,14 @@ function standardError(
 					dispersion(row, false),
 					Math.sqrt(newArr.length),
 					"/"
-				).toFixed(7)
+				).toFixed(fixedSize)
 		  )
 		: Number(
 				exp(
 					standardDeviation(row),
 					Math.sqrt(newArr.length),
 					"/"
-				).toFixed(7)
+				).toFixed(fixedSize)
 		  )
 }
 
