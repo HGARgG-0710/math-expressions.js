@@ -40,6 +40,8 @@ or
 22. [standardError()](#22standarderror)
 23. [degreeOfFreedom()](#23degreeoffreedom)
 24. [expectedValue()](#24expectedvalue)
+25. [floor()](#25floor)
+26. [randomArray()](#26randomarray)
 
 ### 1.exp()
 
@@ -143,6 +145,14 @@ Takes a two-dimensional array of numbers and returns the degree of freedom for i
 ### 24.expectedValue()
 
 Takes two number arrays(first of whicn is for numbers and the second is for their probabilities to appear) and returns an expected value based on this data.
+
+### 25.floor()
+
+Takes two numbers: the "target" number and the level of precision to be used on it. Second argument represents count of digits to be existent after the dot.
+
+### 26.randomArray()
+
+Takes the number array, one number, a boolean and returns a random array, based on this data. The first argument is the max length that the new randomly-generated array can have, second one is the max value that can be detected in the array and the third one is the boolean, representing whether the numbers in the array should all be integers or not (By default false).
 
 ## Classes
 
@@ -260,4 +270,4 @@ For now the library is only at the starting point of being created, so I will be
 
 ### 2.
 
-The package uses ES6 modules (import/export) and not commonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead.
+The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead.

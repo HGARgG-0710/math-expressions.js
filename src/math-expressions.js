@@ -1,4 +1,6 @@
-export const fixedSize = 7 // * This variable characterizes how many fixed numbers are outputted.
+// * This variable characterizes how many fixed numbers are outputted.
+// * You can change it freely, if you want a more "precise" output of some of the functions.
+export let fixedSize = 7
 
 // Classes
 class Statistics {
@@ -264,11 +266,11 @@ class Surface {
 				console.log(find(this.dots, dots)[0])
 				console.log(find(this.lines, dots)[1] <= 1)
 				throw Error(
-					`You have used use Surface.prototype.line method for adding 
-				one(or zero) dot(dots) or line you're trying to add already exists 
-				or there are no needed dots declared in Surface.dots. 
-				If you've wanted to add only one dot, 
-				better use Surface.prorotype.dot() method instead of this one, 
+					`You have used use Surface.prototype.line method for adding
+				one(or zero) dot(dots) or line you're trying to add already exists
+				or there are no needed dots declared in Surface.dots.
+				If you've wanted to add only one dot,
+				better use Surface.prorotype.dot() method instead of this one,
 				otherwise you'll have to add another dot's coordinates.`
 				)
 			}
@@ -393,12 +395,13 @@ class Tests {
 			Math.pow(standardError(rows[1]), 2),
 		])
 
-		return Number(
+		return floor(
 			exp(
 				Math.abs(exp(averages[0], averages[1], "-")),
 				Math.sqrt(exp(errors[0], errors[1])),
 				"/"
-			).toFixed(fixedSize)
+			),
+			fixedSize
 		)
 	}
 
@@ -422,7 +425,7 @@ class Tests {
 			"/"
 		)
 
-		return Number(difference.toFixed(fixedSize))
+		return floor(difference, fixedSize)
 	}
 
 	/**
@@ -645,7 +648,7 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
-	return Number((sameOperator(newArr) / (len + modif)).toFixed(fixedSize))
+	return floor(sameOperator(newArr) / (len + modif), fixedSize)
 }
 
 /**
@@ -768,11 +771,7 @@ function copy(nums = [1, 2, 3, 4, 5]) {
 function generate(start, end, step = 1) {
 	const generated = []
 	const modif = Number.isInteger(step) ? 1 : 0.1
-
-	for (let i = start; i < end + modif; i += step) {
-		generated.push(Number(i.toFixed(1)))
-	}
-
+	for (let i = start; i < end + modif; i += step) generated.push(floor(i, 1))
 	return generated
 }
 
@@ -847,6 +846,7 @@ function readable(num) {
 
 /**
  * Factors out a passed number to the prime numbers.
+ * ! WARNING: Function will work VERY slowly with large numbers. !
  * @param {number} num Number, to be factored out.
  * @returns {number[]} Prime factors array.
  */
@@ -950,12 +950,8 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 
 	row.forEach((num) => {
 		isSquare
-			? deviations.push(
-					Number(Math.pow(num - rowAverage, 2).toFixed(fixedSize))
-			  )
-			: deviations.push(
-					Number(Math.abs(num - rowAverage).toFixed(fixedSize))
-			  )
+			? deviations.push(floor(Math.pow(num - rowAverage, 2), fixedSize))
+			: deviations.push(floor(Math.abs(num - rowAverage), fixedSize))
 	})
 
 	deviations.length = row.length
@@ -1002,10 +998,9 @@ function standardDeviation(
 	isPopulation = true,
 	indexes = [0, 1, 2]
 ) {
-	return Number(
-		Math.sqrt(dispersion(row, true, isPopulation, indexes)).toFixed(
-			fixedSize
-		)
+	return floor(
+		Math.sqrt(dispersion(row, true, isPopulation, indexes)),
+		fixedSize
 	)
 }
 
@@ -1033,33 +1028,23 @@ function standardError(
 		  })
 
 	return isDispersion
-		? Number(
-				exp(
-					dispersion(row, false),
-					Math.sqrt(newArr.length),
-					"/"
-				).toFixed(fixedSize)
+		? floor(
+				exp(dispersion(row, false), Math.sqrt(newArr.length), "/"),
+				fixedSize
 		  )
-		: Number(
-				exp(
-					standardDeviation(row),
-					Math.sqrt(newArr.length),
-					"/"
-				).toFixed(fixedSize)
+		: floor(
+				exp(standardDeviation(row), Math.sqrt(newArr.length), "/"),
+				fixedSize
 		  )
 }
 
 /**
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
- * @param {number[][]} numRows A two-dimesional array, containing number arrays for which the degree of freedom is to be found.
+ * @param {number[][]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
  */
 function degreeOfFreedom(...numRows) {
 	let lenSum = 0
-
-	for (let i = 0; i < numRows.length; i++) {
-		lenSum += numRows[i].length
-	}
-
+	for (let i = 0; i < numRows.length; i++) lenSum += numRows[i].length
 	return lenSum - numRows.length
 }
 
@@ -1077,11 +1062,40 @@ function expectedValue(numbers, probabilities) {
 		)
 	}
 
-	for (let i = 0; i < numbers.length; i++) {
+	for (let i = 0; i < numbers.length; i++) 
 		values.push(numbers[i] * probabilities[i])
-	}
 
 	return sameOperator(values)
+}
+
+/**
+ * Takes the max length of the random array, it's max value, the flag, characterizing whether numbers in it should be integers.
+ * @param {number} maxLength The largest count of numbers, that can appear in the random array. (It can be different from the given value).
+ * @param {number} maxValue The max value, that can be found in the randomly generated array.
+ * @param {boolean} integers The boolean flag, that represents whether all numbers in the array should be integers or not. By default false.
+ */
+function randomArray(maxLength, maxValue, integers = false) {
+	const length = Math.floor(Math.random() * maxLength)
+	const storage = []
+
+	for (let i = 0; i < length; i++)
+		storage.push(
+			integers
+				? floor(Math.random * maxValue, 0)
+				: floor(Math.random * maxValue, fixedSize)
+		)
+
+	return storage
+}
+
+/**
+ * Floors the given number to the needed level of precision.
+ * @param {number} number Number to be floored.
+ * @param {number} afterDot How many positions after dot should there be.
+ * @returns {number}
+ */
+function floor(number, afterDot) {
+	return Number(number.toFixed(afterDot))
 }
 
 export {
@@ -1113,4 +1127,6 @@ export {
 	standardError,
 	degreeOfFreedom,
 	expectedValue,
+	randomArray,
+	floor,
 }

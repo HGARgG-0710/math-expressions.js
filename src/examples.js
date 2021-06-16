@@ -164,3 +164,15 @@ console.log(Tests.Z_score(40, [5, 5, 8, 9, 22])) // 4.789429177909865
 
 // U_test() method
 console.log(Tests.U_test([200, 40, 70], [11, 450, 30])) // 3
+
+// degreeOfFreedom() and randomArray() functions example
+console.log(expjs.degreeOfFreedom(expjs.randomArray(15, 21, true))) // 13
+
+// floor() function example
+
+// * Tired of this: 0.1 + 0.2 = 0.30000000000000004 ?
+// * Then we've got a solution for you! Do:
+console.log(expjs.floor(0.1 + 0.2, 1)) // 0.3
+
+// expectedValue() function 
+console.log(expjs.floor(expjs.expectedValue([1, 2, 3], [0.44, 0.21, 0.35]), 0)) // 2
