@@ -103,8 +103,7 @@ console.log(expjs.readable(45000000)) // 45 000 000
 
 // factorOut() function examples
 console.log(expjs.factorOut(1000)) // [2, 2, 2, 5, 5, 5]
-console.log(expjs.factorOut(50000)) // (Takes a minute time to run) [2, 2, 2, 2, 5, 5, 5, 5, 5]
-console.log(expjs.factorOut(50000, true)) //  (Takes around 50 +- 5 seconds to run) [2, 2, 2, 2, 5, 5, 5, 5]
+console.log(expjs.factorOut(50000)) // [2, 2, 2, 2, 5, 5, 5, 5, 5]
 
 // truncate() function examples
 console.log(expjs.truncate([-100, -200, 1, 2, 3, 4, 5, 100, 200])) // [1, 2, 3, 4, 5]
@@ -169,10 +168,17 @@ console.log(Tests.U_test([200, 40, 70], [11, 450, 30])) // 3
 console.log(expjs.degreeOfFreedom(expjs.randomArray(15, 21, true))) // 13
 
 // floor() function example
-
-// * Tired of this: 0.1 + 0.2 = 0.30000000000000004 ?
-// * Then we've got a solution for you! Do:
+console.log(0.1 + 0.2) // 0.30000000000000004 (whaaa?!)
 console.log(expjs.floor(0.1 + 0.2, 1)) // 0.3
 
-// expectedValue() function 
+// expectedValue() function example
 console.log(expjs.floor(expjs.expectedValue([1, 2, 3], [0.44, 0.21, 0.35]), 0)) // 2
+
+// isPerfect() function example
+console.log(expjs.isPerfect(6)) // true
+console.log(expjs.isPerfect(18)) // false
+console.log(expjs.isPerfect(28)) // true
+
+// allFactors() function example
+console.log(expjs.allFactors(28)) // [1, 2, 4, 7, 14]
+console.log(expjs.allFactors(90)) // [1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45]

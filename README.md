@@ -43,6 +43,7 @@ or
 25. [floor()](#25floor)
 26. [randomArray()](#26randomarray)
 27. [isPerfect()](#27isperfect)
+28. [allFactors()](#28allfactors)
 
 ### 1.exp()
 
