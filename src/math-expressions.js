@@ -845,41 +845,25 @@ function readable(num) {
 }
 
 /**
- * Factors out a passed number to the prime numbers.
- * ! WARNING: Function will work VERY slowly with large numbers. !
+ * Factors out a passed number to the prime numbers. Works quite quickly.
  * @param {number} num Number, to be factored out.
  * @returns {number[]} Prime factors array.
  */
-function factorOut(num) {
-	const fromOneToNum = generate(1, num + 1, 1)
-	const primes = []
+function factorOut(number) {
 	const factors = []
 
-	let tempRes = num
-	let timesDivided
-
-	fromOneToNum.forEach((number) => {
-		timesDivided = 1
-
-		fromOneToNum.forEach((checkNum) => {
-			number % checkNum === 0 && number > 1 && checkNum > 1
-				? timesDivided++
-				: null
-		})
-
-		timesDivided === 2 ? primes.push(number) : null
-	})
-
-	primes.forEach((prime) => {
-		for (let i = 0; i < num; i++) {
-			if (tempRes % prime === 0 && tempRes > 1) {
-				tempRes /= prime
-				factors.push(prime)
-			}
+	for (
+		let currDevisor = 2;
+		number !== 1;
+		currDevisor += currDevisor === 2 ? 1 : 2
+	) {
+		while (number % currDevisor === 0) {
+			factors.push(currDevisor)
+			number /= currDevisor
 		}
-	})
+	}
 
-	return factors
+	return Object.freeze(factors)
 }
 
 /**
@@ -1062,7 +1046,7 @@ function expectedValue(numbers, probabilities) {
 		)
 	}
 
-	for (let i = 0; i < numbers.length; i++) 
+	for (let i = 0; i < numbers.length; i++)
 		values.push(numbers[i] * probabilities[i])
 
 	return sameOperator(values)
@@ -1098,6 +1082,27 @@ function floor(number, afterDot) {
 	return Number(number.toFixed(afterDot))
 }
 
+/**
+ * Checks whether the number passed is perfect or not.
+ * @param {number} number Number, perfectness of which is to be checked.
+ */
+function isPerfect(number) {
+	return sameOperator(allFactors(number)) === number
+}
+
+/**
+ * Takes one integer and returns all of its factors (not only primes, but others also).
+ * @param {number} number An integer, factors for which are to be found.
+ */
+function allFactors(number) {
+	const factors = [1]
+
+	for (let currFactor = 2; currFactor !== number; currFactor++)
+		if (number % currFactor === 0) factors.push(currFactor)
+
+	return Object.freeze(factors)
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1129,4 +1134,6 @@ export {
 	expectedValue,
 	randomArray,
 	floor,
+	isPerfect,
+	allFactors,
 }

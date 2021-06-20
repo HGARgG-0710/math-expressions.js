@@ -42,6 +42,7 @@ or
 24. [expectedValue()](#24expectedvalue)
 25. [floor()](#25floor)
 26. [randomArray()](#26randomarray)
+27. [isPerfect()](#27isperfect)
 
 ### 1.exp()
 
@@ -108,7 +109,7 @@ This function takes a number and returns a string value of it, that is much bett
 
 ### 16.factorOut()
 
-This function allows you to factor numbers. It might be very handy, but not very productive, so I don't recommend you using it with numbers, that are bigger than 50000 if time is what's needed very much in your application. With even bigger numbers it might get stuck for around a minute or so.
+This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)!
 
 ### 17.truncate()
 
@@ -153,6 +154,14 @@ Takes two numbers: the "target" number and the level of precision to be used on 
 ### 26.randomArray()
 
 Takes the number array, one number, a boolean and returns a random array, based on this data. The first argument is the max length that the new randomly-generated array can have, second one is the max value that can be detected in the array and the third one is the boolean, representing whether the numbers in the array should all be integers or not (By default false).
+
+### 27.isPerfect()
+
+Takes a number and checks whether it is perfect or not. Returns boolean.
+
+### 28.allFactors()
+
+Takes a number and returns a number array consisting of all of its factors (do not confuse with factorOut() function, that returns only prime factors).
 
 ## Classes
 
