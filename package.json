@@ -1,0 +1,28 @@
+{
+	"name": "math-expressions.js",
+	"version": "0.4.0",
+	"description": "Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.",
+	"type": "module",
+	"scripts": {
+		"test": "node src/examples.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/HGARgG-0710/math-expressions.js.git"
+	},
+	"keywords": [
+		"mathematics",
+		"functions",
+		"algebra",
+		"surfaces",
+		"expressions",
+		"statistics",
+		"numeric arrays"
+	],
+	"author": "hgargg-0710",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/HGARgG-0710/math-expressions.js/issues"
+	},
+	"homepage": "https://github.com/HGARgG-0710/math-expressions.js#readme"
+}
