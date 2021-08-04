@@ -497,6 +497,167 @@ class Tests {
 	}
 }
 
+class Vector {
+	#setTimes = 0
+
+	_type = "number"
+	_length = 0
+	_vector = []
+
+	static allowedTypes = Object.freeze([
+		"number",
+		"string",
+		"boolean",
+		"function",
+		"object",
+		"bigint",
+		"any",
+	])
+
+	constructor(type = "number", length = 0, vector = []) {
+		this.length = length
+		this.type = type
+		this.vector = vector
+
+		this.#setTimes++
+	}
+
+	static typeCheck(item, type) {
+		if (typeof item !== type && type !== "any")
+			throw new Error(
+				`Type of item ${item} is not equal to vector type: ${type}. Item type: ${typeof item}`
+			)
+	}
+
+	delete(index) {
+		const deleted = this._vector[index]
+
+		if (index < this._length - 1)
+			for (let i = index; i < this._length - 1; i++)
+				this._vector[i] = this._vector[i + 1]
+
+		this._length--
+		this._vector.pop()
+
+		return deleted
+	}
+
+	add(item) {
+		Vector.typeCheck(item, this._type)
+		this._length++
+
+		return this.vector.push(item) - 1
+	}
+
+	swap(index1, index2) {
+		if (
+			typeof index1 !== "number" ||
+			typeof index2 !== "number" ||
+			this._vector[index1] === undefined ||
+			this._vector[index2] === undefined
+		)
+			throw new Error("Invalid indexes passed. ")
+
+		const temp = this._vector[index1]
+		this._vector[index1] = this._vector[index2]
+		this._vector[index2] = temp
+	}
+
+	fill(item) {
+		Vector.typeCheck(item, this._type)
+		this._vector.fill(item)
+	}
+
+	byIndex(i) {
+		return this._vector[i]
+	}
+
+	slice(start, end) {
+		const sliced = this._vector.slice(start, end)
+		return new Vector(sliced.length, this._type, sliced)
+	}
+
+	index(element) {
+		return this._vector.indexOf(element)
+	}
+
+	indexes(element) {
+		const indexes = [this._vector.indexOf(element)]
+
+		if (indexes[0] >= 0)
+			for (let i = indexes[0] + 1; i < this._length; i++)
+				if (this._vector[i] === element) indexes.push(i)
+
+		return indexes
+	}
+
+	static getArrType(array) {
+		let type = typeof array[0]
+
+		for (const element of array)
+			if (typeof element !== type) {
+				type = "any"
+				break
+			}
+
+		return type
+	}
+
+	get length() {
+		return this._length
+	}
+
+	get vector() {
+		return this._vector
+	}
+
+	get type() {
+		return this._type
+	}
+
+	set type(newType) {
+		if (this.#setTimes === 1)
+			throw new Error("Type parameter is not modifyable by default.")
+		if (!Vector.allowedTypes.includes(newType))
+			throw new Error(`Unknown vector type: ${newType}`)
+
+		this._type = newType
+	}
+
+	set length(newLength) {
+		if (newLength < 0)
+			throw new Error(
+				`Length cannot be negative! Passed length: ${newLength}`
+			)
+		if (newLength < this._length)
+			for (let i = this._length; i > newLength; i--) this._vector.pop()
+
+		if (newLength > this._length && this.#setTimes === 1)
+			for (let i = this._length; i < newLength; i++)
+				this._vector[i] = null
+
+		this._length = newLength
+	}
+
+	set vector(newVector) {
+		const type = Vector.getArrType(newVector)
+
+		if (this._length < newVector.length && this.#setTimes === 1)
+			throw new Error(
+				`The length of new vector is too big. Length of current vector: ${this.length}. Length of the new vector: ${newVector.length}`
+			)
+		if (type !== this._type && this._type !== "any")
+			throw new TypeError(
+				`Type of the new vector is different to the one to which you are trying to assign. Old type: ${this._type}. New type: ${type}`
+			)
+
+		newVector.forEach((element) => Vector.typeCheck(element, this._type))
+
+		this._vector = newVector
+		this.length = newVector.length
+	}
+}
+
 // TODO : Implement the add(), multiply(), subtract(), divide() and root() methods.
 class Ratio {
 	#beenSet = 0
@@ -612,10 +773,8 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 function sameOperator(numbers = [], operator = "+") {
 	let result = number[0] !== undefined ? number[0] : 0
 
-	for (let i = 0; i < numbers.length; i++) {
-		if (i === numbers.length - 1) break
+	for (let i = 0; i < numbers.length - 1; i++)
 		result = exp(result, numbers[i + 1], operator)
-	}
 
 	return result
 }
@@ -626,17 +785,16 @@ function sameOperator(numbers = [], operator = "+") {
  * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length
  * ! (but in this case the last element of the operators[] array will be ignored).
  *
- * @param {Expression} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
+ * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
 function fullExp(expression = { nums: [], operators: [] }) {
 	let result = 0
 
-	if (expression.nums.length - expression.operators.length > 1) {
+	if (expression.nums.length - expression.operators.length > 1)
 		throw Error(
 			"Passed operators[] array length is less than passed number[] array for more than one element \
-(operators[] arr must be shorter for one element)."
+(operators[] arr must be shorter for only one element)."
 		)
-	}
 
 	for (let i = 0; i < expression.nums.length - 1; i++) {
 		result =
@@ -847,35 +1005,27 @@ function find(searchArr, searchVal) {
 	let foundTimes = 0
 	const foundIndexes = []
 
-	if (searchVal instanceof Array) {
+	if (searchVal instanceof Array)
 		searchVal.forEach((value) =>
-			searchArr.forEach((arr) =>
-				arr.forEach((num) =>
-					value === num ? ((result = true), foundTimes++) : null
-				)
+			searchArr.forEach((arr, index) =>
+				arr.forEach((num) => {
+					if (value === num) {
+						result = true
+						foundTimes++
+
+						if (!foundIndexes.includes(index))
+							foundIndexes.push(index)
+					}
+				})
 			)
 		)
-	} else {
-		if (typeof searchArr === "string") {
-			const str = searchArr.slice(0) // copying a string using String.prototype.slice()
+	else
+		for (let i = 0; i < searchArr.length; i++)
+			searchArr[i] === searchVal
+				? ((result = true), foundTimes++, foundIndexes.push(i))
+				: null
 
-			for (let i = 0; i < str.length; i++) {
-				str[i] === searchVal
-					? ((result = true), foundTimes++, foundIndexes.push(i))
-					: null
-			}
-		} else {
-			searchArr.forEach((value, i) =>
-				value === searchVal
-					? ((result = true), foundTimes++, foundIndexes.push(i))
-					: null
-			)
-		}
-	}
-
-	return searchVal instanceof Array
-		? [result, foundTimes]
-		: [result, foundTimes, foundIndexes]
+	return [result, foundTimes, foundIndexes]
 }
 
 /**
@@ -1164,6 +1314,7 @@ export {
 	Tests,
 	Ratio,
 	Algorithms,
+	Vector,
 	exp,
 	sameOperator,
 	fullExp,

@@ -181,6 +181,7 @@ Takes a number and returns a number array consisting of all of its factors (do n
 4. [Tests](#4tests)
 5. [Ratio](#5ratio)
 6. [Algorithms](#6algorithms)
+7. [Vector](#7vector)
 
 ### 1.Statistics
 
@@ -209,6 +210,10 @@ This object has a statistic information about passed number array.
     Statistics.populationStandDev: number;
     Statistics.standardError: number;
 
+#### Class Methods
+
+    Statistics(array: number[]): Statistics;
+
 Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and a row(or an array, if you prefer) length property in one object.
 
 #### Notice:
@@ -234,6 +239,10 @@ From the beginning this is an empty surface, that has width(x axis min and max n
     Surface.lines: number[][][];
     Surface.segments: number[][][];
 
+#### Class Methods
+
+    Surface(xLimits: number[], yLimits:number[]): Surface;
+
 #### Class Methods:
 
     Surface.prototype.inLimits(...dots: number[][][]): boolean
@@ -247,11 +256,12 @@ Constructor of this class takes two arrays, one of which contains numbers of exp
 
 #### Class Properties:
 
-    Expression.nums: number[] | string[];
+    Expression.nums: number[];
     Expression.operators: string[];
 
 #### Class Methods:
 
+    Expression(numbers: number[], operators: string[]): Expression;
     Expression.execute(): number;
     Expression.repeat(times: any, operator: any): number;
 
@@ -273,12 +283,12 @@ If you want to try using this class, than be careful with the Tests.U_test() met
 
 #### Class Methods
 
-    Tests.checkArrSize(arr: arr[], size: number): void;
+    Tests.checkArrSize(arr: arr[], size: number): void; (static)
 
-    Tests.t_Students_test(...rows: number[]): number;
-    Tests.F_test(...rows: number[]): number;
-    Tests.U_test(...rows: number[]): number;
-    Test.Z_score(testedNum: number, numbers: number[]): number;
+    Tests.t_Students_test(...rows: number[]): number; (static)
+    Tests.F_test(...rows: number[]): number; (static)
+    Tests.U_test(...rows: number[]): number; (static)
+    Test.Z_score(testedNum: number, numbers: number[]): number; (static)
 
 ### 5.Ratio
 
@@ -291,6 +301,7 @@ This class represents a ratio of two numbers.
 
 #### Class Methods
 
+    Ratio(numerator: number, denomenator: number): Ratio;
     Ratio.evaluate(): number;
 
 ### 6.Algorithms
@@ -299,7 +310,32 @@ That is another static class, this time containing algorithms instead of statist
 
 #### Class Methods
 
-    Algorithms.Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]
+    Algorithms.Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]; (static)
+
+### 7.Vector
+
+This class represents a type-safe and length-safe version of array, that also has controllable length.
+
+#### Class Methods
+
+    Vector(type: string, length: number, vector: any[]): Vector;
+    Vector.typeCheck(item: any): void; (static)
+    Vector.add(item: any);
+    Vector.delete(index: number);
+    Vector.index(item: any);
+    Vector.indexes(item: any);
+    Vector.byIndex(index: number);
+    Vector.slice(start: number, end: number);
+    Vector.fill(item: number);
+    Vector.getArrType(array): string; (static)
+    Vector.swap(index1: number, index2: number): void;
+
+#### Class Properties
+
+    Vector.vector: any[];
+    Vector.length: number;
+    Vector.type: string;
+    Vector.allowedTypes: string[]; (static)
 
 ## Notes:
 

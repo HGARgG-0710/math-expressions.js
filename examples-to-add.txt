@@ -1,6 +1,7 @@
 Classes: 
     - Ratio 
     - Algorithms 
+    - Vector
 
 Functions: 
     none
