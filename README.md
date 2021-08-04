@@ -14,6 +14,15 @@ or
 
     npm i math-expressions.js
 
+## Global Variables
+
+1. [fixedSize](#1fixedsize)
+
+### 1.fixedSize
+
+This variable characterizes how accurate is function output going to be. By default set to 7.
+(Can be modyfied directly).
+
 ## Functions
 
 1. [exp()](#1exp)
@@ -170,6 +179,8 @@ Takes a number and returns a number array consisting of all of its factors (do n
 2. [Surface](#2surface)
 3. [Expression](#3expression)
 4. [Tests](#4tests)
+5. [Ratio](#5ratio)
+6. [Algorithms](#6algorithms)
 
 ### 1.Statistics
 
@@ -268,6 +279,27 @@ If you want to try using this class, than be careful with the Tests.U_test() met
     Tests.F_test(...rows: number[]): number;
     Tests.U_test(...rows: number[]): number;
     Test.Z_score(testedNum: number, numbers: number[]): number;
+
+### 5.Ratio
+
+This class represents a ratio of two numbers.
+
+#### Class Properties
+
+    Ratio.numerator: number;
+    Ratio.denomenator: number;
+
+#### Class Methods
+
+    Ratio.evaluate(): number;
+
+### 6.Algorithms
+
+That is another static class, this time containing algorithms instead of statistical tests.
+
+#### Class Methods
+
+    Algorithms.Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]
 
 ## Notes:
 

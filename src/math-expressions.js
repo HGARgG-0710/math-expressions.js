@@ -37,9 +37,10 @@ class Statistics {
 	#set(what) {
 		if (this.#setCount === 0) {
 			what()
-		} else {
-			throw new Error("Properties of Statistics objects are immutable!")
+			return 1
 		}
+
+		throw new Error("Properties of Statistics objects are immutable!")
 	}
 
 	set min(min) {
@@ -496,6 +497,82 @@ class Tests {
 	}
 }
 
+// TODO : Implement the add(), multiply(), subtract(), divide() and root() methods.
+class Ratio {
+	#beenSet = 0
+
+	constructor(numerator, denomenator) {
+		this.numerator = numerator
+		this.denomenator = denomenator
+		this.#beenSet++
+	}
+
+	evaluate() {
+		return this._numerator / this._denomenator
+	}
+
+	get numerator() {
+		return this._numerator
+	}
+
+	get denomenator() {
+		return this._denomenator
+	}
+
+	set numerator(numerator) {
+		this.#set(() => {
+			this._numerator = numerator
+		})
+	}
+
+	set denomenator(denomenator) {
+		this.#set(() => {
+			this._denomenator = denomenator
+		})
+	}
+
+	#set(handler) {
+		if (this.#beenSet === 0) {
+			handler()
+			return 1
+		}
+
+		throw new Error(
+			"You are not allowed to modify the fields of Ratio class instance. "
+		)
+	}
+}
+
+class Algorithms {
+	constructor() {
+		throw new TypeError("Algorithms is not a constructor")
+	}
+
+	static Farey(startRatio, endRatio, iterations = 0) {
+		function formNewRatio(first, second) {
+			return new Ratio(
+				first.numerator + second.numerator,
+				first.denomenator + second.denomenator
+			)
+		}
+
+		const gotten = [[startRatio, endRatio]]
+
+		for (let i = 0; i < iterations; i++) {
+			gotten.push([])
+			for (let j = 0; j < gotten[i].length; j++) {
+				gotten[i + 1].push(gotten[i][j])
+				if (j !== gotten[i].length - 1)
+					gotten[i + 1].push(
+						formNewRatio(gotten[i][j], gotten[i][j + 1])
+					)
+			}
+		}
+
+		return gotten
+	}
+}
+
 // Functions
 
 /**
@@ -513,13 +590,14 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 		case "*":
 		case "**":
 		case "%":
-			if (typeof firstNum === "number" && typeof secondNum === "number") {
-				return eval(`${firstNum} ${operator} ${secondNum}`)
-			} else {
+			if (
+				!(typeof firstNum === "number" && typeof secondNum === "number")
+			)
 				throw new Error(
 					"First and second arguments of exp() function must be numbers!"
 				)
-			}
+
+			return eval(`${firstNum} ${operator} ${secondNum}`)
 
 		default:
 			throw new Error("Unknown airphmetic operator passed!")
@@ -532,18 +610,11 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
 function sameOperator(numbers = [], operator = "+") {
-	let result = 0
-	let tempRes = 0
+	let result = number[0] !== undefined ? number[0] : 0
 
 	for (let i = 0; i < numbers.length; i++) {
-		if (i === 0) {
-			tempRes = exp(numbers[0], numbers[1], operator)
-		} else if (i === numbers.length - 1) {
-			break
-		} else {
-			tempRes = exp(tempRes, numbers[i + 1], operator)
-		}
-		result = tempRes
+		if (i === numbers.length - 1) break
+		result = exp(result, numbers[i + 1], operator)
 	}
 
 	return result
@@ -555,39 +626,30 @@ function sameOperator(numbers = [], operator = "+") {
  * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length
  * ! (but in this case the last element of the operators[] array will be ignored).
  *
- * @param {object} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
+ * @param {Expression} expression    An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
 function fullExp(expression = { nums: [], operators: [] }) {
 	let result = 0
-	let tempRes = 0
 
 	if (expression.nums.length - expression.operators.length > 1) {
 		throw Error(
 			"Passed operators[] array length is less than passed number[] array for more than one element \
 (operators[] arr must be shorter for one element)."
 		)
-	} else {
-		for (let i = 0; i < expression.nums.length; i++) {
-			if (i === 0) {
-				tempRes = exp(
-					expression.nums[0],
-					expression.nums[1],
-					expression.operators[0]
-				)
-			} else if (i === expression.nums.length - 1) {
-				break
-			} else {
-				tempRes = exp(
-					tempRes,
-					expression.nums[i + 1],
-					expression.operators[i]
-				)
-			}
-			result = tempRes
-		}
-
-		return result
 	}
+
+	for (let i = 0; i < expression.nums.length - 1; i++) {
+		result =
+			i === 0
+				? exp(
+						expression.nums[0],
+						expression.nums[1],
+						expression.operators[0]
+				  )
+				: exp(result, expression.nums[i + 1], expression.operators[i])
+	}
+
+	return result
 }
 
 /**
@@ -596,7 +658,7 @@ function fullExp(expression = { nums: [], operators: [] }) {
  * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
  * ! Wrong names of keys will cause an Error.
  *
- * 	@param {object} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
+ * 	@param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
  * 	@param {number} countOfRepeats   A number of repeats of ariphmetic operation.
  * 	@param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
@@ -623,9 +685,8 @@ They must have next names: "nums" form number array, "operators" for operators a
 				break
 
 			default:
-				for (let i = 0; i < countOfRepeats - 1; i++) {
+				for (let i = 0; i < countOfRepeats - 1; i++)
 					result = exp(result, tempRes, repeatOperator)
-				}
 		}
 	}
 
@@ -827,11 +888,7 @@ function readable(num) {
 
 	while (arr.length % 3 > 0) {
 		changeStr += arr[0]
-
-		if ((arr.length - 1) % 3 === 0) {
-			changeStr += " "
-		}
-
+		if ((arr.length - 1) % 3 === 0) changeStr += " "
 		arr.shift()
 	}
 
@@ -897,7 +954,6 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 	let firstCount = firstNum
 	let secondCount = secondNum
 
-	let isEnd = false
 	let result = null
 
 	for (
@@ -909,14 +965,12 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 		secondMultiples.push(secondCount)
 	}
 
-	firstMultiples.forEach((multiple1) => {
-		secondMultiples.forEach((multiple2) => {
-			if (multiple1 === multiple2 && !isEnd) {
-				result = multiple1
-				isEnd = true
+	loop1: for (const multiple1 of firstMultiples)
+		for (const multiple2 of secondMultiples)
+			if (multiple1 === multiple2) {
+				retult = multiple1
+				break loop1
 			}
-		})
-	})
 
 	return result
 }
@@ -1108,6 +1162,8 @@ export {
 	Surface,
 	Expression,
 	Tests,
+	Ratio,
+	Algorithms,
 	exp,
 	sameOperator,
 	fullExp,

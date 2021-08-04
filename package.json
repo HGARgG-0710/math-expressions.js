@@ -17,7 +17,9 @@
 		"surfaces",
 		"expressions",
 		"statistics",
-		"numeric arrays"
+		"numeric arrays", 
+		"algorithms",
+		"farey"
 	],
 	"author": "hgargg-0710",
 	"license": "MIT",
