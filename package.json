@@ -3,6 +3,7 @@
 	"version": "0.4.0",
 	"description": "Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.",
 	"type": "module",
+	"main": "src/math-expressions.js", 
 	"scripts": {
 		"test": "node src/examples.js"
 	},
@@ -12,7 +13,6 @@
 	},
 	"keywords": [
 		"mathematics",
-		"functions",
 		"algebra",
 		"surfaces",
 		"expressions",
