@@ -1,6 +1,6 @@
 # Math-expressions.js
 
-Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.
+Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics, 2D surfaces and item (especially numbers) collections.  
 For now, the list of functions and classes provided is quite thin, but in the future library will become a REALLY powerful instrument to work with.
 
 ## Installation
@@ -329,6 +329,7 @@ This class represents a type-safe and length-safe version of array, that also ha
     Vector.fill(item: number);
     Vector.getArrType(array): string; (static)
     Vector.swap(index1: number, index2: number): void;
+    Vector.set(index: number, value: any): void;
 
 #### Class Properties
 

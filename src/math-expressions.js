@@ -497,6 +497,91 @@ class Tests {
 	}
 }
 
+// TODO: Add the possibility of creating the Matrix with no array passed and the toArray() method.
+class Matrix {
+	#setTimes = 0
+	_matrix = new Vector("object")
+	_sidelen = 0
+
+	constructor(sidelen = 0, dimensions = []) {
+		this.sidelen = sidelen
+		Matrix.dimensionCheck(sidelen, dimensions)
+		dimensions.forEach((dimension) =>
+			this._matrix.add(new Vector("number", sidelen, dimension))
+		)
+
+		this.#setTimes++
+	}
+
+	static dimensionCheck(sidelen, dimensions) {
+		const isVector = dimensions instanceof Vector
+
+		if (isVector) {
+			dimensions = dimensions.vector
+			dimensions.forEach((vector, index) => {
+				dimensions[index] = vector.vector
+			})
+		}
+
+		dimensions.slice(1).forEach((dimension, index) => {
+			if (dimension.length !== dimension[index - 1])
+				throw new Error(
+					"Lengths of given matrix dimensions are different!"
+				)
+		})
+
+		if (dimensions[0].length < sidelen) {
+			for (let i = 0; i < dimensions.length; i++)
+				for (let j = dimensions[i].length; j < sidelen; j++)
+					dimensions[i][j] = 0
+
+			for (let i = dimensions.length; i < sidelen; i++)
+				dimensions.push(generate(1, dimensions[0].length, 1).fill(0))
+		} else {
+			for (let i = sidelen; i < dimensions[i].length; ) dimensions.pop()
+			for (let i = 0; i < sidelen; i++)
+				for (let j = sidelen; j < dimensions[i].length; )
+					dimensions[i].pop()
+		}
+
+		if (isVector) {
+			dimensions.forEach((vector, index) => {
+				dimensions[index] = new Vector("number", sidelen, vector)
+			})
+			dimensions = new Vector("object", sidelen, dimensions)
+		}
+	}
+
+	set sidelen(newSidelen) {
+		this.#setTimes ? Matrix.dimensionCheck(newSidelen, this._matrix) : null
+		this._sidelen = newSidelen
+	}
+
+	get sidelen() {
+		return this._sidelen
+	}
+
+	get matrix() {
+		return this._matrix
+	}
+
+	navigate(coordinate) {
+		switch (coordinate.length) {
+			case 1:
+				return this._matrix.byIndex(coordinate[0])
+			case 2:
+				return this._matrix
+					.byIndex(coordinate[0])
+					.byIndex(coordinate[1])
+
+			default:
+				throw new Error(
+					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
+				)
+		}
+	}
+}
+
 class Vector {
 	#setTimes = 0
 
@@ -513,6 +598,16 @@ class Vector {
 		"bigint",
 		"any",
 	])
+
+	static default = Object.freeze({
+		string: "",
+		number: 0,
+		object: null,
+		boolean: false,
+		bigint: 0n,
+		function: function () {},
+		any: null,
+	})
 
 	constructor(type = "number", length = 0, vector = []) {
 		this.length = length
@@ -566,6 +661,14 @@ class Vector {
 	fill(item) {
 		Vector.typeCheck(item, this._type)
 		this._vector.fill(item)
+		return this
+	}
+
+	set(index, value) {
+		if (this._matrix[index] === undefined)
+			throw new Error("Invalid index passed into the set function.")
+
+		this._matrix[index] = value
 	}
 
 	byIndex(i) {
@@ -592,7 +695,7 @@ class Vector {
 	}
 
 	static getArrType(array) {
-		let type = typeof array[0]
+		let type = array[0] !== undefined ? typeof array[0] : "nulllength"
 
 		for (const element of array)
 			if (typeof element !== type) {
@@ -634,7 +737,7 @@ class Vector {
 
 		if (newLength > this._length && this.#setTimes === 1)
 			for (let i = this._length; i < newLength; i++)
-				this._vector[i] = null
+				this._vector[i] = Vector.default[this._type]
 
 		this._length = newLength
 	}
@@ -646,7 +749,11 @@ class Vector {
 			throw new Error(
 				`The length of new vector is too big. Length of current vector: ${this.length}. Length of the new vector: ${newVector.length}`
 			)
-		if (type !== this._type && this._type !== "any")
+		if (
+			type !== this._type &&
+			this._type !== "any" &&
+			type !== "nulllength"
+		)
 			throw new TypeError(
 				`Type of the new vector is different to the one to which you are trying to assign. Old type: ${this._type}. New type: ${type}`
 			)
@@ -998,7 +1105,7 @@ function generate(start, end, step = 1) {
  * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
  * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
  * @param {number | number[] | string} searchVal Searched value.
- * @returns {[boolean, number] | [boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
+ * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
  */
 function find(searchArr, searchVal) {
 	let result = false
@@ -1315,6 +1422,7 @@ export {
 	Ratio,
 	Algorithms,
 	Vector,
+	Matrix,
 	exp,
 	sameOperator,
 	fullExp,

@@ -2,6 +2,7 @@ Classes:
     - Ratio 
     - Algorithms 
     - Vector
+    - Matrix
 
 Functions: 
     none
