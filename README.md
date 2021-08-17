@@ -163,7 +163,7 @@ Takes two numbers: the "target" number and the level of precision to be used on 
 
 ### 26.randomArray()
 
-Takes the number array, one number, a boolean and returns a random array, based on this data. The first argument is the max length that the new randomly-generated array can have, second one is the max value that can be detected in the array and the third one is the boolean, representing whether the numbers in the array should all be integers or not (By default false).
+Takes the number, one number, a boolean and returns a random array, based on this data. The first argument is the max length that the new randomly-generated array can have, second one is the max value that can be detected in the array and the third one is the boolean, representing whether the numbers in the array should all be integers or not (By default false).
 
 ### 27.isPerfect()
 
