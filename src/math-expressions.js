@@ -878,7 +878,7 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
 function sameOperator(numbers = [], operator = "+") {
-	let result = number[0] !== undefined ? number[0] : 0
+	let result = numbers[0] !== undefined ? numbers[0] : 0
 
 	for (let i = 0; i < numbers.length - 1; i++)
 		result = exp(result, numbers[i + 1], operator)
@@ -933,16 +933,14 @@ function repeatExp(
 	repeatOperator = "+"
 ) {
 	let result = 0
-	let tempRes = 0
 
-	if (expression.nums === undefined || expression.operators === undefined) {
+	if (expression.nums === undefined || expression.operators === undefined)
 		throw Error(
 			'You have passed expression object with the wrong names of keys of key-value pairs! \
 They must have next names: "nums" form number array, "operators" for operators array.'
 		)
-	} else {
-		tempRes = fullExp(expression)
-		result = tempRes
+	else {
+		result = fullExp(expression)
 
 		switch (repeatOperator) {
 			case "+":
@@ -951,7 +949,7 @@ They must have next names: "nums" form number array, "operators" for operators a
 
 			default:
 				for (let i = 0; i < countOfRepeats - 1; i++)
-					result = exp(result, tempRes, repeatOperator)
+					result = exp(result, result, repeatOperator)
 		}
 	}
 
@@ -1414,6 +1412,23 @@ function allFactors(number) {
 	return Object.freeze(factors)
 }
 
+/**
+ * This function calculates the factorial of a positive integer given.
+ * @param {number} number A positive integer, factorial for which is to be calculated.
+ */
+function factorial(number) {
+	const numbers = []
+
+	if (number < 0)
+		throw new Error(
+			"factorial() function is not supposed to be used with the negative numbers. "
+		)
+	if (!numbers.length) return 1
+
+	for (let i = 1; i <= number; i++) numbers.push(i)
+	return sameOperator(numbers, "*")
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1451,4 +1466,5 @@ export {
 	floor,
 	isPerfect,
 	allFactors,
+	factorial,
 }

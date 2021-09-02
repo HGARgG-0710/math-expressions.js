@@ -5,4 +5,4 @@ Classes:
     - Matrix
 
 Functions: 
-    none
+    - factorial

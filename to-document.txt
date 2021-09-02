@@ -1,2 +1,5 @@
 Classes: 
     - Matrix
+
+Functions:
+    - factorial
