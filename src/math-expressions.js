@@ -933,25 +933,17 @@ function repeatExp(
 	repeatOperator = "+"
 ) {
 	let [result, tempRes] = [0, 0]
-
 	if (expression.nums === undefined || expression.operators === undefined)
 		throw Error(
 			'You have passed expression object with the wrong names of keys of key-value pairs! \
 They must have next names: "nums" form number array, "operators" for operators array.'
 		)
-	else {
-		result = fullExp(expression)
 
-		switch (repeatOperator) {
-			case "+":
-				result *= countOfRepeats
-				break
+	result = tempRes = fullExp(expression)
+	if (repeatOperator === "+") return (result *= countOfRepeats)
 
-			default:
-				for (let i = 0; i < countOfRepeats - 1; i++)
-					result = exp(result, tempRes, repeatOperator)
-		}
-	}
+	for (let i = 0; i < countOfRepeats - 1; i++)
+		result = exp(result, tempRes, repeatOperator)
 
 	return result
 }
