@@ -932,7 +932,7 @@ function repeatExp(
 	countOfRepeats = 1,
 	repeatOperator = "+"
 ) {
-	let result = 0
+	let [result, tempRes] = [0, 0]
 
 	if (expression.nums === undefined || expression.operators === undefined)
 		throw Error(
@@ -949,7 +949,7 @@ They must have next names: "nums" form number array, "operators" for operators a
 
 			default:
 				for (let i = 0; i < countOfRepeats - 1; i++)
-					result = exp(result, result, repeatOperator)
+					result = exp(result, tempRes, repeatOperator)
 		}
 	}
 
