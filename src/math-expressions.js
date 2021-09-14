@@ -1421,6 +1421,18 @@ function factorial(number) {
 	return sameOperator(numbers, "*")
 }
 
+/**
+ * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant. 
+ * @param {number} float1 First number to be added. 
+ * @param {number} float2 Second number to be added. 
+*/
+function realAddition (float1, float2) {
+	const sum = float1 + float2
+	const fixedB = sum - float1 
+	const fix = float2 - fixedB
+	return sum + fix
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1459,4 +1471,5 @@ export {
 	isPerfect,
 	allFactors,
 	factorial,
+	realAddition
 }
