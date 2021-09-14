@@ -497,7 +497,7 @@ class Tests {
 	}
 }
 
-// TODO: Add the possibility of creating the Matrix with no array passed.
+// TODO: Add the possibility of creating a Matrix with no array passed.
 class Matrix {
 	#setTimes = 0
 	_matrix = new Vector("object")
@@ -773,7 +773,6 @@ class Vector {
 	}
 }
 
-// TODO : Implement the multiply(), subtract(), divide() and root() methods.
 class Ratio {
 	#beenSet = 0
 
@@ -818,6 +817,41 @@ class Ratio {
 		}
 
 		return ratio
+	}
+
+	divide(ratio) {
+		return Ratio.simplify(
+			new Ratio(
+				ratio.denomenator * this.numerator,
+				this.denomenator * ratio.numerator
+			)
+		)
+	}
+
+	multiply(ratio) {
+		return Ratio.simplify(
+			new Ratio(
+				this.numerator * ratio.numerator,
+				this.denomenator * ratio.denomenator
+			)
+		)
+	}
+
+	subtract(ratio) {
+		return Ratio.simplify(
+			new Ratio(
+				this.numerator * ratio.denomenator -
+					this.denomenator * ratio.numerator,
+				this.denomenator * ratio.denomenator
+			)
+		)
+	}
+
+	root(base) {
+		return new Ratio(
+			this.numerator ** (1 / base),
+			this.denomenator ** (1 / base)
+		)
 	}
 
 	get numerator() {
@@ -1282,7 +1316,6 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 	})
 
 	deviations.length = row.length
-
 	return deviations
 }
 
