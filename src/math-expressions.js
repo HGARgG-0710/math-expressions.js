@@ -933,9 +933,9 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 
 	switch (operator) {
 		case "+":
-			return realAddition(firstNum, secondNum)
+			return realAddition(firstNum, secondNum)[0]
 		case "-":
-			return realAddition(firstNum, -secondNum)
+			return realAddition(firstNum, -secondNum)[0]
 
 		case "/":
 		case "*":
@@ -1506,7 +1506,8 @@ function realAddition(float1, float2) {
 	const sum = float1 + float2
 	const fixedB = sum - float1
 	const fix = float2 - fixedB
-	return sum + fix
+
+	return [sum + fix, fix]
 }
 
 export {

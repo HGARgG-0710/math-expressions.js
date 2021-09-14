@@ -182,3 +182,11 @@ console.log(expjs.isPerfect(28)) // true
 // allFactors() function example
 console.log(expjs.allFactors(28)) // [1, 2, 4, 7, 14]
 console.log(expjs.allFactors(90)) // [1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45]
+
+// factorial () function 
+console.log(expjs.factorial(6))
+console.log(expjs.factorial(10))
+
+// realAddition () function 
+console.log(expjs.realAddition(0.2, 0.1))
+console.log(expjs.realAddition(0.1, 0.019)) // will return error and the final result

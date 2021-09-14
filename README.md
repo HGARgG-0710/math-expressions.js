@@ -183,6 +183,7 @@ Classic! Good old integer-only factorial() function! You know what it does if yo
 
 This function is a fix of classical addition in computer languages. It is very helpful when adding big numbers in which the error might go straight up. 
 Of course, it wouldn't help completely, but a useful thing for quite specific cases.
+It returns an array of two values: 1. the achieved result, 2. the error (it may be helpful in case of rounding up again) 
 
 ## Classes
 
@@ -358,7 +359,7 @@ This class represents a type-safe and length-safe version of array, that also ha
 
 ### 8.Matrix
 
-This class represents a Vector of Vectors of a mathematical matrix. 
+This class represents a Vector of Vectors or a mathematical matrix. 
 
 #### Class Methods 
 

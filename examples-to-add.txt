@@ -3,7 +3,3 @@ Classes:
     - Algorithms 
     - Vector
     - Matrix
-
-Functions: 
-    - factorial
-    - realAddition
