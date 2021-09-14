@@ -497,7 +497,7 @@ class Tests {
 	}
 }
 
-// TODO: Add the possibility of creating the Matrix with no array passed and the toArray() method.
+// TODO: Add the possibility of creating the Matrix with no array passed.
 class Matrix {
 	#setTimes = 0
 	_matrix = new Vector("object")
@@ -579,6 +579,14 @@ class Matrix {
 					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
 				)
 		}
+	}
+
+	toArray() {
+		const final = []
+
+		for (let i = 0; i < this.sidelen; i++) final.push(this.matrix[i].vector)
+
+		return final
 	}
 }
 
@@ -765,7 +773,7 @@ class Vector {
 	}
 }
 
-// TODO : Implement the add(), multiply(), subtract(), divide() and root() methods.
+// TODO : Implement the multiply(), subtract(), divide() and root() methods.
 class Ratio {
 	#beenSet = 0
 
@@ -776,7 +784,40 @@ class Ratio {
 	}
 
 	evaluate() {
-		return this._numerator / this._denomenator
+		return this.numerator / this.denomenator
+	}
+
+	add(ratio) {
+		return Ratio.simplify(
+			new Ratio(
+				this.numerator * ratio.denomenator +
+					ratio.numerator * this.denomenator,
+				this.denomenator * ratio.denomenator
+			)
+		)
+	}
+
+	static simplify(ratio) {
+		const len = Math.max(
+			allFactors(ratio.numerator).length,
+			allFactors(ratio.denomenator).length
+		)
+
+		let currMultiple
+
+		for (let i = 0; i < len; i++) {
+			if (
+				(currMultiple = leastCommonMultiple(
+					ratio.numerator,
+					ratio.denomenator
+				)) !== null
+			) {
+				ratio.numerator /= currMultiple
+				ratio.denomenator /= currMultiple
+			}
+		}
+
+		return ratio
 	}
 
 	get numerator() {
@@ -851,20 +892,21 @@ class Algorithms {
  *  @returns {number} Result of a mathematical expression.
  */
 function exp(firstNum = 2, secondNum = 2, operator = "+") {
+	if (!(typeof firstNum === "number" && typeof secondNum === "number"))
+		throw new Error(
+			"First and second arguments of exp() function must be numbers!"
+		)
+
 	switch (operator) {
 		case "+":
+			return realAddition(firstNum, secondNum)
 		case "-":
+			return realAddition(firstNum, -secondNum)
+
 		case "/":
 		case "*":
 		case "**":
 		case "%":
-			if (
-				!(typeof firstNum === "number" && typeof secondNum === "number")
-			)
-				throw new Error(
-					"First and second arguments of exp() function must be numbers!"
-				)
-
 			return eval(`${firstNum} ${operator} ${secondNum}`)
 
 		default:
@@ -1215,7 +1257,7 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
 	loop1: for (const multiple1 of firstMultiples)
 		for (const multiple2 of secondMultiples)
 			if (multiple1 === multiple2) {
-				retult = multiple1
+				result = multiple1
 				break loop1
 			}
 
@@ -1422,13 +1464,14 @@ function factorial(number) {
 }
 
 /**
- * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant. 
- * @param {number} float1 First number to be added. 
- * @param {number} float2 Second number to be added. 
-*/
-function realAddition (float1, float2) {
+ * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
+ * @param {number} float1 First number to be added.
+ * @param {number} float2 Second number to be added.
+ * @returns a number with error much less than it would be with JavaScript addition.
+ */
+function realAddition(float1, float2) {
 	const sum = float1 + float2
-	const fixedB = sum - float1 
+	const fixedB = sum - float1
 	const fix = float2 - fixedB
 	return sum + fix
 }
@@ -1471,5 +1514,5 @@ export {
 	isPerfect,
 	allFactors,
 	factorial,
-	realAddition
+	realAddition,
 }

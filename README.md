@@ -53,6 +53,8 @@ This variable characterizes how accurate is function output going to be. By defa
 26. [randomArray()](#26randomarray)
 27. [isPerfect()](#27isperfect)
 28. [allFactors()](#28allfactors)
+29. [factorial()](#29factorial)
+30. [realAddition()](#30realaddition)
 
 ### 1.exp()
 
@@ -172,6 +174,15 @@ Takes a number and checks whether it is perfect or not. Returns boolean.
 ### 28.allFactors()
 
 Takes a number and returns a number array consisting of all of its factors (do not confuse with factorOut() function, that returns only prime factors).
+
+### 29.factorial()
+
+Classic! Good old integer-only factorial() function! You know what it does if you know what factorial is. Takes a integer in and and spits factorial of it out. 
+
+### 30.realAddition() 
+
+This function is a fix of classical addition in computer languages. It is very helpful when adding big numbers in which the error might go straight up. 
+Of course, it wouldn't help completely, but a useful thing for quite specific cases.
 
 ## Classes
 

@@ -1,6 +1,2 @@
 Classes: 
     - Matrix
-
-Functions:
-    - factorial
-    - realAddition 
