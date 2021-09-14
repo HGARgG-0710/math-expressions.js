@@ -193,6 +193,7 @@ Of course, it wouldn't help completely, but a useful thing for quite specific ca
 5. [Ratio](#5ratio)
 6. [Algorithms](#6algorithms)
 7. [Vector](#7vector)
+8. [Matrix](#8matrix)
 
 ### 1.Statistics
 
@@ -314,6 +315,12 @@ This class represents a ratio of two numbers.
 
     Ratio(numerator: number, denomenator: number): Ratio;
     Ratio.evaluate(): number;
+    Ratio.simplify(ratio: Ratio): Ratio; (static) // Note: original ratio is mutated and then returned. 
+    Ratio.add(ratio: Ratio): Ratio; 
+    Ratio.subtract(ratio: Ratio): Ratio; 
+    Ratio.multiply(ratio: Ratio): Ratio; 
+    Ratio.divide(ratio: Ratio): Ratio; 
+    Ratio.root(base: number): Ratio; 
 
 ### 6.Algorithms
 
@@ -348,6 +355,22 @@ This class represents a type-safe and length-safe version of array, that also ha
     Vector.length: number;
     Vector.type: string;
     Vector.allowedTypes: string[]; (static)
+
+### 8.Matrix
+
+This class represents a Vector of Vectors of a mathematical matrix. 
+
+#### Class Methods 
+
+    Matrix(sidelen: number, dimensions: number[][]): Matrix; 
+    Matrix.dimensionCheck(sidelen, dimensions): void; (static)
+    Matrix.navigate(coordinat: number[]): Vector; 
+    Matrix.toArray(): number[][]; 
+
+#### Class Properties
+
+    Matrix.matrix: Vector; 
+    Matrix.sidelen: number; 
 
 ## Notes:
 
