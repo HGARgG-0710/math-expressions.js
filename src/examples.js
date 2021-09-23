@@ -224,3 +224,10 @@ console.log(matrix.toArray()) // (10) [Array(10), Array(10), Array(10), Array(1
 
 // This class is pretty useless for now, but has a great potential. 
 // In the future versions of the library there will indeed be more of methods and properties in it. 
+
+// setPrecision() function example 
+expjs.setPrecision(10)
+console.log(expjs.fixedSize) // 10
+
+// This function had to be implemented because of a bug with the global fixedSize variable. 
+// Now it's settled. 

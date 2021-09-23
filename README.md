@@ -21,7 +21,7 @@ or
 ### 1.fixedSize
 
 This variable characterizes how accurate is function output going to be. By default set to 7.
-(Can be modyfied directly).
+(Cannot be modidified directly, only through the setPrecision() function)
 
 ## Functions
 
@@ -55,6 +55,7 @@ This variable characterizes how accurate is function output going to be. By defa
 28. [allFactors()](#28allfactors)
 29. [factorial()](#29factorial)
 30. [realAddition()](#30realaddition)
+31. [setPrecision()](#31setprecision)
 
 ### 1.exp()
 
@@ -177,13 +178,18 @@ Takes a number and returns a number array consisting of all of its factors (do n
 
 ### 29.factorial()
 
-Classic! Good old integer-only factorial() function! You know what it does if you know what factorial is. Takes a integer in and and spits factorial of it out. 
+Classic! Good old integer-only factorial() function! You know what it does if you know what factorial is. Takes a integer in and and spits factorial of it out.
 
-### 30.realAddition() 
+### 30.realAddition()
 
-This function is a fix of classical addition in computer languages. It is very helpful when adding big numbers in which the error might go straight up. 
+This function is a fix of classical addition in computer languages. It is very helpful when adding big numbers in which the error might go straight up.
 Of course, it wouldn't help completely, but a useful thing for quite specific cases.
-It returns an array of two values: 1. the achieved result, 2. the error (it may be helpful in case of rounding up again) 
+It returns an array of two values: 1. the achieved result, 2. the error (it may be helpful in case of rounding up again)
+
+### 31.setPrecision()
+
+This function sets a new value to the fixedSize global variable. It apparently had to be implemented because of the fact that exported variables, defined with let cannot be modified directly, but rather through a function.
+Takes an integer and sets fixedSize equal to it.
 
 ## Classes
 
@@ -316,12 +322,12 @@ This class represents a ratio of two numbers.
 
     Ratio(numerator: number, denomenator: number): Ratio;
     Ratio.evaluate(): number;
-    Ratio.simplify(ratio: Ratio): Ratio; (static) // Note: original ratio is mutated and then returned. 
-    Ratio.add(ratio: Ratio): Ratio; 
-    Ratio.subtract(ratio: Ratio): Ratio; 
-    Ratio.multiply(ratio: Ratio): Ratio; 
-    Ratio.divide(ratio: Ratio): Ratio; 
-    Ratio.root(base: number): Ratio; 
+    Ratio.simplify(ratio: Ratio): Ratio; (static) // Note: original ratio is mutated and then returned.
+    Ratio.add(ratio: Ratio): Ratio;
+    Ratio.subtract(ratio: Ratio): Ratio;
+    Ratio.multiply(ratio: Ratio): Ratio;
+    Ratio.divide(ratio: Ratio): Ratio;
+    Ratio.root(base: number): Ratio;
 
 ### 6.Algorithms
 
@@ -359,19 +365,19 @@ This class represents a type-safe and length-safe version of array, that also ha
 
 ### 8.Matrix
 
-This class represents a Vector of Vectors or a mathematical matrix. 
+This class represents a Vector of Vectors or a mathematical matrix.
 
-#### Class Methods 
+#### Class Methods
 
-    Matrix(sidelen: number, dimensions: number[][]): Matrix; 
+    Matrix(sidelen: number, dimensions: number[][]): Matrix;
     Matrix.dimensionCheck(sidelen, dimensions): void; (static)
-    Matrix.navigate(coordinat: number[]): Vector; 
-    Matrix.toArray(): number[][]; 
+    Matrix.navigate(coordinat: number[]): Vector;
+    Matrix.toArray(): number[][];
 
 #### Class Properties
 
-    Matrix.matrix: Vector; 
-    Matrix.sidelen: number; 
+    Matrix.matrix: Vector;
+    Matrix.sidelen: number;
 
 ## Notes:
 

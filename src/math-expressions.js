@@ -1502,6 +1502,14 @@ function realAddition(float1, float2) {
 	return [sum + fix, fix]
 }
 
+/**
+ * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
+ * @param {number} newPrecision The new value of fixedSize.
+ */
+function setPrecision(newPrecision = 0) {
+	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D 
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1541,4 +1549,5 @@ export {
 	allFactors,
 	factorial,
 	realAddition,
+	setPrecision,
 }
