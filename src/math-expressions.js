@@ -338,12 +338,8 @@ class Expression {
 	}
 
 	set nums(nums) {
-		if (this.#setCount[0] === 0) {
-			this._nums = nums
-		} else {
-			throw new Error("You can't set nums property for the second time!")
-		}
-
+		if (this.#setCount[0] === 0) this._nums = nums
+		else throw new Error("You can't set nums property for the second time!")
 		this.#setCount[0]++
 	}
 
@@ -352,13 +348,11 @@ class Expression {
 	}
 
 	set operators(operators) {
-		if (this.#setCount[1] === 0) {
-			this._operators = operators
-		} else {
+		if (this.#setCount[1] === 0) this._operators = operators
+		else
 			throw new Error(
 				"You can't set operators property for the second time!"
 			)
-		}
 
 		this.#setCount[1]++
 	}
@@ -497,13 +491,12 @@ class Tests {
 	}
 }
 
-// TODO: Add the possibility of creating a Matrix with no array passed.
 class Matrix {
 	#setTimes = 0
 	_matrix = new Vector("object")
 	_sidelen = 0
 
-	constructor(sidelen = 0, dimensions = []) {
+	constructor(sidelen = 0, dimensions = [[]]) {
 		this.sidelen = sidelen
 		Matrix.dimensionCheck(sidelen, dimensions)
 		dimensions.forEach((dimension) =>
@@ -583,9 +576,8 @@ class Matrix {
 
 	toArray() {
 		const final = []
-
-		for (let i = 0; i < this.sidelen; i++) final.push(this.matrix[i].vector)
-
+		for (let i = 0; i < this.sidelen; i++)
+			final.push(this.matrix.byIndex(i).vector)
 		return final
 	}
 }
@@ -920,8 +912,8 @@ class Algorithms {
 
 /**
  * 	Executes an expression with two numbers
- *  @param {number} firstNum  First number(or string).
- *  @param {number} secondNum Second number(or string).
+ *  @param {number} firstNum  First number.
+ *  @param {number} secondNum Second number.
  *  @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  *  @returns {number} Result of a mathematical expression.
  */

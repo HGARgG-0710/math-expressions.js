@@ -1,5 +1,14 @@
 import * as expjs from "./math-expressions.js"
-import { Statistics, Expression, Surface, Tests } from "./math-expressions.js"
+import {
+	Statistics,
+	Expression,
+	Surface,
+	Tests,
+	Ratio,
+	Matrix,
+	Vector,
+	Algorithms,
+} from "./math-expressions.js"
 
 // exp() function examples
 console.log(expjs.exp(2, 3)) // 5
@@ -183,10 +192,35 @@ console.log(expjs.isPerfect(28)) // true
 console.log(expjs.allFactors(28)) // [1, 2, 4, 7, 14]
 console.log(expjs.allFactors(90)) // [1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45]
 
-// factorial () function 
+// factorial () function example
 console.log(expjs.factorial(6))
 console.log(expjs.factorial(10))
 
-// realAddition () function 
+// realAddition () function example
 console.log(expjs.realAddition(0.2, 0.1))
 console.log(expjs.realAddition(0.1, 0.019)) // will return error and the final result
+
+// Algorithms and Ratio classes example
+// For now, it isn't quite rich enough with the algorithms, just the Farey's. 
+// This will generate the numbers in the Farey's number rows, from 0 to 10 (end val you can set yourself).
+console.log(Algorithms.Farey(new Ratio(1, 5), new Ratio(3, 10), 10)) // (11) [Array(2), Array(3), Array(5), Array(9), Array(17), Array(33), Array(65), Array(129), Array(257), Array(513), Array(1025)]
+
+// Vector class example
+const vector = new Vector("number", 10, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) 
+
+console.log(vector.length) // 10
+console.log(vector.byIndex(4)) // 5
+console.log(vector.index(10)) // 9 
+
+// And so on with the other methods... 
+// You can look at them in the source code or in brief README.md "documentation". 
+
+// Matrix class example
+const matrix = new Matrix(10)
+
+console.log(matrix.sidelen) // 10
+console.log(matrix.navigate([0, 1])) // 0, by default matrix is all zeroes. 
+console.log(matrix.toArray()) // (10) [Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10)]
+
+// This class is pretty useless for now, but has a great potential. 
+// In the future versions of the library there will indeed be more of methods and properties in it. 

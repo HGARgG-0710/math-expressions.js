@@ -1,5 +1,0 @@
-Classes: 
-    - Ratio 
-    - Algorithms 
-    - Vector
-    - Matrix
