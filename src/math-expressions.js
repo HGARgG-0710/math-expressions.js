@@ -426,7 +426,7 @@ class Tests {
 	/**
 	 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
 	 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
-	 * @param {number[]} rows Two one-dimensional arrays, using which the u-test is to be done.
+	 * @param {number[][]} rows Two one-dimensional arrays, using which the u-test is to be done.
 	 */
 	static U_test(...rows) {
 		Tests.checkArrSize(rows, 2)
@@ -491,9 +491,85 @@ class Tests {
 	}
 }
 
-class Matrix {
-	#setTimes = 0
+// TODO: Implement the matrixMultiply() method. 
+class RectMatrix {
 	_matrix = new Vector("object")
+	_sidelen = [0, 0]
+
+	constructor(sidelens = [0, 0], dimensions = []) {
+		RectMatrix.dimensionCheck(sidelens, dimensions)
+
+		this._sidelen = sidelens
+		for (let i = 0; i < dimensions.length; i++)
+			this._matrix.add(dimensions[i])
+	}
+
+	static dimensionCheck(sidelens = [0, 0], dimensions = []) {
+		if (sidelens[1] < dimensions.length)
+			while (sidelens[1] < dimensions.length) dimensions.pop()
+
+		if (sidelens[1] > dimensions.length)
+			for (let i = dimensions.length; i < sidelens[1]; )
+				dimensions.push([dimensions[dimensions.length - 1].map(0)])
+
+		for (let i = 0; i < sidelens[1] - 1; i++)
+			if (dimensions[i].length !== dimensions[i + 1].length) {
+				const biggerDimIndex =
+					dimensions[i].length < dimensions[i + 1].length ? i + 1 : i
+				const smallerDimIndex = biggerDimIndex === i ? i + 1 : i
+
+				for (let j = 0; j < dimensions.length[biggerDimIndex]; j++)
+					dimensions[smallerDimIndex].push(0)
+			}
+
+		for (let i = 0; i < sidelens[1]; i++)
+			if (dimensions[i].length > sidelens[0])
+				while (dimensions[i].length > sidelens[0]) dimensions[i].pop()
+	}
+
+	get sidelen() {
+		return this._sidelen
+	}
+
+	set sidelen(sides = [0, 0]) {
+		RectMatrix.dimensionCheck(sides)
+		this._sidelen = copy(sides)
+	}
+
+	get matrix() {
+		return this._matrix
+	}
+
+	scalarAdd(scalar) {
+		for (let i = 0; i < this.sidelen[0]; i++)
+			this.matrix.byIndex(i).scalarAdd(scalar)
+	}
+
+	scalarMultiply(scalar) {
+		for (let i = 0; i < this.sidelen[0]; i++)
+			this.matrix.byIndex(i).scalarMultiply(scalar)
+	}
+
+	navigate(coordinate) {
+		switch (coordinate.length) {
+			case 1:
+				return this._matrix.byIndex(coordinate[0])
+			case 2:
+				return this._matrix
+					.byIndex(coordinate[0])
+					.byIndex(coordinate[1])
+
+			default:
+				throw new Error(
+					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
+				)
+		}
+	}
+}
+
+// TODO: Implement the matrixMultiply() methodi for square matricies. 
+class Matrix extends RectMatrix {
+	#setTimes = 0
 	_sidelen = 0
 
 	constructor(sidelen = 0, dimensions = [[]]) {
@@ -531,10 +607,9 @@ class Matrix {
 			for (let i = dimensions.length; i < sidelen; i++)
 				dimensions.push(generate(1, dimensions[0].length, 1).fill(0))
 		} else {
-			for (let i = sidelen; i < dimensions[i].length; ) dimensions.pop()
+			while (sidelen < dimensions[i].length) dimensions.pop()
 			for (let i = 0; i < sidelen; i++)
-				for (let j = sidelen; j < dimensions[i].length; )
-					dimensions[i].pop()
+				while (sidelen < dimensions[i].length) dimensions[i].pop()
 		}
 
 		if (isVector) {
@@ -554,31 +629,59 @@ class Matrix {
 		return this._sidelen
 	}
 
-	get matrix() {
-		return this._matrix
-	}
-
-	navigate(coordinate) {
-		switch (coordinate.length) {
-			case 1:
-				return this._matrix.byIndex(coordinate[0])
-			case 2:
-				return this._matrix
-					.byIndex(coordinate[0])
-					.byIndex(coordinate[1])
-
-			default:
-				throw new Error(
-					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
-				)
-		}
-	}
-
 	toArray() {
 		const final = []
 		for (let i = 0; i < this.sidelen; i++)
 			final.push(this.matrix.byIndex(i).vector)
 		return final
+	}
+
+	scalarMultiply(scalar) {
+		for (let i = 0; i < this.sidelen; i++)
+			this.matrix.byIndex(i).scalarMultiply(scalar)
+	}
+
+	scalarAdd(scalar) {
+		for (let i = 0; i < this.sidelen; i++)
+			this.matrix.byIndex(i).scalarAdd(scalar)
+	}
+
+	determinant() {
+		function findAdditional(matrix, i, j) {
+			const final = [matrix.matrix.slice(1).map(() => [])]
+
+			for (let index = 0, ind = 0; index < matrix.sidelen; index++)
+				for (let jndex = 0; jndex < matrix.sidelen; jndex++)
+					if (index !== i && jndex !== j) {
+						final[ind].push(matrix.matrix)
+						ind++
+					}
+
+			return new Matrix(final.length, final).determinant()
+		}
+
+		if (this.sidelen > 2) {
+			const matricesDeterminants = {}
+
+			let n = 0
+			let finale = 0
+
+			for (let j = 0; j < this.sidelen; j++)
+				matricesDeterminants[this.matrix.navigate([0, j])] =
+					findAdditional(this, 0, j)
+
+			for (const pair in matricesDeterminants) {
+				finale += matricesDeterminants[pair] * pair * (-1) ** n
+				n++
+			}
+
+			return finale
+		}
+
+		return (
+			this.navigate([0, 0]) * this.navigate([1, 1]) -
+			this.navigate([1, 0]) * this.navigate([0, 1])
+		)
 	}
 }
 
@@ -675,13 +778,21 @@ class Vector {
 		return this._vector[i]
 	}
 
-	slice(start, end) {
+	slice(start, end = this.vector.length - 1) {
 		const sliced = this._vector.slice(start, end)
 		return new Vector(sliced.length, this._type, sliced)
 	}
 
 	index(element) {
 		return this._vector.indexOf(element)
+	}
+
+	scalarMultiply(scalar) {
+		for (let i = 0; i < this._vector.length; i++) this._vector[i] *= scalar
+	}
+
+	scalarAdd(scalar) {
+		for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
 	}
 
 	indexes(element) {
@@ -1507,7 +1618,7 @@ function realAddition(float1, float2) {
  * @param {number} newPrecision The new value of fixedSize.
  */
 function setPrecision(newPrecision = 0) {
-	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D 
+	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D
 }
 
 export {

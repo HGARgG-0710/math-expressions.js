@@ -201,6 +201,7 @@ Takes an integer and sets fixedSize equal to it.
 6. [Algorithms](#6algorithms)
 7. [Vector](#7vector)
 8. [Matrix](#8matrix)
+9. [RectMatrix](#9rectmatrix)
 
 ### 1.Statistics
 
@@ -345,13 +346,13 @@ This class represents a type-safe and length-safe version of array, that also ha
 
     Vector(type: string, length: number, vector: any[]): Vector;
     Vector.typeCheck(item: any): void; (static)
-    Vector.add(item: any);
-    Vector.delete(index: number);
-    Vector.index(item: any);
-    Vector.indexes(item: any);
-    Vector.byIndex(index: number);
-    Vector.slice(start: number, end: number);
-    Vector.fill(item: number);
+    Vector.add(item: any): number; // Returns vector's previous length 
+    Vector.delete(index: number): any;
+    Vector.index(item: any): number; // Allows to find the index of some element in vector. 
+    Vector.indexes(item: any): number[]; // version of Vector.index() for elements that appear multiple times. 
+    Vector.byIndex(index: number): any; // Gives the element being passed in the index of it. 
+    Vector.slice(start: number, end: number): Vector;
+    Vector.fill(item: number): void;
     Vector.getArrType(array): string; (static)
     Vector.swap(index1: number, index2: number): void;
     Vector.set(index: number, value: any): void;
@@ -365,19 +366,40 @@ This class represents a type-safe and length-safe version of array, that also ha
 
 ### 8.Matrix
 
-This class represents a Vector of Vectors or a mathematical matrix.
+This class represents a Vector of Vectors or a mathematical SQUARE (that's important) matrix.
 
 #### Class Methods
 
     Matrix(sidelen: number, dimensions: number[][]): Matrix;
     Matrix.dimensionCheck(sidelen, dimensions): void; (static)
-    Matrix.navigate(coordinat: number[]): Vector;
+    RectMatrix.navigate(coordinate: number[]): Vector; (inherited from RectMatrix) 
     Matrix.toArray(): number[][];
+    Matrix.scalarMultiply(scalar: number): void;
+    Matrix.scalarAdd(scalar: number): void; 
+    Matrix.determinant(): number;  
 
 #### Class Properties
 
     Matrix.matrix: Vector;
     Matrix.sidelen: number;
+
+### 9.RectMatrix
+
+This class represents a rectangular (that's important) mathematical matrix. 
+
+#### Class Methods: 
+
+    RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;  
+    RectMatrix.dimensionCheck(sidelens: number[], dimensions: number[][]); 
+    RectMatrix.navigate(coordinate: number[]): Vector;
+    RectMatrix.scalarAdd(scalar: number): void; 
+    RectMatrix.scalarMultiply(scalar: number): void;  
+
+
+#### Class Properties: 
+
+    RectMatrix.matrix: Vector; 
+    RectMatrix.sidelen: number[]; // first's the width, second's the height 
 
 ## Notes:
 
