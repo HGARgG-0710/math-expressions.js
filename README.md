@@ -1,7 +1,7 @@
 # Math-expressions.js
 
-Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics, 2D surfaces and item (especially numbers) collections.  
-For now, the list of functions and classes provided is quite thin, but in the future library will become a REALLY powerful instrument to work with.
+Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics, 2D surfaces, item (especially numbers) collections and linear algebra (being added now).  
+For now, the list of functions and classes provided is quite thin, but in the future library may become a truly powerful and indeed irreplacable tool, which may save you many hours of coding in just few seconds.
 
 ## Installation
 
