@@ -376,6 +376,7 @@ This class represents a Vector of Vectors or a mathematical SQUARE (that's impor
     Matrix.toArray(): number[][];
     Matrix.scalarMultiply(scalar: number): void;
     Matrix.scalarAdd(scalar: number): void; 
+    Matrix.matrixMultiply(matrix: Matrix): Matrix; 
     Matrix.determinant(): number;  
 
 #### Class Properties

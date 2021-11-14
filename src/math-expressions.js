@@ -491,7 +491,7 @@ class Tests {
 	}
 }
 
-// TODO: Implement the matrixMultiply() method. 
+// TODO: Implement the matrixMultiply() method.
 class RectMatrix {
 	_matrix = new Vector("object")
 	_sidelen = [0, 0]
@@ -510,7 +510,7 @@ class RectMatrix {
 
 		if (sidelens[1] > dimensions.length)
 			for (let i = dimensions.length; i < sidelens[1]; )
-				dimensions.push([dimensions[dimensions.length - 1].map(0)])
+				dimensions.push(dimensions[dimensions.length - 1].map(() => 0))
 
 		for (let i = 0; i < sidelens[1] - 1; i++)
 			if (dimensions[i].length !== dimensions[i + 1].length) {
@@ -567,7 +567,6 @@ class RectMatrix {
 	}
 }
 
-// TODO: Implement the matrixMultiply() methodi for square matricies. 
 class Matrix extends RectMatrix {
 	#setTimes = 0
 	_sidelen = 0
@@ -641,6 +640,25 @@ class Matrix extends RectMatrix {
 			this.matrix.byIndex(i).scalarMultiply(scalar)
 	}
 
+	matrixMultiply(matrix) {
+		if (this._sidelen !== matrix.sidelen)
+			throw new Error(
+				`Trying to multiply square matrices with sidelengths ${this.sidelen} and ${matrix.sidelen} correspondently. `
+			)
+
+		const copy = this.toArray()
+		matrix = matrix.toArray()
+
+		const result = copy.map(() => [copy[0].map(() => 0)])
+
+		for (let i = 0; i < this.sidelen; i++)
+			for (let j = 0; j < this.sidelen; j++)
+				for (let k = 0; k < this.sidelen; k++)
+					result[i][j] += copy[i][k] * matrix[k][j]
+
+		return new Matrix(this.sidelen, result)
+	}
+
 	scalarAdd(scalar) {
 		for (let i = 0; i < this.sidelen; i++)
 			this.matrix.byIndex(i).scalarAdd(scalar)
@@ -648,19 +666,23 @@ class Matrix extends RectMatrix {
 
 	determinant() {
 		function findAdditional(matrix, i, j) {
-			const final = [matrix.matrix.slice(1).map(() => [])]
+			const final = matrix.matrix
+				.slice(1)
+				.toArray()
+				.map(() => [])
 
 			for (let index = 0, ind = 0; index < matrix.sidelen; index++)
 				for (let jndex = 0; jndex < matrix.sidelen; jndex++)
 					if (index !== i && jndex !== j) {
-						final[ind].push(matrix.matrix)
+						final[ind].push(matrix.matrix.toArray()[index][jndex])
 						ind++
 					}
 
 			return new Matrix(final.length, final).determinant()
 		}
 
-		if (this.sidelen > 2) {
+		if (this.sidelen !== 2) {
+			if (this.sidelen === 1) return this.matrix.byIndex(0).byIndex(0)
 			const matricesDeterminants = {}
 
 			let n = 0
