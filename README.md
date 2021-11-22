@@ -56,7 +56,7 @@ This variable characterizes how accurate is function output going to be. By defa
 29. [factorial()](#29factorial)
 30. [realAddition()](#30realaddition)
 31. [setPrecision()](#31setprecision)
-32. [arrayequality()](#32arrayequality) 
+32. [arrayEquality()](#32arrayequality) 
 
 ### 1.exp()
 
