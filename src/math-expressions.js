@@ -491,7 +491,6 @@ class Tests {
 	}
 }
 
-// TODO: Implement the matrixMultiply() method.
 class RectMatrix {
 	_matrix = new Vector("object")
 	_sidelen = [0, 0]
@@ -548,6 +547,24 @@ class RectMatrix {
 	scalarMultiply(scalar) {
 		for (let i = 0; i < this.sidelen[0]; i++)
 			this.matrix.byIndex(i).scalarMultiply(scalar)
+	}
+
+	matrixMultiply(matrix) {
+		if (this.sidelen[0] !== matrix.sidelen[1])
+			throw new Error(
+				`Trying to multiply rectangular matrices with different values for width and height ${this.sidelen[0]} and ${matrix.sidelen[1]} correspondently. They must be equal.`
+			)
+
+		const copy = this.toArray()
+		const matrixCopy = matrix.toArray()
+		const result = copy.map(() => [matrixCopy[0].map(() => 0)])
+
+		for (let i = 0; i < this.sidelen[1]; i++)
+			for (let j = 0; j < matrix.sidelen[0]; j++)
+				for (let k = 0; k < this.sidelen[0]; k++)
+					result[i][j] += copy[i][k] * matrix[k][j]
+
+		return new Matrix([matrix.sidelen[0], this.sidelen[1]], result)
 	}
 
 	navigate(coordinate) {
@@ -1644,6 +1661,22 @@ function setPrecision(newPrecision = 0) {
 	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D
 }
 
+function arrayEquality(...arrays) {
+	function equalBinary(arr1, arr2) {
+		if (arr1.length !== arr2.length) return false
+
+		for (let i = 0; i < arr1.length; i++)
+			if (arr1[i] !== arr2[i]) return false
+
+		return true
+	}
+
+	for (let i = 1; i < arrays.length; i++)
+		if (!equalBinary(arrays[i - 1], arrays[i])) return false
+
+	return true
+}
+
 export {
 	Statistics,
 	Surface,
@@ -1684,4 +1717,5 @@ export {
 	factorial,
 	realAddition,
 	setPrecision,
+	arrayEquality
 }

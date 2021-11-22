@@ -56,6 +56,7 @@ This variable characterizes how accurate is function output going to be. By defa
 29. [factorial()](#29factorial)
 30. [realAddition()](#30realaddition)
 31. [setPrecision()](#31setprecision)
+32. [arrayequality()](#32arrayequality) 
 
 ### 1.exp()
 
@@ -122,7 +123,7 @@ This function takes a number and returns a string value of it, that is much bett
 
 ### 16.factorOut()
 
-This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)!
+This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)! Seems like my previous algorithm was a complete crap and the current one is much better. 
 
 ### 17.truncate()
 
@@ -190,6 +191,10 @@ It returns an array of two values: 1. the achieved result, 2. the error (it may 
 
 This function sets a new value to the fixedSize global variable. It apparently had to be implemented because of the fact that exported variables, defined with let cannot be modified directly, but rather through a function.
 Takes an integer and sets fixedSize equal to it.
+
+### 32.arrayEquality() 
+
+Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too. 
 
 ## Classes
 
@@ -395,6 +400,7 @@ This class represents a rectangular (that's important) mathematical matrix.
     RectMatrix.navigate(coordinate: number[]): Vector;
     RectMatrix.scalarAdd(scalar: number): void; 
     RectMatrix.scalarMultiply(scalar: number): void;  
+    RectMatrix.matrixMultiply(matrix: Matrix): Matrix;  
 
 
 #### Class Properties: 
@@ -413,4 +419,4 @@ For now the library is only at the starting point of being created, so I will be
 
 ### 2.
 
-The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. I myself recommend using versions 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead.
+The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module for some reason and it works (for some reason)).

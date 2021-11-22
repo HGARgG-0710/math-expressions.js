@@ -222,8 +222,8 @@ console.log(matrix.sidelen) // 10
 console.log(matrix.navigate([0, 1])) // 0, by default matrix is all zeroes. 
 console.log(matrix.toArray()) // (10) [Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10), Array(10)]
 
-// This class is pretty useless for now, but has a great potential. 
-// In the future versions of the library there will indeed be more of methods and properties in it. 
+// The class was somewhat useless, but now is much more helpful. 
+// It's generelesation and parent is RectMatrix. It's quite similiar, so i won't show it here. 
 
 // setPrecision() function example 
 expjs.setPrecision(10)
