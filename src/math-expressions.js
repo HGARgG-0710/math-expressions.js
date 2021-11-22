@@ -1615,9 +1615,10 @@ function factorial(number) {
 		throw new Error(
 			"factorial() function is not supposed to be used with the negative numbers. "
 		)
-	if (!numbers.length) return 1
 
 	for (let i = 1; i <= number; i++) numbers.push(i)
+	if (!numbers.length) return 1
+
 	return sameOperator(numbers, "*")
 }
 
