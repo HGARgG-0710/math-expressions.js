@@ -1661,6 +1661,11 @@ function setPrecision(newPrecision = 0) {
 	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D
 }
 
+/**
+ * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
+ * (I.e. returns the boolean value, representing whether they're equal or not).
+ * @param {number[]} arrays An array of one-dimensional array of any length.
+ */
 function arrayEquality(...arrays) {
 	function equalBinary(arr1, arr2) {
 		if (arr1.length !== arr2.length) return false
@@ -1676,6 +1681,22 @@ function arrayEquality(...arrays) {
 
 	return true
 }
+
+/**
+ * This function takes in array and determines how nested it is (its dimensions). 
+ * If it is not array, dimension is 0. 
+ * If it is an array with only empty array, then it's dimension is 0. 
+ * It it is an array with array inside itself, which dimension is n-1, then the dimension is n. 
+ * This function is defined recursively. 
+ * @param {array[]} array An array with any data in it. It doesn't have to be an array, though. 
+*/
+function dim(array) {
+	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
+	const t = (arr) => max(arr.map((el) => d(el)))
+	return array instanceof Array ? t(array) : 0
+}
+
+// TODO: Implement the compareUniversal(...arrays), which uses dim
 
 export {
 	Statistics,
@@ -1717,5 +1738,6 @@ export {
 	factorial,
 	realAddition,
 	setPrecision,
-	arrayEquality
+	arrayEquality,
+	dim
 }
