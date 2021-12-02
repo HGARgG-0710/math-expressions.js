@@ -31,6 +31,7 @@ class Statistics {
 		this.populationStandDev = standardDeviation(nums)
 		this.standardError = standardError(nums)
 
+		this.dim = dim(nums) 
 		this.#setCount++
 	}
 
@@ -52,6 +53,16 @@ class Statistics {
 	get min() {
 		return this._min
 	}
+
+	set dim (d) {
+		this.#set(() => {
+			this._dim = d
+		})
+	} 
+
+	get dim (d) {
+		return this._dim
+	} 
 
 	set max(max) {
 		this.#set(() => {
@@ -1688,7 +1699,7 @@ function arrayEquality(...arrays) {
  * If it is an array with only empty array, then it's dimension is 0. 
  * It it is an array with array inside itself, which dimension is n-1, then the dimension is n. 
  * This function is defined recursively. 
- * @param {array[]} array An array with any data in it. It doesn't have to be an array, though. 
+ * @param {any[]} array An array with any data in it. It doesn't have to be an array, though. 
 */
 function dim(array) {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)

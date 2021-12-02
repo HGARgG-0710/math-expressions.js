@@ -14,16 +14,11 @@ or
 
     npm i math-expressions.js
 
-## Global Variables
+## Global Variables (links) 
 
 1. [fixedSize](#1fixedsize)
 
-### 1.fixedSize
-
-This variable characterizes how accurate is function output going to be. By default set to 7.
-(Cannot be modidified directly, only through the setPrecision() function)
-
-## Functions
+## Functions (links)
 
 1. [exp()](#1exp)
 2. [sameOperator()](#2sameoperator)
@@ -57,6 +52,28 @@ This variable characterizes how accurate is function output going to be. By defa
 30. [realAddition()](#30realaddition)
 31. [setPrecision()](#31setprecision)
 32. [arrayEquality()](#32arrayequality) 
+33. [dim()](#33dim)
+
+## Classes (links) 
+
+1. [Statistics](#1statistics)
+2. [Surface](#2surface)
+3. [Expression](#3expression)
+4. [Tests](#4tests)
+5. [Ratio](#5ratio)
+6. [Algorithms](#6algorithms)
+7. [Vector](#7vector)
+8. [Matrix](#8matrix)
+9. [RectMatrix](#9rectmatrix)
+
+## Global Variables
+
+### 1.fixedSize
+
+This variable characterizes how accurate is function output going to be. By default set to 7.
+(Cannot be modidified directly, only through the setPrecision() function)
+
+## Functions
 
 ### 1.exp()
 
@@ -196,17 +213,11 @@ Takes an integer and sets fixedSize equal to it.
 
 Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too. 
 
-## Classes
+### 33.dim() 
 
-1. [Statistics](#1statistics)
-2. [Surface](#2surface)
-3. [Expression](#3expression)
-4. [Tests](#4tests)
-5. [Ratio](#5ratio)
-6. [Algorithms](#6algorithms)
-7. [Vector](#7vector)
-8. [Matrix](#8matrix)
-9. [RectMatrix](#9rectmatrix)
+Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of array with no elements. Dim of array with n arrays, which have something else in them is n+1 and so on. 
+
+## Classes
 
 ### 1.Statistics
 
