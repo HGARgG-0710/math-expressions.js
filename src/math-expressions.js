@@ -31,7 +31,7 @@ class Statistics {
 		this.populationStandDev = standardDeviation(nums)
 		this.standardError = standardError(nums)
 
-		this.dim = dim(nums) 
+		this.dim = dim(nums)
 		this.#setCount++
 	}
 
@@ -54,15 +54,15 @@ class Statistics {
 		return this._min
 	}
 
-	set dim (d) {
+	set dim(d) {
 		this.#set(() => {
 			this._dim = d
 		})
-	} 
+	}
 
-	get dim (d) {
+	get dim() {
 		return this._dim
-	} 
+	}
 
 	set max(max) {
 		this.#set(() => {
@@ -1694,17 +1694,33 @@ function arrayEquality(...arrays) {
 }
 
 /**
- * This function takes in array and determines how nested it is (its dimensions). 
- * If it is not array, dimension is 0. 
- * If it is an array with only empty array, then it's dimension is 0. 
- * It it is an array with array inside itself, which dimension is n-1, then the dimension is n. 
- * This function is defined recursively. 
- * @param {any[]} array An array with any data in it. It doesn't have to be an array, though. 
-*/
+ * This function takes in array and determines how nested it is (its dimensions).
+ * If it is not array, dimension is 0.
+ * If it is an array with only empty array, then it's dimension is 0.
+ * It it is an array with array inside itself, which dimension is n-1, then the dimension is n.
+ * This function is defined recursively.
+ * @param {any[]} array An array with any data in it. It doesn't have to be an array, though.
+ */
 function dim(array) {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
 	const t = (arr) => max(arr.map((el) => d(el)))
 	return array instanceof Array ? t(array) : 0
+}
+
+/**
+ * Takes two integral numbers and calculates the value of combinatorics choose function for them.
+ * @param {number} n First integer.
+ * @param {number} k Second integer.
+ */
+function binomial(n, k) {
+	if (typeof n !== "number" || typeof k === "number")
+		throw new Error("Requiring a number to calculate the choose function. ")
+
+	// Rounding down just in case. 
+	n = n | 0  
+	k = k | 0 
+
+	return factorial(n) / (factorial(k) * factorial(n - k))
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim
@@ -1750,5 +1766,6 @@ export {
 	realAddition,
 	setPrecision,
 	arrayEquality,
-	dim
+	dim,
+	binomial,
 }
