@@ -217,6 +217,10 @@ Takes any n arrays as it's input and returns a boolean value representing fact o
 
 Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of array with no elements. Dim of array with n arrays, which have something else in them is n+1 and so on. 
 
+### 34.binomial() 
+
+Takes in two numbers and calculates the binomial coefficient for them. (Works not only with integers, if one passes rational number for the first (but not second) argument, it works fine. However, if the second argument is rational, then it gets rounded down to the nearest integer.)
+
 ## Classes
 
 ### 1.Statistics

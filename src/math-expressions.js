@@ -1713,14 +1713,18 @@ function dim(array) {
  * @param {number} k Second integer.
  */
 function binomial(n, k) {
-	if (typeof n !== "number" || typeof k === "number")
+	if (typeof n !== "number" || typeof k !== "number")
 		throw new Error("Requiring a number to calculate the choose function. ")
 
-	// Rounding down just in case. 
-	n = n | 0  
-	k = k | 0 
+	// Rounding down just in case.
+	k = k | 0
 
-	return factorial(n) / (factorial(k) * factorial(n - k))
+	return (
+		sameOperator(
+			generate(0, k - 1, 1).map((num) => n - num),
+			"*"
+		) / factorial(k)
+	)
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim
