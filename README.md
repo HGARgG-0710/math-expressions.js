@@ -53,6 +53,7 @@ or
 31. [setPrecision()](#31setprecision)
 32. [arrayEquality()](#32arrayequality) 
 33. [dim()](#33dim)
+34. [binomial())](#34binomial)
 
 ## Classes (links) 
 
