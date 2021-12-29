@@ -431,8 +431,8 @@ This class represents a rectangular (that's important) mathematical matrix.
 The full documentation for all of these functions and classes may be seen by you in the math-expression.js file.
 Also, you can find examples of how to use them in examples.js file.
 
-For now the library is only at the starting point of being created, so I will be REALLY grateful if you give some help or suggestions about how to make the project even better.
+For now the library is only at the starting point of being created, so any suggestions on the improvement of the project are only appreciated. 
 
 ### 2.
 
-The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module for some reason and it works (for some reason)).
+The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module (for some reason) and it happens to work (for some  reason)).
