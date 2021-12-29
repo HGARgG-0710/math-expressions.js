@@ -1069,6 +1069,131 @@ class Algorithms {
 	}
 }
 
+class Equation {
+	variables = []
+	equation = ""
+
+	static ParseEquation(equationLine, mappings) {
+		const operators = Object.freeze(["+", "*", "/", "-", "^"])
+		let metEquality = false
+
+		mappings = mappings.varmap
+
+		function eliminateSpaces() {
+			return equationLine.split(" ").join("")
+		}
+
+		function parse(line) {
+			const result = { right: "", left: "" }
+
+			for (let i = 0; i < line.length; i++) {
+				switch (line[i]) {
+					case "=":
+						if (metEquality)
+							throw new Error(
+								"Met equality sign in the parsed string already!"
+							)
+						metEquality = true
+						break
+
+					default:
+						if (mappings.variables.includes(line[i])) {
+							line[i] = mappings.mappings[i]
+							continue
+						}
+
+						if (operators.includes(line[i])) continue
+
+						throw new Error(`Unknown symbol detected: ${line[i]}`)
+				}
+			}
+
+			for (let i = 0; i < line.length; i++) {
+				if (line[i] === "=") {
+					result.right = line.slice(0, i)
+					result.left = line.slice(i + 1)
+					break
+				}
+			}
+
+			return result
+		}
+
+		return parse(eliminateSpaces())
+	}
+
+	parse(mappings) {
+		return Equation.ParseEquation(this.equation, mappings)
+	}
+
+	constructor(equationText, vars = ["x"]) {
+		variables = vars
+		equation = equationText
+	}
+
+	differRightLeft(mappings, varname, varvalue) {
+		function plug(parsed) {
+			for (let i = 0; i < parsed.right.length; i++)
+				if (parsed.right[i] === varname) parsed.right[i] = varvalue
+
+			for (let i = 0; i < parsed.left.length; i++)
+				if (parsed.left[i] === varname) parsed.left[i] = varvalue
+		}
+
+		if (!(varname instanceof String))
+			throw new Error(
+				`Expected string as an input of variable name, got ${typeof varname}}`
+			)
+
+		const plugged = plug(parse(mappings))
+		return eval(plugged.right) - eval(plugged.left)
+	}
+
+	// ! WARNING !
+	// This method performs only numerical search, i.e. it doesn't search for the precise solution.
+	// Just an approximation. 
+	// Also, the precsion is recommended to be about 4-5, 'cause if one puts in 10 or more, 
+	// then the JavaScript will blow up as the array will be too big for it to handle. 
+	searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
+		return min(
+			generate(startvalue, startvalue + pathlength, 10 ** -precision).map(
+				(i) => this.differRightLeft(mappings, varname, i)
+			)
+		)
+	}
+}
+
+class VarMapping {
+	varmap = {}
+
+	constructor(vars = "", maps = []) {
+		function isLetter(thing) {
+			return thing.toLowerCase() !== thing.toUpperCase()
+		}
+
+		if (!(vars instanceof String) && !(maps instanceof Array))
+			if (vars.length !== maps.length)
+				throw new Error(
+					"Arrays of different lengths passed to VarMapping constructor. "
+				)
+
+		for (let i = 0; i < vars.length; i++) {
+			if (!isLetter(vars[i]))
+				throw new Error(
+					`Unacceptable character is being passed as a varname: ${vars[i]}`
+				)
+			for (let j = i + 1; j < vars.length; j++)
+				if (vars[j] === vars[i])
+					throw new Error(
+						"Given repeating variable maps in the VarMapping constructor. "
+					)
+		}
+
+		varmap.variables = vars
+		varmap.mappings = maps
+	}
+}
+
 // Functions
 
 /**
@@ -1093,8 +1218,11 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 		case "/":
 		case "*":
 		case "**":
+		case "^":
 		case "%":
-			return eval(`${firstNum} ${operator} ${secondNum}`)
+			return eval(
+				`${firstNum} ${operator === "^" ? "**" : operator} ${secondNum}`
+			)
 
 		default:
 			throw new Error("Unknown airphmetic operator passed!")
@@ -1738,6 +1866,8 @@ export {
 	Algorithms,
 	Vector,
 	Matrix,
+	VarMapping,
+	Equation,
 	exp,
 	sameOperator,
 	fullExp,
