@@ -3,6 +3,12 @@
 export let fixedSize = 7
 
 // Classes
+
+/**
+ * This class represents an assembly of various statistics on the array of numeric data given.
+ *
+ * Useful when needing a lot of info about data in one place.
+ */
 class Statistics {
 	#setCount = 0
 
@@ -195,17 +201,20 @@ class Statistics {
 	}
 }
 
+/**
+ * This class represents a geometric surface with dots, segments and lines on it.
+ * They are represented via coordinates.
+ */
 class Surface {
 	/**
 	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
 	 *
 	 * !!! NOTE: Be careful, when choosing step in your limits objects(or arrays), because after Surface.x and Surface.y properties of your object are generated
-	 * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error.
+	 * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error. !!!
 	 *
-	 * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is the number, that represents step, with which an array of numbers will be assembled.
+	 * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is that step, with which an array of numbers will be assembled.
 	 * @param {object | number[]} yLimits The same as xLimits, but for y axis of your surface.
 	 */
-
 	constructor(xLimits, yLimits) {
 		this.x = generate(xLimits[0], xLimits[1], xLimits[2])
 		this.y = generate(yLimits[0], yLimits[1], yLimits[2])
@@ -314,8 +323,15 @@ class Surface {
 	}
 }
 
+/**
+ * This class represents a mathematical arithmetic expression.
+ *
+ * It can also come in helpful when evaluating the same expression various number of times.
+ */
 class Expression {
 	#setCount = [0, 0]
+	nums = []
+	operators = []
 
 	/**
 	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
@@ -348,8 +364,11 @@ class Expression {
 		return this._nums
 	}
 
-	set nums(nums) {
-		if (this.#setCount[0] === 0) this._nums = nums
+	/**
+	 * @param {number[]} numbers Numbers, which take place in the expression.
+	 */
+	set nums(numbers) {
+		if (this.#setCount[0] === 0) this._nums = numbers
 		else throw new Error("You can't set nums property for the second time!")
 		this.#setCount[0]++
 	}
@@ -369,6 +388,11 @@ class Expression {
 	}
 }
 
+/**
+ * This a class that contains various statistical tests.
+ * It is a static class, i.e. it is supposed to be like this:
+ * * Tests.testName();
+ */
 class Tests {
 	constructor() {
 		throw new TypeError("Tests is not a constructor")
@@ -502,6 +526,9 @@ class Tests {
 	}
 }
 
+/**
+ * This class represents a mathematical rectangular matrix.
+ */
 class RectMatrix {
 	_matrix = new Vector("object")
 	_sidelen = [0, 0]
@@ -595,6 +622,10 @@ class RectMatrix {
 	}
 }
 
+/**
+ * This class represents a square mathematical matrix.
+ * It allows only numbers in itself.
+ */
 class Matrix extends RectMatrix {
 	#setTimes = 0
 	_sidelen = 0
@@ -735,6 +766,10 @@ class Matrix extends RectMatrix {
 	}
 }
 
+/**
+ * This class represents a length-safe array with some nice stuff added to it.
+ * It also may behave like a mathematical vector.
+ */
 class Vector {
 	#setTimes = 0
 
@@ -926,6 +961,9 @@ class Vector {
 	}
 }
 
+/**
+ * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
+ */
 class Ratio {
 	#beenSet = 0
 
@@ -1039,6 +1077,12 @@ class Ratio {
 	}
 }
 
+/**
+ * This class has a bunch of useful algorithms.
+ * This is one of the static classes, it contains only methods,
+ * i.e. it's supposed to be used like this:
+ * * Algorithms.algorithmName(arg_1, ..., arg_n);
+ */
 class Algorithms {
 	constructor() {
 		throw new TypeError("Algorithms is not a constructor")
@@ -1069,15 +1113,24 @@ class Algorithms {
 	}
 }
 
+/**
+ * This class's purpose is to represent a mathematical equation of multiple variables.
+ * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
+ */
 class Equation {
 	variables = []
 	equation = ""
 
+	/**
+	 * A static method for parsing an equation with various mappings applied. 
+	 * @param {string} equationLine A line, containing an equation. 
+	 * @param {VarMapping} mappings A mapping of variables to their values. 
+	*/
 	static ParseEquation(equationLine, mappings) {
 		const operators = Object.freeze(["+", "*", "/", "-", "^"])
 		let metEquality = false
 
-		mappings = mappings.varmap
+		mappings = mappings.varmap // for simplicity of use 
 
 		function eliminateSpaces() {
 			return equationLine.split(" ").join("")
@@ -1122,6 +1175,10 @@ class Equation {
 		return parse(eliminateSpaces())
 	}
 
+	/**
+	 * Parses an equation, that it's invoked onto. 
+	 * @param {VarMapping} mappings Various mappings for variables. 
+	*/
 	parse(mappings) {
 		return Equation.ParseEquation(this.equation, mappings)
 	}
@@ -1131,6 +1188,12 @@ class Equation {
 		equation = equationText
 	}
 
+	/**
+	 * Difference in between the right and left sides of the equation with mappings for different variables. 
+	 * @param {VarMapping} mappings Mapping of variables to their values. 
+	 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm. 
+	 * @param {number} varvalue Addtional value. 
+	*/
 	differRightLeft(mappings, varname, varvalue) {
 		function plug(parsed) {
 			for (let i = 0; i < parsed.right.length; i++)
@@ -1146,28 +1209,49 @@ class Equation {
 			)
 
 		const plugged = plug(parse(mappings))
-		return eval(plugged.right) - eval(plugged.left)
+		return eval(plugged.right) - fullExp(plugged.left)
 	}
 
-	// ! WARNING !
-	// This method performs only numerical search, i.e. it doesn't search for the precise solution.
-	// Just an approximation. 
-	// Also, the precsion is recommended to be about 4-5, 'cause if one puts in 10 or more, 
-	// then the JavaScript will blow up as the array will be too big for it to handle. 
+	/**
+	 * This method searches for the solution of an equation it's invoked onto.
+	 * 
+	 * ! WARNING !
+	 *
+	 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+	 * Just an approximation.
+	 * 
+	 * PARAMETRES
+	 * 
+	 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
+	 * @param {string} varname Name of the variable for which search is invoked.
+	 * @param {number} startvalue Value, from which search is invoked.
+	 * @param {number} pathlength The length of the search path.
+	 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+	 */
 	searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
 		return min(
 			generate(startvalue, startvalue + pathlength, 10 ** -precision).map(
-				(i) => this.differRightLeft(mappings, varname, i)
+				(i) => Math.abs(this.differRightLeft(mappings, varname, i))
 			)
 		)
 	}
 }
 
+/**
+ * This class represents a mapping of variables to numeric values.
+ * It can be used separately or in combination with the Equation class.
+ * (It's original purpose was the second)
+ */
 class VarMapping {
 	varmap = {}
 
-	constructor(vars = "", maps = []) {
-		function isLetter(thing) {
+	/**
+	 * Constructs a new mapping based on the data inputted. 
+	 * @param {string[]} vars Variable names in a mapping. 
+	 * @param {number[]} maps Numerical values for them. 
+	*/
+	constructor(vars = [], maps = []) {
+		function hasLetters(thing) {
 			return thing.toLowerCase() !== thing.toUpperCase()
 		}
 
@@ -1178,9 +1262,9 @@ class VarMapping {
 				)
 
 		for (let i = 0; i < vars.length; i++) {
-			if (!isLetter(vars[i]))
+			if (!hasLetters(vars[i]))
 				throw new Error(
-					`Unacceptable character is being passed as a varname: ${vars[i]}`
+					`Varname without letters is being passed: ${vars[i]}`
 				)
 			for (let j = i + 1; j < vars.length; j++)
 				if (vars[j] === vars[i])
