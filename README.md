@@ -66,6 +66,7 @@ or
 7. [Vector](#7vector)
 8. [Matrix](#8matrix)
 9. [RectMatrix](#9rectmatrix)
+10. [Equation](#10equation)
 
 ## Global Variables
 
