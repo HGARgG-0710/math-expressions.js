@@ -21,7 +21,7 @@ or
 ## Functions (links)
 
 1. [exp()](#1exp)
-2. [sameOperator()](#2sameoperator)
+2. [repeatedArithmetic()](#2repeatedarithmetic)
 3. [fullExp()](#3fullexp)
 4. [repeatExp()](#4repeatexp)
 5. [average()](#5average)
@@ -78,12 +78,16 @@ This variable characterizes how accurate is function output going to be. By defa
 
 ### 1.exp()
 
-With it you can execute a mathematical expression upon two numbers. Takes two numbers and a string with an operator. By default uses + operator.
+With it you can execute a mathematical expression upon two numbers.
+For now, arithmetic only is available. 
+Takes two numbers and a string with an operator. By default uses + operator.
 
-### 2.sameOperator()
+### 2.repeatedArithmetic()
 
 This function allows you to perform an expression, that uses the same mathematic action, but different numbers.
 By default uses + operator.
+
+Before the version 0.7 it was called sameOperator() (you can still use the old name, though). 
 
 ### 3.fullExp()
 
@@ -423,6 +427,44 @@ This class represents a rectangular (that's important) mathematical matrix.
 
     RectMatrix.matrix: Vector; 
     RectMatrix.sidelen: number[]; // first's the width, second's the height 
+
+### 10.Equation
+
+This class represents a mathematical equation. It allows you to equip a particular string, containing
+most basic mathematical equality and arithmetic with tools to approximate solutions to it on a given interval. 
+
+But, before this actually happens the string has to be parsed by certain rules. 
+They are listed here: 
+
+1. The equation has to have two sides, separated by a "=" sign; 
+2. Allowed arithmetical operators are:
+
+        2.1. "a+b" - addition of b to a,
+        2.2. "a-b" - subtraction of b from a (or additive inverse, if put before something), 
+        2.3. "a*b" - multiplication of a by b, 
+        2.4. "a/b" - division of a by b, 
+        2.5  "a^b" - exponentiation of a to the b. 
+
+    (Later there will be more, but for now - that's it)
+3. One can use brackets: "(" and ")", "[" and "]", "{" and "}". They will all be interpreted as the same. 
+4. The order of operations is as in BOMDAS.
+5. You can use different variable names, that are lengthed as 1 (sadly, bigger names don't work yet). 
+
+Also, the computation of the root for the given equation is purely numerical and depends on the given search ranges. 
+And I would highly recommend NOT to make the search area too big and to make the solutions less accurate than 9 ('cause otherwise JS might blow up due to the overflow). 
+
+#### Class Properties
+
+    Equation.variables: string[]; 
+    Equation.equation: string; 
+
+#### Class Methods
+
+    Equation.parse(mappings: VarMapping): {right: string, left: string}; 
+    Equation.ParseEquation(equationLine: string, mappings: VarMapping): { right: string, left: string };  (static) 
+    Equation.differRightLeft(mappings: VarMapping, varname: string, varvalue: number); 
+    Equation.searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4); 
+    Equation.replaceIndex(string: string, index: number, val: string): string; (static)
 
 ## Notes:
 

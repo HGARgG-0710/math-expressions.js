@@ -1,6 +1,20 @@
+/**
+ * * Hello and welcome into the source code.
+ * * I tried to comment everything that may be somewhat confusing along with most of the elements of library.
+ * * Hope this helps. Any contributions are highly appriciated!
+ * * (After this note comes the code)
+ *
+ * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2022
+ */
+
+// Global variables
+
 // * This variable characterizes how many fixed numbers are outputted.
 // * You can change it freely, if you want a more "precise" output of some of the functions.
 export let fixedSize = 7
+
+// Aliases
+export const repeatedArithmetic = sameOperator
 
 // Classes
 
@@ -1122,15 +1136,17 @@ class Equation {
 	equation = ""
 
 	/**
-	 * A static method for parsing an equation with various mappings applied. 
-	 * @param {string} equationLine A line, containing an equation. 
-	 * @param {VarMapping} mappings A mapping of variables to their values. 
-	*/
+	 * A static method for parsing an equation with various mappings applied.
+	 * @param {string} equationLine A line, containing an equation.
+	 * @param {VarMapping} mappings A mapping of variables to their values.
+	 */
 	static ParseEquation(equationLine, mappings) {
 		const operators = Object.freeze(["+", "*", "/", "-", "^"])
+		const brackets = Object.freeze(["[", "]", "(", ")", "{", "}"])
+
 		let metEquality = false
 
-		mappings = mappings.varmap // for simplicity of use 
+		mappings = mappings.varmap // for simplicity of use
 
 		function eliminateSpaces() {
 			return equationLine.split(" ").join("")
@@ -1155,6 +1171,12 @@ class Equation {
 							continue
 						}
 
+						if (brackets.includes(line[i])) {
+							line =
+								brackets.indexOf(line[i]) % 2 === 0 ? "(" : ")"
+							continue
+						}
+
 						if (operators.includes(line[i])) continue
 
 						throw new Error(`Unknown symbol detected: ${line[i]}`)
@@ -1175,32 +1197,41 @@ class Equation {
 		return parse(eliminateSpaces())
 	}
 
+	static replaceIndex(string, index, val) {
+		return string.substring(0, index) + val + string.substring(index + 1)
+	}
+
 	/**
-	 * Parses an equation, that it's invoked onto. 
-	 * @param {VarMapping} mappings Various mappings for variables. 
-	*/
+	 * Parses an equation, that it's invoked onto.
+	 * @param {VarMapping} mappings Various mappings for variables.
+	 */
 	parse(mappings) {
 		return Equation.ParseEquation(this.equation, mappings)
 	}
 
-	constructor(equationText, vars = ["x"]) {
-		variables = vars
-		equation = equationText
+	constructor(equationText = "", vars = ["x"]) {
+		this.variables = vars
+		this.equation = equationText
 	}
 
 	/**
-	 * Difference in between the right and left sides of the equation with mappings for different variables. 
-	 * @param {VarMapping} mappings Mapping of variables to their values. 
-	 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm. 
-	 * @param {number} varvalue Addtional value. 
-	*/
+	 * Difference in between the right and left sides of the equation with mappings for different variables.
+	 * @param {VarMapping} mappings Mapping of variables to their values.
+	 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm.
+	 * @param {number} varvalue Addtional value.
+	 */
 	differRightLeft(mappings, varname, varvalue) {
+		// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
 		function plug(parsed) {
 			for (let i = 0; i < parsed.right.length; i++)
-				if (parsed.right[i] === varname) parsed.right[i] = varvalue
+				if (parsed.right[i] === varname)
+					parsed.right = replaceIndex(parsed.right, i, varvalue)
 
 			for (let i = 0; i < parsed.left.length; i++)
-				if (parsed.left[i] === varname) parsed.left[i] = varvalue
+				if (parsed.left[i] === varname)
+					parsed.left = replaceIndex(parsed.left, i, varvalue)
+
+			return parsed
 		}
 
 		if (!(varname instanceof String))
@@ -1208,20 +1239,21 @@ class Equation {
 				`Expected string as an input of variable name, got ${typeof varname}}`
 			)
 
-		const plugged = plug(parse(mappings))
+		const plugged = plug(this.parse(mappings))
 		return eval(plugged.right) - fullExp(plugged.left)
 	}
 
 	/**
 	 * This method searches for the solution of an equation it's invoked onto.
-	 * 
+	 *
 	 * ! WARNING !
 	 *
 	 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-	 * Just an approximation.
-	 * 
+	 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+	 * (However, if the root is rational, then it could even be exactly it.)
+	 *
 	 * PARAMETRES
-	 * 
+	 *
 	 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
 	 * @param {string} varname Name of the variable for which search is invoked.
 	 * @param {number} startvalue Value, from which search is invoked.
@@ -1229,11 +1261,12 @@ class Equation {
 	 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
 	 */
 	searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
-		return min(
-			generate(startvalue, startvalue + pathlength, 10 ** -precision).map(
-				(i) => Math.abs(this.differRightLeft(mappings, varname, i))
-			)
-		)
+		const differences = generate(
+			startvalue,
+			startvalue + pathlength,
+			10 ** -precision
+		).map((i) => Math.abs(this.differRightLeft(mappings, varname, i)))
+		return startvalue + differences.indexOf(min(differences)) * 10 ** (-precision)
 	}
 }
 
@@ -1243,13 +1276,13 @@ class Equation {
  * (It's original purpose was the second)
  */
 class VarMapping {
-	varmap = {}
+	varmap = { variables: [], mappings: [] }
 
 	/**
-	 * Constructs a new mapping based on the data inputted. 
-	 * @param {string[]} vars Variable names in a mapping. 
-	 * @param {number[]} maps Numerical values for them. 
-	*/
+	 * Constructs a new mapping based on the data inputted.
+	 * @param {string[]} vars Variable names in a mapping.
+	 * @param {number[]} maps Numerical values for them.
+	 */
 	constructor(vars = [], maps = []) {
 		function hasLetters(thing) {
 			return thing.toLowerCase() !== thing.toUpperCase()
@@ -1275,6 +1308,30 @@ class VarMapping {
 
 		varmap.variables = vars
 		varmap.mappings = maps
+	}
+
+	/**
+	 * Adds a new pair of name-number to the mapping.
+	 * Useful when using some sort of numerical function in a big cycle.
+	 * @param {string} name Name of the new (or old) property.
+	 * @param {number} value Numerical value to be set to the name.
+	 *
+	 * ! NOTE: Can be used to change the old property by setting name to be old.
+	 */
+	add(name, value) {
+		if (typeof value !== "number")
+			throw new Error("Given non-numeric data as a value for mapping. ")
+
+		this.varmap[name] = value
+	}
+
+	/**
+	 * Deletes a property from varmap by the given name.
+	 * @param {string} name Name to be used for deletion.
+	 * @returns {boolean} Whether the delete was successful or not.
+	 */
+	delete(name) {
+		return delete this.varmap[name]
 	}
 }
 
