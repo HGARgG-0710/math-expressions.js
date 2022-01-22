@@ -1982,8 +1982,9 @@ function dim(array) {
 }
 
 /**
- * Takes two integral numbers and calculates the value of combinatorics choose function for them.
- * @param {number} n First integer.
+ * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
+ * (What it actually does is it takes their binomial coefficient, but never mind about that. )
+ * @param {number} n First number.
  * @param {number} k Second integer.
  */
 function binomial(n, k) {
