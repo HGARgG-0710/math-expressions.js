@@ -13,7 +13,9 @@
 // * You can change it freely, if you want a more "precise" output of some of the functions.
 export let fixedSize = 7
 
-// Aliases
+// Aliases  
+
+// * sameOperator was a really-really bad name, and so I decided to change it. 
 export const repeatedArithmetic = sameOperator
 
 // Classes
@@ -348,7 +350,7 @@ class Expression {
 	operators = []
 
 	/**
-	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), sameOperator(), fullExp(), repeatExp().)
+	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), repeatedArithmetic(), fullExp(), repeatExp().)
 	 * @param {number[]} nums An array, containing numbers of expression.
 	 * @param {string[]} operators An array, containing operators of expression.
 	 */
@@ -1266,7 +1268,10 @@ class Equation {
 			startvalue + pathlength,
 			10 ** -precision
 		).map((i) => Math.abs(this.differRightLeft(mappings, varname, i)))
-		return startvalue + differences.indexOf(min(differences)) * 10 ** (-precision)
+		return (
+			startvalue +
+			differences.indexOf(min(differences)) * 10 ** -precision
+		)
 	}
 }
 
@@ -1462,7 +1467,7 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
-	return floor(sameOperator(newArr) / (len + modif), fixedSize)
+	return floor(repeatedArithmetic(newArr) / (len + modif), fixedSize)
 }
 
 /**
@@ -1847,7 +1852,7 @@ function expectedValue(numbers, probabilities) {
 	for (let i = 0; i < numbers.length; i++)
 		values.push(numbers[i] * probabilities[i])
 
-	return sameOperator(values)
+	return repeatedArithmetic(values)
 }
 
 /**
@@ -1885,7 +1890,7 @@ function floor(number, afterDot) {
  * @param {number} number Number, perfectness of which is to be checked.
  */
 function isPerfect(number) {
-	return sameOperator(allFactors(number)) === number
+	return repeatedArithmetic(allFactors(number)) === number
 }
 
 /**
@@ -1916,7 +1921,7 @@ function factorial(number) {
 	for (let i = 1; i <= number; i++) numbers.push(i)
 	if (!numbers.length) return 1
 
-	return sameOperator(numbers, "*")
+	return repeatedArithmetic(numbers, "*")
 }
 
 /**
@@ -1989,7 +1994,7 @@ function binomial(n, k) {
 	k = k | 0
 
 	return (
-		sameOperator(
+		repeatedArithmetic(
 			generate(0, k - 1, 1).map((num) => n - num),
 			"*"
 		) / factorial(k)
