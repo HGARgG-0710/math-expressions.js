@@ -11,11 +11,11 @@
 
 // * This variable characterizes how many fixed numbers are outputted.
 // * You can change it freely, if you want a more "precise" output of some of the functions.
-export let fixedSize = 7
+export let fixedSize = 11
 
-// Aliases  
+// Aliases
 
-// * sameOperator was a really-really bad name, and so I decided to change it. 
+// * sameOperator was a really-really bad name, and so I decided to change it.
 export const repeatedArithmetic = sameOperator
 
 // Classes
@@ -1104,6 +1104,37 @@ class Algorithms {
 		throw new TypeError("Algorithms is not a constructor")
 	}
 
+	// TODO: Test. If works - good, if doesn't - fix. 
+	static BinarySearch(array, number) {
+		// * For getting the middle index of the array.
+		const middle = (arr) => floor(median(arr.map((a, i) => i)), 0)
+
+		let copyArray = sort(array)
+		let index = middle(copyArray)
+
+		while (true) {
+			if (copyArray.length === 1 && copyArray[0] !== number) break
+			if (number === copyArray[index]) return index
+
+			if (number > copyArray[index]) {
+				copyArray = copyArray.slice(index + 1, copyArray.length)
+				index = middle(copyArray)
+				continue
+			}
+
+			copyArray = copyArray.slice(0, index)
+			index = middle(copyArray)
+		}
+
+		return -1
+	}
+
+	/**
+	 * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
+	 * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
+	 * @param {Ratio} endRatio Ratio, that is used as an upper bound in the algorithm.
+	 * @param {number} iterations Number of iterations (integer).
+	 */
 	static Farey(startRatio, endRatio, iterations = 0) {
 		function formNewRatio(first, second) {
 			return new Ratio(
@@ -1571,14 +1602,11 @@ function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
 
 /**
  * Copies an array without referencing its object.
- * @param {number[]} nums A numeric array, thatneeds to be copied.
+ * @param {any[]} nums An array that needs to be copied.
  * @returns {number[]} Copy of a passed array, without referencing its object.
  */
 function copy(nums = [1, 2, 3, 4, 5]) {
-	const copyArr = []
-	nums.forEach((num) => copyArr.push(num))
-
-	return copyArr
+	return nums.map((i) => i)
 }
 
 /**

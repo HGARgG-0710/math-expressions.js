@@ -14,7 +14,7 @@ or
 
     npm i math-expressions.js
 
-## Global Variables (links) 
+## Global Variables (links)
 
 1. [fixedSize](#1fixedsize)
 
@@ -51,11 +51,11 @@ or
 29. [factorial()](#29factorial)
 30. [realAddition()](#30realaddition)
 31. [setPrecision()](#31setprecision)
-32. [arrayEquality()](#32arrayequality) 
+32. [arrayEquality()](#32arrayequality)
 33. [dim()](#33dim)
 34. [binomial()](#34binomial)
 
-## Classes (links) 
+## Classes (links)
 
 1. [Statistics](#1statistics)
 2. [Surface](#2surface)
@@ -67,12 +67,13 @@ or
 8. [Matrix](#8matrix)
 9. [RectMatrix](#9rectmatrix)
 10. [Equation](#10equation)
+11. [VarMapping](#11varmapping)
 
 ## Global Variables
 
 ### 1.fixedSize
 
-This variable characterizes how accurate is function output going to be. By default set to 7.
+This variable characterizes how accurate is function output going to be. By default set to 11.
 (Cannot be modidified directly, only through the setPrecision() function)
 
 ## Functions
@@ -80,7 +81,7 @@ This variable characterizes how accurate is function output going to be. By defa
 ### 1.exp()
 
 With it you can execute a mathematical expression upon two numbers.
-For now, arithmetic only is available. 
+For now, arithmetic only is available.
 Takes two numbers and a string with an operator. By default uses + operator.
 
 ### 2.repeatedArithmetic()
@@ -88,7 +89,7 @@ Takes two numbers and a string with an operator. By default uses + operator.
 This function allows you to perform an expression, that uses the same mathematic action, but different numbers.
 By default uses + operator.
 
-Before the version 0.7 it was called sameOperator() (you can still use the old name, though). 
+Before the version 0.7 it was called sameOperator() (you can still use the old name, though).
 
 ### 3.fullExp()
 
@@ -146,7 +147,7 @@ This function takes a number and returns a string value of it, that is much bett
 
 ### 16.factorOut()
 
-This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)! Seems like my previous algorithm was a complete crap and the current one is much better. 
+This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)! Seems like my previous algorithm was a complete crap and the current one is much better.
 
 ### 17.truncate()
 
@@ -215,15 +216,15 @@ It returns an array of two values: 1. the achieved result, 2. the error (it may 
 This function sets a new value to the fixedSize global variable. It apparently had to be implemented because of the fact that exported variables, defined with let cannot be modified directly, but rather through a function.
 Takes an integer and sets fixedSize equal to it.
 
-### 32.arrayEquality() 
+### 32.arrayEquality()
 
-Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too. 
+Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too.
 
-### 33.dim() 
+### 33.dim()
 
-Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of array with no elements. Dim of array with n arrays, which have something else in them is n+1 and so on. 
+Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of array with no elements. Dim of array with n arrays, which have something else in them is n+1 and so on.
 
-### 34.binomial() 
+### 34.binomial()
 
 Takes in two numbers and calculates the binomial coefficient for them. (Works not only with integers, if one passes rational number for the first (but not second) argument, it works fine. However, if the second argument is rational, then it gets rounded down to the nearest integer.)
 
@@ -372,11 +373,11 @@ This class represents a type-safe and length-safe version of array, that also ha
 
     Vector(type: string, length: number, vector: any[]): Vector;
     Vector.typeCheck(item: any): void; (static)
-    Vector.add(item: any): number; // Returns vector's previous length 
+    Vector.add(item: any): number; // Returns vector's previous length
     Vector.delete(index: number): any;
-    Vector.index(item: any): number; // Allows to find the index of some element in vector. 
-    Vector.indexes(item: any): number[]; // version of Vector.index() for elements that appear multiple times. 
-    Vector.byIndex(index: number): any; // Gives the element being passed in the index of it. 
+    Vector.index(item: any): number; // Allows to find the index of some element in vector.
+    Vector.indexes(item: any): number[]; // version of Vector.index() for elements that appear multiple times.
+    Vector.byIndex(index: number): any; // Gives the element being passed in the index of it.
     Vector.slice(start: number, end: number): Vector;
     Vector.fill(item: number): void;
     Vector.getArrType(array): string; (static)
@@ -398,12 +399,12 @@ This class represents a Vector of Vectors or a mathematical SQUARE (that's impor
 
     Matrix(sidelen: number, dimensions: number[][]): Matrix;
     Matrix.dimensionCheck(sidelen, dimensions): void; (static)
-    RectMatrix.navigate(coordinate: number[]): Vector; (inherited from RectMatrix) 
+    RectMatrix.navigate(coordinate: number[]): Vector; (inherited from RectMatrix)
     Matrix.toArray(): number[][];
     Matrix.scalarMultiply(scalar: number): void;
-    Matrix.scalarAdd(scalar: number): void; 
-    Matrix.matrixMultiply(matrix: Matrix): Matrix; 
-    Matrix.determinant(): number;  
+    Matrix.scalarAdd(scalar: number): void;
+    Matrix.matrixMultiply(matrix: Matrix): Matrix;
+    Matrix.determinant(): number;
 
 #### Class Properties
 
@@ -412,60 +413,79 @@ This class represents a Vector of Vectors or a mathematical SQUARE (that's impor
 
 ### 9.RectMatrix
 
-This class represents a rectangular (that's important) mathematical matrix. 
+This class represents a rectangular (that's important) mathematical matrix.
 
-#### Class Methods: 
+#### Class Methods:
 
-    RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;  
-    RectMatrix.dimensionCheck(sidelens: number[], dimensions: number[][]); 
+    RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;
+    RectMatrix.dimensionCheck(sidelens: number[], dimensions: number[][]);
     RectMatrix.navigate(coordinate: number[]): Vector;
-    RectMatrix.scalarAdd(scalar: number): void; 
-    RectMatrix.scalarMultiply(scalar: number): void;  
-    RectMatrix.matrixMultiply(matrix: Matrix): Matrix;  
+    RectMatrix.scalarAdd(scalar: number): void;
+    RectMatrix.scalarMultiply(scalar: number): void;
+    RectMatrix.matrixMultiply(matrix: Matrix): Matrix;
 
+#### Class Properties:
 
-#### Class Properties: 
-
-    RectMatrix.matrix: Vector; 
-    RectMatrix.sidelen: number[]; // first's the width, second's the height 
+    RectMatrix.matrix: Vector;
+    RectMatrix.sidelen: number[]; // first's the width, second's the height
 
 ### 10.Equation
 
 This class represents a mathematical equation. It allows you to equip a particular string, containing
-most basic mathematical equality and arithmetic with tools to approximate solutions to it on a given interval. 
+most basic mathematical equality and arithmetic with tools to approximate solutions to it on a given interval.
 
-But, before this actually happens the string has to be parsed by certain rules. 
-They are listed here: 
+But, before this actually happens the string has to be parsed by certain rules.
+They are listed here:
 
-1. The equation has to have two sides, separated by a "=" sign; 
-2. Allowed arithmetical operators are:
+1.  The equation has to have two sides, separated by a "=" sign;
+2.  Allowed arithmetical operators are:
 
         2.1. "a+b" - addition of b to a,
-        2.2. "a-b" - subtraction of b from a (or additive inverse, if put before something), 
-        2.3. "a*b" - multiplication of a by b, 
-        2.4. "a/b" - division of a by b, 
-        2.5  "a^b" - exponentiation of a to the b. 
+        2.2. "a-b" - subtraction of b from a (or additive inverse, if put before something),
+        2.3. "a*b" - multiplication of a by b,
+        2.4. "a/b" - division of a by b,
+        2.5  "a^b" - exponentiation of a to the b.
 
     (Later there will be more, but for now - that's it)
-3. One can use brackets: "(" and ")", "[" and "]", "{" and "}". They will all be interpreted as the same. 
-4. The order of operations is as in BOMDAS.
-5. You can use different variable names, that are lengthed as 1 (sadly, bigger names don't work yet). 
 
-Also, the computation of the root for the given equation is purely numerical and depends on the given search ranges. 
-And I would highly recommend NOT to make the search area too big and to make the solutions less accurate than 9 ('cause otherwise JS might blow up due to the overflow). 
+3.  One can use brackets: "(" and ")", "[" and "]", "{" and "}". They will all be interpreted as the same.
+4.  The order of operations is as in BOMDAS.
+5.  You can use different variable names, that are lengthed as 1 (sadly, bigger names don't work yet).
+
+Also, the computation of the root for the given equation is purely numerical and depends on the given search ranges.
+And I would highly recommend NOT to make the search area too big and to make the solutions less accurate than 9 ('cause otherwise JS might blow up due to the overflow).
 
 #### Class Properties
 
-    Equation.variables: string[]; 
-    Equation.equation: string; 
+    Equation.variables: string[];
+    Equation.equation: string;
 
 #### Class Methods
 
-    Equation.parse(mappings: VarMapping): {right: string, left: string}; 
-    Equation.ParseEquation(equationLine: string, mappings: VarMapping): { right: string, left: string };  (static) 
-    Equation.differRightLeft(mappings: VarMapping, varname: string, varvalue: number); 
-    Equation.searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4); 
+    Equation(equationText: string, vars: string[]): Equation;
+    Equation.parse(mappings: VarMapping): { right: string, left: string };
+    Equation.ParseEquation(equationLine: string, mappings: VarMapping): { right: string, left: string };  (static)
+    Equation.differRightLeft(mappings: VarMapping, varname: string, varvalue: number);
+    Equation.searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4);
     Equation.replaceIndex(string: string, index: number, val: string): string; (static)
+
+### 11.VarMapping
+
+This class is mostly neccesary for the use with Equation class.
+
+It represents a mapping from variables to their values, that are gonna be plugged into the final equation object after parsing and plugging in.
+
+By the way, it works not just with variables, which have length 1. In fact, the variable names can even have numbers in them (there must be at least one letter, however). This current problem is in the Equation class only. In order to fix it, one would have to rewrite the plugging procedure completely.
+
+#### Class Properties
+
+    VarMapping.varmap: { variables: string[], mappings: number[] };
+
+#### Class Methods 
+
+    VarMapping (vars: string[], maps: number[]): VarMapping; 
+    VarMapping.add(name: string, value: number): void; 
+    VarMapping.delete(name: string): boolean; // Returns, whether the deletion was successful. 
 
 ## Notes:
 
@@ -474,8 +494,8 @@ And I would highly recommend NOT to make the search area too big and to make the
 The full documentation for all of these functions and classes may be seen by you in the math-expression.js file.
 Also, you can find examples of how to use them in examples.js file.
 
-For now the library is only at the starting point of being created, so any suggestions on the improvement of the project are only appreciated. 
+For now the library is only at the starting point of being created, so any suggestions on the improvement of the project are only appreciated.
 
 ### 2.
 
-The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module (for some reason) and it happens to work (for some  reason)).
+The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module (for some reason) and it happens to work (for some reason)).
