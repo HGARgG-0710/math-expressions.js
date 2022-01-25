@@ -222,7 +222,7 @@ Takes any n arrays as it's input and returns a boolean value representing fact o
 
 ### 33.dim()
 
-Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of array with no elements. Dim of array with n arrays, which have something else in them is n+1 and so on.
+Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of an array with no elements in it. Dim of array with n >= 1 arrays, which have something else in them is n+1.  
 
 ### 34.binomial()
 
@@ -364,6 +364,7 @@ That is another static class, this time containing algorithms instead of statist
 #### Class Methods
 
     Algorithms.Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]; (static)
+    Algorithms.BinarySearch(array: number[], element: number): number; // returns index of sorted array
 
 ### 7.Vector
 
@@ -394,16 +395,17 @@ This class represents a type-safe and length-safe version of array, that also ha
 ### 8.Matrix
 
 This class represents a Vector of Vectors or a mathematical SQUARE (that's important) matrix.
+It's only possible necessety and advantage over RectMatrix is the determinant method, that allows you to find a determinant of a square matrix. 
 
 #### Class Methods
 
     Matrix(sidelen: number, dimensions: number[][]): Matrix;
-    Matrix.dimensionCheck(sidelen, dimensions): void; (static)
+    Matrix.dimensionCheck(sidelen, dimensions): void; (static) (inherited from RectMatrix)
     RectMatrix.navigate(coordinate: number[]): Vector; (inherited from RectMatrix)
-    Matrix.toArray(): number[][];
-    Matrix.scalarMultiply(scalar: number): void;
-    Matrix.scalarAdd(scalar: number): void;
-    Matrix.matrixMultiply(matrix: Matrix): Matrix;
+    Matrix.toArray(): number[][]; (inherited from RectMatrix)
+    Matrix.scalarMultiply(scalar: number): void; (inherited from RectMatrix)
+    Matrix.scalarAdd(scalar: number): void; (inherited from RectMatrix)
+    Matrix.matrixMultiply(matrix: Matrix): Matrix; (inherited from RectMatrix)
     Matrix.determinant(): number;
 
 #### Class Properties
@@ -420,14 +422,15 @@ This class represents a rectangular (that's important) mathematical matrix.
     RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;
     RectMatrix.dimensionCheck(sidelens: number[], dimensions: number[][]);
     RectMatrix.navigate(coordinate: number[]): Vector;
+    RectMatrix.toArray(): number[][];
     RectMatrix.scalarAdd(scalar: number): void;
     RectMatrix.scalarMultiply(scalar: number): void;
-    RectMatrix.matrixMultiply(matrix: Matrix): Matrix;
+    RectMatrix.matrixMultiply(matrix: RectMatrix): Matrix;
 
 #### Class Properties:
 
     RectMatrix.matrix: Vector;
-    RectMatrix.sidelen: number[]; // first's the width, second's the height
+    RectMatrix.sidelen: number[]; // first's the width (number of vectors) , second's the height (number of numbers in vectors) 
 
 ### 10.Equation
 
@@ -481,11 +484,11 @@ By the way, it works not just with variables, which have length 1. In fact, the 
 
     VarMapping.varmap: { variables: string[], mappings: number[] };
 
-#### Class Methods 
+#### Class Methods
 
-    VarMapping (vars: string[], maps: number[]): VarMapping; 
-    VarMapping.add(name: string, value: number): void; 
-    VarMapping.delete(name: string): boolean; // Returns, whether the deletion was successful. 
+    VarMapping (vars: string[], maps: number[]): VarMapping;
+    VarMapping.add(name: string, value: number): void;
+    VarMapping.delete(name: string): boolean; // Returns, whether the deletion was successful.
 
 ## Notes:
 

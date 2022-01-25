@@ -9,14 +9,19 @@
 
 // Global variables
 
-// * This variable characterizes how many fixed numbers are outputted.
-// * You can change it freely, if you want a more "precise" output of some of the functions.
+/**
+ *
+ * * This variable characterizes how many fixed numbers are outputted.
+ * * You can change it freely, if you want a more "precise" output of some of the functions.
+ */
 export let fixedSize = 11
 
 // Aliases
 
 // * sameOperator was a really-really bad name, and so I decided to change it.
-export const repeatedArithmetic = sameOperator
+// * Still, for backwards compatebility reasons I left it.
+// * (Library has a lot of bugs already, why add more? XD Better just fix the old ones and try not to add new. )
+export const sameOperator = repeatedArithmetic
 
 // Classes
 
@@ -300,8 +305,6 @@ class Surface {
 				this.lines.push(dots)
 				this.segments.push(dots)
 			} else {
-				console.log(find(this.dots, dots)[0])
-				console.log(find(this.lines, dots)[1] <= 1)
 				throw Error(
 					`You have used use Surface.prototype.line method for adding
 				one(or zero) dot(dots) or line you're trying to add already exists
@@ -554,18 +557,15 @@ class RectMatrix {
 
 		this._sidelen = sidelens
 		for (let i = 0; i < dimensions.length; i++)
-			this._matrix.add(dimensions[i])
+			this._matrix.add(new Vector("number", sidelens[0], dimensions[i]))
 	}
 
 	static dimensionCheck(sidelens = [0, 0], dimensions = []) {
-		if (sidelens[1] < dimensions.length)
-			while (sidelens[1] < dimensions.length) dimensions.pop()
+		while (sidelens[0] < dimensions.length) dimensions.pop()
+		while (sidelens[0] > dimensions.length)
+			dimensions.push(generate(1, sidelens[1]).map(() => 0))
 
-		if (sidelens[1] > dimensions.length)
-			for (let i = dimensions.length; i < sidelens[1]; )
-				dimensions.push(dimensions[dimensions.length - 1].map(() => 0))
-
-		for (let i = 0; i < sidelens[1] - 1; i++)
+		for (let i = 0; i < sidelens[0] - 1; i++)
 			if (dimensions[i].length !== dimensions[i + 1].length) {
 				const biggerDimIndex =
 					dimensions[i].length < dimensions[i + 1].length ? i + 1 : i
@@ -575,9 +575,8 @@ class RectMatrix {
 					dimensions[smallerDimIndex].push(0)
 			}
 
-		for (let i = 0; i < sidelens[1]; i++)
-			if (dimensions[i].length > sidelens[0])
-				while (dimensions[i].length > sidelens[0]) dimensions[i].pop()
+		for (let i = 0; i < sidelens[0]; i++)
+			while (dimensions[i].length > sidelens[1]) dimensions[i].pop()
 	}
 
 	get sidelen() {
@@ -603,6 +602,14 @@ class RectMatrix {
 			this.matrix.byIndex(i).scalarMultiply(scalar)
 	}
 
+	toArray() {
+		const final = []
+		for (let i = 0; i < this._sidelen[0]; i++) {
+			final.push(this.matrix.byIndex(i).vector)
+		}
+		return final
+	}
+
 	matrixMultiply(matrix) {
 		if (this.sidelen[0] !== matrix.sidelen[1])
 			throw new Error(
@@ -611,14 +618,14 @@ class RectMatrix {
 
 		const copy = this.toArray()
 		const matrixCopy = matrix.toArray()
-		const result = copy.map(() => [matrixCopy[0].map(() => 0)])
+		const result = copy.map(() => matrixCopy[0].map(() => 0))
 
 		for (let i = 0; i < this.sidelen[1]; i++)
 			for (let j = 0; j < matrix.sidelen[0]; j++)
 				for (let k = 0; k < this.sidelen[0]; k++)
 					result[i][j] += copy[i][k] * matrix[k][j]
 
-		return new Matrix([matrix.sidelen[0], this.sidelen[1]], result)
+		return new RectMatrix([matrix.sidelen[0], this.sidelen[1]], result)
 	}
 
 	navigate(coordinate) {
@@ -643,102 +650,26 @@ class RectMatrix {
  * It allows only numbers in itself.
  */
 class Matrix extends RectMatrix {
-	#setTimes = 0
-	_sidelen = 0
-
-	constructor(sidelen = 0, dimensions = [[]]) {
-		this.sidelen = sidelen
-		Matrix.dimensionCheck(sidelen, dimensions)
-		dimensions.forEach((dimension) =>
-			this._matrix.add(new Vector("number", sidelen, dimension))
-		)
-
-		this.#setTimes++
+	constructor(sidelen = 0, dimensions = []) {
+		super([sidelen, sidelen], dimensions)
 	}
 
 	static dimensionCheck(sidelen, dimensions) {
-		const isVector = dimensions instanceof Vector
-
-		if (isVector) {
-			dimensions = dimensions.vector
-			dimensions.forEach((vector, index) => {
-				dimensions[index] = vector.vector
-			})
-		}
-
-		dimensions.slice(1).forEach((dimension, index) => {
-			if (dimension.length !== dimension[index - 1])
-				throw new Error(
-					"Lengths of given matrix dimensions are different!"
-				)
-		})
-
-		if (dimensions[0].length < sidelen) {
-			for (let i = 0; i < dimensions.length; i++)
-				for (let j = dimensions[i].length; j < sidelen; j++)
-					dimensions[i][j] = 0
-
-			for (let i = dimensions.length; i < sidelen; i++)
-				dimensions.push(generate(1, dimensions[0].length, 1).fill(0))
-		} else {
-			while (sidelen < dimensions[i].length) dimensions.pop()
-			for (let i = 0; i < sidelen; i++)
-				while (sidelen < dimensions[i].length) dimensions[i].pop()
-		}
-
-		if (isVector) {
-			dimensions.forEach((vector, index) => {
-				dimensions[index] = new Vector("number", sidelen, vector)
-			})
-			dimensions = new Vector("object", sidelen, dimensions)
-		}
+		RectMatrix.dimensionCheck([sidelen, sidelen], dimensions)
 	}
 
 	set sidelen(newSidelen) {
-		this.#setTimes ? Matrix.dimensionCheck(newSidelen, this._matrix) : null
-		this._sidelen = newSidelen
+		Matrix.dimensionCheck(newSidelen)
+		this._sidelen = [newSidelen, newSidelen]
 	}
 
 	get sidelen() {
-		return this._sidelen
+		return this._sidelen[0]
 	}
 
-	toArray() {
-		const final = []
-		for (let i = 0; i < this.sidelen; i++)
-			final.push(this.matrix.byIndex(i).vector)
-		return final
-	}
-
-	scalarMultiply(scalar) {
-		for (let i = 0; i < this.sidelen; i++)
-			this.matrix.byIndex(i).scalarMultiply(scalar)
-	}
-
-	matrixMultiply(matrix) {
-		if (this._sidelen !== matrix.sidelen)
-			throw new Error(
-				`Trying to multiply square matrices with sidelengths ${this.sidelen} and ${matrix.sidelen} correspondently. `
-			)
-
-		const copy = this.toArray()
-		matrix = matrix.toArray()
-
-		const result = copy.map(() => [copy[0].map(() => 0)])
-
-		for (let i = 0; i < this.sidelen; i++)
-			for (let j = 0; j < this.sidelen; j++)
-				for (let k = 0; k < this.sidelen; k++)
-					result[i][j] += copy[i][k] * matrix[k][j]
-
-		return new Matrix(this.sidelen, result)
-	}
-
-	scalarAdd(scalar) {
-		for (let i = 0; i < this.sidelen; i++)
-			this.matrix.byIndex(i).scalarAdd(scalar)
-	}
-
+	/**
+	 * Finds the determinant of a square matrix it's invoked onto.
+	 */
 	determinant() {
 		function findAdditional(matrix, i, j) {
 			const final = matrix.matrix
@@ -756,7 +687,12 @@ class Matrix extends RectMatrix {
 			return new Matrix(final.length, final).determinant()
 		}
 
-		if (this.sidelen !== 2) {
+		if (this.sidelen < 2) {
+			if (this.sidelen[0] === 1) return this.navigate([0, 0])
+			return 0
+		}
+
+		if (this.sidelen > 2) {
 			if (this.sidelen === 1) return this.matrix.byIndex(0).byIndex(0)
 			const matricesDeterminants = {}
 
@@ -764,8 +700,11 @@ class Matrix extends RectMatrix {
 			let finale = 0
 
 			for (let j = 0; j < this.sidelen; j++)
-				matricesDeterminants[this.matrix.navigate([0, j])] =
-					findAdditional(this, 0, j)
+				matricesDeterminants[this.navigate([0, j])] = findAdditional(
+					this,
+					0,
+					j
+				)
 
 			for (const pair in matricesDeterminants) {
 				finale += matricesDeterminants[pair] * pair * (-1) ** n
@@ -809,7 +748,7 @@ class Vector {
 		object: null,
 		boolean: false,
 		bigint: 0n,
-		function: function () {},
+		function: () => {},
 		any: null,
 	})
 
@@ -1104,26 +1043,26 @@ class Algorithms {
 		throw new TypeError("Algorithms is not a constructor")
 	}
 
-	// TODO: Test. If works - good, if doesn't - fix. 
 	static BinarySearch(array, number) {
 		// * For getting the middle index of the array.
 		const middle = (arr) => floor(median(arr.map((a, i) => i)), 0)
-
-		let copyArray = sort(array)
+		const copyArray = sort(array)
 		let index = middle(copyArray)
 
-		while (true) {
-			if (copyArray.length === 1 && copyArray[0] !== number) break
+		let copyArr = copy(copyArray)
+		let copyIndex = index
+
+		for (let i = 0; ; i++) {
 			if (number === copyArray[index]) return index
+			if (copyArr.length === 1) break
 
-			if (number > copyArray[index]) {
-				copyArray = copyArray.slice(index + 1, copyArray.length)
-				index = middle(copyArray)
-				continue
-			}
+			const isBigger = number > copyArray[index]
 
-			copyArray = copyArray.slice(0, index)
-			index = middle(copyArray)
+			copyArr = isBigger
+				? copyArr.slice(copyIndex + 1, copyArr.length)
+				: copyArr.slice(0, copyIndex)
+			copyIndex = middle(copyArr)
+			index = isBigger ? index + copyIndex : index - copyIndex
 		}
 
 		return -1
@@ -1411,7 +1350,7 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
  * @param {number[]} numbers An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
-function sameOperator(numbers = [], operator = "+") {
+function repeatedArithmetic(numbers = [], operator = "+") {
 	let result = numbers[0] !== undefined ? numbers[0] : 0
 
 	for (let i = 0; i < numbers.length - 1; i++)
@@ -1534,32 +1473,28 @@ function median(nums = [1, 2, 3, 4, 5]) {
  * Takes an array and returns most "popular" number in it.
  * @param {number[]} nums An array of numbers passed to the function.
  */
-function mostPopularNum(nums = [1, 2, 3, 4, 5]) {
-	const repeats = []
-	let sameNum = false
-	let countOfRepeats = 0
+function mostPopularNum(nums = []) {
+	const t = (e, i) =>
+		i < nums.length ? Number(nums[i] === e) + t(e, i+1) : 0
+	const e = (j) => nums[j]
+	const freq = {}
 
-	for (let i = 0; i < nums.length; i++, countOfRepeats = 0) {
-		for (let j = i; j < nums.length; j++) {
-			if (nums[i] === nums[j]) {
-				countOfRepeats++
-			}
+	for (let i = 0; i < nums.length; i++) 
+		if (freq[nums[i]] === undefined) freq[nums[i]] = t(e(i), i)
 
-			sameNum =
-				i < nums.length
-					? (sameNum =
-							nums[i - 1] === nums[i] && nums[i] === nums[i + 1])
-					: (sameNum = nums[i - 1] === nums[i])
-		}
+	const freq_vals = Object.values(freq)
+	const maxRepetition = max(freq_vals)
+	const mostFrequent = nums[freq_vals.indexOf(maxRepetition)]
 
-		if (!sameNum || i === nums.length - 1) {
-			repeats.push(countOfRepeats)
-		}
+	for (let i = 0; i < nums.length; i++) {
+		if (
+			maxRepetition === freq[nums[i]] &&
+			nums[i] !== mostFrequent
+		) 
+			return "None"
 	}
 
-	const maxNum = max(repeats)
-
-	return maxNum === 1 ? "None" : nums[repeats.indexOf(maxNum)]
+	return maxRepetition !== -Infinity ? mostFrequent : "None"
 }
 
 /**
@@ -1909,7 +1844,7 @@ function randomArray(maxLength, maxValue, integers = false) {
  * @param {number} afterDot How many positions after dot should there be.
  * @returns {number}
  */
-function floor(number, afterDot) {
+function floor(number, afterDot = fixedSize) {
 	return Number(number.toFixed(afterDot))
 }
 
@@ -2006,7 +1941,7 @@ function arrayEquality(...arrays) {
 function dim(array) {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
 	const t = (arr) => max(arr.map((el) => d(el)))
-	return array instanceof Array ? t(array) : 0
+	return array instanceof Array ? (array.length > 0 ? t(array) : 0) : 0
 }
 
 /**
@@ -2022,7 +1957,7 @@ function binomial(n, k) {
 	// Rounding down just in case.
 	k = k | 0
 
-	return (
+	return floor(
 		repeatedArithmetic(
 			generate(0, k - 1, 1).map((num) => n - num),
 			"*"
@@ -2041,10 +1976,11 @@ export {
 	Algorithms,
 	Vector,
 	Matrix,
+	RectMatrix,
 	VarMapping,
 	Equation,
 	exp,
-	sameOperator,
+	repeatedArithmetic,
 	fullExp,
 	repeatExp,
 	average,
