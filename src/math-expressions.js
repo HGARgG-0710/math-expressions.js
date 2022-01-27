@@ -23,8 +23,6 @@ export let fixedSize = 11
 // * (Library has a lot of bugs already, why add more? XD Better just fix the old ones and try not to add new. )
 export const sameOperator = repeatedArithmetic
 
-var count = 0
-
 // Classes
 
 /**
