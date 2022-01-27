@@ -492,7 +492,7 @@ By the way, it works not just with variables, which have length 1. In fact, the 
 
     VarMapping (vars: string[], maps: number[]): VarMapping;
     VarMapping.add(name: string, value: number): void;
-    VarMapping.delete(name: string): boolean; // Returns, whether the deletion was successful.
+    VarMapping.delete(name: string): void; 
 
 ## Notes:
 

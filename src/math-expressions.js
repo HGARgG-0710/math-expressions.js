@@ -1103,7 +1103,7 @@ class Algorithms {
  * This class's purpose is to represent a mathematical equation of multiple variables.
  * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
  */
-// TODO: Finish the default mapping scheme of solution finding. 
+// TODO: Finish the default mapping scheme of solution finding.
 class Equation {
 	variables = []
 	equation = ""
@@ -1363,8 +1363,6 @@ class VarMapping {
 	 * Useful when using some sort of numerical function in a big cycle.
 	 * @param {string} name Name of the new (or old) property.
 	 * @param {number} value Numerical value to be set to the name.
-	 *
-	 * ! NOTE: Can be used to change the old property by setting name to be old.
 	 */
 	add(name, value) {
 		if (typeof value !== "number")
@@ -1377,10 +1375,19 @@ class VarMapping {
 	/**
 	 * Deletes a property from varmap by the given name.
 	 * @param {string} name Name to be used for deletion.
-	 * @returns {boolean} Whether the delete was successful or not.
 	 */
 	delete(name) {
-		return delete this.varmap[name]
+		for (
+			let i = this.varmap.variables.indexOf(name);
+			i < this.varmap.variables.length;
+			i++
+		) {
+			this.varmap.variables[i] = this.varmap.variables[i + 1]
+			this.varmap.mappings[i] = this.varmap.mappings[i + 1]
+		}
+
+		this.varmap.mappings.pop()
+		this.varmap.variables.pop()
 	}
 }
 
