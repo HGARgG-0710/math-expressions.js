@@ -135,7 +135,7 @@ This function takes an array and returns a copy of it without referencing object
 
 ### 13.generate()
 
-This function allows you to generate a row of data by giving it three numbers: firstly - the start position(the smallest number in the row), secondly - the end position(the largest position in the row) and thirdly - step number or the difference between each of row's numbers.
+This function allows you to generate a row of data by giving it three numbers: firstly - the start position(the smallest number in the row), secondly - the end position(the largest position in the row), thirdly - step number or the difference between each of row's numbers and fourthly - the precision of the step (if your have all else as integers, then 0), which is how many digits after dot does your step have. The last one is required in order to avoid an error, when calculating the next value (good old floating-point arithmetic). 
 
 ### 14.find()
 
@@ -462,15 +462,19 @@ And I would highly recommend NOT to make the search area too big and to make the
 
     Equation.variables: string[];
     Equation.equation: string;
+    Equation.defaultMappings: VarMapping[]
+    Equation.defaultParsed: {right: string, left: string}[]
 
 #### Class Methods
 
     Equation(equationText: string, vars: string[]): Equation;
     Equation.parse(mappings: VarMapping): { right: string, left: string };
-    Equation.ParseEquation(equationLine: string, mappings: VarMapping): { right: string, left: string };  (static)
+    Equation.ParseEquation(equationLine: string, mappings: VarMapping, varibales: string[]): { right: string, left: string };  (static)
     Equation.differRightLeft(mappings: VarMapping, varname: string, varvalue: number);
     Equation.searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4);
     Equation.replaceIndex(string: string, index: number, val: string): string; (static)
+    Equation.defaultDifferRightLeft(index: number, varname: string, varvalue: number); 
+    Equation.defaultsearchSolution(index: number, varname: string, startvalue: number, pathlength: number, precision: number); 
 
 ### 11.VarMapping
 

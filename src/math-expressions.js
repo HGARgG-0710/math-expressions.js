@@ -23,6 +23,8 @@ export let fixedSize = 11
 // * (Library has a lot of bugs already, why add more? XD Better just fix the old ones and try not to add new. )
 export const sameOperator = repeatedArithmetic
 
+var count = 0
+
 // Classes
 
 /**
@@ -1103,22 +1105,38 @@ class Algorithms {
  * This class's purpose is to represent a mathematical equation of multiple variables.
  * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
  */
+// TODO: Finish the default mapping scheme of solution finding. 
 class Equation {
 	variables = []
 	equation = ""
+	defaultParsed = null
+	defaultMappings = null
 
 	/**
 	 * A static method for parsing an equation with various mappings applied.
 	 * @param {string} equationLine A line, containing an equation.
 	 * @param {VarMapping} mappings A mapping of variables to their values.
+	 * @param {string[]} variables Additional variable names.
 	 */
-	static ParseEquation(equationLine, mappings) {
+	static ParseEquation(equationLine, origmappings, variables) {
 		const operators = Object.freeze(["+", "*", "/", "-", "^"])
 		const brackets = Object.freeze(["[", "]", "(", ")", "{", "}"])
+		const digits = Object.freeze([
+			"0",
+			"1",
+			"2",
+			"3",
+			"4",
+			"5",
+			"6",
+			"7",
+			"8",
+			"9",
+		])
 
 		let metEquality = false
 
-		mappings = mappings.varmap // for simplicity of use
+		const mappings = { ...origmappings.varmap } // for simplicity of use
 
 		function eliminateSpaces() {
 			return equationLine.split(" ").join("")
@@ -1138,18 +1156,37 @@ class Equation {
 						break
 
 					default:
+						if (line[i] === "^") {
+							line = Equation.replaceIndex(line, i, "**")
+							continue
+						}
+
 						if (mappings.variables.includes(line[i])) {
-							line[i] = mappings.mappings[i]
+							line = Equation.replaceIndex(
+								line,
+								i,
+								mappings.mappings[
+									mappings.variables.indexOf(line[i])
+								]
+							)
 							continue
 						}
 
 						if (brackets.includes(line[i])) {
-							line =
+							line = Equation.replaceIndex(
+								line,
+								i,
 								brackets.indexOf(line[i]) % 2 === 0 ? "(" : ")"
+							)
 							continue
 						}
 
-						if (operators.includes(line[i])) continue
+						if (
+							operators.includes(line[i]) ||
+							digits.includes(line[i]) ||
+							variables.includes(line[i])
+						)
+							continue
 
 						throw new Error(`Unknown symbol detected: ${line[i]}`)
 				}
@@ -1169,6 +1206,14 @@ class Equation {
 		return parse(eliminateSpaces())
 	}
 
+	/**
+	 * This static method replaces a given index in a given string by a given value and returns the result.
+	 * Note: Original string is NOT mutated.
+	 *
+	 * @param {string} string String, index in which is to be changed.
+	 * @param {number} index Index.
+	 * @param {number | string | boolean} val Value to be inserted on a place of index "index", thereby replacing it.
+	 */
 	static replaceIndex(string, index, val) {
 		return string.substring(0, index) + val + string.substring(index + 1)
 	}
@@ -1178,12 +1223,17 @@ class Equation {
 	 * @param {VarMapping} mappings Various mappings for variables.
 	 */
 	parse(mappings) {
-		return Equation.ParseEquation(this.equation, mappings)
+		return Equation.ParseEquation(this.equation, mappings, this.variables)
 	}
 
-	constructor(equationText = "", vars = ["x"]) {
+	constructor(equationText = "", vars = ["x"], defaultMappings = []) {
 		this.variables = vars
 		this.equation = equationText
+		this.defaultMappings = defaultMappings
+		this.defaultParsed = []
+
+		for (let i = 0; i < defaultMappings.length; i++)
+			this.defaultParsed.push(this.parse(defaultMappings[i]))
 	}
 
 	/**
@@ -1197,32 +1247,48 @@ class Equation {
 		function plug(parsed) {
 			for (let i = 0; i < parsed.right.length; i++)
 				if (parsed.right[i] === varname)
-					parsed.right = replaceIndex(parsed.right, i, varvalue)
+					parsed.right = Equation.replaceIndex(
+						parsed.right,
+						i,
+						varvalue
+					)
 
 			for (let i = 0; i < parsed.left.length; i++)
 				if (parsed.left[i] === varname)
-					parsed.left = replaceIndex(parsed.left, i, varvalue)
+					parsed.left = Equation.replaceIndex(
+						parsed.left,
+						i,
+						varvalue
+					)
 
 			return parsed
 		}
 
-		if (!(varname instanceof String))
+		if (typeof varname !== "string")
 			throw new Error(
 				`Expected string as an input of variable name, got ${typeof varname}}`
 			)
 
 		const plugged = plug(this.parse(mappings))
-		return eval(plugged.right) - fullExp(plugged.left)
+		return eval(plugged.right) - eval(plugged.left)
 	}
 
 	/**
 	 * This method searches for the solution of an equation it's invoked onto.
 	 *
-	 * ! WARNING !
+	 * ! WARNING 1 !
 	 *
 	 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
 	 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
 	 * (However, if the root is rational, then it could even be exactly it.)
+	 *
+	 * ! WARNING 2 !
+	 *
+	 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+	 *
+	 * ! WARINING 3 !
+	 *
+	 * This version is very slow and it NOT recommended for use. If you need speed - use the default version instead.
 	 *
 	 * PARAMETRES
 	 *
@@ -1236,13 +1302,22 @@ class Equation {
 		const differences = generate(
 			startvalue,
 			startvalue + pathlength,
-			10 ** -precision
-		).map((i) => Math.abs(this.differRightLeft(mappings, varname, i)))
+			floor(10 ** -precision, precision),
+			precision
+		).map((i) => {
+			return Math.abs(this.differRightLeft(mappings, varname, i))
+		})
+
 		return (
 			startvalue +
-			differences.indexOf(min(differences)) * 10 ** -precision
+			differences.indexOf(min(differences)) *
+				floor(10 ** -precision, precision)
 		)
 	}
+
+	defaultDifferRightLeft(index, varname, varvalue) {}
+
+	defaultSearchSolution(index, varname, startvalue, pathlength, precision) {}
 }
 
 /**
@@ -1281,8 +1356,8 @@ class VarMapping {
 					)
 		}
 
-		varmap.variables = vars
-		varmap.mappings = maps
+		this.varmap.variables = vars
+		this.varmap.mappings = maps
 	}
 
 	/**
@@ -1297,7 +1372,8 @@ class VarMapping {
 		if (typeof value !== "number")
 			throw new Error("Given non-numeric data as a value for mapping. ")
 
-		this.varmap[name] = value
+		this.varmap.variables.push(name)
+		this.varmap.mappings.push(value)
 	}
 
 	/**
@@ -1475,24 +1551,20 @@ function median(nums = [1, 2, 3, 4, 5]) {
  */
 function mostPopularNum(nums = []) {
 	const t = (e, i) =>
-		i < nums.length ? Number(nums[i] === e) + t(e, i+1) : 0
+		i < nums.length ? Number(nums[i] === e) + t(e, i + 1) : 0
 	const e = (j) => nums[j]
 	const freq = {}
 
-	for (let i = 0; i < nums.length; i++) 
+	for (let i = 0; i < nums.length; i++)
 		if (freq[nums[i]] === undefined) freq[nums[i]] = t(e(i), i)
 
 	const freq_vals = Object.values(freq)
 	const maxRepetition = max(freq_vals)
 	const mostFrequent = nums[freq_vals.indexOf(maxRepetition)]
 
-	for (let i = 0; i < nums.length; i++) {
-		if (
-			maxRepetition === freq[nums[i]] &&
-			nums[i] !== mostFrequent
-		) 
+	for (let i = 0; i < nums.length; i++)
+		if (maxRepetition === freq[nums[i]] && nums[i] !== mostFrequent)
 			return "None"
-	}
 
 	return maxRepetition !== -Infinity ? mostFrequent : "None"
 }
@@ -1549,11 +1621,13 @@ function copy(nums = [1, 2, 3, 4, 5]) {
  * @param {number} start Start number in array(it's supposed to be the least number in it)
  * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
  * @param {number} step Value, by which the count is incremented every iteration.
+ * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
  */
-function generate(start, end, step = 1) {
+function generate(start, end, step = 1, precision = 1) {
 	const generated = []
-	const modif = Number.isInteger(step) ? 1 : 0.1
-	for (let i = start; i < end + modif; i += step) generated.push(floor(i, 1))
+	const modif = Number.isInteger(step) ? 1 : 10 ** -precision
+	for (let i = start; i < end + modif; i += step)
+		generated.push(floor(i, precision))
 	return generated
 }
 
@@ -1947,8 +2021,8 @@ function dim(array) {
 /**
  * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
  * (What it actually does is it takes their binomial coefficient, but never mind about that. )
- * @param {number} n First number.
- * @param {number} k Second integer.
+ * @param {number} n First number (any rational number).
+ * @param {number} k Second number (integer).
  */
 function binomial(n, k) {
 	if (typeof n !== "number" || typeof k !== "number")

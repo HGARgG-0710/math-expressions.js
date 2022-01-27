@@ -8,6 +8,8 @@ import {
 	Matrix,
 	Vector,
 	Algorithms,
+	Equation, 
+	VarMapping
 } from "./math-expressions.js"
 
 // exp() function examples
@@ -248,3 +250,18 @@ console.log(expjs.dim([[1, [5]]])) // 3
 // binomial() function example
 console.log(expjs.binomial(10, 2)) // 45
 console.log(expjs.binomial(10 * Math.E, 3)) // 2987.1976216796083
+
+// Equation and VarMapping classes example 
+const sextic = new Equation("a*x^{6}-b*x^{5}+c*x^{2}-d*x=0", ["x"]) // A randomly typed sextic polynomial equation. 
+const varmap = new VarMapping() 
+
+console.log(varmap)
+
+varmap.add("a", 10)
+varmap.add("b", 3)
+varmap.add("c", 91)
+varmap.add("d", 30)
+
+console.log(varmap)
+
+console.log("Approximation: x = " + sextic.searchSolution(varmap, "x", 0.3, 0.05, 6)) // Approximation: x = 0.329632
