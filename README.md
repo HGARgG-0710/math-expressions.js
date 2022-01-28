@@ -475,6 +475,7 @@ And I would highly recommend NOT to make the search area too big and to make the
     Equation.replaceIndex(string: string, index: number, val: string): string; (static)
     Equation.defaultDifferRightLeft(index: number, varname: string, varvalue: number); 
     Equation.defaultsearchSolution(index: number, varname: string, startvalue: number, pathlength: number, precision: number); 
+    Equation.plug(origparsed: { right: string, left: string }, varname: string, varvalue: number): { right: string, left: string }; (static) 
 
 ### 11.VarMapping
 

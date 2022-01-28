@@ -8,8 +8,8 @@ import {
 	Matrix,
 	Vector,
 	Algorithms,
-	Equation, 
-	VarMapping
+	Equation,
+	VarMapping,
 } from "./math-expressions.js"
 
 // exp() function examples
@@ -207,7 +207,7 @@ console.log(expjs.realAddition(0.1, 0.019)) // will return error and the final r
 // This will generate the numbers in the Farey's number rows, from 0 to 10 (end and start val you can set yourself).
 console.log(Algorithms.Farey(new Ratio(1, 5), new Ratio(3, 10), 10)) // (11) [Array(2), Array(3), Array(5), Array(9), Array(17), Array(33), Array(65), Array(129), Array(257), Array(513), Array(1025)]
 console.log(Algorithms.BinarySearch([1, 2, 3], 2)) // 1
-console.log(Algorithms.BinarySearch([2, 10, 3, 1, 7], 7)) // 3 (it sorts it in a from-smaller-to-bigger way) 
+console.log(Algorithms.BinarySearch([2, 10, 3, 1, 7], 7)) // 3 (it sorts it in a from-smaller-to-bigger way)
 console.log(Algorithms.BinarySearch([81, 90, 100], 42)) // -1
 
 // Vector class example
@@ -243,7 +243,7 @@ console.log(expjs.arrayEquality([1, 2, 3], [1, 2, 3], [1, 2, 4])) // false
 
 // dim() funciton example
 console.log(expjs.dim([])) // 0
-console.log(expjs.dim("Hallo")) // 0 
+console.log(expjs.dim("Hallo")) // 0
 console.log(expjs.dim([1])) // 1
 console.log(expjs.dim([[1, [5]]])) // 3
 
@@ -251,9 +251,9 @@ console.log(expjs.dim([[1, [5]]])) // 3
 console.log(expjs.binomial(10, 2)) // 45
 console.log(expjs.binomial(10 * Math.E, 3)) // 2987.1976216796083
 
-// Equation and VarMapping classes example 
-const sextic = new Equation("a*x^{6}-b*x^{5}+c*x^{2}-d*x=0", ["x"]) // A randomly typed sextic polynomial equation. 
-const varmap = new VarMapping() 
+// Equation and VarMapping classes example 1
+const sextic = new Equation("a*x^{6}-b*x^{5}+c*x^{2}-d*x=0", ["x"]) // A randomly typed sextic polynomial equation.
+const varmap = new VarMapping()
 
 console.log(varmap)
 
@@ -264,4 +264,16 @@ varmap.add("d", 30)
 
 console.log(varmap)
 
-console.log("Approximation: x = " + sextic.searchSolution(varmap, "x", 0.3, 0.05, 6)) // Approximation: x = 0.329632
+console.log(
+	"Approximation: x = " + sextic.searchSolution(varmap, "x", 0.3, 0.05, 6)
+) // Approximation: x = 0.329632
+
+// Equation and VarMapping example 2
+// * Here I'll show an alternative solution using default mappings.
+// * Clearly theoritecally, it's supposed to be much faster because of the preparation of parsed data.
+// * Still, I haven't done any tests on the same equation so trying to say is quite error-prone.
+
+const varmap_2 = new VarMapping(["x"], [Math.sqrt(2)])
+const eq = new Equation("t^{t^x} - x = 0", ["t"], [varmap_2])
+
+console.log("Approximation: t = " + eq.defaultSearchSolution(0, "t", 1, 0.5, 5)) // Approximation: t = 1.2777

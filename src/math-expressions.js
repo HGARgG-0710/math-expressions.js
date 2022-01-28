@@ -1103,7 +1103,6 @@ class Algorithms {
  * This class's purpose is to represent a mathematical equation of multiple variables.
  * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
  */
-// TODO: Finish the default mapping scheme of solution finding.
 class Equation {
 	variables = []
 	equation = ""
@@ -1130,6 +1129,7 @@ class Equation {
 			"7",
 			"8",
 			"9",
+			".",
 		])
 
 		let metEquality = false
@@ -1233,6 +1233,20 @@ class Equation {
 		for (let i = 0; i < defaultMappings.length; i++)
 			this.defaultParsed.push(this.parse(defaultMappings[i]))
 	}
+	// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
+	static plug(origparsed, varname, varvalue) {
+		const parsed = { ...origparsed } // Making a copy.
+
+		for (let i = 0; i < parsed.right.length; i++)
+			if (parsed.right[i] === varname)
+				parsed.right = Equation.replaceIndex(parsed.right, i, varvalue)
+
+		for (let i = 0; i < parsed.left.length; i++)
+			if (parsed.left[i] === varname)
+				parsed.left = Equation.replaceIndex(parsed.left, i, varvalue)
+
+		return parsed
+	}
 
 	/**
 	 * Difference in between the right and left sides of the equation with mappings for different variables.
@@ -1241,33 +1255,12 @@ class Equation {
 	 * @param {number} varvalue Addtional value.
 	 */
 	differRightLeft(mappings, varname, varvalue) {
-		// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
-		function plug(parsed) {
-			for (let i = 0; i < parsed.right.length; i++)
-				if (parsed.right[i] === varname)
-					parsed.right = Equation.replaceIndex(
-						parsed.right,
-						i,
-						varvalue
-					)
-
-			for (let i = 0; i < parsed.left.length; i++)
-				if (parsed.left[i] === varname)
-					parsed.left = Equation.replaceIndex(
-						parsed.left,
-						i,
-						varvalue
-					)
-
-			return parsed
-		}
-
 		if (typeof varname !== "string")
 			throw new Error(
 				`Expected string as an input of variable name, got ${typeof varname}}`
 			)
 
-		const plugged = plug(this.parse(mappings))
+		const plugged = Equation.plug(this.parse(mappings), varname, varvalue)
 		return eval(plugged.right) - eval(plugged.left)
 	}
 
@@ -1283,10 +1276,6 @@ class Equation {
 	 * ! WARNING 2 !
 	 *
 	 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-	 *
-	 * ! WARINING 3 !
-	 *
-	 * This version is very slow and it NOT recommended for use. If you need speed - use the default version instead.
 	 *
 	 * PARAMETRES
 	 *
@@ -1313,9 +1302,57 @@ class Equation {
 		)
 	}
 
-	defaultDifferRightLeft(index, varname, varvalue) {}
+	defaultDifferRightLeft(index, varname, varvalue) {
+		if (typeof varname !== "string")
+			throw new Error(
+				`Expected string as an input of variable name, got ${typeof varname}}`
+			)
 
-	defaultSearchSolution(index, varname, startvalue, pathlength, precision) {}
+		const plugged = Equation.plug(
+			this.defaultParsed[index],
+			varname,
+			varvalue
+		)
+		return eval(plugged.right) - eval(plugged.left)
+	}
+
+	/**
+	 * This method searches for the solution of an equation it's invoked onto using default mappings.
+	 * It's technically supposed to be much faster because of the data preparation. 
+	 *
+	 * ! WARNING 1 !
+	 *
+	 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+	 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+	 * (However, if the root is rational, then it could even be exactly it.)
+	 *
+	 * ! WARNING 2 !
+	 *
+	 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+	 *
+	 * PARAMETRES
+	 * @param {number} index Index of the default mapping to be used.
+	 * @param {string} varname Name of the variable for which search is invoked.
+	 * @param {number} startvalue Value, from which search is invoked.
+	 * @param {number} pathlength The length of the search path.
+	 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+	 */
+	defaultSearchSolution(index, varname, startvalue, pathlength, precision) {
+		const differences = generate(
+			startvalue,
+			startvalue + pathlength,
+			floor(10 ** -precision, precision),
+			precision
+		).map((i) => {
+			return Math.abs(this.defaultDifferRightLeft(index, varname, i))
+		})
+
+		return (
+			startvalue +
+			differences.indexOf(min(differences)) *
+				floor(10 ** -precision, precision)
+		)
+	}
 }
 
 /**
