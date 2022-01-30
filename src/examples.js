@@ -226,6 +226,7 @@ const matrix = new Matrix(10)
 console.log(matrix.sidelen) // 10
 console.log(matrix.toArray()) // 10 arrays with 10 zeros in each of 'em.
 console.log(matrix.navigate([0, 1])) // 0, by default matrix is all zeroes.
+console.log(matrix.determinant()) // 0, the matrix is singular. 
 
 // The class was somewhat useless, but now is much more helpful.
 // It's generelesation and parent is RectMatrix. It's quite similiar, so i won't show it here.

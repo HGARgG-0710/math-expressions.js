@@ -658,6 +658,10 @@ class Matrix extends RectMatrix {
 		RectMatrix.dimensionCheck([sidelen, sidelen], dimensions)
 	}
 
+	/**
+	 * Sets the siedelen of a square matrix.
+	 * @param {number} newSidelen New sidelen.
+	 */
 	set sidelen(newSidelen) {
 		Matrix.dimensionCheck(newSidelen)
 		this._sidelen = [newSidelen, newSidelen]
@@ -672,17 +676,14 @@ class Matrix extends RectMatrix {
 	 */
 	determinant() {
 		function findAdditional(matrix, i, j) {
-			const final = matrix.matrix
-				.slice(1)
-				.toArray()
-				.map(() => [])
+			const final = matrix.matrix.slice(1).vector.map(() => [])
 
-			for (let index = 0, ind = 0; index < matrix.sidelen; index++)
+			for (let index = 0; index < matrix.sidelen; index++)
 				for (let jndex = 0; jndex < matrix.sidelen; jndex++)
-					if (index !== i && jndex !== j) {
-						final[ind].push(matrix.matrix.toArray()[index][jndex])
-						ind++
-					}
+					if (index !== i && jndex !== j)
+						final[index > i ? index - 1 : index].push(
+							matrix.toArray()[index][jndex]
+						)
 
 			return new Matrix(final.length, final).determinant()
 		}
@@ -818,9 +819,9 @@ class Vector {
 		return this._vector[i]
 	}
 
-	slice(start, end = this.vector.length - 1) {
+	slice(start, end = this.vector.length) {
 		const sliced = this._vector.slice(start, end)
-		return new Vector(sliced.length, this._type, sliced)
+		return new Vector(this._type, sliced.length, sliced)
 	}
 
 	index(element) {
@@ -1318,7 +1319,7 @@ class Equation {
 
 	/**
 	 * This method searches for the solution of an equation it's invoked onto using default mappings.
-	 * It's technically supposed to be much faster because of the data preparation. 
+	 * It's technically supposed to be much faster because of the data preparation.
 	 *
 	 * ! WARNING 1 !
 	 *
