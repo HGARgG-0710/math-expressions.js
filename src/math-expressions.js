@@ -12,7 +12,7 @@
 /**
  *
  * * This variable characterizes how many fixed numbers are outputted.
- * * You can change it freely, if you want a more "precise" output of some of the functions.
+ * * You can change it freely using setPrecision() function, if you want a more "precise" output of some of the functions.
  */
 export let fixedSize = 11
 
@@ -1591,8 +1591,9 @@ function median(nums = [1, 2, 3, 4, 5]) {
 /**
  * Takes an array and returns most "popular" number in it.
  * @param {number[]} nums An array of numbers passed to the function.
+ * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums = []) {
+function mostPopularNum(nums = [], noneValue = "None") {
 	const t = (e, i) =>
 		i < nums.length ? Number(nums[i] === e) + t(e, i + 1) : 0
 	const e = (j) => nums[j]
@@ -1607,9 +1608,9 @@ function mostPopularNum(nums = []) {
 
 	for (let i = 0; i < nums.length; i++)
 		if (maxRepetition === freq[nums[i]] && nums[i] !== mostFrequent)
-			return "None"
+			return noneValue
 
-	return maxRepetition !== -Infinity ? mostFrequent : "None"
+	return maxRepetition !== -Infinity ? mostFrequent : noneValue
 }
 
 /**
@@ -1619,7 +1620,7 @@ function mostPopularNum(nums = []) {
  */
 function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
 	const newArr = isInterquartile ? truncate(nums, 25) : copy(nums)
-	return max(newArr) - min(newArr)
+	return floor(max(newArr) - min(newArr))
 }
 
 /**
@@ -1851,7 +1852,7 @@ function dispersion(
 
 	newRow.length = row.length
 
-	return average(deviations(newRow, isSquare), true, 0) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of average()).
+	return floor(average(deviations(newRow, isSquare), true, 0)) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of average()).
 }
 
 /**
@@ -1932,7 +1933,17 @@ function expectedValue(numbers, probabilities) {
 	for (let i = 0; i < numbers.length; i++)
 		values.push(numbers[i] * probabilities[i])
 
-	return repeatedArithmetic(values)
+	return floor(repeatedArithmetic(values))
+}
+
+/**
+ * Floors the given number to the needed level of precision.
+ * @param {number} number Number to be floored.
+ * @param {number} afterDot How many positions after dot should there be.
+ * @returns {number}
+ */
+function floor(number, afterDot = fixedSize) {
+	return Number(number.toFixed(afterDot))
 }
 
 /**
@@ -1953,16 +1964,6 @@ function randomArray(maxLength, maxValue, integers = false) {
 		)
 
 	return storage
-}
-
-/**
- * Floors the given number to the needed level of precision.
- * @param {number} number Number to be floored.
- * @param {number} afterDot How many positions after dot should there be.
- * @returns {number}
- */
-function floor(number, afterDot = fixedSize) {
-	return Number(number.toFixed(afterDot))
 }
 
 /**
@@ -2053,7 +2054,7 @@ function arrayEquality(...arrays) {
  * If it is an array with only empty array, then it's dimension is 0.
  * It it is an array with array inside itself, which dimension is n-1, then the dimension is n.
  * This function is defined recursively.
- * @param {any[]} array An array with any data in it. It doesn't have to be an array, though.
+ * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
 function dim(array) {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
@@ -2082,7 +2083,22 @@ function binomial(n, k) {
 	)
 }
 
+/**
+ * Takes and array and returns the most frequently appearing element in it or null, if there isn't one.
+ * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
+ * @param
+ */
+function mostPopularElem(array = [], noneValue = null) {
+	const most_popular_index = mostPopularNum(
+		generate(0, array.length).map((i) => array.indexOf(array[i]))
+	)
+	if (most_popular_index === "None") return noneValue
+	return array[most_popular_index]
+}
+
 // TODO: Implement the compareUniversal(...arrays), which uses dim
+
+// * Exports (constants are being exported separately).
 
 export {
 	Statistics,
@@ -2130,4 +2146,5 @@ export {
 	arrayEquality,
 	dim,
 	binomial,
+	mostPopularElem,
 }
