@@ -1515,9 +1515,9 @@ function fullExp(expression = { nums: [], operators: [] }) {
  * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
  * ! Wrong names of keys will cause an Error.
  *
- * 	@param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
- * 	@param {number} countOfRepeats   A number of repeats of ariphmetic operation.
- * 	@param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
+ * @param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
+ * @param {number} countOfRepeats   A number of repeats of ariphmetic operation.
+ * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
 function repeatExp(
 	expression = { nums: [2, 2], operators: ["*"] },
@@ -2097,7 +2097,7 @@ function mostPopularElem(array = [], noneValue = null) {
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim
-// TODO: Add the Statistics.mostPopularElem property and fix the issue with the mostPopularNum in the constructor (it should only be calculated for the number arrays). 
+// TODO: Add the Statistics.mostPopularElem property and fix the issue with the mostPopularNum in the constructor (it should only be calculated for the number arrays).
 
 // * Exports (constants are being exported separately).
 
