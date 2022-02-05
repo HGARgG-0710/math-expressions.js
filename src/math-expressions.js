@@ -1432,11 +1432,11 @@ class VarMapping {
 // Functions
 
 /**
- * 	Executes an expression with two numbers
- *  @param {number} firstNum  First number.
- *  @param {number} secondNum Second number.
- *  @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
- *  @returns {number} Result of a mathematical expression.
+ * Executes an expression with two numbers
+ * @param {number} firstNum  First number.
+ * @param {number} secondNum Second number.
+ * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
+ * @returns {number} Result of a mathematical expression.
  */
 function exp(firstNum = 2, secondNum = 2, operator = "+") {
 	if (!(typeof firstNum === "number" && typeof secondNum === "number"))
@@ -1510,7 +1510,7 @@ function fullExp(expression = { nums: [], operators: [] }) {
 }
 
 /**
- * 	Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
+ * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
  *
  * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
  * ! Wrong names of keys will cause an Error.

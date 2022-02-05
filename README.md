@@ -100,11 +100,11 @@ From math-expressions.js:
 
 ```js
 /**
- * 	Executes an expression with two numbers
- *  @param {number} firstNum  First number.
- *  @param {number} secondNum Second number.
- *  @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
- *  @returns {number} Result of a mathematical expression.
+ * Executes an expression with two numbers
+ * @param {number} firstNum  First number.
+ * @param {number} secondNum Second number.
+ * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
+ * @returns {number} Result of a mathematical expression.
  */
 function exp(firstNum = 2, secondNum = 2, operator = "+")
 ```
@@ -155,7 +155,7 @@ From math-expressions.js:
 
 ```js
 /**
- * 	Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
+ * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
  *
  * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
  * ! Wrong names of keys will cause an Error.
@@ -655,7 +655,7 @@ function binomial(n, k)
 ### 35.mostPopularElem()
 
 Takes an array of arbitrary objects and returns the most frequent of them. A generalisation of mostPopularNum function.
-Also, as a second argument it accepts the value, that should be returned in case if there isn't most frequent element. By default, the second parameter is equal to null. 
+Also, as a second argument it accepts the value, that should be returned in case if there isn't most frequent element. By default, the second parameter is equal to null.
 
 From math-expressions.js:
 
@@ -676,30 +676,29 @@ Constructor of this class takes an array of numbers and creates a Statistics obj
 This object has a statistic information about passed number array.
 (For now, only, I hope) this class only has a constructor and properties.
 
-#### Class Properties:
+```js
 
-    Statistics.min: number;
-    Statistics.max: number;
-
-    Statistics.range: number;
-    Statistics.interquartRange: number;
-    Statistics.countOfElements: number;
-
-    Statistics.median: number;
-    Statistics.average: number;
-    Statistics.truncatedAverage: number;
-    Statistics.mostPopular: string | number;
-
-    Statistics.sorted: number[];
-    Statistics.deviations: number[];
-
-    Statistics.populationVarience: number;
-    Statistics.populationStandDev: number;
-    Statistics.standardError: number;
-
-#### Class Methods
-
+class Statistics {
+    // Methods
     Statistics(array: number[]): Statistics;
+
+    // Properties
+    min: number;
+    max: number;
+    range: number;
+    interquartRange: number;
+    countOfElements: number;
+    median: number;
+    average: number;
+    truncatedAverage: number;
+    mostPopular: string | number;
+    sorted: number[];
+    deviations: number[];
+    populationVarience: number;
+    populationStandDev: number;
+    standardError: number;
+}
+```
 
 Actually, Statistics.countOfElements property is just a copy of Array.length property of passed array, but I thought, that it might be useful for someone to have all this beautiful data and a row(or an array, if you prefer) length property in one object.
 
@@ -714,46 +713,44 @@ Constructor of this class takes two objects(or arrays), that contain three value
 Surface object itself represents a surface on which geometric figures are placed.
 From the beginning this is an empty surface, that has width(x axis min and max numbers), height(y axis min and max numbers), two arrays for x and y axises, representing possible values, being placed on both of axises and a zero point in Surface.dots ([0, 0]).
 
-#### Class properties:
-
-    Surface.x: number[];
-    Surface.y: number[];
-
-    Surface.width: number;
-    Surface.height: number;
-
-    Surface.dots: number[][];
-    Surface.lines: number[][][];
-    Surface.segments: number[][][];
-
-#### Class Methods
-
+```js
+class Surface {
+    // Methods
     Surface(xLimits: number[], yLimits:number[]): Surface;
+    inLimits(...dots: number[][][]): boolean
+    dot(...dots: number[][]): void
+    line(...dots: number[][]): void
+    segment(...dots: number[][]): void
 
-#### Class Methods:
-
-    Surface.prototype.inLimits(...dots: number[][][]): boolean
-    Surface.prototype.dot(...dots: number[][]): void
-    Surface.prototype.line(...dots: number[][]): void
-    Surface.prototype.segment(...dots: number[][]): void
+    // Properties
+    x: number[];
+    y: number[];
+    width: number;
+    height: number;
+    dots: number[][];
+    lines: number[][][];
+    segments: number[][][];
+}
+```
 
 ### 3.Expression
 
 Constructor of this class takes two arrays, one of which contains numbers of expression, that this object represents, other contains strings, containing operators of this expression.
 
-#### Class Properties:
-
-    Expression.nums: number[];
-    Expression.operators: string[];
-
-#### Class Methods:
-
+```js
+class Expression {
+    // Methods
     Expression(numbers: number[], operators: string[]): Expression;
-    Expression.execute(): number;
-    Expression.repeat(times: any, operator: any): number;
+    execute(): number;
+    repeat(times: number, operator: string): number;
 
-This class can be very comfortly used with functions, that work with math expressions.
-These are exp(), sameOperator(), fullExp() and repeatExp(). Even though, I would recommend you using Expression.execute() and Expression.repeat() instead of the last two functions.
+    // Properties
+    nums: number[];
+    operators: string[];
+}
+```
+
+This class can be very comfortly used with arithmetic functions: exp(), sameOperator(), fullExp() and repeatExp(). Even though, the use of Expression.execute() and Expression.repeat() instead of the last two functions is recommended.
 
 #### Notice:
 
@@ -768,69 +765,90 @@ It can be called "fully static", 'cause all of its methods are static and so it 
 
 If you want to try using this class, than be careful with the Tests.U_test() method, that is used for Mann-Whitney U-test, because for now it does not work with the arrays, that have repeating numbers in them. In future, I hope, it will be fixed. (Even though it works perfectly with arrays that have no repeating number in them).
 
-#### Class Methods
-
-    Tests.checkArrSize(arr: arr[], size: number): void; (static)
-
-    Tests.t_Students_test(...rows: number[]): number; (static)
-    Tests.F_test(...rows: number[]): number; (static)
-    Tests.U_test(...rows: number[]): number; (static)
-    Test.Z_score(testedNum: number, numbers: number[]): number; (static)
+```js
+class Tests {
+    // Methods only here
+    static checkArrSize(arr: arr[], size: number): void;
+    static t_Students_test(...rows: number[]): number;
+    static F_test(...rows: number[]): number;
+    static U_test(...rows: number[]): number;
+    static Z_score(testedNum: number, numbers: number[]): number;
+}
+```
 
 ### 5.Ratio
 
 This class represents a ratio of two numbers.
 
-#### Class Properties
-
-    Ratio.numerator: number;
-    Ratio.denomenator: number;
-
-#### Class Methods
-
+```js
+class Ratio {
+    // Methods
+    static simplify(ratio: Ratio): Ratio;  // Note: original ratio is mutated and then returned.
     Ratio(numerator: number, denomenator: number): Ratio;
-    Ratio.evaluate(): number;
-    Ratio.simplify(ratio: Ratio): Ratio; (static) // Note: original ratio is mutated and then returned.
-    Ratio.add(ratio: Ratio): Ratio;
-    Ratio.subtract(ratio: Ratio): Ratio;
-    Ratio.multiply(ratio: Ratio): Ratio;
-    Ratio.divide(ratio: Ratio): Ratio;
-    Ratio.root(base: number): Ratio;
+    evaluate(): number;
+    add(ratio: Ratio): Ratio;
+    subtract(ratio: Ratio): Ratio;
+    multiply(ratio: Ratio): Ratio;
+    divide(ratio: Ratio): Ratio;
+    root(base: number): Ratio;
+
+    // Properties
+    numerator: number;
+    denomenator: number;
+}
+```
 
 ### 6.Algorithms
 
 That is another static class, this time containing algorithms instead of statistical tests.
 
-#### Class Methods
-
-    Algorithms.Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]; (static)
-    Algorithms.BinarySearch(array: number[], element: number): number; // returns index of sorted array
+```js
+class Algorithms {
+    // Again, methods only here.
+    static Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]; (static)
+    static BinarySearch(array: number[], element: number): number; // returns index of sorted array
+}
+```
 
 ### 7.Vector
 
 This class represents a type-safe and length-safe version of array, that also has controllable length.
 
-#### Class Methods
+```js
+class Vector {
+    // Methods
+    static typeCheck(item: any): void; 
+    static getArrType(array): string; 
 
     Vector(type: string, length: number, vector: any[]): Vector;
-    Vector.typeCheck(item: any): void; (static)
-    Vector.add(item: any): number; // Returns vector's previous length
-    Vector.delete(index: number): any;
-    Vector.index(item: any): number; // Allows to find the index of some element in vector.
-    Vector.indexes(item: any): number[]; // version of Vector.index() for elements that appear multiple times.
-    Vector.byIndex(index: number): any; // Gives the element being passed in the index of it.
-    Vector.slice(start: number, end: number): Vector;
-    Vector.fill(item: number): void;
-    Vector.getArrType(array): string; (static)
-    Vector.swap(index1: number, index2: number): void;
-    Vector.set(index: number, value: any): void;
+    add(item: any): number; // Returns vector's previous length
+    delete(index: number): any;
+    index(item: any): number; // Allows to find the index of some element in vector.
+    indexes(item: any): number[]; // version of Vector.index() for elements that appear multiple times.
+    byIndex(index: number): any; // Gives the element being passed in the index of it.
+    slice(start: number, end: number): Vector;
+    fill(item: number): void;
+    swap(index1: number, index2: number): void;
+    set(index: number, value: any): void;
+
+    // Properties
+    vector: any[];
+    length: number;
+    type: string;
+
+    static allowedTypes: readonly string[] = [
+		"number",
+		"string",
+		"boolean",
+		"function",
+		"object",
+		"bigint",
+		"any",
+    ]
+}
+```
 
 #### Class Properties
-
-    Vector.vector: any[];
-    Vector.length: number;
-    Vector.type: string;
-    Vector.allowedTypes: string[]; (static)
 
 ### 8.Matrix
 
