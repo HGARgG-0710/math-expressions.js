@@ -2086,7 +2086,7 @@ function binomial(n, k) {
 /**
  * Takes and array and returns the most frequently appearing element in it or null, if there isn't one.
  * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
- * @param
+ * @param {any} noneValue The value that is to be returned in case there is no most popular element. 
  */
 function mostPopularElem(array = [], noneValue = null) {
 	const most_popular_index = mostPopularNum(

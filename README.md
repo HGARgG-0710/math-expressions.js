@@ -663,7 +663,7 @@ From math-expressions.js:
 /**
  * Takes and array and returns the most frequently appearing element in it or null, if there isn't one.
  * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
- * @param
+ * @param {any} noneValue The value that is to be returned in case there is no most popular element.
  */
 function mostPopularElem(array = [], noneValue = null)
 ```
@@ -817,8 +817,8 @@ This class represents a type-safe and length-safe version of array, that also ha
 ```js
 class Vector {
     // Methods
-    static typeCheck(item: any): void; 
-    static getArrType(array): string; 
+    static typeCheck(item: any): void;
+    static getArrType(array): string;
 
     Vector(type: string, length: number, vector: any[]): Vector;
     add(item: any): number; // Returns vector's previous length
