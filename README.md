@@ -805,7 +805,7 @@ That is another static class, this time containing algorithms instead of statist
 ```js
 class Algorithms {
     // Again, methods only here.
-    static Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][]; (static)
+    static Farey(startRatio: Ratio, endRatio: Ratio, iterations: number): Ratio[][];
     static BinarySearch(array: number[], element: number): number; // returns index of sorted array
 }
 ```
@@ -837,13 +837,13 @@ class Vector {
     type: string;
 
     static allowedTypes: readonly string[] = [
-		"number",
-		"string",
-		"boolean",
-		"function",
-		"object",
-		"bigint",
-		"any",
+        "number",
+	    "string",
+	    "boolean",
+	    "function",
+	    "object",
+	    "bigint",
+	    "any"
     ]
 }
 ```

@@ -2097,7 +2097,7 @@ function mostPopularElem(array = [], noneValue = null) {
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim
-// TODO: Add the Statistics.mostPopularElem property and fix the issue with the mostPopularNum in the constructor (it should only be calculated for the number arrays).
+// TODO: Add the Statistics.mostPopularElem property and fix the issue with the mostPopularNum in the constructor (it should only be calculated for number arrays).
 
 // * Exports (constants are being exported separately).
 
