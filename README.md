@@ -837,13 +837,13 @@ class Vector {
     type: string;
 
     static allowedTypes: readonly string[] = [
-        "number",
-	    "string",
-	    "boolean",
-	    "function",
-	    "object",
-	    "bigint",
-	    "any"
+		"number",
+		"string",
+		"boolean",
+		"function",
+		"object",
+		"bigint",
+		"any"
     ]
 }
 ```
