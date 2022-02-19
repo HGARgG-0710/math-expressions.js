@@ -143,7 +143,7 @@ From math-expressions.js:
  *
  * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
-function fullExp(expression = { nums: [], operators: [] }) {
+function fullExp(expression = { nums: [], operators: [] });
 ```
 
 ### 4.repeatExp()
@@ -184,7 +184,7 @@ From math-expressions.js:
  * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
+function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10);
 ```
 
 ### 6.min()
@@ -852,43 +852,43 @@ class Vector {
 
 ### 8.Matrix
 
-This class represents a Vector of Vectors or a mathematical SQUARE (that's important) matrix.
+This class represents a Vector of Vectors or a mathematical square (that's important) matrix.
 It's only possible necessety and advantage over RectMatrix is the determinant method, that allows you to find a determinant of a square matrix.
 
-#### Class Methods
+This way, they are almost equivalent (below only the exclusive methods and properties of Matrix class are listed, not the ones of RectMatrix).
 
-    Matrix(sidelen: number, dimensions: number[][]): Matrix;
-    Matrix.dimensionCheck(sidelen, dimensions): void; (static) (inherited from RectMatrix)
-    RectMatrix.navigate(coordinate: number[]): Vector; (inherited from RectMatrix)
-    Matrix.toArray(): number[][]; (inherited from RectMatrix)
-    Matrix.scalarMultiply(scalar: number): void; (inherited from RectMatrix)
-    Matrix.scalarAdd(scalar: number): void; (inherited from RectMatrix)
-    Matrix.matrixMultiply(matrix: Matrix): Matrix; (inherited from RectMatrix)
-    Matrix.determinant(): number;
+```js
+    class Matrix extends RectMatrix {
+        // Methods
+        Matrix(sidelen: number, dimentions: number[][]): Matrix;
+        determinant(): number;
 
-#### Class Properties
-
-    Matrix.matrix: Vector;
-    Matrix.sidelen: number;
+        // Properties
+        sidelen: number;
+    }
+```
 
 ### 9.RectMatrix
 
 This class represents a rectangular (that's important) mathematical matrix.
 
-#### Class Methods:
+```js
+    class RectMatrix {
+        // Methods
+        static dimensionCheck(sidelens: number[], dimensions: number[][]): void;
 
-    RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;
-    RectMatrix.dimensionCheck(sidelens: number[], dimensions: number[][]);
-    RectMatrix.navigate(coordinate: number[]): Vector;
-    RectMatrix.toArray(): number[][];
-    RectMatrix.scalarAdd(scalar: number): void;
-    RectMatrix.scalarMultiply(scalar: number): void;
-    RectMatrix.matrixMultiply(matrix: RectMatrix): Matrix;
+        RectMatrix(sidelen: number, dimensions: number[][]): RectMatrix;
+        navigate(coordinate: number[]): Vector;
+        toArray(): number[][];
+        scalarAdd(scalar: number): void;
+        scalarMultiply(scalar: number): void;
+        matrixMultiply(matrix: RectMatrix): Matrix;
 
-#### Class Properties:
-
-    RectMatrix.matrix: Vector;
-    RectMatrix.sidelen: number[]; // first's the width (number of vectors) , second's the height (number of numbers in vectors)
+        // Properties
+        matrix: Vector; // Vector consists of Vectors.
+        sidelen: number[]; // first's the width (number of vectors) , second's the height (number of numbers in vectors)
+    }
+```
 
 ### 10.Equation
 
@@ -914,26 +914,31 @@ They are listed here:
 5.  You can use different variable names, that are lengthed as 1 (sadly, bigger names don't work yet).
 
 Also, the computation of the root for the given equation is purely numerical and depends on the given search ranges.
-And I would highly recommend NOT to make the search area too big and to make the solutions less accurate than 9 ('cause otherwise JS might blow up due to the overflow).
+And I would highly recommend NOT to make the search area too big and to make the solutions less accurate than 6 ('cause otherwise JS might blow up due to the overflow).
 
-#### Class Properties
+```js
 
-    Equation.variables: string[];
-    Equation.equation: string;
-    Equation.defaultMappings: VarMapping[]
-    Equation.defaultParsed: {right: string, left: string}[]
+    class Equation {
+        // Methods
+        static ParseEquation(equationLine: string, mappings: VarMapping, varibales: string[]): { right: string, left: string };
+        static replaceIndex(string: string, index: number, val: string): string;
 
-#### Class Methods
+        Equation(equationText: string, vars: string[]): Equation;
+        parse(mappings: VarMapping): { right: string, left: string };
+        differRightLeft(mappings: VarMapping, varname: string, varvalue: number);
+        searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4);
+        defaultDifferRightLeft(index: number, varname: string, varvalue: number);
+        defaultsearchSolution(index: number, varname: string, startvalue: number, pathlength: number, precision: number);
+        plug(origparsed: { right: string, left: string }, varname: string, varvalue: number): { right: string, left: string };
 
-    Equation(equationText: string, vars: string[]): Equation;
-    Equation.parse(mappings: VarMapping): { right: string, left: string };
-    Equation.ParseEquation(equationLine: string, mappings: VarMapping, varibales: string[]): { right: string, left: string };  (static)
-    Equation.differRightLeft(mappings: VarMapping, varname: string, varvalue: number);
-    Equation.searchSolution(mappings: VarMapping, varname: string, startvalue: number, pathlength: number, precision: number = 4);
-    Equation.replaceIndex(string: string, index: number, val: string): string; (static)
-    Equation.defaultDifferRightLeft(index: number, varname: string, varvalue: number);
-    Equation.defaultsearchSolution(index: number, varname: string, startvalue: number, pathlength: number, precision: number);
-    Equation.plug(origparsed: { right: string, left: string }, varname: string, varvalue: number): { right: string, left: string }; (static)
+        // Properties
+        variables: string[];
+        equation: string;
+        defaultMappings: VarMapping[]
+        defaultParsed: {right: string, left: string}[]
+    }
+
+```
 
 ### 11.VarMapping
 
@@ -943,15 +948,17 @@ It represents a mapping from variables to their values, that are gonna be plugge
 
 By the way, it works not just with variables, which have length 1. In fact, the variable names can even have numbers in them (there must be at least one letter, however). This current problem is in the Equation class only. In order to fix it, one would have to rewrite the plugging procedure completely.
 
-#### Class Properties
+```js 
+    class VarMapping {
+        // Methods
+        VarMapping (vars: string[], maps: number[]): VarMapping;
+        add(name: string, value: number): void;
+        delete(name: string): void;
 
-    VarMapping.varmap: { variables: string[], mappings: number[] };
-
-#### Class Methods
-
-    VarMapping (vars: string[], maps: number[]): VarMapping;
-    VarMapping.add(name: string, value: number): void;
-    VarMapping.delete(name: string): void;
+        // Properties
+        varmap: { variables: string[], mappings: number[] };
+    } 
+```
 
 ## Notes:
 
