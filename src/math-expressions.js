@@ -33,30 +33,57 @@ export const sameOperator = repeatedArithmetic
 class Statistics {
 	#setCount = 0
 
+	static isNumeric(data) {
+		for (let i = 0; i < data.length; i++)
+			if (typeof data[i] !== "number") return false
+		return true
+	}
+
 	/**
 	 * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
 	 * @param {number[]} nums An array of numbers passed to the function.
 	 * @param {boolean} toLarge Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
 	 */
-	constructor(nums = [1, 2, 3, 4, 5], toLarge = true) {
-		this.min = min(nums)
-		this.max = max(nums)
+	constructor(nums, toLarge = true, nullValue = "None") {
+		if (Statistics.isNumeric(nums)) {
+			this.min = min(nums)
+			this.max = max(nums)
 
-		this.range = range(nums)
-		this.interquartRange = range(nums, true)
-		this.countOfElements = nums.length
+			this.sorted = sort(nums, toLarge)
+			this.range = range(nums)
+			this.interquartRange = range(nums, true)
+			this.countOfElements = nums.length
 
-		this.median = median(nums, toLarge)
-		this.average = average(nums)
-		this.truncatedAverage = average(nums, true)
-		this.mostPopular = mostPopularNum(nums)
+			this.median = median(nums, toLarge)
+			this.average = average(nums)
+			this.truncatedAverage = average(nums, true)
+			this.mostPopular = mostPopularNum(nums, nullValue)
 
-		this.sorted = sort(nums, toLarge)
-		this.deviations = deviations(nums)
+			this.deviations = deviations(nums)
 
-		this.populationVarience = dispersion(nums)
-		this.populationStandDev = standardDeviation(nums)
-		this.standardError = standardError(nums)
+			this.populationVarience = dispersion(nums)
+			this.populationStandDev = standardDeviation(nums)
+			this.standardError = standardError(nums)
+		} else {
+			this.min = null
+			this.max = null
+
+			this.sorted = null
+			this.range = null
+			this.interquartRange = null
+			this.countOfElements = null
+
+			this.median = null
+			this.average = null
+			this.truncatedAverage = null
+			this.mostPopular = mostPopularElem(nums, nullValue) 
+
+			this.deviations = null
+
+			this.populationVarience = null
+			this.populationStandDev = null
+			this.standardError = null
+		} 
 
 		this.dim = dim(nums)
 		this.#setCount++
@@ -2086,7 +2113,7 @@ function binomial(n, k) {
 /**
  * Takes and array and returns the most frequently appearing element in it or null, if there isn't one.
  * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
- * @param {any} noneValue The value that is to be returned in case there is no most popular element. 
+ * @param {any} noneValue The value that is to be returned in case there is no most popular element.
  */
 function mostPopularElem(array = [], noneValue = null) {
 	const most_popular_index = mostPopularNum(
@@ -2097,7 +2124,6 @@ function mostPopularElem(array = [], noneValue = null) {
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim
-// TODO: Add the Statistics.mostPopularElem property and fix the issue with the mostPopularNum in the constructor (it should only be calculated for number arrays).
 
 // * Exports (constants are being exported separately).
 

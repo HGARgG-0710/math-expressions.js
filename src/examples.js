@@ -88,11 +88,14 @@ console.log(expjs.find("Hello, World!", "l")) // [true, 3, [2, 3, 10]]
 // Statistics class examples
 const numArr = [10, 50, -10]
 const stats = new Statistics(numArr)
+const nonNumeric = new Statistics(["Howdy!", "Again, i said...", "Howdy!"]) 
 
 console.log(stats.min) // -10
 console.log(stats.mostPopular) // "None"
 console.log(stats.range) // 60
 console.log(stats) // Logs Statistics object
+
+console.log(nonNumeric.mostPopular) // "Howdy!"
 
 // Surface class exmples
 const surface = new Surface([-30, 30], [-20, 40])
