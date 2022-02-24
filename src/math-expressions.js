@@ -52,7 +52,6 @@ class Statistics {
 			this.sorted = sort(nums, toLarge)
 			this.range = range(nums)
 			this.interquartRange = range(nums, true)
-			this.countOfElements = nums.length
 
 			this.median = median(nums, toLarge)
 			this.average = average(nums)
@@ -71,7 +70,6 @@ class Statistics {
 			this.sorted = null
 			this.range = null
 			this.interquartRange = null
-			this.countOfElements = null
 
 			this.median = null
 			this.average = null
@@ -85,7 +83,9 @@ class Statistics {
 			this.standardError = null
 		} 
 
+		this.countOfElements = nums.length
 		this.dim = dim(nums)
+
 		this.#setCount++
 	}
 

@@ -674,12 +674,13 @@ function mostPopularElem(array = [], noneValue = null)
 
 Constructor of this class takes an array of numbers and creates a Statistics object.
 This object has a statistic information about passed number array.
-(For now, only, I hope) this class only has a constructor and properties.
+This class only has a constructor, properties and one static method.
 
 ```js
 
 class Statistics {
     // Methods
+    static isNumeric(data: any[]): boolean; // returns. whether the given row of data consists of numbers only. 
     Statistics(array: number[]): Statistics;
 
     // Properties
