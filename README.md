@@ -681,23 +681,23 @@ This class only has a constructor, properties and one static method.
 class Statistics {
     // Methods
     static isNumeric(data: any[]): boolean; // returns. whether the given row of data consists of numbers only. 
-    Statistics(array: number[]): Statistics;
+    Statistics(array: number[], smallerToBigger: boolean, nullValue: any): Statistics;
 
     // Properties
-    min: number;
-    max: number;
-    range: number;
-    interquartRange: number;
+    min: number | null;
+    max: number | null;
+    range: number | null;
+    interquartRange: number | null;
     countOfElements: number;
-    median: number;
-    average: number;
-    truncatedAverage: number;
-    mostPopular: string | number;
-    sorted: number[];
-    deviations: number[];
-    populationVarience: number;
-    populationStandDev: number;
-    standardError: number;
+    median: number | null;
+    average: number | null;
+    truncatedAverage: number | null;
+    mostPopular: string | number | any;
+    sorted: number[] | null;
+    deviations: number[] | null;
+    populationVarience: number | null;
+    populationStandDev: number | null;
+    standardError: number | null;
 }
 ```
 
