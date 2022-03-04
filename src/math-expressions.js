@@ -74,14 +74,14 @@ class Statistics {
 			this.median = null
 			this.average = null
 			this.truncatedAverage = null
-			this.mostPopular = mostPopularElem(nums, nullValue) 
+			this.mostPopular = mostPopularElem(nums, nullValue)
 
 			this.deviations = null
 
 			this.populationVarience = null
 			this.populationStandDev = null
 			this.standardError = null
-		} 
+		}
 
 		this.countOfElements = nums.length
 		this.dim = dim(nums)
@@ -2085,8 +2085,8 @@ function arrayEquality(...arrays) {
  */
 function dim(array) {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
-	const t = (arr) => max(arr.map((el) => d(el)))
-	return array instanceof Array ? (array.length > 0 ? t(array) : 0) : 0
+	const t = (arr) => (arr.length === 0 ? 0 : max(arr.map((el) => d(el))))
+	return array instanceof Array ? t(array) : 0
 }
 
 /**
