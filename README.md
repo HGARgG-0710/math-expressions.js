@@ -106,7 +106,7 @@ From math-expressions.js:
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  * @returns {number} Result of a mathematical expression.
  */
-function exp(firstNum = 2, secondNum = 2, operator = "+")
+function exp(firstNum = 2, secondNum = 2, operator = "+"); 
 ```
 
 ### 2.repeatedArithmetic()
@@ -168,7 +168,7 @@ function repeatExp(
 	expression = { nums: [2, 2], operators: ["*"] },
 	countOfRepeats = 1,
 	repeatOperator = "+"
-)
+); 
 ```
 
 ### 5.average()
@@ -184,7 +184,7 @@ From math-expressions.js:
  * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10);
+function average(nums: number[], isTruncated:boolean = false, percents:number = 10);
 ```
 
 ### 6.min()
@@ -197,7 +197,7 @@ This function takes an array of numbers and returns the least value from it.
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The smallest number of the passed array.
  */
-function min(nums = [1, 2, 3, 4, 5])
+function min(nums: number[]); 
 ```
 
 ### 7.max()
@@ -212,7 +212,7 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The largest number in passed numerical array.
  */
-function max(nums = [1, 2, 3, 4, 5])
+function max(nums:number[]); 
 ```
 
 ### 8.median()
@@ -226,7 +226,7 @@ From math-expressions.js:
  * Takes an array of numbers, which length can be odd or even and returns the median of it.
  * @param {number[]} nums An array of numbers, passed to the function.
  */
-function median(nums = [1, 2, 3, 4, 5])
+function median(nums); 
 ```
 
 ### 9.mostPopularNum()
@@ -241,7 +241,7 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums = [], noneValue = "None")
+function mostPopularNum(nums:number[], noneValue:string = "None"); 
 ```
 
 ### 10.range()
@@ -256,7 +256,7 @@ From math-expressions.js:
  * @param {boolean} isInterquartile A boolean, representing shall the range to be gotten be interquartille or not. By deafault false.
  * @returns the range of the numeric array (if passed [-5, 10] returns 15).
  */
-function range(nums = [1, 2, 3, 4, 5], isInterquartile = false)
+function range(nums:number[], isInterquartile:boolean = false); 
 ```
 
 ### 11.sort()
@@ -271,7 +271,7 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers, passed to the function to sort.
  * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
-function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true)
+function sort(nums:number[], fromSmallToLarge:boolean = true); 
 ```
 
 ### 12.copy()
@@ -286,7 +286,7 @@ From math-expressions.js:
  * @param {any[]} nums An array that needs to be copied.
  * @returns {number[]} Copy of a passed array, without referencing its object.
  */
-function copy(nums = [1, 2, 3, 4, 5])
+function copy(nums: any[]); 
 ```
 
 ### 13.generate()
@@ -303,7 +303,7 @@ From math-expressions.js:
  * @param {number} step Value, by which the count is incremented every iteration.
  * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
  */
-function generate(start, end, step = 1, precision = 1)
+function generate(start: number, end: number, step: number = 1, precision: number = 1); 
 ```
 
 ### 14.find()
@@ -319,7 +319,7 @@ From math-expressions.js:
  * @param {number | number[] | string} searchVal Searched value.
  * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
  */
-function find(searchArr, searchVal)
+function find(searchArr: number[] | number[][] | string, searchVal: number | number[] | string); 
 ```
 
 ### 15.readable()
@@ -333,7 +333,7 @@ From math-expressions.js:
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
  */
-function readable(num)
+function readable(num:number): string; 
 ```
 
 ### 16.factorOut()
@@ -348,7 +348,7 @@ From math-expressions.js:
  * @param {number} num Number, to be factored out.
  * @returns {readonly number[]} Prime factors array.
  */
-function factorOut(number)
+function factorOut(number:number): readonly number[]; 
 ```
 
 ### 17.truncate()
@@ -363,7 +363,7 @@ From math-expressions.js:
  * @param {number[]} nums An array to be truncated.
  * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
  */
-function truncate(nums, percents = 10)
+function truncate(nums: number[], percents: number = 10);  
 ```
 
 #### Notice:
@@ -383,7 +383,7 @@ From math-expressions.js:
  * @param {number} secondNum Second number.
  * @param {number} searchRange A number, representing range of searches(if you get null from this function, then try to make range bigger). By default 100.
  */
-function leastCommonMultiple(firstNum, secondNum, searchRange = 100)
+function leastCommonMultiple(firstNum: number, secondNum: number, searchRange: number = 100)
 ```
 
 ### 19.deviations()
@@ -400,7 +400,7 @@ From math-expressions.js:
  * @param {boolean} isTruncated A boolean, representing, should or should not an array be truncated, during the process of searching for its average. By default false.
  * @param {number} percents A number, representing count of percents of numbers, for which this array shall be truncated, while searching for its average. Pased value will be doubled. Works only if isTruncated equals true. By default 10.
  */
-function deviations(row, isSquare = false, isTruncated = false, percents = 10)
+function deviations(row: number[], isSquare: boolean = false, isTruncated: boolean = false, percents: number = 10): number[]; 
 ```
 
 ### 20.dispersion()
@@ -418,10 +418,10 @@ From math-expressions.js:
  * @param {number[]} indexes A numeric array of indexes, using which, inside of a first argument needed values will be taken for a sample population(only if second parameter is false).
  */
 function dispersion(
-	row = [1, 2, 3, 4, 5],
-	isSquare = false,
-	isGeneral = true,
-	indexes = [0, 1, 2]
+	row: number[],
+	isSquare: boolean = false,
+	isGeneral: boolean = true,
+	indexes: number[] // only needed if isGeneral = false 
 )
 ```
 
@@ -439,10 +439,10 @@ From math-expressions.js:
  * @param {number[]} indexes An array of numbers, representing indexes of the sample, sample standard deviation deviation for which shall be found.
  */
 function standardDeviation(
-	row = [1, 2, 3, 4, 5],
-	isPopulation = true,
-	indexes = [0, 1, 2]
-)
+	row: number[],
+	isPopulation: boolean = true,
+	indexes: number[] // needed only if isPopulation = false
+): number; 
 ```
 
 ### 22.standardError()
@@ -460,11 +460,11 @@ From math-expressions.js:
  * @param {number[]} indexes An array of numbers, representing indexes using which sample of the original row should be made. Works only if isPopulation equals true.
  */
 function standardError(
-	row = [1, 2, 3, 4, 5],
-	isDispersion = false,
-	isPopulation = true,
-	indexes = [0, 1, 2]
-)
+	row: number[],
+	isDispersion: boolean = false,
+	isPopulation: boolean= true,
+	indexes: number[]
+): number;  
 ```
 
 ### 23.degreeOfFreedom()
@@ -478,7 +478,7 @@ From math-expressions.js:
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
  * @param {number[][]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
  */
-function degreeOfFreedom(...numRows)
+function degreeOfFreedom(...numRows): number; 
 ```
 
 ### 24.expectedValue()
@@ -493,7 +493,7 @@ From math-expressions.js :
  * @param {number[]} numbers A number array, expected value for which is to be found.
  * @param {number[]} probabilities An array of probabilitiles for certain numbers from numbers array to appear.
  */
-function expectedValue(numbers, probabilities)
+function expectedValue(numbers: number[], probabilities: number[]);  
 ```
 
 ### 25.floor()
@@ -509,7 +509,7 @@ From math-expressions.js:
  * @param {number} afterDot How many positions after dot should there be.
  * @returns {number}
  */
-function floor(number, afterDot = fixedSize)
+function floor(number: number, afterDot: number = fixedSize): number; 
 ```
 
 ### 26.randomArray()
@@ -525,7 +525,7 @@ From math-expressions.js:
  * @param {number} maxValue The max value, that can be found in the randomly generated array.
  * @param {boolean} integers The boolean flag, that represents whether all numbers in the array should be integers or not. By default false.
  */
-function randomArray(maxLength, maxValue, integers = false)
+function randomArray(maxLength: number, maxValue: number, integers: boolean = false);  
 ```
 
 ### 27.isPerfect()
@@ -539,7 +539,7 @@ From math-expressions.js:
  * Checks whether the number passed is perfect or not.
  * @param {number} number Number, perfectness of which is to be checked.
  */
-function isPerfect(number)
+function isPerfect(number: number): boolean; 
 ```
 
 ### 28.allFactors()
@@ -553,7 +553,7 @@ From math-expressions.js:
  * Takes one integer and returns all of its factors (not only primes, but others also).
  * @param {number} number An integer, factors for which are to be found.
  */
-function allFactors(number)
+function allFactors(number: number): number[]; 
 ```
 
 ### 29.factorial()
@@ -567,7 +567,7 @@ From math-expressions.js:
  * This function calculates the factorial of a positive integer given.
  * @param {number} number A positive integer, factorial for which is to be calculated.
  */
-function factorial(number)
+function factorial(number: number): number; 
 ```
 
 ### 30.realAddition()
@@ -585,7 +585,7 @@ From math-expressions.js:
  * @param {number} float2 Second number to be added.
  * @returns a number with error much less than it would be with JavaScript addition.
  */
-function realAddition(float1, float2)
+function realAddition(float1: number, float2: number); 
 ```
 
 ### 31.setPrecision()
@@ -600,7 +600,7 @@ From math-expressions.js:
  * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
  * @param {number} newPrecision The new value of fixedSize.
  */
-function setPrecision(newPrecision = 0)
+function setPrecision(newPrecision: number = 0); 
 ```
 
 ### 32.arrayEquality()
@@ -615,7 +615,7 @@ From math-expressions.js:
  * (I.e. returns the boolean value, representing whether they're equal or not).
  * @param {number[]} arrays An array of one-dimensional array of any length.
  */
-function arrayEquality(...arrays); 
+function arrayEquality(...arrays): boolean; 
 ```
 
 ### 33.dim()
@@ -635,7 +635,7 @@ From math-expressions.js:
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
-function dim(array); 
+function dim(array: any); 
 ```
 
 ### 34.binomial()
@@ -651,7 +651,7 @@ From math-expressions.js:
  * @param {number} n First number (any rational number).
  * @param {number} k Second number (integer).
  */
-function binomial(n, k)
+function binomial(n: number, k: number);
 ```
 
 ### 35.mostPopularElem()
@@ -667,7 +667,7 @@ From math-expressions.js:
  * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
  * @param {any} noneValue The value that is to be returned in case there is no most popular element.
  */
-function mostPopularElem(array = [], noneValue = null)
+function mostPopularElem(array: any[], noneValue: any = null); 
 ```
 
 ## Classes
