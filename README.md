@@ -20,41 +20,41 @@ or
 
 ## Functions (links)
 
-1. [exp()](#1exp)
-2. [repeatedArithmetic()](#2repeatedarithmetic)
-3. [fullExp()](#3fullexp)
-4. [repeatExp()](#4repeatexp)
-5. [average()](#5average)
-6. [min()](#6min)
-7. [max()](#7max)
-8. [median()](#8median)
-9. [mostPopularNum()](#9mostpopularnum)
-10. [range()](#10range)
-11. [sort()](#11sort)
-12. [copy()](#12copy)
-13. [generate()](#13generate)
-14. [find()](#14find)
-15. [readable()](#15readable)
-16. [factorOut()](#16factorout)
-17. [truncate()](#17truncate)
-18. [leastCommonMultiple()](#18leastcommonmultiple)
-19. [deviations()](#19deviations)
-20. [dispersion()](#20dispersion)
-21. [standardDeviation()](#21standarddeviation)
-22. [standardError()](#22standarderror)
-23. [degreeOfFreedom()](#23degreeoffreedom)
-24. [expectedValue()](#24expectedvalue)
-25. [floor()](#25floor)
-26. [randomArray()](#26randomarray)
-27. [isPerfect()](#27isperfect)
-28. [allFactors()](#28allfactors)
-29. [factorial()](#29factorial)
-30. [realAddition()](#30realaddition)
-31. [setPrecision()](#31setprecision)
-32. [arrayEquality()](#32arrayequality)
-33. [dim()](#33dim)
-34. [binomial()](#34binomial)
-35. [mostPopularElem()](#35mostpopularelem)
+1. [exp](#1exp)
+2. [repeatedArithmetic](#2repeatedarithmetic)
+3. [fullExp](#3fullexp)
+4. [repeatExp](#4repeatexp)
+5. [average](#5average)
+6. [min](#6min)
+7. [max](#7max)
+8. [median](#8median)
+9. [mostPopularNum](#9mostpopularnum)
+10. [range](#10range)
+11. [sort](#11sort)
+12. [copy](#12copy)
+13. [generate](#13generate)
+14. [find](#14find)
+15. [readable](#15readable)
+16. [factorOut](#16factorout)
+17. [truncate](#17truncate)
+18. [leastCommonMultiple](#18leastcommonmultiple)
+19. [deviations](#19deviations)
+20. [dispersion](#20dispersion)
+21. [standardDeviation](#21standarddeviation)
+22. [standardError](#22standarderror)
+23. [degreeOfFreedom](#23degreeoffreedom)
+24. [expectedValue](#24expectedvalue)
+25. [floor](#25floor)
+26. [randomArray](#26randomarray)
+27. [isPerfect](#27isperfect)
+28. [allFactors](#28allfactors)
+29. [factorial](#29factorial)
+30. [realAddition](#30realaddition)
+31. [setPrecision](#31setprecision)
+32. [arrayEquality](#32arrayequality)
+33. [dim](#33dim)
+34. [binomial](#34binomial)
+35. [mostPopularElem](#35mostpopularelem)
 
 ## Classes (links)
 
@@ -85,12 +85,12 @@ From math-expressions.js:
  * * This variable characterizes how many fixed numbers are outputted.
  * * You can change it freely using setPrecision() function, if you want a more "precise" output of some of the functions.
  */
-export let fixedSize = 11
+export let fixedSize: number = 11
 ```
 
 ## Functions
 
-### 1.exp()
+### 1.exp
 
 With it you can execute a mathematical expression upon two numbers.
 For now, arithmetic only is available.
@@ -103,13 +103,13 @@ From math-expressions.js:
  * Executes an expression with two numbers
  * @param {number} firstNum  First number.
  * @param {number} secondNum Second number.
- * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
+ * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, **, ^ (exponentiation) or %).
  * @returns {number} Result of a mathematical expression.
  */
-function exp(firstNum = 2, secondNum = 2, operator = "+"); 
+function exp(firstNum: number = 2, secondNum: number = 2, operator: string = "+"): number;
 ```
 
-### 2.repeatedArithmetic()
+### 2.repeatedArithmetic
 
 This function allows you to perform an expression, that uses the same mathematic action, but different numbers.
 By default uses + operator.
@@ -124,10 +124,10 @@ From math-expressions.js:
  * @param {number[]} numbers An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
-function repeatedArithmetic(numbers = [], operator = "+");
+function repeatedArithmetic(numbers: number[] = [], operator: string = "+"): number;
 ```
 
-### 3.fullExp()
+### 3.fullExp
 
 This function allows you to perform different mathematic actions upon a bunch of different numbers.
 By default uses \*\* and \* operators.
@@ -143,10 +143,10 @@ From math-expressions.js:
  *
  * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
-function fullExp(expression = { nums: [], operators: [] });
+function fullExp(expression: { nums: number[], operators: string[] } | Expression): number;
 ```
 
-### 4.repeatExp()
+### 4.repeatExp
 
 This function allows you to repeat an expression a bunch of times, then perform an ariphmetic
 operation upon all of its results and return the final result.
@@ -165,29 +165,29 @@ From math-expressions.js:
  * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
 function repeatExp(
-	expression = { nums: [2, 2], operators: ["*"] },
+	expression: { nums: number[], operators: string[] },
 	countOfRepeats = 1,
 	repeatOperator = "+"
-); 
+): number;
 ```
 
-### 5.average()
+### 5.average
 
-This function takes a numeric array and returns an average of all its values. An average may be truncated or not, depending upon the fact was a second argument (a boolean) passed(as true) or not(or passed, but as false). This may be useful, when you want to get a truncated average.
+This function takes a numeric array and returns an arithmetic mean of all its values. An average may be truncated or not, depending upon the fact was a second argument (a boolean) passed (as true) or not (or passed, but as false). This may be useful, when you want to get a truncated average.
 
 From math-expressions.js:
 
 ```js
 /**
- * Takes the number array and rerturns an average of it.
+ * Takes the number array and rerturns an arithmetic mean of it.
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums: number[], isTruncated:boolean = false, percents:number = 10);
+function average(nums: number[], isTruncated:boolean = false, percents:number = 10): number;
 ```
 
-### 6.min()
+### 6.min
 
 This function takes an array of numbers and returns the least value from it.
 
@@ -197,10 +197,10 @@ This function takes an array of numbers and returns the least value from it.
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The smallest number of the passed array.
  */
-function min(nums: number[]); 
+function min(nums: number[]): number;
 ```
 
-### 7.max()
+### 7.max
 
 This function takes an array of numbers and returns the largest value in it.
 
@@ -212,10 +212,10 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The largest number in passed numerical array.
  */
-function max(nums:number[]); 
+function max(nums:number[]): number;
 ```
 
-### 8.median()
+### 8.median
 
 This function takes an array of numbers, which length must be odd, and returns the middle value from it(a median).
 
@@ -226,10 +226,10 @@ From math-expressions.js:
  * Takes an array of numbers, which length can be odd or even and returns the median of it.
  * @param {number[]} nums An array of numbers, passed to the function.
  */
-function median(nums); 
+function median(nums: number[]): number;
 ```
 
-### 9.mostPopularNum()
+### 9.mostPopularNum
 
 This function takes an array of numbers and an arbitrary something. Then returns the most frequent number in the array or the arbitrary something if there is not such. (By default, arbitrary something = "None")
 
@@ -241,10 +241,10 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums:number[], noneValue:string = "None"); 
+function mostPopularNum(nums: number[], noneValue:string = "None"): number;
 ```
 
-### 10.range()
+### 10.range
 
 This function takes an array of numbers and returns the difference between the max and the min values.
 
@@ -256,10 +256,10 @@ From math-expressions.js:
  * @param {boolean} isInterquartile A boolean, representing shall the range to be gotten be interquartille or not. By deafault false.
  * @returns the range of the numeric array (if passed [-5, 10] returns 15).
  */
-function range(nums:number[], isInterquartile:boolean = false); 
+function range(nums: number[], isInterquartile: boolean = false): number;
 ```
 
-### 11.sort()
+### 11.sort
 
 This function takes a numeric array and returns it sorted from smallest to largest(or opposite, from largest to smallest) number, depending on second parameter(that is a boolean).
 
@@ -271,10 +271,10 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers, passed to the function to sort.
  * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
-function sort(nums:number[], fromSmallToLarge:boolean = true); 
+function sort(nums:number[], fromSmallToLarge:boolean = true): number;
 ```
 
-### 12.copy()
+### 12.copy
 
 This function takes an array and returns a copy of it without referencing object of an original array. It might be useful, when doing a duplicate of row of data to work with it(change) and leaving an original array as a reserve copy.
 
@@ -286,10 +286,10 @@ From math-expressions.js:
  * @param {any[]} nums An array that needs to be copied.
  * @returns {number[]} Copy of a passed array, without referencing its object.
  */
-function copy(nums: any[]); 
+function copy(nums: any[]): any[];
 ```
 
-### 13.generate()
+### 13.generate
 
 This function allows you to generate a row of data by giving it three numbers: firstly - the start position(the smallest number in the row), secondly - the end position(the largest position in the row), thirdly - step number or the difference between each of row's numbers and fourthly - the precision of the step (if your have all else as integers, then 0), which is how many digits after dot does your step have. The last one is required in order to avoid an error, when calculating the next value (good old floating-point arithmetic).
 
@@ -303,10 +303,10 @@ From math-expressions.js:
  * @param {number} step Value, by which the count is incremented every iteration.
  * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
  */
-function generate(start: number, end: number, step: number = 1, precision: number = 1); 
+function generate(start: number, end: number, step: number = 1, precision: number = 1): number[];
 ```
 
-### 14.find()
+### 14.find
 
 This function takes a numeric array(one- or two-dimensional) or a string and a number(or a one-dimensional array of numbers) or a substring, that will be found in this array(or string). Returns an array, that, if the value is found, contains true and a count of times this number(or a one-dimensional array, or a substring) was found, otherwise false and 0.
 
@@ -319,10 +319,10 @@ From math-expressions.js:
  * @param {number | number[] | string} searchVal Searched value.
  * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
  */
-function find(searchArr: number[] | number[][] | string, searchVal: number | number[] | string); 
+function find(searchArr: number[] | number[][] | string, searchVal: number | number[] | string): [boolean, number, number[]];
 ```
 
-### 15.readable()
+### 15.readable
 
 This function takes a number and returns a string value of it, that is much better readable.
 
@@ -333,10 +333,10 @@ From math-expressions.js:
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
  */
-function readable(num:number): string; 
+function readable(num: number): string;
 ```
 
-### 16.factorOut()
+### 16.factorOut
 
 This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)! Seems like my previous algorithm was a complete crap and the current one is much better.
 
@@ -348,10 +348,10 @@ From math-expressions.js:
  * @param {number} num Number, to be factored out.
  * @returns {readonly number[]} Prime factors array.
  */
-function factorOut(number:number): readonly number[]; 
+function factorOut(number: number): readonly number[];
 ```
 
-### 17.truncate()
+### 17.truncate
 
 Truncates a passed numeric array(the first parameter) by count of numbers, that is equal function's second parameter(it is a number) multiplied by 2. Array is being truncated from it's "edges"(only stated count of percents of the biggest and the smallest numbers are deleted).
 
@@ -363,14 +363,14 @@ From math-expressions.js:
  * @param {number[]} nums An array to be truncated.
  * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
  */
-function truncate(nums: number[], percents: number = 10);  
+function truncate(nums: number[], percents: number = 10): number[];
 ```
 
 #### Notice:
 
 Before truncating an array truncate() function sorts it from-smallest-to-largest way.
 
-### 18.leastCommonMultiple()
+### 18.leastCommonMultiple
 
 Finds the least common multiple between two numbers(first and second arguments) in given search range(third argument). Search range is not a number to which the search will be continued, it is a number of iterations, each of which similiar value is searched (100 by default). If the search range is too small, then returns null, otherwise the least common multiple.
 
@@ -383,10 +383,10 @@ From math-expressions.js:
  * @param {number} secondNum Second number.
  * @param {number} searchRange A number, representing range of searches(if you get null from this function, then try to make range bigger). By default 100.
  */
-function leastCommonMultiple(firstNum: number, secondNum: number, searchRange: number = 100)
+function leastCommonMultiple(firstNum: number, secondNum: number, searchRange: number = 100): number; 
 ```
 
-### 19.deviations()
+### 19.deviations
 
 Takes an array of numbers, two booleans and a number and returns an array of deviative numbers(comparing to the average) of the passed array. First boolean represents should or not all found deviations be powered by two or not. If it is false(what is a default value), then instead of powering all deviative numbers by two function just makes them an absolutes of original selves. Second boolean represents, should or should not array be truncated while searching for its average. The fourth parameter(number) represents count of percents, for which array should be truncated. It works only if third argument is true (by default it is false).
 
@@ -400,10 +400,10 @@ From math-expressions.js:
  * @param {boolean} isTruncated A boolean, representing, should or should not an array be truncated, during the process of searching for its average. By default false.
  * @param {number} percents A number, representing count of percents of numbers, for which this array shall be truncated, while searching for its average. Pased value will be doubled. Works only if isTruncated equals true. By default 10.
  */
-function deviations(row: number[], isSquare: boolean = false, isTruncated: boolean = false, percents: number = 10): number[]; 
+function deviations(row: number[], isSquare: boolean = false, isTruncated: boolean = false, percents: number = 10): number[];
 ```
 
-### 20.dispersion()
+### 20.dispersion
 
 Takes an array of numbers, two booleans and another number array and returns a number - dispersion of a first argument. Second parameter represents should, in process of finding the dispersion, deviations be powered by two or not. If false(what is a default value), then instead of doing that, while searching for dispersion, will just use absolute values of all the found deviations. Third parameter represents the fact does the variance is sample variance or population variance. If it is false, then it is sample variance (by default second parameter is true). If it's false, then sample dispersion is returned, from the sample, made using numbers from the third argument, that represent needed indexes of the first argument.
 
@@ -421,11 +421,11 @@ function dispersion(
 	row: number[],
 	isSquare: boolean = false,
 	isGeneral: boolean = true,
-	indexes: number[] // only needed if isGeneral = false 
-)
+	indexes: number[] // only needed if isGeneral = false
+): number; 
 ```
 
-### 21.standardDeviation()
+### 21.standardDeviation
 
 Takes an array of numbers, boolean, another array of numbers and returns standard deviation of the numeric array, passed as the first argument. Second argument represents should standard deviation be of population or sample (By default - true, population). Third argument represents indexes of the sample, standard deviation of which shall be found (Works only if second argument is true).
 
@@ -442,10 +442,10 @@ function standardDeviation(
 	row: number[],
 	isPopulation: boolean = true,
 	indexes: number[] // needed only if isPopulation = false
-): number; 
+): number;
 ```
 
-### 22.standardError()
+### 22.standardError
 
 Takes an array of numbers, two booleans, another array of numbers and returns standard error of the first numeric array. Second argument represents, should dispersion(found using absolute values of deviations) be used as a number, divided by the length of the sample(or the whole array, if it is population) (By default false, standard deviation). Third argument represents should the return value be the standard error of population or sample (By default true, standard error of population). Fourth argument represents an array of indexes, using which sample, standard error of which shall be found, will be constructed. (Works only if the third argument equals false).
 
@@ -464,10 +464,10 @@ function standardError(
 	isDispersion: boolean = false,
 	isPopulation: boolean= true,
 	indexes: number[]
-): number;  
+): number;
 ```
 
-### 23.degreeOfFreedom()
+### 23.degreeOfFreedom
 
 Takes a two-dimensional array of numbers and returns the degree of freedom for it.
 
@@ -476,12 +476,12 @@ From math-expressions.js:
 ```js
 /**
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
- * @param {number[][]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
+ * @param {number[]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
  */
-function degreeOfFreedom(...numRows): number; 
+function degreeOfFreedom(...numRows: number[]): number;
 ```
 
-### 24.expectedValue()
+### 24.expectedValue
 
 Takes two number arrays(first of whicn is for numbers and the second is for their probabilities to appear) and returns an expected value based on this data.
 
@@ -493,10 +493,10 @@ From math-expressions.js :
  * @param {number[]} numbers A number array, expected value for which is to be found.
  * @param {number[]} probabilities An array of probabilitiles for certain numbers from numbers array to appear.
  */
-function expectedValue(numbers: number[], probabilities: number[]);  
+function expectedValue(numbers: number[], probabilities: number[]): number;
 ```
 
-### 25.floor()
+### 25.floor
 
 Takes two numbers: the "target" number and the level of precision to be used on it. Second argument represents count of digits to be existent after the dot.
 
@@ -509,10 +509,10 @@ From math-expressions.js:
  * @param {number} afterDot How many positions after dot should there be.
  * @returns {number}
  */
-function floor(number: number, afterDot: number = fixedSize): number; 
+function floor(number: number, afterDot: number = fixedSize): number;
 ```
 
-### 26.randomArray()
+### 26.randomArray
 
 Takes the number, one number, a boolean and returns a random array, based on this data. The first argument is the max length that the new randomly-generated array can have, second one is the max value that can be detected in the array and the third one is the boolean, representing whether the numbers in the array should all be integers or not (By default false).
 
@@ -525,10 +525,10 @@ From math-expressions.js:
  * @param {number} maxValue The max value, that can be found in the randomly generated array.
  * @param {boolean} integers The boolean flag, that represents whether all numbers in the array should be integers or not. By default false.
  */
-function randomArray(maxLength: number, maxValue: number, integers: boolean = false);  
+function randomArray(maxLength: number, maxValue: number, integers: boolean = false): number[];
 ```
 
-### 27.isPerfect()
+### 27.isPerfect
 
 Takes a number and checks whether it is perfect or not. Returns boolean.
 
@@ -539,10 +539,10 @@ From math-expressions.js:
  * Checks whether the number passed is perfect or not.
  * @param {number} number Number, perfectness of which is to be checked.
  */
-function isPerfect(number: number): boolean; 
+function isPerfect(number: number): boolean;
 ```
 
-### 28.allFactors()
+### 28.allFactors
 
 Takes a number and returns a number array consisting of all of its factors (do not confuse with factorOut() function, that returns only prime factors).
 
@@ -553,10 +553,10 @@ From math-expressions.js:
  * Takes one integer and returns all of its factors (not only primes, but others also).
  * @param {number} number An integer, factors for which are to be found.
  */
-function allFactors(number: number): number[]; 
+function allFactors(number: number): number[];
 ```
 
-### 29.factorial()
+### 29.factorial
 
 Classic! Good old integer-only factorial() function. You know what it does if you know what factorial is. Takes a integer in and and spits factorial of it out.
 
@@ -567,10 +567,10 @@ From math-expressions.js:
  * This function calculates the factorial of a positive integer given.
  * @param {number} number A positive integer, factorial for which is to be calculated.
  */
-function factorial(number: number): number; 
+function factorial(number: number): number;
 ```
 
-### 30.realAddition()
+### 30.realAddition
 
 This function is a fix of classical addition in computer languages. It is very helpful when adding big numbers in which the error might go straight up.
 Of course, it wouldn't help completely, but a useful thing for quite specific cases.
@@ -585,10 +585,10 @@ From math-expressions.js:
  * @param {number} float2 Second number to be added.
  * @returns a number with error much less than it would be with JavaScript addition.
  */
-function realAddition(float1: number, float2: number); 
+function realAddition(float1: number, float2: number): number;
 ```
 
-### 31.setPrecision()
+### 31.setPrecision
 
 This function sets a new value to the fixedSize global variable. It apparently had to be implemented because of the fact that exported variables, defined with let cannot be modified directly, but rather through a function.
 Takes an integer and sets fixedSize equal to it.
@@ -600,10 +600,10 @@ From math-expressions.js:
  * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
  * @param {number} newPrecision The new value of fixedSize.
  */
-function setPrecision(newPrecision: number = 0); 
+function setPrecision(newPrecision: number = 0): void;
 ```
 
-### 32.arrayEquality()
+### 32.arrayEquality
 
 Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too.
 
@@ -613,12 +613,12 @@ From math-expressions.js:
 /**
  * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
  * (I.e. returns the boolean value, representing whether they're equal or not).
- * @param {number[]} arrays An array of one-dimensional array of any length.
+ * @param {any[]} arrays An array of one-dimensional array of any length.
  */
-function arrayEquality(...arrays): boolean; 
+function arrayEquality(...arrays: any[]): boolean;
 ```
 
-### 33.dim()
+### 33.dim
 
 Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of an array with no elements in it. Dim of array with n >= 1 arrays, which have something else in them is n+1.
 
@@ -629,16 +629,16 @@ From math-expressions.js:
  * This function takes in array and determines how nested it is (its dimensions).
  * If it is not array, dimension is 0.
  * If it is an empty array, then it's dimension is 0.
- * If it is an array only with an element which is not an array, then it's dim is 1.  
- * If it is an array with only an array of dim n-1, then it's own dim is n. 
- * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements. 
+ * If it is an array only with an element which is not an array, then it's dim is 1.
+ * If it is an array with only an array of dim n-1, then it's own dim is n.
+ * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements.
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
-function dim(array: any); 
+function dim(array: any): number;
 ```
 
-### 34.binomial()
+### 34.binomial
 
 Takes in two numbers and calculates the binomial coefficient for them. (Works not only with integers, if one passes rational number for the first (but not second) argument, it works fine. However, if the second argument is rational, then it gets rounded down to the nearest integer.)
 
@@ -651,10 +651,10 @@ From math-expressions.js:
  * @param {number} n First number (any rational number).
  * @param {number} k Second number (integer).
  */
-function binomial(n: number, k: number);
+function binomial(n: number, k: number): number;
 ```
 
-### 35.mostPopularElem()
+### 35.mostPopularElem
 
 Takes an array of arbitrary objects and returns the most frequent of them. A generalisation of mostPopularNum function.
 Also, as a second argument it accepts the value, that should be returned in case if there isn't most frequent element. By default, the second parameter is equal to null.
@@ -667,7 +667,7 @@ From math-expressions.js:
  * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
  * @param {any} noneValue The value that is to be returned in case there is no most popular element.
  */
-function mostPopularElem(array: any[], noneValue: any = null); 
+function mostPopularElem(array: any[], noneValue: any = null): any;
 ```
 
 ## Classes
@@ -682,7 +682,7 @@ This class only has a constructor, properties and one static method.
 
 class Statistics {
     // Methods
-    static isNumeric(data: any[]): boolean; // returns. whether the given row of data consists of numbers only. 
+    static isNumeric(data: any[]): boolean; // returns. whether the given row of data consists of numbers only.
     Statistics(array: number[], smallerToBigger: boolean, nullValue: any): Statistics;
 
     // Properties
@@ -951,7 +951,7 @@ It represents a mapping from variables to their values, that are gonna be plugge
 
 By the way, it works not just with variables, which have length 1. In fact, the variable names can even have numbers in them (there must be at least one letter, however). This current problem is in the Equation class only. In order to fix it, one would have to rewrite the plugging procedure completely.
 
-```js 
+```js
     class VarMapping {
         // Methods
         VarMapping (vars: string[], maps: number[]): VarMapping;
@@ -960,7 +960,7 @@ By the way, it works not just with variables, which have length 1. In fact, the 
 
         // Properties
         varmap: { variables: string[], mappings: number[] };
-    } 
+    }
 ```
 
 ## Notes:

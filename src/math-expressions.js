@@ -1,5 +1,6 @@
 /**
- * * Hello and welcome into the source code.
+ * * Hello and welcome into the source code of the mathematical JavaScript library math-expressions.js.
+ * * This is the version 0.8.
  * * I tried to comment everything that may be somewhat confusing along with most of the elements of library.
  * * Hope this helps. Any contributions are highly appriciated!
  * * (After this note comes the code)
@@ -1459,7 +1460,11 @@ class VarMapping {
 // Functions
 
 /**
- * Executes an expression with two numbers
+ * Executes an arithmetic expression with two numbers
+ * 
+ * * Note: with it you can even build a very simple calculator. 
+ * * Plus, it's more secure an allows only aritmetic (for now, at least).  
+ * 
  * @param {number} firstNum  First number.
  * @param {number} secondNum Second number.
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
@@ -1935,7 +1940,7 @@ function standardError(
 
 /**
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
- * @param {number[][]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
+ * @param {number[]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
  */
 function degreeOfFreedom(...numRows) {
 	let lenSum = 0
@@ -1951,11 +1956,10 @@ function degreeOfFreedom(...numRows) {
 function expectedValue(numbers, probabilities) {
 	const values = []
 
-	if (numbers.length > probabilities.length) {
+	if (numbers.length > probabilities.length) 
 		throw new Error(
-			"The length of probability array is smaller than the length of the numbers array. Cannot compute the expectedValue."
+			"The length of probability array is smaller than the length of the numbers array. No possibility to compute the expectedValue."
 		)
-	}
 
 	for (let i = 0; i < numbers.length; i++)
 		values.push(numbers[i] * probabilities[i])
@@ -2057,7 +2061,7 @@ function setPrecision(newPrecision = 0) {
 /**
  * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
  * (I.e. returns the boolean value, representing whether they're equal or not).
- * @param {number[]} arrays An array of one-dimensional array of any length.
+ * @param {any[]} arrays An array of one-dimensional array of any length.
  */
 function arrayEquality(...arrays) {
 	function equalBinary(arr1, arr2) {
