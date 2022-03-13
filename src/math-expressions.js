@@ -2040,7 +2040,7 @@ function factorial(number) {
  * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
  * @param {number} float1 First number to be added.
  * @param {number} float2 Second number to be added.
- * @returns a number with error much less than it would be with JavaScript addition.
+ * @returns {[number, number]} a number with error much less than it would be with JavaScript addition.
  */
 function realAddition(float1, float2) {
 	const sum = float1 + float2
@@ -2082,8 +2082,10 @@ function arrayEquality(...arrays) {
 /**
  * This function takes in array and determines how nested it is (its dimensions).
  * If it is not array, dimension is 0.
- * If it is an array with only empty array, then it's dimension is 0.
- * It it is an array with array inside itself, which dimension is n-1, then the dimension is n.
+ * If it is an empty array, then it's dimension is 0.
+ * If it is an array only with an element which is not an array, then it's dim is 1.  
+ * If it is an array with only an array of dim n-1, then it's own dim is n. 
+ * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1. 
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */

@@ -583,15 +583,12 @@ From math-expressions.js:
  * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
  * @param {number} float1 First number to be added.
  * @param {number} float2 Second number to be added.
- * @returns a number with error much less than it would be with JavaScript addition.
+ * @returns {[number, number]} a number (first) with error less than it would be with JavaScript addition.
  */
-function realAddition(float1: number, float2: number): number;
+function realAddition(float1: number, float2: number): [number, number];
 ```
 
 ### 31.setPrecision
-
-This function sets a new value to the fixedSize global variable. It apparently had to be implemented because of the fact that exported variables, defined with let cannot be modified directly, but rather through a function.
-Takes an integer and sets fixedSize equal to it.
 
 From math-expressions.js:
 
@@ -604,8 +601,6 @@ function setPrecision(newPrecision: number = 0): void;
 ```
 
 ### 32.arrayEquality
-
-Takes any n arrays as it's input and returns a boolean value representing fact of truthness of their equality amongst themselves. Broadly speacking, checks whether they are equal or not and if not returns false otherwise true. It cares about order and lengths too.
 
 From math-expressions.js:
 
@@ -620,8 +615,6 @@ function arrayEquality(...arrays: any[]): boolean;
 
 ### 33.dim
 
-Takes an array and measures it's maximum dim (how nested it actually is). For example dim of a number/string or anything that is not an Array is 0 as well as of an array with no elements in it. Dim of array with n >= 1 arrays, which have something else in them is n+1.
-
 From math-expressions.js:
 
 ```js
@@ -631,11 +624,11 @@ From math-expressions.js:
  * If it is an empty array, then it's dimension is 0.
  * If it is an array only with an element which is not an array, then it's dim is 1.
  * If it is an array with only an array of dim n-1, then it's own dim is n.
- * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements.
+ * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1.
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
-function dim(array: any): number;
+function dim(array: any);
 ```
 
 ### 34.binomial
