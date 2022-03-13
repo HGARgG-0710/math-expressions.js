@@ -111,10 +111,10 @@ function exp(firstNum: number = 2, secondNum: number = 2, operator: string = "+"
 
 ### 2.repeatedArithmetic
 
-This function allows you to perform an expression, that uses the same mathematic action, but different numbers.
+This function allows you to perform an expression, that uses the same arithmetic operator, but different numbers.
 By default uses + operator.
 
-Before the version 0.7 it was called sameOperator() (you can still use the old name, though).
+It allows to quickly sum, multiply and so on a bunch of numerics. 
 
 From math-expressions.js:
 
@@ -127,11 +127,13 @@ From math-expressions.js:
 function repeatedArithmetic(numbers: number[] = [], operator: string = "+"): number;
 ```
 
+#### Note: 
+
+Before the version 0.7 it was called sameOperator() (you can still use the old name, though).
+
 ### 3.fullExp
 
 This function allows you to perform different mathematic actions upon a bunch of different numbers.
-By default uses \*\* and \* operators.
-
 From math-expressions.js:
 
 ```js
@@ -148,7 +150,7 @@ function fullExp(expression: { nums: number[], operators: string[] } | Expressio
 
 ### 4.repeatExp
 
-This function allows you to repeat an expression a bunch of times, then perform an ariphmetic
+This function repeats an arithmetic expression a bunch of times, then perform an ariphmetic
 operation upon all of its results and return the final result.
 
 From math-expressions.js:
@@ -173,7 +175,8 @@ function repeatExp(
 
 ### 5.average
 
-This function takes a numeric array and returns an arithmetic mean of all its values. An average may be truncated or not, depending upon the fact was a second argument (a boolean) passed (as true) or not (or passed, but as false). This may be useful, when you want to get a truncated average.
+This function takes a numeric array and returns an arithmetic mean of all its values. 
+The average may be truncated or not, depending upon the fact whether the second argument (a boolean) was passed (as true) or not (or passed, but as false). 
 
 From math-expressions.js:
 
@@ -189,7 +192,7 @@ function average(nums: number[], isTruncated:boolean = false, percents:number = 
 
 ### 6.min
 
-This function takes an array of numbers and returns the least value from it.
+Returns a minimum of a passed array.
 
 ```js
 /**
@@ -202,7 +205,7 @@ function min(nums: number[]): number;
 
 ### 7.max
 
-This function takes an array of numbers and returns the largest value in it.
+Returns a maximum of given array. 
 
 From math-expressions.js:
 
@@ -217,13 +220,13 @@ function max(nums:number[]): number;
 
 ### 8.median
 
-This function takes an array of numbers, which length must be odd, and returns the middle value from it(a median).
+Returns a median of passed array. 
 
 From math-expressions.js:
 
 ```js
 /**
- * Takes an array of numbers, which length can be odd or even and returns the median of it.
+ * Takes an array of numbers, which length and returns the median of it.
  * @param {number[]} nums An array of numbers, passed to the function.
  */
 function median(nums: number[]): number;
@@ -241,7 +244,7 @@ From math-expressions.js:
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums: number[], noneValue:string = "None"): number;
+function mostPopularNum(nums: number[], noneValue:any = "None"): number;
 ```
 
 ### 10.range
@@ -261,7 +264,8 @@ function range(nums: number[], isInterquartile: boolean = false): number;
 
 ### 11.sort
 
-This function takes a numeric array and returns it sorted from smallest to largest(or opposite, from largest to smallest) number, depending on second parameter(that is a boolean).
+Returns an array sorted. 
+It could be sorted forwards or backwards depending on the second argument.  
 
 From math-expressions.js:
 
@@ -276,7 +280,7 @@ function sort(nums:number[], fromSmallToLarge:boolean = true): number;
 
 ### 12.copy
 
-This function takes an array and returns a copy of it without referencing object of an original array. It might be useful, when doing a duplicate of row of data to work with it(change) and leaving an original array as a reserve copy.
+Copies a given array. 
 
 From math-expressions.js:
 
@@ -291,7 +295,11 @@ function copy(nums: any[]): any[];
 
 ### 13.generate
 
-This function allows you to generate a row of data by giving it three numbers: firstly - the start position(the smallest number in the row), secondly - the end position(the largest position in the row), thirdly - step number or the difference between each of row's numbers and fourthly - the precision of the step (if your have all else as integers, then 0), which is how many digits after dot does your step have. The last one is required in order to avoid an error, when calculating the next value (good old floating-point arithmetic).
+Generates an array based on given data. 
+First argument - start, from which the array is to be made. 
+Second - when it shall end. 
+Third - the generation step. 
+Fourth - the precision of step (necessary iff third argument is a float).  
 
 From math-expressions.js:
 
@@ -324,13 +332,13 @@ function find(searchArr: number[] | number[][] | string, searchVal: number | num
 
 ### 15.readable
 
-This function takes a number and returns a string value of it, that is much better readable.
+Returns a better readable string version of given integer. 
 
 From math-expressions.js:
 
 ```js
 /**
- * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
+ * Takes in an integer and returns a string, containing it's readable version. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
  */
 function readable(num: number): string;
@@ -338,7 +346,7 @@ function readable(num: number): string;
 
 ### 16.factorOut
 
-This function allows you to factor numbers. Previously, I wrote how terribly slow it was. Now it has become SO productive, that it cracks a number like 10000000000 in second or even less (I have not checked precisely, but it was already good enough)! Seems like my previous algorithm was a complete crap and the current one is much better.
+Factors a given integer and returns it's factorization in an unmodifiable array. 
 
 From math-expressions.js:
 
