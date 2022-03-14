@@ -352,11 +352,11 @@ From math-expressions.js:
 
 ```js
 /**
- * Factors out a passed number to the prime numbers. Works quite quickly.
+ * Factors out a passed number to the prime numbers.
  * @param {number} num Number, to be factored out.
- * @returns {readonly number[]} Prime factors array.
+ * @returns {number[]} Prime factors array.
  */
-function factorOut(number: number): readonly number[];
+function factorOut(number: number): number[];
 ```
 
 ### 17.truncate

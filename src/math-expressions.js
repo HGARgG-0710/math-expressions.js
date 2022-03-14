@@ -1783,7 +1783,7 @@ function factorOut(number) {
 		}
 	}
 
-	return Object.freeze(factors)
+	return factors
 }
 
 /**
