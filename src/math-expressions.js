@@ -8,6 +8,10 @@
  * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2022
  */
 
+// Imports
+
+import ntk from "ntk"
+
 // Global variables
 
 /**
@@ -255,6 +259,9 @@ class Statistics {
  * They are represented via coordinates.
  */
 class Surface {
+	static _n = 0
+	n = 0
+
 	/**
 	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
 	 *
@@ -274,6 +281,8 @@ class Surface {
 		this.dots = [[0, 0]]
 		this.lines = []
 		this.segments = []
+
+		n = ++Surface._n
 	}
 
 	/**
@@ -367,6 +376,26 @@ class Surface {
 				"Provided coordinate is out of limits of x and y properties of your Surface object."
 			)
 		}
+	}
+
+	draw(width, height, title = "") {
+		function plot(window, contex) {
+			this.dots.forEach((el) => {})
+			this.segments.forEach((el) => {})
+			this.lines.forEach((el) => {})
+		}
+
+		ntk.createClient((error, application) => {
+			const window = application.createWindow({
+				height: height,
+				width: width,
+			})
+			const contex = window.getContext("2d")
+
+			plot(window, contex)
+
+			window.map()
+		})
 	}
 }
 
@@ -1461,10 +1490,10 @@ class VarMapping {
 
 /**
  * Executes an arithmetic expression with two numbers
- * 
- * * Note: with it you can even build a very simple calculator. 
- * * Plus, it's more secure an allows only aritmetic (for now, at least).  
- * 
+ *
+ * * Note: with it you can even build a very simple calculator.
+ * * Plus, it's more secure an allows only aritmetic (for now, at least).
+ *
  * @param {number} firstNum  First number.
  * @param {number} secondNum Second number.
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
@@ -1956,7 +1985,7 @@ function degreeOfFreedom(...numRows) {
 function expectedValue(numbers, probabilities) {
 	const values = []
 
-	if (numbers.length > probabilities.length) 
+	if (numbers.length > probabilities.length)
 		throw new Error(
 			"The length of probability array is smaller than the length of the numbers array. No possibility to compute the expectedValue."
 		)
@@ -2083,9 +2112,9 @@ function arrayEquality(...arrays) {
  * This function takes in array and determines how nested it is (its dimensions).
  * If it is not array, dimension is 0.
  * If it is an empty array, then it's dimension is 0.
- * If it is an array only with an element which is not an array, then it's dim is 1.  
- * If it is an array with only an array of dim n-1, then it's own dim is n. 
- * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1. 
+ * If it is an array only with an element which is not an array, then it's dim is 1.
+ * If it is an array with only an array of dim n-1, then it's own dim is n.
+ * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1.
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
