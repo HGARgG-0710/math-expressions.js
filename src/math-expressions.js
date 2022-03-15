@@ -378,11 +378,18 @@ class Surface {
 		}
 	}
 
-	draw(width, height, title = "") {
-		function plot(window, contex) {
-			this.dots.forEach((el) => {})
-			this.segments.forEach((el) => {})
-			this.lines.forEach((el) => {})
+	draw(width, height, title = `Surface ${this.n}`) {
+		function plot(contex) {
+			this.dots.forEach((el) => {
+				contex.point({ x: el[0], y: el[1] })
+			})
+			this.segments.forEach((el) => {
+				contex.polyline([
+					{ x: el[0][0], y: el[0][1] },
+					{ x: el[1][0], y: el[1][1] },
+				])
+			})
+			this.lines.forEach((el) => {}) // TODO: Fix the fact, that lines currently do not represent. 
 		}
 
 		ntk.createClient((error, application) => {
@@ -390,7 +397,8 @@ class Surface {
 				height: height,
 				width: width,
 			})
-			const contex = window.getContext("2d")
+			window.setTitle(title)
+			const contex = window.getContext("x11")
 
 			plot(window, contex)
 
