@@ -10,7 +10,10 @@
 
 // Imports
 
-import ntk from "ntk"
+// TODO: Add after fixing the installation problems (they're due to the lack of necessary compiler). 
+// TODO: After fixing problems on your machine, add a setup.js that would do it automatically in a prerun. 
+
+// import ntk from "ntk"
 
 // Global variables
 
@@ -282,7 +285,7 @@ class Surface {
 		this.lines = []
 		this.segments = []
 
-		n = ++Surface._n
+		this.n = ++Surface._n
 	}
 
 	/**

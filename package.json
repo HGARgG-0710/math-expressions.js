@@ -26,8 +26,5 @@
 	"bugs": {
 		"url": "https://github.com/HGARgG-0710/math-expressions.js/issues"
 	},
-	"homepage": "https://github.com/HGARgG-0710/math-expressions.js#readme",
-	"dependencies": {
-		"ntk": "^2.2.0"
-	}
+	"homepage": "https://github.com/HGARgG-0710/math-expressions.js#readme"
 }
