@@ -914,6 +914,26 @@ class Vector {
 		return indexes
 	}
 
+	addVector(vector) {
+		const vecCopy = copy(this.vector) 
+		this.elementByElement(vector, "+")
+
+		const retCopy = copy(this.vector)
+		this.vector = vecCopy
+
+		return new Vector(this.type, Math.max(this.length, vector.length), retCopy)
+	}
+
+	vectorScalarMultiply (vector) {
+		const main = Math.max(this.length, vector.length) == vector.length ? vector : this
+		const other = main.vector == vector.vector ? this : vector
+		return repeatedArithmetic(other.vector.map((el, i) => el * main.vector[i]))
+	} 
+
+	map(f = (x) => x, type = this.type) {
+		return new Vector(type, this.length, this.vector.map(f))
+	} 
+
 	elementByElement(vector, operation) {
 		for (let i = 0 ; i < Math.min(vector.length, this.length);  i++) 
 			this.set(i, eval(`this.vector[${i}] ${operation} vector.vector[${i}]`))
