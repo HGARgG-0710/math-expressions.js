@@ -214,7 +214,7 @@ console.log(Algorithms.BinarySearch([2, 10, 3, 1, 7], 7)) // 3 (it sorts it in a
 console.log(Algorithms.BinarySearch([81, 90, 100], 42)) // -1
 
 // Vector class example
-const vector = new Vector("number", 10, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+const vector = new Vector("number", 10, expjs.generate(1, 10, 1))
 
 console.log(vector.length) // 10
 console.log(vector.byIndex(4)) // 5
@@ -225,6 +225,12 @@ const binvec2 = new Vector("number", 5, [1, 0, 1, 0, 0])
 
 binvec1.elementByElement(binvec2, "^")
 console.log(binvec1.vector) // [1, 1, 1, 1, 1]
+
+const vec1 = new Vector("number", 10, expjs.generate(10, 1, -1)) // Note: generate can now work backwards also. 
+const vec2 = vec1.addVector(vector)
+
+console.log(vec2.vector) // [11, 11, 11, 11, 11, 11, 11, 11, 11, 11]
+console.log(vec1.vectorScalarMultiply(vec2)) // 605
 
 // And so on with the other methods...
 // You can look at them in the source code or in brief README.md "documentation".
@@ -260,6 +266,10 @@ console.log(expjs.dim([[1, [5]]])) // 3
 // binomial() function example
 console.log(expjs.binomial(10, 2)) // 45
 console.log(expjs.binomial(10 * Math.E, 3)) // 2987.1976216796083
+
+
+// ! WARNING !: The next tests take a few seconds lot of time to run, so if you need to do it quickly, 
+// ! then I recommend you commenting them out temporarily.  
 
 // Equation and VarMapping classes example 1
 const sextic = new Equation("a*x^{6}-b*x^{5}+c*x^{2}-d*x=0", ["x"]) // A randomly typed sextic polynomial equation.

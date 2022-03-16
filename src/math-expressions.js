@@ -10,8 +10,8 @@
 
 // Imports
 
-// TODO: Add after fixing the installation problems (they're due to the lack of necessary compiler). 
-// TODO: After fixing problems on your machine, add a setup.js that would do it automatically in a prerun. 
+// TODO: Add after fixing the installation problems (they're due to the lack of necessary compiler).
+// TODO: After fixing problems on your machine, add a setup.js that would do it automatically in a prerun.
 
 // import ntk from "ntk"
 
@@ -392,7 +392,7 @@ class Surface {
 					{ x: el[1][0], y: el[1][1] },
 				])
 			})
-			this.lines.forEach((el) => {}) // TODO: Fix the fact, that lines currently do not represent. 
+			this.lines.forEach((el) => {}) // TODO: Fix the fact, that lines currently do not represent.
 		}
 
 		ntk.createClient((error, application) => {
@@ -915,28 +915,40 @@ class Vector {
 	}
 
 	addVector(vector) {
-		const vecCopy = copy(this.vector) 
+		const vecCopy = copy(this.vector)
 		this.elementByElement(vector, "+")
 
 		const retCopy = copy(this.vector)
 		this.vector = vecCopy
 
-		return new Vector(this.type, Math.max(this.length, vector.length), retCopy)
+		return new Vector(
+			this.type,
+			Math.max(this.length, vector.length),
+			retCopy
+		)
 	}
 
-	vectorScalarMultiply (vector) {
-		const main = Math.max(this.length, vector.length) == vector.length ? vector : this
+	vectorScalarMultiply(vector) {
+		const main =
+			Math.max(this.length, vector.length) == vector.length
+				? vector
+				: this
 		const other = main.vector == vector.vector ? this : vector
-		return repeatedArithmetic(other.vector.map((el, i) => el * main.vector[i]))
-	} 
+		return repeatedArithmetic(
+			other.vector.map((el, i) => el * main.vector[i])
+		)
+	}
 
 	map(f = (x) => x, type = this.type) {
 		return new Vector(type, this.length, this.vector.map(f))
-	} 
+	}
 
 	elementByElement(vector, operation) {
-		for (let i = 0 ; i < Math.min(vector.length, this.length);  i++) 
-			this.set(i, eval(`this.vector[${i}] ${operation} vector.vector[${i}]`))
+		for (let i = 0; i < Math.min(vector.length, this.length); i++)
+			this.set(
+				i,
+				eval(`this.vector[${i}] ${operation} vector.vector[${i}]`)
+			)
 	}
 
 	static getArrType(array) {
@@ -1767,8 +1779,14 @@ function copy(nums = [1, 2, 3, 4, 5]) {
 function generate(start, end, step = 1, precision = 1) {
 	const generated = []
 	const modif = Number.isInteger(step) ? 1 : 10 ** -precision
-	for (let i = start; i < end + modif; i += step)
+
+	const proposition = step > 0 ? (i, m) => i < m : (i, m) => i > m
+	const coeff = (-1) ** (step < 0)
+	const upper = end + coeff * modif
+
+	for (let i = start; proposition(i, upper); i += step)
 		generated.push(floor(i, precision))
+
 	return generated
 }
 
