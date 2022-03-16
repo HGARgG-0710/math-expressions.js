@@ -88,7 +88,7 @@ console.log(expjs.find("Hello, World!", "l")) // [true, 3, [2, 3, 10]]
 // Statistics class examples
 const numArr = [10, 50, -10]
 const stats = new Statistics(numArr)
-const nonNumeric = new Statistics(["Howdy!", "Again, i said...", "Howdy!"]) 
+const nonNumeric = new Statistics(["Howdy!", "Again, i said...", "Howdy!"])
 
 console.log(stats.min) // -10
 console.log(stats.mostPopular) // "None"
@@ -220,6 +220,12 @@ console.log(vector.length) // 10
 console.log(vector.byIndex(4)) // 5
 console.log(vector.index(10)) // 9
 
+const binvec1 = new Vector("number", 5, [0, 1, 0, 1, 1])
+const binvec2 = new Vector("number", 5, [1, 0, 1, 0, 0])
+
+binvec1.elementByElement(binvec2, "^")
+console.log(binvec1.vector) // [1, 1, 1, 1, 1]
+
 // And so on with the other methods...
 // You can look at them in the source code or in brief README.md "documentation".
 
@@ -229,7 +235,7 @@ const matrix = new Matrix(10)
 console.log(matrix.sidelen) // 10
 console.log(matrix.toArray()) // 10 arrays with 10 zeros in each of 'em.
 console.log(matrix.navigate([0, 1])) // 0, by default matrix is all zeroes.
-console.log(matrix.determinant()) // 0, the matrix is singular. 
+console.log(matrix.determinant()) // 0, the matrix is singular.
 
 // The class was somewhat useless, but now is much more helpful.
 // It's generelesation and parent is RectMatrix. It's quite similiar, so i won't show it here.
