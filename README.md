@@ -301,6 +301,10 @@ Second - when it shall end.
 Third - the generation step. 
 Fourth - the precision of step (necessary iff third argument is a float).  
 
+#### Note: 
+
+It can also be done backwards, like in Python. 
+
 From math-expressions.js:
 
 ```js
@@ -835,6 +839,10 @@ class Vector {
     swap(index1: number, index2: number): void;
     set(index: number, value: any): void;
     elementByElement(vector: Vector, operator: string): void; // does a given operation on each of elements of this and vector (in pairs). 
+    map(type: string, f: (element, index, arr) => any): Vector; 
+    addVector(vec: Vector): Vector; 
+    vectorScalarMultiply(vector): number;  
+    
 
     // Properties
     vector: any[];
