@@ -834,6 +834,7 @@ class Vector {
     fill(item: number): void;
     swap(index1: number, index2: number): void;
     set(index: number, value: any): void;
+    elementByElement(vector: Vector, operator: string): void; // does a given operation on each of elements of this and vector (in pairs). 
 
     // Properties
     vector: any[];
