@@ -877,10 +877,10 @@ class Vector {
 	}
 
 	set(index, value) {
-		if (this._matrix[index] === undefined)
+		if (this._vector[index] === undefined)
 			throw new Error("Invalid index passed into the set function.")
 
-		this._matrix[index] = value
+		this._vector[index] = value
 	}
 
 	byIndex(i) {
@@ -912,6 +912,11 @@ class Vector {
 				if (this._vector[i] === element) indexes.push(i)
 
 		return indexes
+	}
+
+	elementByElement(vector, operation) {
+		for (let i = 0 ; i < Math.min(vector.length, this.length);  i++) 
+			this.set(i, eval(`this.vector[${i}] ${operation} vector.vector[${i}]`))
 	}
 
 	static getArrType(array) {
