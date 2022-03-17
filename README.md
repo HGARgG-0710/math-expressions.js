@@ -820,7 +820,8 @@ class Algorithms {
 
 ### 7.Vector
 
-This class represents a type-safe and length-safe version of array, that also has controllable length.
+This class represents a mathematical vector. 
+You can do all sorts of operations on it, most of the ones of vector algebra. 
 
 ```js
 class Vector {
@@ -861,8 +862,6 @@ class Vector {
 }
 ```
 
-#### Class Properties
-
 ### 8.Matrix
 
 This class represents a Vector of Vectors or a mathematical square (that's important) matrix.
@@ -896,6 +895,7 @@ This class represents a rectangular (that's important) mathematical matrix.
         scalarAdd(scalar: number): void;
         scalarMultiply(scalar: number): void;
         matrixMultiply(matrix: RectMatrix): Matrix;
+        addMatrix(matrix: RectMatrix): RectMatrix; 
 
         // Properties
         matrix: Vector; // Vector consists of Vectors.
