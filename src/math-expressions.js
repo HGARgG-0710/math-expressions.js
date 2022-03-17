@@ -711,6 +711,18 @@ class RectMatrix {
 				)
 		}
 	}
+
+	addMatrix(matrix) {
+		if (!arrayEquality(matrix.sidelen, this.sidelen))
+			throw new Error("Trying to add matrices with different lengths. ")
+
+		const thisCopy = new RectMatrix(this.sidelen, this.dimentions)
+
+		for (let i = 0; i < matrix.sidelen[0]; i++)
+			thisCopy.matrix[i].addVector(matrix.matrix[i])
+
+		return thisCopy
+	}
 }
 
 /**
@@ -894,6 +906,29 @@ class Vector {
 
 	index(element) {
 		return this._vector.indexOf(element)
+	}
+
+	crossProduct(vector) {
+		if (this.length != 3 && this.length != 7)
+			throw new Error(
+				"Cross product is not defined for vectors, which lengths aren't 3 or 7. "
+			)
+		if (this.length != vector.length)
+			throw new Error(
+				"Trying to cross product vectors with different lengths. "
+			)
+
+		if (vector.length === 3) 
+			return new Vector("number", 3, [
+				this.vector[1] * vector.vector[2] -
+					vector.vector[1] * this.vector[2],
+				vector.vector[0] * this.vector[2] -
+					this.vector[0] * vector.vector[2],
+				this.vector[0] * vector.vector[1] -
+					this.vector[1] * vector.vector[0],
+			])
+		
+		// TODO: Use the RectMatrix product formula on wikipedia page. 
 	}
 
 	scalarMultiply(scalar) {
