@@ -1,0 +1,56 @@
+1. Right, this thing has not been touched in more than a year. 
+
+For now, Mr. Body is a tad tired, so only making this one TODO... 
+Later will deal with it...
+
+Time to do something about it; 
+
+    1.1. Using TypeScript
+
+        Rewrite the thing into TypeScript; 
+
+    1.2. Documentation
+
+        Separate the functions/classes onto categories; 
+        Get rid of the funny introduction
+
+    1.3. Remaking of the math-expressions.js: 
+
+        The new math-expressions.js (1.0) should not have backwards-compatibility; 
+        It's written in TypeScript; 
+        Should use namespaces for the separation of different abstractions; 
+
+        Current namespaces: 
+
+            1. linear (for linear-algebra-related stuff; add more of it, btw): 
+            2. statistics (for statistics-related-stuff; )
+            3. numbers (for number-related stuff); 
+            4. util (for various nice functions like generate, dim or copy)
+            5. algs (algorithms)
+                5.1. algs.sort (sorting algorithms, not only for number arrays; generalized)
+        
+        New hings to add: 
+
+            1. ideas of InfiniteCounters (rewrite in JS), TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
+            2. ideas of Order[s], OrderedArray, IterableSet, generators; note: TypeScript is bad for these things representation, its got Generics, but no templates;
+            3. new sorting algorithms, for generalized versions of orders; more new funny/interesting algorithms; 
+
+        Old things to (maybe?) delete/rework: 
+
+            1. Ratio class (there'll be TrueRatio or something in its place; feels obsolete);
+            2. Tests class (maybe rewrite as a namespace/object with these things? + change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names;)
+
+    1.4. "S" for "Style": 
+
+        Create more generalized "style" for the project; 
+        things like "copy" should be documented and defined to be general; 
+        What can be generalized gets generalized; 
+        
+    1.5. New things: 
+
+        Create a great deal of new definitions; 
+        Follow the Projects within the 
+    
+    1.6. Examples: 
+
+        Update examples in accordance with all this stuff...

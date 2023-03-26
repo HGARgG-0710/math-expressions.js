@@ -918,7 +918,7 @@ class Vector {
 				"Trying to cross product vectors with different lengths. "
 			)
 
-		if (vector.length === 3) 
+		if (vector.length === 3)
 			return new Vector("number", 3, [
 				this.vector[1] * vector.vector[2] -
 					vector.vector[1] * this.vector[2],
@@ -927,8 +927,8 @@ class Vector {
 				this.vector[0] * vector.vector[1] -
 					this.vector[1] * vector.vector[0],
 			])
-		
-		// TODO: Use the RectMatrix product formula on wikipedia page. 
+
+		// TODO: Use the RectMatrix product formula on wikipedia page.
 	}
 
 	scalarMultiply(scalar) {
