@@ -26,19 +26,22 @@ Time to do something about it;
             2. statistics (for statistics-related-stuff; )
             3. numbers (for number-related stuff); 
             4. util (for various nice functions like generate, dim or copy)
-            5. algs (algorithms)
+            5. algorithms (various algorithms)
                 5.1. algs.sort (sorting algorithms, not only for number arrays; generalized)
+            6. abstract (for the new ideas); 
         
         New hings to add: 
 
             1. ideas of InfiniteCounters (rewrite in JS), TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
             2. ideas of Order[s], OrderedArray, IterableSet, generators; note: TypeScript is bad for these things representation, its got Generics, but no templates;
             3. new sorting algorithms, for generalized versions of orders; more new funny/interesting algorithms; 
+            4. The previous log, logHack functions (they are quite nice...)
 
         Old things to (maybe?) delete/rework: 
 
             1. Ratio class (there'll be TrueRatio or something in its place; feels obsolete);
             2. Tests class (maybe rewrite as a namespace/object with these things? + change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names;)
+            3. exp function (either expand it enormously, or delete entirely; this thing can be so much more beautiful...)
 
     1.4. "S" for "Style": 
 
@@ -54,3 +57,28 @@ Time to do something about it;
     1.6. Examples: 
 
         Update examples in accordance with all this stuff...
+
+2. Fix the keywords in the package.json; 
+
+3. PROBLEM : there is a difficulty with the package; 
+
+    It is such: what does one do about the default numbers? 
+    Should the library even be supporting them now? 
+    It does have a far more unlimited alternative -- the InfiniteCounter; 
+    Should one remove them completely, then? 
+    The previous functions get rewritten for the numbers, et voila; 
+
+    But wait: there's a problem with doing that too: it is the arabic numerals; 
+    The library should have a good way of representation of them; 
+    There should be ways to convert an arabic numeral into an InfiniteCounter (but not conversely); 
+    Thus: to the list of things to be added, the numerals add; 
+
+4. PROBLEM: types; 
+
+    For the large part, the library had been ignoring them; 
+    As shining examples: the Vector, Matrix and RectMatrix classes; 
+    They have the methods that are supposed to exist only in the case of number being the type; 
+    but they STILL do exist in the others; 
+
+    Solution: based on the passed `type` parameter, one would decide whether one such is present or not...
+    (In a different language, one would just use a bloody tempalate literal as an object, but never mind about that now...)

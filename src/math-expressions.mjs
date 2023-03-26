@@ -1,19 +1,7 @@
 /**
- * * Hello and welcome into the source code of the mathematical JavaScript library math-expressions.js.
- * * This is the version 0.8.
- * * I tried to comment everything that may be somewhat confusing along with most of the elements of library.
- * * Hope this helps. Any contributions are highly appriciated!
- * * (After this note comes the code)
- *
- * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2022
+ * * This is the source code, version pre-1.0.
+ * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
  */
-
-// Imports
-
-// TODO: Add after fixing the installation problems (they're due to the lack of necessary compiler).
-// TODO: After fixing problems on your machine, add a setup.js that would do it automatically in a prerun.
-
-// import ntk from "ntk"
 
 // Global variables
 
@@ -382,31 +370,7 @@ class Surface {
 	}
 
 	draw(width, height, title = `Surface ${this.n}`) {
-		function plot(contex) {
-			this.dots.forEach((el) => {
-				contex.point({ x: el[0], y: el[1] })
-			})
-			this.segments.forEach((el) => {
-				contex.polyline([
-					{ x: el[0][0], y: el[0][1] },
-					{ x: el[1][0], y: el[1][1] },
-				])
-			})
-			this.lines.forEach((el) => {}) // TODO: Fix the fact, that lines currently do not represent.
-		}
-
-		ntk.createClient((error, application) => {
-			const window = application.createWindow({
-				height: height,
-				width: width,
-			})
-			window.setTitle(title)
-			const contex = window.getContext("x11")
-
-			plot(window, contex)
-
-			window.map()
-		})
+		// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
 	}
 }
 
@@ -1240,6 +1204,7 @@ class Algorithms {
 	}
 }
 
+// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers; ALSO -- decide what to do about the matter of numbers within the library; 
 /**
  * This class's purpose is to represent a mathematical equation of multiple variables.
  * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
