@@ -24,15 +24,24 @@ Time to do something about it;
 
             1. linear (for linear-algebra-related stuff; add more of it, btw): 
             2. statistics (for statistics-related-stuff; )
-            3. numbers (for number-related stuff); 
-            4. util (for various nice functions like generate, dim or copy)
-            5. algorithms (various algorithms)
-                5.1. algs.sort (sorting algorithms, not only for number arrays; generalized)
-            6. abstract (for the new ideas); 
+            3. util (for various nice functions like generate, dim or copy)
+            4. algorithms (various algorithms)
+                4.1. algs.sort (sorting algorithms, not only for number arrays; generalized)
+            5. abstract (for the new ideas);  
+                5.1. counters (for counter-related stuff); 
+                    5.1.1. numerals (stuff for number-to-InfiniteCounter transitions and also the numbers system creation things)
+                5.2. orders (for order-related stuff); 
+            6. numbers (for the older number-related things)
+            
+            (Question: where do all the old things go?)
+            They would do perfectly with the newer objects (InfiniteCounter-based ones;)...
+            DECISION: goes to "numbers"; there, in every function the InfiniteCounter is used by means of transforming the user's input via "abstract.counters.numerals"; 
+            Then, all the initial library code gets rewritten (that is, generalized, the code itself is the same); 
+            
         
-        New hings to add: 
+        New things to add: 
 
-            1. ideas of InfiniteCounters (rewrite in JS), TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
+            1. ideas of TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
             2. ideas of Order[s], OrderedArray, IterableSet, generators; note: TypeScript is bad for these things representation, its got Generics, but no templates;
             3. new sorting algorithms, for generalized versions of orders; more new funny/interesting algorithms; 
             4. The previous log, logHack functions (they are quite nice...)
@@ -42,6 +51,8 @@ Time to do something about it;
             1. Ratio class (there'll be TrueRatio or something in its place; feels obsolete);
             2. Tests class (maybe rewrite as a namespace/object with these things? + change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names;)
             3. exp function (either expand it enormously, or delete entirely; this thing can be so much more beautiful...)
+            4. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
+            5. repeatedArithmetic -- if one does happen to generalize it much, pray let one make it repeatedOperator; 
 
     1.4. "S" for "Style": 
 
@@ -82,3 +93,26 @@ Time to do something about it;
 
     Solution: based on the passed `type` parameter, one would decide whether one such is present or not...
     (In a different language, one would just use a bloody tempalate literal as an object, but never mind about that now...)
+
+5. Name of the package; 
+
+    Considering the major changes... 
+    It seems inappropriate; 
+    Feels too narrow...
+
+    Ideas for a new name: 
+
+        1. expressions.ts
+
+    Will do the next thing: publish first as math-expressions.js 1.0, then deprecate this thing, 
+    publishing a new version of the thing as a new package (this is already for the expressions.ts 1.1); 
+
+    I'm now thinking...
+    Would it not be a better idea for oneself to deprecate the 0.8 thing, then? 
+ 
+    (About changing the name) On the other hand... There is still statistics, and a lot of other things too; 
+
+    So, no, "expressions.ts" certainly don't do...
+    One wants a different name, one that would outline both the origin of the package and its destination (that is, far greater diversity and generality); 
+    For now, the current title is good. 
+    Later will create some other one, probably...
