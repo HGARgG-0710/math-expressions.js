@@ -1,8 +1,13 @@
 {
     "compilerOptions": {
-        "allowJs": true, 
-        "outDir": "out"
-    }, 
+        "allowJs": true,
+        "outDir": "out",
+        "module": "ES2020",
+        "lib": [
+            "es2020"
+        ],
+        "target": "ES2020"
+    },
     "include": [
         "src/*.ts"
     ]

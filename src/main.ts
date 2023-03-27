@@ -31,6 +31,15 @@ export namespace util {
 				return a === b
 		}
 	}
+
+	// * Does a flat copy of something;
+	export function flatCopy(a: any): any {
+		return a instanceof Array
+			? [...a]
+			: typeof a === "object"
+			? { ...a }
+			: a
+	}
 }
 
 export namespace numbers {}
@@ -106,30 +115,69 @@ export namespace abstract {
 			return !typechecker(x)
 		}
 
+		// TODO: finish this thing (add orders, other things from the previous file)...
 		// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 
-		// TODO: finish this thing (add orders, other things from the previous file), continue rewriting the previous implementation of this into TypeScript...
 		export class InfiniteCounter<Type = RecursiveArray<number>> {
-			generator: (something?: Type) => Type
-			previous: Type[]
 			next(): InfiniteCounter<Type> {
 				return new InfiniteCounter<Type>(
-					[...this.previous, this.value],
+					[...this.previous, this],
 					this.generator
 				)
 			}
-			value: Type
-			prev(): Type {
+			prev(): InfiniteCounter<Type> {
 				return this.previous[this.previous.length - 1]
 			}
-			constructor(previous: Type[] = [], generator: (a?: Type) => Type) {
+
+			previous: InfiniteCounter<Type>[]
+			value: Type
+			generator: (something?: Type) => Type
+
+			// * 'true' means 'follows after'
+			// * 'false' means 'is followed after'
+			// * 'null' means 'no following';
+			compare(ic: InfiniteCounter<Type>): ternary {
+				return this.previous.includes(ic)
+					? true
+					: ic.previous.includes(this)
+					? false
+					: null
+			}
+
+			constructor(
+				previous: InfiniteCounter<Type>[] = [],
+				generator: (a?: Type) => Type
+			) {
 				this.generator = generator
 				this.previous = previous
 				this.value = previous.length
-					? generator(previous[previous.length - 1])
+					? generator(previous[previous.length - 1].value)
 					: generator()
 			}
 		}
+
+		// TODO: in a library of oneself, there is a piece of code that does precisely this kind of a thing (recursiveApplication);
+		// * Again, the issue with inter-dependency; solution is the same -- first publish like so, then rewrite differently...
+		export function fromNumber<Type>(
+			n: number | bigint,
+			generator: (a?: Type) => Type
+		): InfiniteCounter<Type> | undefined {
+			if (n <= 0) return undefined
+			let result: InfiniteCounter<Type> = new InfiniteCounter<Type>(
+				[],
+				generator
+			)
+
+			n = BigInt(n) - 1n
+			for (let i = 0n; i < n; i++) result = result.next()
+			return result
+		}
+
+		export function isBigInt(x: any): x is BigInt {
+			return typeof x === "bigint"
+		}
+
+		export type ternary = true | false | null
 
 		export namespace numerals {
 			// TODO: here, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
