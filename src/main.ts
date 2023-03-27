@@ -53,6 +53,7 @@ export namespace abstract {
 		// * That's an example of an infinite counter;
 		// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 		// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
+		// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 		export function numberCounter(
 			a?: RecursiveArray<number>
 		): RecursiveArray<number> {
@@ -184,7 +185,56 @@ export namespace abstract {
 		}
 	}
 
-	export namespace orders {}
+	export namespace orders {
+		// * For iteration over an array; this thing is index-free; handles them for the user;
+		// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+		export class IterableSet<Type = any> {
+			elements: Set<Type>
+			typechecker: (x: any) => x is Type
+
+			private currindex: number = 0
+
+			curr(): Type {
+				return this.elements[this.currindex]
+			}
+
+			next(): Type {
+				this.currindex = (this.currindex + 1) % this.elements.size
+				return Array.from(this.elements.values())[this.currindex]
+			}
+
+			add(x: Type): Set<Type> {
+				return this.elements.add(x)
+			}
+
+			// TODO: I like this thing far more than any of the ways TypeScript tends to do stuff ususally in;
+			// * It checks out all the trivial-to-handle type-dependant cases, but gives little ways of actually resulving them
+			// * apart from explicitly telling it to shut up using a type-checker function;
+			// * That's not one's way, functions arguments and generally behaviour should handle all the possible cases, using types as transformations, not TypeError invokers...
+			// That's exactly the only 1 thing I don't like TypeScript for, apart from it not generalizing some concepts (like generics) into something creative...
+			has(x: any): boolean {
+				if (!this.typechecker(x)) return false
+				return this.elements.has(x)
+			}
+
+			get size(): number {
+				return this.elements.size
+			}
+
+			delete(x: any): boolean {
+				if (!this.typechecker(x)) return false
+				return this.elements.delete(x)
+			}
+
+			constructor(
+				elems: Set<Type> = new Set<Type>([]),
+				typechecker?: (x: any) => x is Type
+			) {
+				this.elements = elems
+				this.typechecker = typechecker
+			}
+		}
+	}
 
 	// * This is pretty. In C would probably be more explicit with all the manual dynamic allocations, de-allocations...
 	export type RecursiveArray<ElementType> = (
@@ -192,27 +242,40 @@ export namespace abstract {
 		| ElementType
 	)[]
 
-	export namespace constants {
-		// TODO: add all sorts of nice programming-language-related constants here... They'd be useful in different projects;
-		// * From now on, the math-expressions.js library doesn't anymore include what it had included before...
-		// * Now, it's also including constants about different things, that may be useful and interesting...
-
-		// TODO: add maximum string length, maximum number of object properties; maximum number of variables; maximum variable length;
-		export namespace js {
-			export const MAX_ARRAY_LENGTH = 2 ** 32 - 1
-			export const MAX_NUMBER = Number.MAX_VALUE
-			export const MAX_INT = 2 ** 53 - 1
-			export const MIN_INT = -MAX_INT
-			export const MIN_NUMBER = 2 ** -1074
-		}
-
-		// TODO: add all the corresponding constants for all these languages too; for CPP -- add type-specific, for each compiler...
-		export namespace cpp {}
-
-		export namespace java {}
-
-		export namespace python {}
-
-		export namespace lua {}
+	// TODO: add all sorts of nice programming-language-related constants here... They'd be useful in different projects;
+	// * From now on, the math-expressions.js library doesn't anymore include what it had included before...
+	// * Now, it's also including constants about different things, that may be useful an
+	// TODO: add all the corresponding constants for all these languages too; for CPP -- add type-specific, for each compiler, architecture...
+	// TODO: also, separate onto versions (where relevant;)...
+	// * Currently, this thing ain't very descriptive; though, it's a wonderful idea...
+	export const constants = {
+		js: {
+			MAX_ARRAY_LENGTH: 2 ** 32 - 1,
+			MAX_NUMBER: Number.MAX_VALUE,
+			MAX_INT: 2 ** 53 - 1,
+			MIN_INT: -(2 ** 53 - 1),
+			MIN_NUMBER: 2 ** -1074,
+			MAX_STRING_LENGTH: 2 ** 53 - 1,
+			MAX_VARIABLE_NAME_LENGTH: 254,
+		},
+		cpp: {
+			MAX_ARRAY_LENGTH: Infinity,
+			MAX_VARIABLE_NAME_LENGTH: 255,
+		},
+		java: {
+			MAX_ARRAY_LENGTH: 2 ** 31 - 1,
+			MAX_VARIABLE_NAME_LENGTH: 64,
+		},
+		python: {
+			MAX_INT: Infinity,
+			MIN_INT: -Infinity,
+			MAX_VARIABLE_NAME_LENGTH: 79,
+		},
+		lua: {
+			MAX_VARIABLE_NAME_LENGTH: Infinity,
+		},
+		c: {
+			MAX_VARIABLE_NAME_LENGTH: Infinity,
+		},
 	}
 }
