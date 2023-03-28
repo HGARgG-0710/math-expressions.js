@@ -40,6 +40,39 @@ export namespace util {
 			? { ...a }
 			: a
 	}
+
+	// * Replaces a value within a string...
+	export function replaceStr(string: string, x: string, y: string): string {
+		return string.split(x).join(y)
+	}
+
+	export function replaceStrMany(
+		string: string,
+		x: string[],
+		y: string[]
+	): string {
+		// TODO: again, the repeatedApplication from a different library could do this in 1 line... Same thing with the versions...
+		let final = string
+		for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
+		return final
+	}
+
+	// * Replaces values within an array...
+	export function replaceArr<X = any>(
+		array: X[],
+		x: X[],
+		y: X[],
+		transformation: (something: X) => X = (a: any) => a
+	): X[] {
+		let resArray: X[] = [...array]
+
+		for (let i = 0; i < array.length; i++) {
+			const index: number = x.indexOf(array[i])
+			if (index !== -1) resArray[i] = transformation(y[index])
+		}
+
+		return resArray
+	}
 }
 
 export namespace numbers {}
