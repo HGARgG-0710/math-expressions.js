@@ -1,7 +1,9 @@
 /**
  * * This is the New API source code, version pre-1.0;
  * @copyright HGARgG-0710 (Igor Kuznetsov, 2023
-*/
+ */
+
+// TODO: create here a UniversalMap class; let it be virtually a map which can have arbitrary values for both the key and the value of a key...
 
 export namespace statistics {}
 export namespace util {
@@ -91,6 +93,29 @@ export namespace util {
 	export function arrApply(f: Function, arr: any[]): any {
 		return f(...arr)
 	}
+
+	export const countAppearences = (
+		array: any[],
+		element: any,
+		i: number,
+		comparison: (a: any, b: any) => boolean = (a: any, b: any): boolean =>
+			a === b
+	): number =>
+		i < array.length
+			? Number(comparison(array[i], element)) +
+			  countAppearences(array, element, i + 1)
+			: 0
+
+	export function indexOfMult(
+		array: any[],
+		el: any,
+		comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b
+	): number[] {
+		const indexes = []
+		for (let i = 0; i < array.length; i++)
+			if (comparison(array[i], el)) indexes.push(i)
+		return indexes
+	}
 }
 
 export namespace numbers {}
@@ -106,12 +131,12 @@ export namespace abstract {
 		// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 		// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 		export function numberCounter(
-			a?: RecursiveArray<number>
-		): RecursiveArray<number> {
+			a?: types.RecursiveArray<number>
+		): types.RecursiveArray<number> {
 			if (a === undefined) return [0]
 
 			function findDeep(
-				a: RecursiveArray<number>,
+				a: types.RecursiveArray<number>,
 				prevArr: number[] = []
 			): number[] | false {
 				let i: number[] = [...prevArr, 0]
@@ -131,14 +156,14 @@ export namespace abstract {
 			const resultIndexes: number[] | false = findDeep(a)
 			if (!resultIndexes) return [a]
 
-			let result: RecursiveArray<number> = util.deepCopy(a)
+			let result: types.RecursiveArray<number> = util.deepCopy(a)
 
 			// * Hmmm... That's a very interesting thing there...
 			// * See, that thing is already in one of the unpublished projects that depend upon the math-expressions.js;
 			// ? Solution: if the versions of the dependant and the dependee are different, then it's alright...;
 			// TODO: implement, later, after publishing both the math-expressions.js 1.0 and the new thing...;
 			for (let i = 0; i < resultIndexes.length - 1; i++) {
-				const indexed: RecursiveArray<number> | number =
+				const indexed: types.RecursiveArray<number> | number =
 					result[resultIndexes[i]]
 
 				if (isRecursiveArray(indexed, isNumber)) {
@@ -163,14 +188,14 @@ export namespace abstract {
 		export function isRecursiveArray<Type>(
 			x: any,
 			typechecker: (a: any) => a is Type
-		): x is RecursiveArray<Type> {
+		): x is types.RecursiveArray<Type> {
 			return !typechecker(x)
 		}
 
 		// TODO: finish this thing (add orders, other things from the previous file)...
 		// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 
-		export class InfiniteCounter<Type = RecursiveArray<number>> {
+		export class InfiniteCounter<Type = types.RecursiveArray<number>> {
 			next(): InfiniteCounter<Type> {
 				return new InfiniteCounter<Type>(
 					[...this.previous, this],
@@ -287,11 +312,68 @@ export namespace abstract {
 		}
 	}
 
-	// * This is pretty. In C would probably be more explicit with all the manual dynamic allocations, de-allocations...
-	export type RecursiveArray<ElementType> = (
-		| RecursiveArray<ElementType>
-		| ElementType
-	)[]
+	export namespace types {
+		// * This is pretty. In C would probably be more explicit with all the manual dynamic allocations, de-allocations...
+		export type RecursiveArray<ElementType> = (
+			| RecursiveArray<ElementType>
+			| ElementType
+		)[]
+
+		export class UniversalMap<
+			KeyType = any,
+			ValueType = any,
+			NotFoundType = any
+		> {
+			keys: KeyType[]
+			values: ValueType[]
+			notFound: NotFoundType
+			notFoundChecker: (a: any) => a is NotFoundType
+
+			referenceGet(key: KeyType): ValueType {
+				return this.values[this.keys.indexOf(key)]
+			}
+
+			valueGet(key: KeyType): NotFoundType | ValueType {
+				let index: NotFoundType | number = this.notFound
+				let i = 0
+
+				for (const x of this.keys) {
+					if (util.valueCompare(x, key)) {
+						index = i
+						break
+					}
+					i++
+				}
+
+				return this.notFoundChecker(index) ? index : this.values[index]
+			}
+
+			set(key: KeyType, value: ValueType): ValueType {
+				const index: number = this.keys.indexOf(key)
+				if (index !== -1) {
+					this.values[index] = value
+					return value
+				}
+
+				this.keys.push(key)
+				this.values.push(value)
+			}
+
+			constructor(
+				keys: KeyType[],
+				values: ValueType[],
+				notFoundCode: NotFoundType = undefined,
+				notFoundChecker: (a: any) => a is NotFoundType = (
+					x: any
+				): x is NotFoundType => x === undefined
+			) {
+				this.keys = keys
+				this.values = values
+				this.notFound = notFoundCode
+				this.notFoundChecker = notFoundChecker
+			}
+		}
+	}
 
 	// TODO: add all sorts of nice programming-language-related constants here... They'd be useful in different projects;
 	// * From now on, the math-expressions.js library doesn't anymore include what it had included before...

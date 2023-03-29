@@ -1,7 +1,8 @@
-import { util } from "./newapi"
+import { util, abstract } from "./newapi"
 
 // TODO: add all of those functions that seem fit from the new api into the old one...
-const { flatCopy } = util
+const { flatCopy, countAppearences, arrApply, indexOfMult } = util
+const { UniversalMap } = abstract.types
 
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
@@ -16,10 +17,11 @@ const { flatCopy } = util
 // *        1.1.1. mostPopularNum -- rename to mostPopular (most probably, this thing is to work for "more or less" anything; rewrite in accordance with this...)
 // *        1.1.2. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
 // *        1.1.3. mostPopularElem -- merge with the mostPopularNum into mostPoppular ()
-// * 2. Rewrite the in-editor JSDoc documentation...
+// * 2. Rewrite the in-editor JSDoc documentation (most probably, from scratch...)...
 // * 3. Add proper types to everywhere in the code (especially, places with dots...);
 // * 4. Fix all the TypeErrors...
 // * 5. Make code more permissive (get rid of Object.freeze and other such "safety" things, get rid of the Error throws...);
+// * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality...
 
 /**
  * * This is the Old API source code, version pre-1.0.
@@ -79,7 +81,7 @@ class Statistics {
 			this.median = median(nums)
 			this.average = average(nums)
 			this.truncatedAverage = average(nums, true)
-			this.mostPopular = mostPopularNum(nums, nullValue)
+			this.mostPopular = mostPopular(nums, nullValue)
 
 			this.deviations = deviations(nums)
 
@@ -1682,7 +1684,11 @@ They must have next names: "nums" form number array, "operators" for operators a
  * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
+function average(
+	nums: number[] = [],
+	isTruncated: boolean = false,
+	percents: number = 10
+): number {
 	const len = nums.length
 	const newArr =
 		isTruncated && percents > 0 ? truncate(nums, percents) : copy(nums)
@@ -1701,7 +1707,7 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
  * @returns {number} The smallest number of the passed array.
  */
 function min(nums: number[] = []): number {
-	return Math.min(...nums)
+	return arrApply(Math.min, nums)
 }
 
 /**
@@ -1710,7 +1716,7 @@ function min(nums: number[] = []): number {
  * @returns {number} The largest number in passed numerical array.
  */
 function max(nums: number[] = []): number {
-	return Math.max(...nums)
+	return arrApply(Math.max, nums)
 }
 
 /**
@@ -1719,36 +1725,33 @@ function max(nums: number[] = []): number {
  */
 function median(nums: number[] = []): number {
 	const sorted = sort(nums)
+	const firstIndex = sorted[Math.round(nums.length / 2) - 1]
 	return nums.length % 2 === 1
-		? sorted[Math.round(nums.length / 2) - 1]
-		: average([sorted[nums.length / 2 - 1], sorted[nums.length / 2]])
+		? firstIndex
+		: average([firstIndex, sorted[nums.length / 2]])
 }
 
-// TODO: pay particular attention here...
 /**
  * Takes an array and returns most "popular" number in it.
- * @param {number[]} nums An array of numbers passed to the function.
+ * @param {number[]} elems An array of numbers passed to the function.
  * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums: any[] = [], noneValue: any = "None"): any {
-	const t = (e, i) =>
-		i < nums.length ? Number(nums[i] === e) + t(e, i + 1) : 0
-	const e = (j) => nums[j]
-	const freq = {}
-
-	for (let i = 0; i < nums.length; i++)
-		if (freq[nums[i]] === undefined) freq[nums[i]] = t(e(i), i)
-
-	const freq_vals = Object.values(freq)
-	const maxRepetition = max(freq_vals)
-	const mostFrequent = nums[freq_vals.indexOf(maxRepetition)]
-
-	for (let i = 0; i < nums.length; i++)
-		if (maxRepetition === freq[nums[i]] && nums[i] !== mostFrequent)
-			return noneValue
-
-	return maxRepetition !== -Infinity ? mostFrequent : noneValue
+function mostPopular(
+	elems: any[] = [],
+	noneValue: any = null,
+	comparison: (a: any, b: any) => boolean = (a: any, b: any): boolean =>
+		a === b
+): any {
+	if (elems.length === 0) return noneValue
+	const freq = new UniversalMap(
+		elems,
+		elems.map((el) => countAppearences(elems, el, 0, comparison))
+	)
+	return indexOfMult(freq.values, max(freq.values), comparison)
 }
+
+export const mostPopularElem = mostPopular
+export const mostPopularNum = mostPopular
 
 // TODO: make the range of truncation an argument too... Generalize...
 /**
@@ -1764,13 +1767,13 @@ function range(nums: number[] = [], isInterquartile: boolean = false) {
 /**
  * Takes an array of numbers and returns sorted version of it.
  * @param {number[]} nums An array of numbers, passed to the function to sort.
- * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
+ * @param {boolean} forward A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
-function sort(nums: number[] = [], fromSmallToLarge = true): number[] {
+function sort(nums: number[] = [], forward: boolean = true): number[] {
 	const listArr = copy(nums)
 	const sorted = []
 
-	if (fromSmallToLarge) {
+	if (forward) {
 		for (let i = 0; i < nums.length; i++) {
 			const least = min(listArr)
 
@@ -2252,19 +2255,6 @@ function binomial(n: number, k: number): number {
 	)
 }
 
-/**
- * Takes and array and returns the most frequently appearing element in it or null, if there isn't one.
- * @param {any[]} array An array of ... pretty much anything, for as long as it's not null.
- * @param {any} noneValue The value that is to be returned in case there is no most popular element.
- */
-function mostPopularElem(array = [], noneValue = null) {
-	const most_popular_index = mostPopularNum(
-		generate(0, array.length).map((i) => array.indexOf(array[i]))
-	)
-	if (most_popular_index === "None") return noneValue
-	return array[most_popular_index]
-}
-
 // TODO: Implement the compareUniversal(...arrays), which uses dim
 
 // * Exports (constants are being exported separately).
@@ -2289,7 +2279,7 @@ export {
 	min,
 	max,
 	median,
-	mostPopularNum,
+	mostPopular,
 	range,
 	sort,
 	copy,
@@ -2315,5 +2305,4 @@ export {
 	arrayEquality,
 	dim,
 	binomial,
-	mostPopularElem,
 }
