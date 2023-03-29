@@ -7,21 +7,23 @@ const { UniversalMap } = abstract.types
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
 
-// todo: things to add:
-// * 1. leastPopular (as dual to mostPopular...)
+// todo: new things to add:
+// * 1. more number-theoretic functions...;
+// * 2. an entirely new system for the definition of the "exp" function (Idea: rename it to "op"?) -- current operator set won't do; one wants user to be capable of adding their own ones...
+// ? 	2.1?. Maybe some kind of object type OperatorDefinitions, that would get taken? And have some default one that is used and can be changed by the user as well? 
 
 // TODO: things to do (generally):
 // * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
 // *    or, just add the old alias (like in the case of sameOperator...)
 // *    1.1. Special cases of it:
-// *        1.1.1. mostPopularNum -- rename to mostPopular (most probably, this thing is to work for "more or less" anything; rewrite in accordance with this...)
-// *        1.1.2. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
-// *        1.1.3. mostPopularElem -- merge with the mostPopularNum into mostPoppular ()
+// *        1.1.1. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
 // * 2. Rewrite the in-editor JSDoc documentation (most probably, from scratch...)...
 // * 3. Add proper types to everywhere in the code (especially, places with dots...);
 // * 4. Fix all the TypeErrors...
 // * 5. Make code more permissive (get rid of Object.freeze and other such "safety" things, get rid of the Error throws...);
 // * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality...
+// * 7. Add new in-editor documentation for the new definitions...
+// * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
 
 /**
  * * This is the Old API source code, version pre-1.0.
@@ -409,18 +411,17 @@ class Surface {
  * It can also come in helpful when evaluating the same expression various number of times.
  */
 class Expression {
-	#setCount = [0, 0]
-	nums = []
-	operators = []
+	objects: string[] = []
+	operators: string[] = []
 
 	/**
 	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), repeatedArithmetic(), fullExp(), repeatExp().)
-	 * @param {number[]} nums An array, containing numbers of expression.
+	 * @param {string[]} objects An array, containing numbers of expression.
 	 * @param {string[]} operators An array, containing operators of expression.
 	 */
 
-	constructor(nums = [], operators = []) {
-		this.nums = nums
+	constructor(objects: string[] = [], operators: string[] = []) {
+		this.objects = objects
 		this.operators = operators
 	}
 
@@ -431,40 +432,15 @@ class Expression {
 		return fullExp(this)
 	}
 
+	// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
+	// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
 	/**
 	 * Wrapper for repeatExp() function. Watch documentation for it.
 	 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
 	 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
 	 */
-	repeat(times = 1, operator = "+") {
-		return repeatExp(this, times, operator)
-	}
-
-	get nums() {
-		return this._nums
-	}
-
-	/**
-	 * @param {number[]} numbers Numbers, which take place in the expression.
-	 */
-	set nums(numbers) {
-		if (this.#setCount[0] === 0) this._nums = numbers
-		else throw new Error("You can't set nums property for the second time!")
-		this.#setCount[0]++
-	}
-
-	get operators() {
-		return this._operators
-	}
-
-	set operators(operators) {
-		if (this.#setCount[1] === 0) this._operators = operators
-		else
-			throw new Error(
-				"You can't set operators property for the second time!"
-			)
-
-		this.#setCount[1]++
+	repeat(operator: string, times: number = 1) {
+		return repeatExp(this, operator, times)
 	}
 }
 
@@ -1565,28 +1541,30 @@ class VarMapping {
 
 // Functions
 
+// TODO: this thing it to be rewritten (both the JSDoc and the function...)
 /**
  * Executes an arithmetic expression with two numbers
  *
  * * Note: with it you can even build a very simple calculator.
  * * Plus, it's more secure an allows only aritmetic (for now, at least).
  *
- * @param {number} firstNum  First number.
- * @param {number} secondNum Second number.
+ * @param {number} firstObj  First number.
+ * @param {number} secondObj Second number.
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  * @returns {number} Result of a mathematical expression.
  */
-function exp(firstNum = 2, secondNum = 2, operator = "+") {
-	if (!(typeof firstNum === "number" && typeof secondNum === "number"))
+function exp(firstObj: any, secondObj: any, operator: string): any {
+	if (!(typeof firstObj === "number" && typeof secondObj === "number"))
 		throw new Error(
 			"First and second arguments of exp() function must be numbers!"
 		)
 
+	// TODO: make this nice...
 	switch (operator) {
 		case "+":
-			return realAddition(firstNum, secondNum)[0]
+			return realAddition(firstObj, secondObj)[0]
 		case "-":
-			return realAddition(firstNum, -secondNum)[0]
+			return realAddition(firstObj, -secondObj)[0]
 
 		case "/":
 		case "*":
@@ -1594,7 +1572,7 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 		case "^":
 		case "%":
 			return eval(
-				`${firstNum} ${operator === "^" ? "**" : operator} ${secondNum}`
+				`${firstObj} ${operator === "^" ? "**" : operator} ${secondObj}`
 			)
 
 		default:
@@ -1602,20 +1580,30 @@ function exp(firstNum = 2, secondNum = 2, operator = "+") {
 	}
 }
 
+// TODO: rewrite this later, as a repeated application of the same function on itself...
+// * Example of how one's future Code might look like (currrently, won't work; no dependency):
+// const repeatedOperation = (objects: string[], operator: string) =>
+// {
+// let i = 1
+// let result = objects[0]
+// const repeated = () => {result = exp(result, objects[i++], operator)}
+// return repeatedApplication(repeated, objects.length)
+// }
 /**
  * Executes mathematical expression with the same operator repeating, but different numbers.
- * @param {number[]} numbers An array of numbers(or strings) using which expression will be executed.
+ * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
-function repeatedArithmetic(numbers = [], operator = "+") {
-	let result = numbers[0] !== undefined ? numbers[0] : 0
-
-	for (let i = 0; i < numbers.length - 1; i++)
-		result = exp(result, numbers[i + 1], operator)
-
-	return result
+function repeatedOperation(objects: string[] = [], operator: string) {
+	return new Expression(
+		objects,
+		objects.map(() => operator)
+	).execute()
 }
 
+export const repeatedArithmetic = repeatedOperation
+
+// TODO: same as the function above -- use the repeatedApplication...
 /**
  * Executes mathematical expression with different operators and numbers.
  *
@@ -1624,25 +1612,12 @@ function repeatedArithmetic(numbers = [], operator = "+") {
  *
  * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
-function fullExp(expression = { nums: [], operators: [] }) {
-	let result = 0
+function fullExp(expression: Expression): any {
+	if (expression.objects.length === 0) return null
+	let result: any = expression.objects[0]
 
-	if (expression.nums.length - expression.operators.length > 1)
-		throw Error(
-			"Passed operators[] array length is less than passed number[] array for more than one element \
-(operators[] arr must be shorter for only one element)."
-		)
-
-	for (let i = 0; i < expression.nums.length - 1; i++) {
-		result =
-			i === 0
-				? exp(
-						expression.nums[0],
-						expression.nums[1],
-						expression.operators[0]
-				  )
-				: exp(result, expression.nums[i + 1], expression.operators[i])
-	}
+	for (let i = 0; i < expression.objects.length - 1; i++)
+		result = exp(result, expression.objects[i + 1], expression.operators[i])
 
 	return result
 }
@@ -1654,25 +1629,18 @@ function fullExp(expression = { nums: [], operators: [] }) {
  * ! Wrong names of keys will cause an Error.
  *
  * @param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
- * @param {number} countOfRepeats   A number of repeats of ariphmetic operation.
+ * @param {number} timesRepeat   A number of repeats of ariphmetic operation.
  * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
 function repeatExp(
-	expression = { nums: [2, 2], operators: ["*"] },
-	countOfRepeats = 1,
-	repeatOperator = "+"
-) {
-	let [result, tempRes] = [0, 0]
-	if (expression.nums === undefined || expression.operators === undefined)
-		throw Error(
-			'You have passed expression object with the wrong names of keys of key-value pairs! \
-They must have next names: "nums" form number array, "operators" for operators array.'
-		)
+	expression: Expression,
+	repeatOperator: string,
+	timesRepeat = 1
+): any {
+	let tempRes = null
+	let result = (tempRes = fullExp(expression))
 
-	result = tempRes = fullExp(expression)
-	if (repeatOperator === "+") return (result *= countOfRepeats)
-
-	for (let i = 0; i < countOfRepeats - 1; i++)
+	for (let i = 0; i < timesRepeat - 1; i++)
 		result = exp(result, tempRes, repeatOperator)
 
 	return result
@@ -1698,7 +1666,14 @@ function average(
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
-	return floor(repeatedArithmetic(newArr) / (len + modif), fixedSize)
+	return floor(
+		repeatedArithmetic(
+			newArr.map((a: number) => String(a)),
+			"+"
+		) /
+			(len + modif),
+		fixedSize
+	)
 }
 
 /**
@@ -1741,17 +1716,35 @@ function mostPopular(
 	noneValue: any = null,
 	comparison: (a: any, b: any) => boolean = (a: any, b: any): boolean =>
 		a === b
+): any[] {
+	if (elems.length === 0) return noneValue
+	const freq = new UniversalMap(
+		elems,
+		elems.map((el) => countAppearences(elems, el, 0, comparison))
+	)
+	return indexOfMult(freq.values, max(freq.values), comparison).map(
+		(a: number) => freq.keys[a]
+	)
+}
+
+export const mostPopularElem = mostPopular
+export const mostPopularNum = mostPopular
+
+function leastPopular(
+	elems: any[] = [],
+	noneValue: any = null,
+	comparison: (a: any, b: any) => boolean = (a: any, b: any): boolean =>
+		a === b
 ): any {
 	if (elems.length === 0) return noneValue
 	const freq = new UniversalMap(
 		elems,
 		elems.map((el) => countAppearences(elems, el, 0, comparison))
 	)
-	return indexOfMult(freq.values, max(freq.values), comparison)
+	return indexOfMult(freq.values, min(freq.values), comparison).map(
+		(a: number) => freq.keys[a]
+	)
 }
-
-export const mostPopularElem = mostPopular
-export const mostPopularNum = mostPopular
 
 // TODO: make the range of truncation an argument too... Generalize...
 /**
@@ -2272,7 +2265,7 @@ export {
 	VarMapping,
 	Equation,
 	exp,
-	repeatedArithmetic,
+	repeatedOperation,
 	fullExp,
 	repeatExp,
 	average,
@@ -2280,6 +2273,7 @@ export {
 	max,
 	median,
 	mostPopular,
+	leastPopular,
 	range,
 	sort,
 	copy,
