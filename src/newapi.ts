@@ -3,7 +3,9 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov, 2023
  */
 
-// TODO: create here a UniversalMap class; let it be virtually a map which can have arbitrary values for both the key and the value of a key...
+// TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
+
+import { dim } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
@@ -135,7 +137,8 @@ export namespace abstract {
 		): types.RecursiveArray<number> {
 			if (a === undefined) return [0]
 
-			function findDeep(
+			// ? put these two out of the function's context?
+			function findDeepUnfilledNum(
 				a: types.RecursiveArray<number>,
 				prevArr: number[] = []
 			): number[] | false {
@@ -143,7 +146,7 @@ export namespace abstract {
 
 				for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
 					if (a[i[i.length - 1]] instanceof Array) {
-						const temp: number[] | false = findDeep(a, i)
+						const temp: number[] | false = findDeepUnfilledNum(a, i)
 						if (temp) return temp
 					}
 					if (a[i[i.length - 1]] < abstract.constants.js.MAX_INT)
@@ -153,10 +156,61 @@ export namespace abstract {
 				return false
 			}
 
-			const resultIndexes: number[] | false = findDeep(a)
-			if (!resultIndexes) return [a]
+			function findDeepUnfilledArr(
+				a: types.RecursiveArray<number>,
+				prevArr: number[] = []
+			): number[] | false {
+				let i: number[] = [...prevArr, 0]
 
-			let result: types.RecursiveArray<number> = util.deepCopy(a)
+				for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
+					// ! noticed another "percularity" about TypeScript (one of those things that had been previously called "stupidity");
+					// * When an expression is being checked for something without the value of that expression changeing...
+					// * The thing won't react to the type-check! This is a very bright example: one would not call the thing in question 'indexed' had it worked without it;
+					// ? should this be submitted to their Issues?
+					const indexed = a[i[i.length - 1]]
+					if (indexed instanceof Array) {
+						if (indexed.length < abstract.constants.js.MAX_INT)
+							return i
+						const temp: number[] | false = findDeepUnfilledArr(a, i)
+						if (temp) return temp
+					}
+				}
+
+				return false
+			}
+
+			let resultIndexes: number[] | false = findDeepUnfilledNum(a)
+			let _result: types.RecursiveArray<number> = util.deepCopy(a)
+			let result = _result
+
+			if (!resultIndexes) {
+				resultIndexes = findDeepUnfilledArr(a)
+				if (!resultIndexes) return [a]
+
+				// TODO: again, the same thing as below...
+				for (let i = 0; i < resultIndexes.length - 1; i++) {
+					const indexed: types.RecursiveArray<number> | number =
+						result[resultIndexes[i]]
+
+					if (indexed instanceof Array) {
+						result = indexed
+						continue
+					}
+
+					break
+				}
+
+				const finalDimension = dim(a) - resultIndexes.length
+				// todo: again, the same thing as below...
+				for (let i = 0; i < finalDimension; i++) {
+					result.push([])
+					const last = result[result.length - 1]
+					if (!isNumber(last)) result = last
+				}
+
+				result.push(0)
+				return _result
+			}
 
 			// * Hmmm... That's a very interesting thing there...
 			// * See, that thing is already in one of the unpublished projects that depend upon the math-expressions.js;
@@ -166,7 +220,7 @@ export namespace abstract {
 				const indexed: types.RecursiveArray<number> | number =
 					result[resultIndexes[i]]
 
-				if (isRecursiveArray(indexed, isNumber)) {
+				if (indexed instanceof Array) {
 					result = indexed
 					continue
 				}
@@ -175,21 +229,32 @@ export namespace abstract {
 			}
 
 			let finalIndexed = result[resultIndexes[resultIndexes.length - 1]]
-			if (isNumber(finalIndexed)) finalIndexed++
+			if (isNumber(finalIndexed)) finalIndexed++ // this is for TypeScript to shut up only...
 
-			return a
+			return _result
 		}
 
 		export function isNumber(x: any): x is number {
 			return typeof x === "number"
 		}
 
+		// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library...
 		// * an example of a typechecker for the recursive arrays...
 		export function isRecursiveArray<Type>(
 			x: any,
 			typechecker: (a: any) => a is Type
 		): x is types.RecursiveArray<Type> {
-			return !typechecker(x)
+			return (
+				x instanceof Array &&
+				Math.min(
+					...x.map((a: any) =>
+						Number(
+							isRecursiveArray<Type>(a, typechecker) ||
+								typechecker(a)
+						)
+					)
+				) === 1
+			)
 		}
 
 		// TODO: finish this thing (add orders, other things from the previous file)...
@@ -319,39 +384,51 @@ export namespace abstract {
 			| ElementType
 		)[]
 
+		export type map<KeyType, ValueType, NotFoundType> = {
+			keys: KeyType
+			values: ValueType
+			notFound: NotFoundType
+			notFoundChecker: (a: any) => a is NotFoundType
+		}
+
 		export class UniversalMap<
 			KeyType = any,
 			ValueType = any,
 			NotFoundType = any
-		> {
+		> implements map<KeyType[], ValueType[], NotFoundType>
+		{
 			keys: KeyType[]
 			values: ValueType[]
 			notFound: NotFoundType
 			notFoundChecker: (a: any) => a is NotFoundType
 
-			referenceGet(key: KeyType): ValueType {
-				return this.values[this.keys.indexOf(key)]
+			get(
+				key: KeyType,
+				comparison: (a: any, b: any) => boolean = (a: any, b: any) =>
+					a === b,
+				number: number = 1
+			): ValueType[] | NotFoundType {
+				const indexes = util.indexOfMult(this.keys, key, comparison)
+				if (indexes.length === 0) return this.notFound
+				return indexes
+					.slice(0, number)
+					.map((i: number) => this.values[i])
 			}
 
-			valueGet(key: KeyType): NotFoundType | ValueType {
-				let index: NotFoundType | number = this.notFound
-				let i = 0
+			set(
+				key: KeyType,
+				value: ValueType,
+				comparison: (a: any, b: any) => boolean = (a: any, b: any) =>
+					a === b
+			): ValueType {
+				const index: number[] = util.indexOfMult(
+					this.keys,
+					key,
+					comparison
+				)
 
-				for (const x of this.keys) {
-					if (util.valueCompare(x, key)) {
-						index = i
-						break
-					}
-					i++
-				}
-
-				return this.notFoundChecker(index) ? index : this.values[index]
-			}
-
-			set(key: KeyType, value: ValueType): ValueType {
-				const index: number = this.keys.indexOf(key)
-				if (index !== -1) {
-					this.values[index] = value
+				if (index.length !== 0) {
+					for (const _index of index) this.values[_index] = value
 					return value
 				}
 
@@ -362,15 +439,66 @@ export namespace abstract {
 			constructor(
 				keys: KeyType[],
 				values: ValueType[],
-				notFoundCode: NotFoundType = undefined,
+				notFound: NotFoundType = undefined,
 				notFoundChecker: (a: any) => a is NotFoundType = (
 					x: any
 				): x is NotFoundType => x === undefined
 			) {
 				this.keys = keys
 				this.values = values
-				this.notFound = notFoundCode
+				this.notFound = notFound
 				this.notFoundChecker = notFoundChecker
+			}
+		}
+
+		// TODO: add an InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
+		export class InfiniteMap<
+			KeyType = any,
+			ValueType = any,
+			NotFoundType = any
+		> implements
+				map<
+					RecursiveArray<KeyType>,
+					RecursiveArray<ValueType>,
+					NotFoundType
+				>
+		{
+			keys: RecursiveArray<KeyType>
+			values: RecursiveArray<ValueType>
+			notFound: NotFoundType
+			notFoundChecker: (a: any) => a is NotFoundType
+
+			isKeyType: (x: any) => x is KeyType
+			isValueType: (x: any) => x is ValueType
+
+			// TODO: finish this later... Mr. Body feels tired...
+			// * Here, one should implement the algorithms for setting an index of interest (which depends on the current length of the array), to a given value; It comes down to finding the first free index, restructuring the array recursively and creating one, if there isn't...;
+			set(key: KeyType, value: ValueType): ValueType {}
+
+			// * Here, one finds the fitting keys, returns an array of their values;
+			get(
+				key: RecursiveArray<KeyType>,
+				comparison: (a: any, b: any) => boolean = (a: any, b: any) =>
+					a === b,
+				number: number
+			): ValueType[] | NotFoundType {}
+
+			constructor(
+				keys: RecursiveArray<KeyType>,
+				values: RecursiveArray<ValueType>,
+				notFound: NotFoundType,
+				notFoundChecker: (a: any) => a is NotFoundType = (
+					x: any
+				): x is NotFoundType => x === undefined,
+				keyTypeChecker: (x: any) => x is KeyType,
+				valuetypeChecker: (x: any) => x is ValueType
+			) {
+				this.keys = keys
+				this.values = values
+				this.notFound = notFound
+				this.notFoundChecker = notFoundChecker
+				this.isValueType = valuetypeChecker
+				this.isKeyType = keyTypeChecker
 			}
 		}
 	}

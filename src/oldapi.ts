@@ -9,8 +9,8 @@ const { UniversalMap } = abstract.types
 
 // todo: new things to add:
 // * 1. more number-theoretic functions...;
-// * 2. an entirely new system for the definition of the "exp" function (Idea: rename it to "op"?) -- current operator set won't do; one wants user to be capable of adding their own ones...
-// ? 	2.1?. Maybe some kind of object type OperatorDefinitions, that would get taken? And have some default one that is used and can be changed by the user as well? 
+// * 2. an entirely new system for the definition of the "op" function -- current operator set won't do; one wants user to be capable of adding their own ones...
+// ? 	2.1?. Maybe some kind of object type OperatorDefinitions, that would get taken? And have some default one that is used and can be changed by the user as well?
 
 // TODO: things to do (generally):
 // * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
@@ -44,6 +44,8 @@ export let fixedSize: number = 11
 // * sameOperator was a really-really bad name, and so I decided to change it.
 // * Still, for backwards compatebility reasons I left it.
 // * (Library has a lot of bugs already, why add more? XD Better just fix the old ones and try not to add new. )
+export const exp = op
+export const repeatedArithmetic = repeatedOperation
 export const sameOperator = repeatedArithmetic
 
 // Classes
@@ -1553,12 +1555,7 @@ class VarMapping {
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  * @returns {number} Result of a mathematical expression.
  */
-function exp(firstObj: any, secondObj: any, operator: string): any {
-	if (!(typeof firstObj === "number" && typeof secondObj === "number"))
-		throw new Error(
-			"First and second arguments of exp() function must be numbers!"
-		)
-
+function op(firstObj: any, secondObj: any, operator: string): any {
 	// TODO: make this nice...
 	switch (operator) {
 		case "+":
@@ -1600,8 +1597,6 @@ function repeatedOperation(objects: string[] = [], operator: string) {
 		objects.map(() => operator)
 	).execute()
 }
-
-export const repeatedArithmetic = repeatedOperation
 
 // TODO: same as the function above -- use the repeatedApplication...
 /**
@@ -1823,25 +1818,30 @@ function generate(
 	return generated
 }
 
+// TODO: this should also separate onto findValue and findReference;
+// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
+// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
 /**
  * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
  * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
  * @param {number | number[] | string} searchVal Searched value.
  * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
  */
-function find(searchArr, searchVal) {
+function find(
+	searchArr: any[] | string,
+	searchVal: any | any[]
+): [boolean, number, number[]] {
 	let result = false
 	let foundTimes = 0
 	const foundIndexes = []
 
-	if (searchVal instanceof Array)
+	if (isArray(searchVal) && isArray(searchArr))
 		searchVal.forEach((value) =>
 			searchArr.forEach((arr, index) =>
-				arr.forEach((num) => {
-					if (value === num) {
+				arr.forEach((obj: number) => {
+					if (value === obj) {
 						result = true
 						foundTimes++
-
 						if (!foundIndexes.includes(index))
 							foundIndexes.push(index)
 					}
@@ -2214,18 +2214,31 @@ function arrayEquality(...arrays: any[][]): boolean {
 /**
  * This function takes in array and determines how nested it is (its dimensions).
  * If it is not array, dimension is 0.
- * If it is an empty array, then it's dimension is 0.
+ * If it is an empty array, then it's dimension is 1.
  * If it is an array only with an element which is not an array, then it's dim is 1.
  * If it is an array with only an array of dim n-1, then it's own dim is n.
  * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1.
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
-function dim(array: any[]): number {
-	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
-	const t = (arr) => (arr.length === 0 ? 0 : max(arr.map((el) => d(el))))
-	return array instanceof Array ? t(array) : 0
+// * Alternative implementation (second one):
+function dim(array: any): number {
+	if (array instanceof Array)
+		return 1 + (array.length === 0 ? 0 : max(array.map((a: any) => dim(a))))
+	return 0
 }
+
+// function dim(array: any): number {
+// 	const d = (elem: any) => (elem instanceof Array ? t(elem) : 0)
+// 	const t = (arr: any[]) =>
+// 		1 + (arr.length === 0 ? 0 : max(arr.map((el) => d(el))))
+// 	return array instanceof Array ? t(array) : 0
+// }
+
+// ? They're both so good... Which one should be?
+// * first is 4 function calls per level; 
+// * second is 3 function calls per level; 
+// * CURRENT DECISION: both shall stay, but the first one will be commented out...
 
 /**
  * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
@@ -2242,13 +2255,24 @@ function binomial(n: number, k: number): number {
 
 	return floor(
 		repeatedArithmetic(
-			generate(0, k - 1, 1).map((num) => n - num),
+			generate(0, k - 1, 1).map((num) => String(n - num)),
 			"*"
 		) / factorial(k)
 	)
 }
 
-// TODO: Implement the compareUniversal(...arrays), which uses dim
+// TODO: later, pray generalize for it to be just a Table<Function> (from the other self's package...)
+/**
+ * * This type will (most likely) not last for a long amount of time in the library, being replaced by Table (same, but generalized);
+ * ! DO NOT USE...
+ */
+type OperatorDefinitions = { [opname: string]: Function }
+
+export function isArray(x: any): x is any[] {
+	return x instanceof Array
+}
+
+// TODO: Implement the compareUniversal(...arrays), which uses dim;
 
 // * Exports (constants are being exported separately).
 
@@ -2264,7 +2288,7 @@ export {
 	RectMatrix,
 	VarMapping,
 	Equation,
-	exp,
+	op,
 	repeatedOperation,
 	fullExp,
 	repeatExp,
@@ -2299,4 +2323,5 @@ export {
 	arrayEquality,
 	dim,
 	binomial,
+	OperatorDefinitions,
 }
