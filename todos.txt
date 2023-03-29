@@ -126,3 +126,19 @@ INDEPENDENT NOTE: Funny. The more I use types, the less I start to like them as 
     For example: f(a);(b) would be "if a, do b": 
     There could be references and things... 
     Write it using one's (for now unpublished) parser.(..) library...
+
+7. IDEA: let the math-expressions.mjs file stay, but be reformed as an import, becoming the "old" API, whilst the main.ts will be the "new" API; 
+
+    Two objects "oldapi" and "newapi" would get imported from the main file; 
+    The original math-expressions.js gets rewritten into TypeScript to keep all the behaviour; 
+    The only incompatibilities of the math-expression since version 1.0 is the matter of the imports: they'd have to be changed; 
+    One would just add 2 lines:
+
+        import { oldapi } from "math-expressions.js"
+        const {(list of the used stuff)} = oldapi
+
+    This way, there'd never be such a striking dissimilarity with the math-expressions.js 0.8 with the 1.0 and later versions, 
+    Mr. Body wouldn't deprecate the package or change the name, whilst making both a thing; 
+
+    Even better, the old version (oldapi), may still be supported! Get updates, new things and whatnot...
+    Beautiful; so happy about this decision...

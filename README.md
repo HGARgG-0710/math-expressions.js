@@ -1,7 +1,12 @@
-# Math-expressions.js
+# math-expressions.js
 
-Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics, 2D surfaces, item (especially numbers) collections, multi-dimensional arrays, linear algebra and equation parsing/solving.  
-For now, the list of functions and classes provided is quite thin, but in the future library may become a truly powerful and indeed irreplacable tool, which may save you many hours of coding in just few seconds.
+math-expressions.js is a TypeScript (originally, JavaScript) library with a vast variety of covered areas of interest.
+<!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
+Amongst those: very handy utilities, some basic statistics, 2D surfaces, collections, abstract objects, 
+multi-dimensional arrays, some simple linear algebra, parsing;
+
+<!-- TODO: finish the documentation after having finished the main.ts; -->
+<!-- TODO: especially add about that each new version of the library is breaking compatibility with the previous one; also, that the library has the old api that won't go away for sentimental reasons; the new api, however, does NOT provide backward compatibility for any of the versions before or after 1.0; used versions of the package should be specified explicitly, updating can easily break something...-->
 
 ## Installation
 
