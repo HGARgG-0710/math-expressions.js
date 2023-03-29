@@ -1,18 +1,28 @@
+import { util } from "./newapi"
+
+// TODO: add all of those functions that seem fit from the new api into the old one...
+const { flatCopy } = util
+
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
 
-// todo: things to add: 
+// todo: things to add:
 // * 1. leastPopular (as dual to mostPopular...)
 
-// TODO: things to do (generally): 
-// * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility), 
+// TODO: things to do (generally):
+// * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
 // *    or, just add the old alias (like in the case of sameOperator...)
-// *    1.1. Special cases of it: 
+// *    1.1. Special cases of it:
 // *        1.1.1. mostPopularNum -- rename to mostPopular (most probably, this thing is to work for "more or less" anything; rewrite in accordance with this...)
 // *        1.1.2. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
+// *        1.1.3. mostPopularElem -- merge with the mostPopularNum into mostPoppular ()
+// * 2. Rewrite the in-editor JSDoc documentation...
+// * 3. Add proper types to everywhere in the code (especially, places with dots...);
+// * 4. Fix all the TypeErrors...
+// * 5. Make code more permissive (get rid of Object.freeze and other such "safety" things, get rid of the Error throws...);
 
 /**
- * * This is the source code, version pre-1.0.
+ * * This is the Old API source code, version pre-1.0.
  * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
  */
 
@@ -794,7 +804,7 @@ class Vector {
 	_length = 0
 	_vector = []
 
-	static allowedTypes = Object.freeze([
+	static allowedTypes = [
 		"number",
 		"string",
 		"boolean",
@@ -802,9 +812,9 @@ class Vector {
 		"object",
 		"bigint",
 		"any",
-	])
+	]
 
-	static default = Object.freeze({
+	static default = {
 		string: "",
 		number: 0,
 		object: null,
@@ -812,7 +822,7 @@ class Vector {
 		bigint: 0n,
 		function: () => {},
 		any: null,
-	})
+	}
 
 	constructor(type = "number", length = 0, vector = []) {
 		this.length = length
@@ -1690,8 +1700,8 @@ function average(nums = [1, 2, 3, 4, 5], isTruncated = false, percents = 10) {
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The smallest number of the passed array.
  */
-function min(nums = [1, 2, 3, 4, 5]) {
-	return Math.min.apply(null, nums)
+function min(nums: number[] = []): number {
+	return Math.min(...nums)
 }
 
 /**
@@ -1699,27 +1709,28 @@ function min(nums = [1, 2, 3, 4, 5]) {
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The largest number in passed numerical array.
  */
-function max(nums = [1, 2, 3, 4, 5]) {
-	return Math.max.apply(null, nums)
+function max(nums: number[] = []): number {
+	return Math.max(...nums)
 }
 
 /**
  * Takes an array of numbers, which length can be odd or even and returns the median of it.
  * @param {number[]} nums An array of numbers, passed to the function.
  */
-function median(nums = [1, 2, 3, 4, 5]) {
-	const sorted = Object.freeze(sort(nums))
+function median(nums: number[] = []): number {
+	const sorted = sort(nums)
 	return nums.length % 2 === 1
 		? sorted[Math.round(nums.length / 2) - 1]
 		: average([sorted[nums.length / 2 - 1], sorted[nums.length / 2]])
 }
 
+// TODO: pay particular attention here...
 /**
  * Takes an array and returns most "popular" number in it.
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
  */
-function mostPopularNum(nums = [], noneValue = "None") {
+function mostPopularNum(nums: any[] = [], noneValue: any = "None"): any {
 	const t = (e, i) =>
 		i < nums.length ? Number(nums[i] === e) + t(e, i + 1) : 0
 	const e = (j) => nums[j]
@@ -1739,12 +1750,13 @@ function mostPopularNum(nums = [], noneValue = "None") {
 	return maxRepetition !== -Infinity ? mostFrequent : noneValue
 }
 
+// TODO: make the range of truncation an argument too... Generalize...
 /**
  * @param {number[]} nums An array of numbers passed to the function.
  * @param {boolean} isInterquartile A boolean, representing shall the range to be gotten be interquartille or not. By deafault false.
  * @returns the range of the numeric array (if passed [-5, 10] returns 15).
  */
-function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
+function range(nums: number[] = [], isInterquartile: boolean = false) {
 	const newArr = isInterquartile ? truncate(nums, 25) : copy(nums)
 	return floor(max(newArr) - min(newArr))
 }
@@ -1754,7 +1766,7 @@ function range(nums = [1, 2, 3, 4, 5], isInterquartile = false) {
  * @param {number[]} nums An array of numbers, passed to the function to sort.
  * @param {boolean} fromSmallToLarge A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
  */
-function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
+function sort(nums: number[] = [], fromSmallToLarge = true): number[] {
 	const listArr = copy(nums)
 	const sorted = []
 
@@ -1777,14 +1789,17 @@ function sort(nums = [2, 4, 3, 5, 1], fromSmallToLarge = true) {
 	return sorted
 }
 
+// TODO: rewrite the docs...
 /**
  * Copies an array without referencing its object.
  * @param {any[]} nums An array that needs to be copied.
  * @returns {number[]} Copy of a passed array, without referencing its object.
  */
-function copy(nums = [1, 2, 3, 4, 5]) {
-	return nums.map((i) => i)
-}
+const copy = flatCopy
+// * Previous definition (later, clear?)
+// function copy(nums = [1, 2, 3, 4, 5]) {
+// 	return nums.map((i) => i)
+// }
 
 /**
  * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
@@ -1793,12 +1808,17 @@ function copy(nums = [1, 2, 3, 4, 5]) {
  * @param {number} step Value, by which the count is incremented every iteration.
  * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
  */
-function generate(start, end, step = 1, precision = 1) {
+function generate(
+	start: number,
+	end: number,
+	step: number = 1,
+	precision: number = 1
+): number[] {
 	const generated = []
 	const modif = Number.isInteger(step) ? 1 : 10 ** -precision
 
 	const proposition = step > 0 ? (i, m) => i < m : (i, m) => i > m
-	const coeff = (-1) ** (step < 0)
+	const coeff = (-1) ** Number(step < 0)
 	const upper = end + coeff * modif
 
 	for (let i = start; proposition(i, upper); i += step)
@@ -1845,7 +1865,7 @@ function find(searchArr, searchVal) {
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
  */
-function readable(num) {
+function readable(num: number[]): string {
 	const arr = num.toString().split("")
 	let changeStr = ""
 
@@ -1869,8 +1889,8 @@ function readable(num) {
  * @param {number} num Number, to be factored out.
  * @returns {number[]} Prime factors array.
  */
-function factorOut(number) {
-	const factors = []
+function factorOut(number: number): number[] {
+	const factors: number[] = []
 
 	for (
 		let currDevisor = 2;
@@ -1891,7 +1911,7 @@ function factorOut(number) {
  * @param {number[]} nums An array to be truncated.
  * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
  */
-function truncate(nums, percents = 10) {
+function truncate(nums: number[], percents: number = 10): number[] {
 	const shortened = sort(copy(nums))
 	const len = shortened.length
 	const toDelete = Number(Math.trunc((len / 100) * percents))
@@ -1910,7 +1930,11 @@ function truncate(nums, percents = 10) {
  * @param {number} secondNum Second number.
  * @param {number} searchRange A number, representing range of searches(if you get null from this function, then try to make range bigger). By default 100.
  */
-function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
+function leastCommonMultiple(
+	firstNum: number,
+	secondNum: number,
+	searchRange: number = 100
+) {
 	const firstMultiples = []
 	const secondMultiples = []
 
@@ -1945,7 +1969,12 @@ function leastCommonMultiple(firstNum, secondNum, searchRange = 100) {
  * @param {boolean} isTruncated A boolean, representing, should or should not an array be truncated, during the process of searching for its average. By default false.
  * @param {number} percents A number, representing count of percents of numbers, for which this array shall be truncated, while searching for its average. Pased value will be doubled. Works only if isTruncated equals true. By default 10.
  */
-function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
+function deviations(
+	row: number[],
+	isSquare: boolean = false,
+	isTruncated: boolean = false,
+	percents: number = 10
+) {
 	const rowAverage = average(row, isTruncated, percents)
 	const deviations = []
 
@@ -1967,11 +1996,11 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
  * @param {number[]} indexes A numeric array of indexes, using which, inside of a first argument needed values will be taken for a sample population(only if second parameter is false).
  */
 function dispersion(
-	row = [1, 2, 3, 4, 5],
-	isSquare = false,
-	isGeneral = true,
-	indexes = [0, 1, 2]
-) {
+	row: number[] = [],
+	isSquare: boolean = false,
+	isGeneral: boolean = true,
+	indexes: number[] = []
+): number {
 	const newRow = []
 
 	!isGeneral
@@ -1984,6 +2013,8 @@ function dispersion(
 
 	newRow.length = row.length
 
+	// ? what's that, a hack?
+	// TODO: if don't like, pray do something about...
 	return floor(average(deviations(newRow, isSquare), true, 0)) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of average()).
 }
 
@@ -1994,9 +2025,9 @@ function dispersion(
  * @param {number[]} indexes An array of numbers, representing indexes of the sample, sample standard deviation deviation for which shall be found.
  */
 function standardDeviation(
-	row = [1, 2, 3, 4, 5],
-	isPopulation = true,
-	indexes = [0, 1, 2]
+	row: number[] = [],
+	isPopulation: boolean = true,
+	indexes: number[] = []
 ) {
 	return floor(
 		Math.sqrt(dispersion(row, true, isPopulation, indexes)),
@@ -2012,11 +2043,11 @@ function standardDeviation(
  * @param {number[]} indexes An array of numbers, representing indexes using which sample of the original row should be made. Works only if isPopulation equals true.
  */
 function standardError(
-	row = [1, 2, 3, 4, 5],
-	isDispersion = false,
-	isPopulation = true,
-	indexes = [0, 1, 2]
-) {
+	row: number[] = [],
+	isDispersion: boolean = false,
+	isPopulation: boolean = true,
+	indexes: number[] = []
+): number {
 	const newArr = []
 
 	isPopulation
@@ -2042,7 +2073,7 @@ function standardError(
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
  * @param {number[]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
  */
-function degreeOfFreedom(...numRows) {
+function degreeOfFreedom(...numRows: number[][]) {
 	let lenSum = 0
 	for (let i = 0; i < numRows.length; i++) lenSum += numRows[i].length
 	return lenSum - numRows.length
@@ -2053,7 +2084,7 @@ function degreeOfFreedom(...numRows) {
  * @param {number[]} numbers A number array, expected value for which is to be found.
  * @param {number[]} probabilities An array of probabilitiles for certain numbers from numbers array to appear.
  */
-function expectedValue(numbers, probabilities) {
+function expectedValue(numbers: number[], probabilities: number[]): number {
 	const values = []
 
 	if (numbers.length > probabilities.length)
@@ -2073,7 +2104,7 @@ function expectedValue(numbers, probabilities) {
  * @param {number} afterDot How many positions after dot should there be.
  * @returns {number}
  */
-function floor(number, afterDot = fixedSize) {
+function floor(number: number, afterDot: number = fixedSize): number {
 	return Number(number.toFixed(afterDot))
 }
 
@@ -2083,7 +2114,11 @@ function floor(number, afterDot = fixedSize) {
  * @param {number} maxValue The max value, that can be found in the randomly generated array.
  * @param {boolean} integers The boolean flag, that represents whether all numbers in the array should be integers or not. By default false.
  */
-function randomArray(maxLength, maxValue, integers = false) {
+function randomArray(
+	maxLength: number,
+	maxValue: number,
+	integers: boolean = false
+): number[] {
 	const length = Math.floor(Math.random() * maxLength)
 	const storage = []
 
@@ -2101,7 +2136,7 @@ function randomArray(maxLength, maxValue, integers = false) {
  * Checks whether the number passed is perfect or not.
  * @param {number} number Number, perfectness of which is to be checked.
  */
-function isPerfect(number) {
+function isPerfect(number: number): boolean {
 	return repeatedArithmetic(allFactors(number)) === number
 }
 
@@ -2109,20 +2144,20 @@ function isPerfect(number) {
  * Takes one integer and returns all of its factors (not only primes, but others also).
  * @param {number} number An integer, factors for which are to be found.
  */
-function allFactors(number) {
+function allFactors(number: number): number[] {
 	const factors = [1]
 
 	for (let currFactor = 2; currFactor !== number; currFactor++)
 		if (number % currFactor === 0) factors.push(currFactor)
 
-	return Object.freeze(factors)
+	return factors
 }
 
 /**
  * This function calculates the factorial of a positive integer given.
  * @param {number} number A positive integer, factorial for which is to be calculated.
  */
-function factorial(number) {
+function factorial(number: number): number {
 	const numbers = []
 
 	if (number < 0)
@@ -2142,7 +2177,7 @@ function factorial(number) {
  * @param {number} float2 Second number to be added.
  * @returns {[number, number]} a number with error much less than it would be with JavaScript addition.
  */
-function realAddition(float1, float2) {
+function realAddition(float1: number, float2: number): [number, number] {
 	const sum = float1 + float2
 	const fixedB = sum - float1
 	const fix = float2 - fixedB
@@ -2154,16 +2189,17 @@ function realAddition(float1, float2) {
  * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
  * @param {number} newPrecision The new value of fixedSize.
  */
-function setPrecision(newPrecision = 0) {
-	fixedSize = newPrecision | 0 // in case someone malisciously decides to put floats in there, hehe :D
+function setPrecision(newPrecision: number = 0): number {
+	return (fixedSize = newPrecision | 0) // in case someone malisciously decides to put floats in there, hehe :D
 }
 
+// TODO : separate onto reference-equality (current) and value-equality (for this, one could employ newapi.utils.valueComparison)
 /**
  * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
  * (I.e. returns the boolean value, representing whether they're equal or not).
  * @param {any[]} arrays An array of one-dimensional array of any length.
  */
-function arrayEquality(...arrays) {
+function arrayEquality(...arrays: any[][]): boolean {
 	function equalBinary(arr1, arr2) {
 		if (arr1.length !== arr2.length) return false
 
@@ -2189,7 +2225,7 @@ function arrayEquality(...arrays) {
  * This function is defined recursively.
  * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
  */
-function dim(array) {
+function dim(array: any[]): number {
 	const d = (elem) => (elem instanceof Array ? 1 + t(elem) : 1)
 	const t = (arr) => (arr.length === 0 ? 0 : max(arr.map((el) => d(el))))
 	return array instanceof Array ? t(array) : 0
@@ -2201,7 +2237,7 @@ function dim(array) {
  * @param {number} n First number (any rational number).
  * @param {number} k Second number (integer).
  */
-function binomial(n, k) {
+function binomial(n: number, k: number): number {
 	if (typeof n !== "number" || typeof k !== "number")
 		throw new Error("Requiring a number to calculate the choose function. ")
 

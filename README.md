@@ -8,6 +8,8 @@ multi-dimensional arrays, some simple linear algebra, parsing;
 <!-- TODO: finish the documentation after having finished the main.ts; -->
 <!-- TODO: especially add about that each new version of the library is breaking compatibility with the previous one; also, that the library has the old api that won't go away for sentimental reasons; the new api, however, does NOT provide backward compatibility for any of the versions before or after 1.0; used versions of the package should be specified explicitly, updating can easily break something...-->
 
+<!-- * The compatibility is broken in 3 places: 1. the imports and 2. the default arguments of functions... 3. (sometimes) The precise argument lists and definitions of functions (though, the changes were always only generalizing, expansive and constructive...) -->
+
 ## Installation
 
 Math-expressions.js can be installed using npm.

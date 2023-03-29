@@ -1,3 +1,8 @@
+/**
+ * * This is the New API source code, version pre-1.0;
+ * @copyright HGARgG-0710 (Igor Kuznetsov, 2023
+*/
+
 export namespace statistics {}
 export namespace util {
 	// ? considering the fact that there is now the deepCopy() function (which is a generalization of copy)
@@ -72,6 +77,19 @@ export namespace util {
 		}
 
 		return resArray
+	}
+
+	// * just a convinient syntax...
+	export function arrThisApply(
+		f: Function,
+		arr: any[],
+		thisArg: any = null
+	): any {
+		return f.apply(thisArg, arr)
+	}
+
+	export function arrApply(f: Function, arr: any[]): any {
+		return f(...arr)
 	}
 }
 
