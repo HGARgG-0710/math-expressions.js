@@ -149,3 +149,8 @@ INDEPENDENT NOTE: Funny. The more I use types, the less I start to like them as 
 
 10. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 11. Change the package.json "version" field (always almost forgetting before the release...)
+12. I don't trust these two exactly -- TypeScript and Deno linters; both tend to overlook some small potential difficulties; 
+
+    Let Mr. Body look through the code on the matter of types by oneself; 
+    Seek potential problems, fix them...
+    Then, compile and test; 

@@ -10,6 +10,8 @@ import { dim, max } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
+	// ? some of these things are quite good with the arrays.... Question: should Mr. Body be adding those for some kind of "uniter" structure? (Like the Statistics and other such classes from the oldapi, other classes from other packages?)
+
 	// ? considering the fact that there is now the deepCopy() function (which is a generalization of copy)
 	export function deepCopy(a: any): any {
 		if (a instanceof Array) return a.map((el) => deepCopy(el))
@@ -122,12 +124,19 @@ export namespace util {
 		return indexes
 	}
 
+	// * clears all but the first `tokeep` repetition of `el`
 	export function clearRepetitions(
 		arr: any[],
 		el: any,
+		tokeep: number = 0,
 		comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b
 	): any[] {
-		return arr.filter((a) => !comparison(a, el))
+		const firstMet = indexOfMult(arr, el, comparison)
+		return firstMet.length
+			? arr.filter(
+					(a, i) => firstMet.indexOf(i) < tokeep || !comparison(a, el)
+			  )
+			: [...arr]
 	}
 
 	export function splitArr(
@@ -200,12 +209,13 @@ export namespace abstract {
 				const i: number[] = [...prevArr, 0]
 
 				for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-					if (a[i[i.length - 1]] instanceof Array) {
+					const indexed = a[i[i.length - 1]]
+					if (indexed instanceof Array) {
 						const temp: number[] | false = findDeepUnfilledNum(a, i)
 						if (temp) return temp
+						continue
 					}
-					if (a[i[i.length - 1]] < abstract.constants.js.MAX_INT)
-						return i
+					if (indexed < abstract.constants.js.MAX_INT) return i
 				}
 
 				return false
@@ -499,7 +509,7 @@ export namespace abstract {
 			constructor(
 				keys: KeyType[],
 				values: ValueType[],
-				notFound: NotFoundType,
+				notFound: NotFoundType | undefined = undefined,
 				notFoundChecker: (a: any) => a is NotFoundType = (
 					x: any
 				): x is NotFoundType => x === undefined
@@ -546,7 +556,7 @@ export namespace abstract {
 			constructor(
 				keys: RecursiveArray<KeyType>,
 				values: RecursiveArray<ValueType>,
-				notFound: NotFoundType,
+				notFound: NotFoundType | undefined = undefined,
 				notFoundChecker: (a: any) => a is NotFoundType = (
 					x: any
 				): x is NotFoundType => x === undefined,

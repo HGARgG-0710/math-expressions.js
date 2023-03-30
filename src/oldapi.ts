@@ -158,8 +158,8 @@ class Surface {
 	lines: [number, number][]
 	segments: [[number, number], [number, number]][][]
 
-	// TODO: add capability to have the initial Surface not being empty (like it is at the moment...)
-	// TODO: use the Tuple type from one's library...
+	// TODO: add capability to have the initial Surface not being empty (unlike it is at the moment...)
+	// TODO: use the Tuple type from one's library for the [number...] arrays...
 	/**
 	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
 	 *
@@ -199,13 +199,13 @@ class Surface {
 				  )
 				: this[`${type}s`].push(data as [number, number])
 
-		const minIndex = indexOfMult(this.x, min(this.x))
-		let maxIndex = indexOfMult(this.x, max(this.x))
+		const minIndex = indexOfMult(this.x, min(this.x))[0]
+		let maxIndex = indexOfMult(this.x, max(this.x))[0]
 
 		if (minIndex === maxIndex) maxIndex++
 
-		let minData
-		let maxData
+		let minData: number = 0
+		let maxData: number = 0
 
 		if (type === "segment") {
 			const copy = gutInnerArrs([...data])
@@ -239,7 +239,8 @@ class Surface {
 		return (this[`${type}s`] =
 			indexOfMult(this[`${type}s`], data, valueCompare).length === 0
 				? this[`${type}s`]
-				: clearRepetitions(this[`${type}s`], data, valueCompare)).length
+				: clearRepetitions(this[`${type}s`], data, 0, valueCompare))
+			.length
 	}
 
 	draw(width: number, height: number, title: string = `Surface ${this.n}`) {
@@ -326,7 +327,7 @@ class Tests {
 		return floor(
 			exp(
 				Math.abs(exp(averages[0], averages[1], "-")),
-				Math.sqrt(exp(errors[0], errors[1])),
+				Math.sqrt(exp(errors[0], errors[1], "+")),
 				"/"
 			),
 			fixedSize
@@ -1323,11 +1324,12 @@ class VarMapping {
 	 * @param {string[]} vars Variable names in a mapping.
 	 * @param {number[]} maps Numerical values for them.
 	 */
-	constructor(vars = [], maps = []) {
+	constructor(vars = [], maps: any[] = []) {
 		function hasLetters(thing) {
 			return thing.toLowerCase() !== thing.toUpperCase()
 		}
 
+		// ? what is this? deal with this thing later... Seems to have been inteded to be different from that...
 		if (!(vars instanceof String) && !(maps instanceof Array))
 			if (vars.length !== maps.length)
 				throw new Error(
@@ -1386,6 +1388,9 @@ class VarMapping {
 // Functions
 
 // TODO: this thing it to be rewritten (both the JSDoc and the function...)
+// TODO: the OperatorDefinitions should be different; should also take a type of the arguments into account;
+// * This thing should take an array of things of different arities (any[]); 
+// ! The repeatedOperation should not take strings -- fix that...
 /**
  * Executes an arithmetic expression with two numbers
  *
@@ -1418,6 +1423,7 @@ function op(firstObj: any, secondObj: any, operator: string): any {
 			throw new Error("Unknown airphmetic operator passed!")
 	}
 }
+
 
 // TODO: rewrite this later, as a repeated application of the same function on itself...
 // * Example of how one's future Code might look like (currrently, won't work; no dependency):
@@ -1495,11 +1501,14 @@ function average(
 	percents: number = 10
 ): number {
 	const len = nums.length
-	const newArr =
+	const newArr: (number | null | undefined)[] =
 		isTruncated && percents > 0 ? truncate(nums, percents) : copy(nums)
 
 	percents === 0 && isTruncated
-		? newArr.filter((num) => num != null && num != undefined)
+		? newArr.filter(
+				(num: number | null | undefined) =>
+					num != null && num != undefined
+		  )
 		: null
 
 	const modif = len === newArr.length ? 0 : -1
@@ -1557,7 +1566,7 @@ function mostPopular(
 	if (elems.length === 0) return noneValue
 	const freq = new UniversalMap(
 		elems,
-		elems.map((el) => countAppearences(elems, el, 0, comparison))
+		elems.map((el) => countAppearences(elems, el, 0, comparison)),
 	)
 	return indexOfMult(freq.values, max(freq.values), comparison).map(
 		(a: number) => freq.keys[a]
@@ -1576,7 +1585,7 @@ function leastPopular(
 	if (elems.length === 0) return noneValue
 	const freq = new UniversalMap(
 		elems,
-		elems.map((el) => countAppearences(elems, el, 0, comparison))
+		elems.map((el) => countAppearences(elems, el, 0, comparison)),
 	)
 	return indexOfMult(freq.values, min(freq.values), comparison).map(
 		(a: number) => freq.keys[a]
@@ -1650,17 +1659,20 @@ function generate(
 	const generated = []
 	const modif = Number.isInteger(step) ? 1 : 10 ** -precision
 
-	const proposition = step > 0 ? (i, m) => i < m : (i, m) => i > m
 	const coeff = (-1) ** Number(step < 0)
-	const upper = end + coeff * modif
+	const upper = realAddition(end, coeff * modif)[0]
 
-	for (let i = start; proposition(i, upper); i += step)
+	const proposition =
+		step > 0 ? (i: number) => i < upper : (i: number) => i > upper
+
+	for (let i = start; proposition(i); i += step)
 		generated.push(floor(i, precision))
 
 	return generated
 }
 
 // TODO: this should also separate onto findValue and findReference;
+// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
 // TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
 // TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
 /**
@@ -1675,7 +1687,7 @@ function find(
 ): [boolean, number, number[]] {
 	let result = false
 	let foundTimes = 0
-	const foundIndexes = []
+	const foundIndexes: number[] = []
 
 	if (isArray(searchVal) && isArray(searchArr))
 		searchVal.forEach((value) =>
@@ -1814,7 +1826,7 @@ function deviations(
 	percents: number = 10
 ) {
 	const rowAverage = average(row, isTruncated, percents)
-	const deviations = []
+	const deviations: number[] = []
 
 	row.forEach((num) => {
 		isSquare
@@ -1839,7 +1851,7 @@ function dispersion(
 	isGeneral: boolean = true,
 	indexes: number[] = []
 ): number {
-	const newRow = []
+	const newRow: number[] = []
 
 	!isGeneral
 		? row.forEach((num, index) => {
@@ -1923,7 +1935,7 @@ function degreeOfFreedom(...numRows: number[][]) {
  * @param {number[]} probabilities An array of probabilitiles for certain numbers from numbers array to appear.
  */
 function expectedValue(numbers: number[], probabilities: number[]): number {
-	const values = []
+	const values: number[] = []
 
 	if (numbers.length > probabilities.length)
 		throw new Error(
@@ -1933,7 +1945,7 @@ function expectedValue(numbers: number[], probabilities: number[]): number {
 	for (let i = 0; i < numbers.length; i++)
 		values.push(numbers[i] * probabilities[i])
 
-	return floor(repeatedArithmetic(values))
+	return floor(repeatedArithmetic(values.map(String), "+"))
 }
 
 /**
@@ -1963,8 +1975,8 @@ function randomArray(
 	for (let i = 0; i < length; i++)
 		storage.push(
 			integers
-				? floor(Math.random * maxValue, 0)
-				: floor(Math.random * maxValue, fixedSize)
+				? floor(Math.random() * maxValue, 0)
+				: floor(Math.random() * maxValue, fixedSize)
 		)
 
 	return storage
@@ -1975,7 +1987,7 @@ function randomArray(
  * @param {number} number Number, perfectness of which is to be checked.
  */
 function isPerfect(number: number): boolean {
-	return repeatedArithmetic(allFactors(number)) === number
+	return repeatedArithmetic(allFactors(number).map(String), "+") === number
 }
 
 /**
@@ -1998,6 +2010,7 @@ function allFactors(number: number): number[] {
 function factorial(number: number): number {
 	const numbers = []
 
+	// TODO: after having implemented the Gamma function for the old API (?maybe just extend this one?), pray do make this thing work properly...
 	if (number < 0)
 		throw new Error(
 			"factorial() function is not supposed to be used with the negative numbers. "
@@ -2006,7 +2019,7 @@ function factorial(number: number): number {
 	for (let i = 1; i <= number; i++) numbers.push(i)
 	if (!numbers.length) return 1
 
-	return repeatedArithmetic(numbers, "*")
+	return repeatedArithmetic(numbers.map(String), "*")
 }
 
 /**
@@ -2105,10 +2118,11 @@ function binomial(n: number, k: number): number {
 
 // TODO: later, pray generalize for it to be just a Table<Function> (from the other self's package...)
 /**
- * * This type will (most likely) not last for a long amount of time in the library, being replaced by Table (same, but generalized);
- * ! DO NOT USE...
+ * * This type (name) will (most likely) not last for a long amount of time in the library, being replaced by Table (same, but generalized);
+ *
+ * ! REQUEST NOT TO USE, either specify the type directly, or use other independent alternative...
  */
-type OperatorDefinitions = { [opname: string]: Function }
+export type OperatorDefinitions = { [opname: string]: Function }
 
 export function isArray(x: any): x is any[] {
 	return x instanceof Array
@@ -2165,5 +2179,4 @@ export {
 	arrayEquality,
 	dim,
 	binomial,
-	OperatorDefinitions,
 }
