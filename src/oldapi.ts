@@ -9,6 +9,7 @@ const {
 	indexOfMult,
 	valueCompare,
 	clearRepetitions,
+	gutInnerArrs,
 } = util
 const { UniversalMap } = abstract.types
 
@@ -155,10 +156,10 @@ class Surface {
 
 	dots: [number, number][]
 	lines: [number, number][]
-	segments: number[][][]
+	segments: [[number, number], [number, number]][][]
 
 	// TODO: add capability to have the initial Surface not being empty (like it is at the moment...)
-	// TODO: create a new function splitArray() for splitting an array based on a comparison of a kind and a value...
+	// TODO: use the Tuple type from one's library...
 	/**
 	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
 	 *
@@ -182,18 +183,58 @@ class Surface {
 		this.n = ++Surface._n
 	}
 
-	// TODO: expand the x, y upon insertion; 
+	// ? make the "line" have the same shape as a segment? This way, one could have lines that are "not full" in the middle...
+	// * CURRENT DECISION: sure, why not?
 	add(
 		type: "segment" | "dot" | "line",
-		data: [number, number] | number[][]
+		data: [number, number] | [[number, number], [number, number]][]
 	): number {
 		if (indexOfMult(this[`${type}s`], data, valueCompare).length !== 0)
 			return this[`${type}s`].length
-		return type === "segment"
-			? this.segments.push(data as number[][])
-			: this[`${type}s`].push(data as [number, number])
+
+		const returned =
+			type === "segment"
+				? this.segments.push(
+						data as [[number, number], [number, number]][]
+				  )
+				: this[`${type}s`].push(data as [number, number])
+
+		const minIndex = indexOfMult(this.x, min(this.x))
+		let maxIndex = indexOfMult(this.x, max(this.x))
+
+		if (minIndex === maxIndex) maxIndex++
+
+		let minData
+		let maxData
+
+		if (type === "segment") {
+			const copy = gutInnerArrs([...data])
+			const maxs = []
+			const mins = []
+
+			for (let i = 0; i < copy.length; i++) {
+				maxs.push(max(copy[i]))
+				mins.push(min(copy[i]))
+			}
+
+			minData = min(mins)
+			maxData = max(maxs)
+		} else {
+			minData = min(data as [number, number])
+			maxData = max(data as [number, number])
+		}
+
+		this.x[minIndex] = min([minData, this.x[minIndex]])
+		this.x[maxIndex] = max([maxData, this.x[maxIndex]])
+
+		this.y[minIndex] = min([minData, this.y[minIndex]])
+		this.y[maxIndex] = max([maxData, this.y[maxIndex]])
+
+		return returned
 	}
 
+	// ? question: should the x and y automatically shrink with the deletion of border objects? Or no?
+	// * Current decision: no, let it stay...
 	delete(type: "segment" | "dot" | "line", data: number[]): number {
 		return (this[`${type}s`] =
 			indexOfMult(this[`${type}s`], data, valueCompare).length === 0
@@ -201,101 +242,7 @@ class Surface {
 				: clearRepetitions(this[`${type}s`], data, valueCompare)).length
 	}
 
-	// TODO: all that stuff (except for "draw" is obsolete; when adding support for expanding bounds on the Surface, pray delete...)
-	/**
-	 * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
-	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(three-dimensional array) and can have a bit unpredictable results.
-	 * @param {number[][][]} dots A bunch of arrays with different dots' coordinates.
-	 * @returns {boolean} True if all of dots are in x and y limits or false if they are not.
-	 */
-	inLimits(...dots) {
-		let isHere = true
-
-		dots.forEach((dot) => {
-			dot.forEach((coordinate) => {
-				if (
-					!find(this.x, coordinate[0])[0] ||
-					!find(this.y, coordinate[1])[0]
-				) {
-					isHere = false
-				}
-			})
-		})
-
-		return isHere
-	}
-
-	/**
-	 * Adds a dot coordinate to Surface.dots property array.
-	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates.
-	 */
-	dot(...dots) {
-		if (this.inLimits(dots)) {
-			dots.forEach((dot) => {
-				if (!find(this.dots, dot)[0]) {
-					this.dots.push(dot)
-				}
-			})
-		} else {
-			throw Error(
-				"Provided coordinate is out of limits of x and y properties of your Surface object."
-			)
-		}
-	}
-
-	/**
-	 * Adds two dots' coordinates to Surface.lines(technically creates a straight line, that comes through these two dots).
-	 * !!! NOTE: If passed dots' coordinates are not in Surface.dots array, then line will not be added to the Surface.lines.
-	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
-	 */
-	line(...dots) {
-		if (this.inLimits(dots)) {
-			if (
-				dots.length === 2 &&
-				find(this.lines, dots)[1] <= 1 &&
-				find(this.dots, dots[0])[0] &&
-				find(this.dots, dots[1])[0]
-			) {
-				this.lines.push(dots)
-				this.segments.push(dots)
-			} else {
-				throw Error(
-					`You have used use Surface.prototype.line method for adding
-				one(or zero) dot(dots) or line you're trying to add already exists
-				or there are no needed dots declared in Surface.dots.
-				If you've wanted to add only one dot,
-				better use Surface.prorotype.dot() method instead of this one,
-				otherwise you'll have to add another dot's coordinates.`
-				)
-			}
-		} else {
-			throw Error(
-				"Provided coordinate is out of limits of x and y properties of your Surface object."
-			)
-		}
-	}
-
-	/**
-	 * Adds one segment(two dots' coordinates - segment's beginning and end) to the Surface.segments array property.
-	 * @param {number[][]} dots A bunch of arrays with different dots' coordinates(two dots, otherwise throws an error).
-	 */
-	segment(...dots) {
-		if (this.inLimits(dots)) {
-			dots.length === 2
-				? this.segments.push(dots)
-				: () => {
-						throw Error(
-							"Coordinates of more or less, than two dots were passed to the Surface.prototype.segment. Only two dots for one segment allowed."
-						)
-				  }
-		} else {
-			throw Error(
-				"Provided coordinate is out of limits of x and y properties of your Surface object."
-			)
-		}
-	}
-
-	draw(width, height, title = `Surface ${this.n}`) {
+	draw(width: number, height: number, title: string = `Surface ${this.n}`) {
 		// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
 	}
 }

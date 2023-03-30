@@ -6,7 +6,7 @@
 
 // TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
 
-import { dim } from "./oldapi"
+import { dim, max } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
@@ -148,6 +148,31 @@ export namespace util {
 
 		return segments.map((seg: [number, number]) => arr.slice(...seg))
 	}
+
+	// * "guts" the first layer inner arrays into the current one...
+	export function gutInnerArrs(array: any[]): any[] {
+		const returned: any[] = []
+
+		for (let i = 0; i < array.length; i++) {
+			if (array[i] instanceof Array) {
+				array[i].forEach(returned.push)
+				continue
+			}
+			returned.push(array[i])
+		}
+
+		return returned
+	}
+
+	export function gutInnerRecursive(array: any[]): any[] {
+		while (hasArrays(array)) array = gutInnerArrs(array)
+		return array
+	}
+
+	// TODO: another one's library has a method for this thing (boolmapMult; maps a set of boolean functions to a set of values forming a 2d boolean array...)
+	// * code-update...
+	export const hasArrays = (array: any[]): boolean =>
+		max(array.map((a: any) => Number(a instanceof Array))) === 1
 }
 
 export namespace numbers {}
