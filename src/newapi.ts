@@ -121,6 +121,33 @@ export namespace util {
 			if (comparison(array[i], el)) indexes.push(i)
 		return indexes
 	}
+
+	export function clearRepetitions(
+		arr: any[],
+		el: any,
+		comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b
+	): any[] {
+		return arr.filter((a) => !comparison(a, el))
+	}
+
+	export function splitArr(
+		arr: any[],
+		el: any,
+		comparison: (a: any, b: any) => boolean
+	): any[][] {
+		const segments: [number, number][] = []
+		let begInd = 0
+		let endInd = 0
+
+		for (let i = 0; i < arr.length; i++)
+			if (comparison(el, arr[i])) {
+				begInd = endInd + Number(Boolean(endInd))
+				endInd = i
+				segments.push([begInd, endInd])
+			}
+
+		return segments.map((seg: [number, number]) => arr.slice(...seg))
+	}
 }
 
 export namespace numbers {}

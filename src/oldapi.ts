@@ -2,7 +2,14 @@
 import { util, abstract } from "./newapi"
 
 // TODO: add all of those functions that seem fit from the new api into the old one...
-const { flatCopy, countAppearences, arrApply, indexOfMult } = util
+const {
+	flatCopy,
+	countAppearences,
+	arrApply,
+	indexOfMult,
+	valueCompare,
+	clearRepetitions,
+} = util
 const { UniversalMap } = abstract.types
 
 // TODO: finish;
@@ -130,37 +137,71 @@ class Statistics {
 	}
 }
 
+// TODO: add the user interface to the window of the Surface.draw(), such that it would be possible to modify a surface given right there....
+// TODO: get rid of the inLimits: let the thing be scalable: that is, if there is
 /**
  * This class represents a geometric surface with dots, segments and lines on it.
  * They are represented via coordinates.
  */
 class Surface {
-	static _n = 0
-	n = 0
+	static _n: number = 0
+	n: number = 0
 
+	x: [number, number]
+	y: [number, number]
+
+	width: number
+	height: number
+
+	dots: [number, number][]
+	lines: [number, number][]
+	segments: number[][][]
+
+	// TODO: add capability to have the initial Surface not being empty (like it is at the moment...)
+	// TODO: create a new function splitArray() for splitting an array based on a comparison of a kind and a value...
 	/**
 	 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
 	 *
 	 * !!! NOTE: Be careful, when choosing step in your limits objects(or arrays), because after Surface.x and Surface.y properties of your object are generated
 	 * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error. !!!
 	 *
-	 * @param {object | number[]} xLimits Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is that step, with which an array of numbers will be assembled.
-	 * @param {object | number[]} yLimits The same as xLimits, but for y axis of your surface.
+	 * @param {object | number[]} xInit Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is that step, with which an array of numbers will be assembled.
+	 * @param {object | number[]} yInit The same as xLimits, but for y axis of your surface.
 	 */
-	constructor(xLimits, yLimits) {
-		this.x = generate(xLimits[0], xLimits[1], xLimits[2])
-		this.y = generate(yLimits[0], yLimits[1], yLimits[2])
+	constructor(xInit: [number, number], yInit: [number, number]) {
+		this.x = [...xInit]
+		this.y = [...yInit]
 
 		this.width = range(this.x)
 		this.height = range(this.y)
 
-		this.dots = [[0, 0]]
+		this.dots = []
 		this.lines = []
 		this.segments = []
 
 		this.n = ++Surface._n
 	}
 
+	// TODO: expand the x, y upon insertion; 
+	add(
+		type: "segment" | "dot" | "line",
+		data: [number, number] | number[][]
+	): number {
+		if (indexOfMult(this[`${type}s`], data, valueCompare).length !== 0)
+			return this[`${type}s`].length
+		return type === "segment"
+			? this.segments.push(data as number[][])
+			: this[`${type}s`].push(data as [number, number])
+	}
+
+	delete(type: "segment" | "dot" | "line", data: number[]): number {
+		return (this[`${type}s`] =
+			indexOfMult(this[`${type}s`], data, valueCompare).length === 0
+				? this[`${type}s`]
+				: clearRepetitions(this[`${type}s`], data, valueCompare)).length
+	}
+
+	// TODO: all that stuff (except for "draw" is obsolete; when adding support for expanding bounds on the Surface, pray delete...)
 	/**
 	 * Checks if coordinates of the dot are in limits(or borders, if you prefer) of x and y axis.
 	 * This method of Surface class is not supposed to be used directly by the library user, because it needs to get an array of arrays(three-dimensional array) and can have a bit unpredictable results.
