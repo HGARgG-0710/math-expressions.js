@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
 import { util, abstract } from "./newapi"
 
 // TODO: add all of those functions that seem fit from the new api into the old one...
@@ -26,7 +27,7 @@ const { UniversalMap } = abstract.types
 // * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
 
 /**
- * * This is the Old API source code, version pre-1.0.
+ * * This is the Old API source code, version pre-1.0 (in work).
  * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
  */
 
@@ -41,9 +42,6 @@ export let fixedSize: number = 11
 
 // Aliases
 
-// * sameOperator was a really-really bad name, and so I decided to change it.
-// * Still, for backwards compatebility reasons I left it.
-// * (Library has a lot of bugs already, why add more? XD Better just fix the old ones and try not to add new. )
 export const exp = op
 export const repeatedArithmetic = repeatedOperation
 export const sameOperator = repeatedArithmetic
@@ -56,8 +54,24 @@ export const sameOperator = repeatedArithmetic
  * Useful when needing a lot of info about data in one place.
  */
 class Statistics {
-	#setCount = 0
+	min: number | null
+	max: number | null
+	median: number | null
+	range: number | null
+	interquartRange: number | null
+	average: number | null
+	truncatedAverage: number | null
+	sorted: number[] | null
+	deviations: number[] | null
+	populationVariance: number | null
+	populationStandDev: number | null
+	standardError: number | null
 
+	mostPopular: any[]
+	length: number
+	dim: number
+
+	// ? use the newapi.isNumber for this thing (they are the same, just less repetition...)
 	static isNumeric(data: any[]): data is number[] {
 		for (let i = 0; i < data.length; i++)
 			if (typeof data[i] !== "number") return false
@@ -67,29 +81,28 @@ class Statistics {
 	/**
 	 * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
 	 * @param {number[]} nums An array of numbers passed to the function.
-	 * @param {boolean} toLarge Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
+	 * @param {boolean} forward Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
 	 */
 	constructor(
-		nums: any[],
-		toLarge: boolean = true,
+		nums: any[] = [],
+		forward: boolean = true,
 		nullValue: string = "None"
 	) {
 		if (Statistics.isNumeric(nums)) {
 			this.min = min(nums)
 			this.max = max(nums)
 
-			this.sorted = sort(nums, toLarge)
+			this.sorted = sort(nums, forward)
 			this.range = range(nums)
 			this.interquartRange = range(nums, true)
 
 			this.median = median(nums)
 			this.average = average(nums)
 			this.truncatedAverage = average(nums, true)
-			this.mostPopular = mostPopular(nums, nullValue)
 
 			this.deviations = deviations(nums)
 
-			this.populationVarience = dispersion(nums)
+			this.populationVariance = dispersion(nums)
 			this.populationStandDev = standardDeviation(nums)
 			this.standardError = standardError(nums)
 		} else {
@@ -103,178 +116,17 @@ class Statistics {
 			this.median = null
 			this.average = null
 			this.truncatedAverage = null
-			this.mostPopular = mostPopularElem(nums, nullValue)
 
 			this.deviations = null
 
-			this.populationVarience = null
+			this.populationVariance = null
 			this.populationStandDev = null
 			this.standardError = null
 		}
 
-		this.countOfElements = nums.length
+		this.mostPopular = mostPopular(nums, nullValue)
+		this.length = nums.length
 		this.dim = dim(nums)
-
-		this.#setCount++
-	}
-
-	#set(what) {
-		if (this.#setCount === 0) {
-			what()
-			return 1
-		}
-
-		throw new Error("Properties of Statistics objects are immutable!")
-	}
-
-	set min(min) {
-		this.#set(() => {
-			this._min = min
-		})
-	}
-
-	get min() {
-		return this._min
-	}
-
-	set dim(d) {
-		this.#set(() => {
-			this._dim = d
-		})
-	}
-
-	get dim() {
-		return this._dim
-	}
-
-	set max(max) {
-		this.#set(() => {
-			this._max = max
-		})
-	}
-
-	get max() {
-		return this._max
-	}
-
-	set range(range) {
-		this.#set(() => {
-			this._range = range
-		})
-	}
-
-	get range() {
-		return this._range
-	}
-
-	set interquartRange(inter) {
-		this.#set(() => {
-			this._interquartRange = inter
-		})
-	}
-
-	get interquartRange() {
-		return this._interquartRange
-	}
-
-	set countOfElements(length) {
-		this.#set(() => {
-			this._countOfElements = length
-		})
-	}
-
-	get countOfElements() {
-		return this._countOfElements
-	}
-
-	set median(median) {
-		this.#set(() => {
-			this._median = median
-		})
-	}
-
-	get median() {
-		return this._median
-	}
-
-	set average(aver) {
-		this.#set(() => {
-			this._average = aver
-		})
-	}
-
-	get average() {
-		return this._average
-	}
-
-	set truncatedAverage(truncAv) {
-		this.#set(() => {
-			this._truncatedAverage = truncAv
-		})
-	}
-
-	get truncatedAverage() {
-		return this._truncatedAverage
-	}
-
-	set mostPopular(mostPop) {
-		this.#set(() => {
-			this._mostPopular = mostPop
-		})
-	}
-
-	get mostPopular() {
-		return this._mostPopular
-	}
-
-	set sorted(sort) {
-		this.#set(() => {
-			this._sorted = sort
-		})
-	}
-
-	get sorted() {
-		return this._sorted
-	}
-
-	set deviations(devi) {
-		this.#set(() => {
-			this._deviations = devi
-		})
-	}
-
-	get deviations() {
-		return this._deviations
-	}
-
-	set populationVarience(disp) {
-		this.#set(() => {
-			this._populationVarience = disp
-		})
-	}
-
-	get populationVarience() {
-		return this._populationVariance
-	}
-
-	set populationStandDev(popStandDev) {
-		this.#set(() => {
-			this._populationStandDev = popStandDev
-		})
-	}
-
-	get populationStandDev() {
-		return this._populationStandDev
-	}
-
-	set standardError(stdErr) {
-		this.#set(() => {
-			this._standardErr = stdErr
-		})
-	}
-
-	get standardError() {
-		return this._standardErr
 	}
 }
 
@@ -1155,9 +1007,10 @@ class Algorithms {
 		throw new TypeError("Algorithms is not a constructor")
 	}
 
-	static BinarySearch(array, number) {
+	static BinarySearch(array: number[], number: number): number {
 		// * For getting the middle index of the array.
-		const middle = (arr) => floor(median(arr.map((a, i) => i)), 0)
+		const middle = (arr: number[]) =>
+			floor(median(arr.map((_a, i) => i)), 0)
 		const copyArray = sort(array)
 		let index = middle(copyArray)
 
@@ -1186,8 +1039,9 @@ class Algorithms {
 	 * @param {Ratio} endRatio Ratio, that is used as an upper bound in the algorithm.
 	 * @param {number} iterations Number of iterations (integer).
 	 */
-	static Farey(startRatio, endRatio, iterations = 0) {
-		function formNewRatio(first, second) {
+	static Farey(startRatio: Ratio, endRatio: Ratio, iterations: number = 0) {
+		// ? add as an operation to the Ratio class?
+		function formNewRatio(first: Ratio, second: Ratio): Ratio {
 			return new Ratio(
 				first.numerator + second.numerator,
 				first.denomenator + second.denomenator
@@ -2236,8 +2090,8 @@ function dim(array: any): number {
 // }
 
 // ? They're both so good... Which one should be?
-// * first is 4 function calls per level; 
-// * second is 3 function calls per level; 
+// * first is 4 function calls per level;
+// * second is 3 function calls per level;
 // * CURRENT DECISION: both shall stay, but the first one will be commented out...
 
 /**

@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-namespace no-explicit-any ban-types no-inferrable-types
 /**
  * * This is the New API source code, version pre-1.0;
  * @copyright HGARgG-0710 (Igor Kuznetsov, 2023
@@ -14,7 +15,9 @@ export namespace util {
 		if (a instanceof Array) return a.map((el) => deepCopy(el))
 
 		if (typeof a === "object") {
-			const aCopy: object = {}
+			// TODO: use the Key type from a different library of self's...
+			// * After the release, there will be a very big lot of code-updating to be done... Looking forward to it...
+			const aCopy: { [key: symbol | string | number]: any } = {}
 			for (const b in a) aCopy[b] = deepCopy(a[b])
 			return aCopy
 		}
@@ -73,7 +76,7 @@ export namespace util {
 		y: X[],
 		transformation: (something: X) => X = (a: any) => a
 	): X[] {
-		let resArray: X[] = [...array]
+		const resArray: X[] = [...array]
 
 		for (let i = 0; i < array.length; i++) {
 			const index: number = x.indexOf(array[i])
@@ -142,7 +145,7 @@ export namespace abstract {
 				a: types.RecursiveArray<number>,
 				prevArr: number[] = []
 			): number[] | false {
-				let i: number[] = [...prevArr, 0]
+				const i: number[] = [...prevArr, 0]
 
 				for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
 					if (a[i[i.length - 1]] instanceof Array) {
@@ -160,7 +163,7 @@ export namespace abstract {
 				a: types.RecursiveArray<number>,
 				prevArr: number[] = []
 			): number[] | false {
-				let i: number[] = [...prevArr, 0]
+				const i: number[] = [...prevArr, 0]
 
 				for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
 					// ! noticed another "percularity" about TypeScript (one of those things that had been previously called "stupidity");
@@ -180,7 +183,7 @@ export namespace abstract {
 			}
 
 			let resultIndexes: number[] | false = findDeepUnfilledNum(a)
-			let _result: types.RecursiveArray<number> = util.deepCopy(a)
+			const _result: types.RecursiveArray<number> = util.deepCopy(a)
 			let result = _result
 
 			if (!resultIndexes) {
@@ -216,6 +219,7 @@ export namespace abstract {
 			// * See, that thing is already in one of the unpublished projects that depend upon the math-expressions.js;
 			// ? Solution: if the versions of the dependant and the dependee are different, then it's alright...;
 			// TODO: implement, later, after publishing both the math-expressions.js 1.0 and the new thing...;
+			// ! the check is, again, only for TS to shut up...
 			for (let i = 0; i < resultIndexes.length - 1; i++) {
 				const indexed: types.RecursiveArray<number> | number =
 					result[resultIndexes[i]]
@@ -336,12 +340,15 @@ export namespace abstract {
 			private currindex: number = 0
 
 			curr(): Type {
-				return this.elements[this.currindex]
+				return Array.from(this.elements.values())[this.currindex]
 			}
 
 			next(): Type {
+				// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
+				// * Current decision: yes, let it be.
+				// TODO: pray do that...
 				this.currindex = (this.currindex + 1) % this.elements.size
-				return Array.from(this.elements.values())[this.currindex]
+				return this.curr()
 			}
 
 			add(x: Type): Set<Type> {
@@ -369,7 +376,7 @@ export namespace abstract {
 
 			constructor(
 				elems: Set<Type> = new Set<Type>([]),
-				typechecker?: (x: any) => x is Type
+				typechecker: (x: any) => x is Type = (x: any): x is Type => true
 			) {
 				this.elements = elems
 				this.typechecker = typechecker
@@ -434,12 +441,13 @@ export namespace abstract {
 
 				this.keys.push(key)
 				this.values.push(value)
+				return value
 			}
 
 			constructor(
 				keys: KeyType[],
 				values: ValueType[],
-				notFound: NotFoundType = undefined,
+				notFound: NotFoundType,
 				notFoundChecker: (a: any) => a is NotFoundType = (
 					x: any
 				): x is NotFoundType => x === undefined

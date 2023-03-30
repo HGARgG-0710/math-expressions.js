@@ -48,11 +48,10 @@ Time to do something about it;
 
         Old things to (maybe?) delete/rework: 
 
-            1. Ratio class (there'll be TrueRatio or something in its place; feels obsolete);
-            2. Tests class (maybe rewrite as a namespace/object with these things? + change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names;)
-            3. exp function (either expand it enormously, or delete entirely; this thing can be so much more beautiful...)
-            4. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
-            5. repeatedArithmetic -- if one does happen to generalize it much, pray let one make it repeatedOperator; 
+            1. Tests class (change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names; maybe add a few more interesting things there...)
+            2. exp function (either expand it enormously, or delete entirely; this thing can be so much more beautiful...)
+            3. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
+            4. repeatedArithmetic -- if one does happen to generalize it much, pray let one make it repeatedOperator; 
 
     1.4. "S" for "Style": 
 
@@ -142,3 +141,11 @@ INDEPENDENT NOTE: Funny. The more I use types, the less I start to like them as 
 
     Even better, the old version (oldapi), may still be supported! Get updates, new things and whatnot...
     Beautiful; so happy about this decision...
+
+8. Before the 1.0 release, pray clear all the TODOs, questions and stars unrelated to the 1.1. code-updating procedures...
+9. Make sure that the library is acceptable to a Deno compiler (that is, that it would generate as few errors and warnings as possible); 
+
+    The module must be importable by means of deno's 'import {...} from "npm:..."'
+
+10. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
+11. Change the package.json "version" field (always almost forgetting before the release...)
