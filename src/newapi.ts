@@ -66,6 +66,7 @@ export namespace util {
 		y: string[]
 	): string {
 		// TODO: again, the repeatedApplication from a different library could do this in 1 line... Same thing with the versions...
+		// * do code-update...
 		let final = string
 		for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
 		return final
@@ -173,7 +174,7 @@ export namespace util {
 		return returned
 	}
 
-	export function gutInnerRecursive(array: any[]): any[] {
+	export function gutInnerArrsRecursive(array: any[]): any[] {
 		while (hasArrays(array)) array = gutInnerArrs(array)
 		return array
 	}
@@ -182,9 +183,41 @@ export namespace util {
 	// * code-update...
 	export const hasArrays = (array: any[]): boolean =>
 		max(array.map((a: any) => Number(a instanceof Array))) === 1
+
+	// * "reverses" the gutInnerArrs (only once, at a given place)
+	export function arrEncircle(
+		a: any[],
+		from: number = 0,
+		to: number = a.length
+	): any[] {
+		const copied: any[] = []
+
+		for (let i = 0; i < a.length; i++) {
+			if (i >= from && i <= to) {
+				copied.push(a.slice(from, to + 1))
+				i = to
+			}
+			copied.push(a[i])
+		}
+
+		return copied
+	}
+
+	// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
+	// TODO: the same way, write objEncircle; there'd also be an argument for the key;
+	// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
+	// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
+
+	// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
+	// * Same permutations for the InfiniteMap and UniversalMap...
+
+	// TODO: add more methods to UniversalMap and InfiniteMap;
+	// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
 }
 
-export namespace numbers {}
+export namespace numbers {
+	// TODO: add all the generic infinite number classes one had been thinking about (based on the InfiniteCounter...);
+}
 
 export namespace linear {}
 export namespace algorithms {
@@ -325,7 +358,8 @@ export namespace abstract {
 
 		// TODO: finish this thing (add orders, other things from the previous file)...
 		// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
-
+		// TODO: add ways of 'jumping' forward onto a 'number | InfiniteCounter' of steps, along with an order of some kind (which would map the wanted thing to the wanted quantity of steps);
+		// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
 		export class InfiniteCounter<Type = types.RecursiveArray<number>> {
 			next(): InfiniteCounter<Type> {
 				return new InfiniteCounter<Type>(
@@ -344,6 +378,7 @@ export namespace abstract {
 			// * 'true' means 'follows after'
 			// * 'false' means 'is followed after'
 			// * 'null' means 'no following';
+			// TODO: add the 'comparison' argument here. One may want to abstract from the references (current thing in certain circumstances don't work)...
 			compare(ic: InfiniteCounter<Type>): ternary {
 				return this.previous.includes(ic)
 					? true
@@ -518,6 +553,96 @@ export namespace abstract {
 				this.values = values
 				this.notFound = notFound
 				this.notFoundChecker = notFoundChecker
+			}
+		}
+
+		// TODO: finish the InfiniteString class; It would allow work like with a string, though would be based on the InfiniteCounter/TrueInteger classes...
+		// * Let it have all the capabilities (methods, properties) of a string and more -- let there be a way to reverse() it natively...;
+		export class InfiniteString<IndexType = number> {
+			private string: RecursiveArray<string>
+			length: counters.InfiniteCounter<IndexType>
+			indexGenerator: (a?: IndexType) => IndexType
+
+			append(x: string | InfiniteString<IndexType>) {
+				// ? generalize and then make an export ?
+				function appendStrRecursive(
+					str: string,
+					thisArg: InfiniteString<IndexType>,
+					i: number = 0
+				): void {
+					// TODO: replace with repeatedApplication or recursiveIndexation or something such within a different library...
+					let currLevel = thisArg.string
+
+					for (let j = 0; j < i; j++) {
+						// * again, TypeScript...
+						const indexed = currLevel[currLevel.length - 1]
+						if (typeof indexed === "string") break
+						currLevel = indexed
+					}
+
+					if (currLevel.length < constants.js.MAX_ARRAY_LENGTH - 1) {
+						thisArg.length = thisArg.length.next()
+						currLevel.push(str)
+						return
+					}
+
+					if (currLevel.length === constants.js.MAX_ARRAY_LENGTH - 1)
+						currLevel.push([])
+
+					return appendStrRecursive(str, thisArg, i + 1)
+				}
+
+				function appendInfStringRecursive(
+					arr: InfiniteString<IndexType>,
+					thisArg: InfiniteString<IndexType>
+				) {
+					for (let i = 0; i < arr.string.length - 1; i++) {
+						const currStr = arr.string[i]
+						if (typeof currStr !== "string") break
+						appendStrRecursive(currStr, thisArg)
+					}
+					if (arr.string.length === constants.js.MAX_ARRAY_LENGTH) {
+						appendInfStringRecursive(
+							new InfiniteString<IndexType>(
+								arr.string[arr.string.length - 1],
+								arr.indexGenerator
+							),
+							this
+						)
+					}
+				}
+
+				if (typeof x === "string") return appendStrRecursive(x, this)
+				return appendInfStringRecursive(x, this)
+			}
+
+			copy() {
+				return util.deepCopy(this)
+			}
+
+			// TODO: allow for use of the InfiniteString as an argument... (That is, copying an InfiniteString; new instance is by default its extension...)
+			// TODO: allow for use of the RecursiveArray<string>... (for this, generalize the last element-safety check...)
+			constructor(
+				initial: string | RecursiveArray<string>,
+				indexGenerator: (x?: IndexType) => IndexType
+			) {
+				if (typeof initial === "string") {
+					this.string = [initial]
+					return
+				}
+
+				this.string = initial
+				// TODO: use the util.gut... and util.encircle... functions for the finalized check (make it all the same form -- [string, ...., pointer to RecursiveArray<string>])
+				if (initial.length === constants.js.MAX_ARRAY_LENGTH) {
+					this.string[this.string.length - 1] = [
+						this.string[this.string.length - 1],
+					]
+				}
+				this.length = counters.fromNumber(
+					initial.length,
+					indexGenerator
+				)
+				this.indexGenerator = indexGenerator
 			}
 		}
 

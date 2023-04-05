@@ -254,7 +254,7 @@ class Surface {
  * It can also come in helpful when evaluating the same expression various number of times.
  */
 class Expression {
-	objects: string[] = []
+	objects: any[] = []
 	operators: string[] = []
 
 	/**
@@ -263,7 +263,7 @@ class Expression {
 	 * @param {string[]} operators An array, containing operators of expression.
 	 */
 
-	constructor(objects: string[] = [], operators: string[] = []) {
+	constructor(objects: any[] = [], operators: string[] = []) {
 		this.objects = objects
 		this.operators = operators
 	}
@@ -425,6 +425,7 @@ class Tests {
 	}
 }
 
+// * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type; 
 /**
  * This class represents a mathematical rectangular matrix.
  */
@@ -1439,7 +1440,7 @@ function op(firstObj: any, secondObj: any, operator: string): any {
  * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
-function repeatedOperation(objects: string[] = [], operator: string) {
+function repeatedOperation(objects: any[] = [], operator: string) {
 	return new Expression(
 		objects,
 		objects.map(() => operator)
