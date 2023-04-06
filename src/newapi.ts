@@ -6,7 +6,7 @@
 
 // TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
 
-import { dim, max, generate } from "./oldapi"
+import { dim, max, generate, sameOperator } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
@@ -493,6 +493,7 @@ export namespace abstract {
 	export namespace orders {
 		// * For iteration over an array; this thing is index-free; handles them for the user;
 		// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+		// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
 		export class IterableSet<Type = any> {
 			elements: Set<Type>
 			typechecker: (x: any) => x is Type
@@ -621,34 +622,75 @@ export namespace abstract {
 
 		// TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
 		// * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
+		// * Also, the library (probably) should export this thing from the different library as well (would give the user a way of getting less dependencies...)
 		// TODO: finish this thing... (as well as others...)
 		export class InfiniteArray<Type = any> {
+			// TODO: define length() method; It iterates over all the elements, giving an InfiniteCounter<Smthng>;
 			private index: RecursiveArray<boolean>
 			private array: RecursiveArray<Type>
+			typechecker: (x: any) => x is Type
 
 			currIndex() {
 				return this.index
 			}
 
 			next() {
-				const path: number[] = this.currElement()
-				let index: RecursiveArray<boolean> | boolean = this.index
-				let array: RecursiveArray<Type> | Type = this.array
-				// TODO: library... repeatedIndexation... refactor...(these todos are just markers for the future...)
-				for (let i = 0; i < path.length - 1; i++) {
-					index = index[path[i]]
-					array = array[path[i]]
+				// TODO: these recursive functions should get generalizations that would become dependencies...
+				// ? perhaps, the library function that does this kind of stuff should too be rewritten (after adding math-expressions.js as a dependency) to work with InfiniteCounter(s)
+				function recursive(
+					array: RecursiveArray<Type>,
+					index: RecursiveArray<boolean>,
+					path: RecursiveArray<number>,
+					typechecker: (x: any) => x is Type
+				): [RecursiveArray<Type>, RecursiveArray<boolean>] {
+					for (let i = 0; i < path.length; i++) {
+						const indexed = path[i]
+						if (typeof indexed !== "number") {
+							;[array, index] = recursive(
+								array,
+								index,
+								indexed,
+								typechecker
+							)
+							continue
+						}
+						const indexindexed = index[indexed]
+						const arrayindexed = array[indexed]
+
+						if (
+							typeof indexindexed === "boolean" ||
+							typechecker(arrayindexed)
+						)
+							break
+
+						index = indexindexed
+						array = arrayindexed
+					}
+
+					return [array, index]
 				}
-				index[path[path.length - 1]] = 0
-				// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this
+
+				const path: RecursiveArray<number> = this.currElement()
+				let [array, index] = recursive(
+					this.array,
+					this.index,
+					path,
+					this.typechecker
+				)
+				const lastIndex = path[path.length - 1]
+				if (typeof lastIndex === "number") index[lastIndex] = false
+
+				// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this; 
+				// * There is a strong feeling for far more advanced API for working with the RecursiveArrays; This API is to be added 
+				// ! Pray do walk the code up and down and decide what to do about this...
 			}
 
-			currElement(): number[] {
+			currElement(): RecursiveArray<number> {
 				let current: RecursiveArray<boolean> | boolean = this.index
 
-				function recursive(): number[] | false {
+				function recursive(): RecursiveArray<number> | false {
 					let prevCurrent = current
-					let temp: number[] | boolean = false
+					let temp: RecursiveArray<number> | false = false
 
 					if (prevCurrent instanceof Array) {
 						for (let i = 0; i < prevCurrent.length; i++) {
@@ -660,24 +702,63 @@ export namespace abstract {
 							}
 
 							temp = recursive()
-							if (temp !== false) return [i, ...temp]
+							if (temp !== false) {
+								if (temp.length < constants.js.MAX_ARRAY_LENGTH)
+									return [i, ...temp]
+								return [i, temp]
+							}
 						}
 
 						current = prevCurrent
 					}
 
-					return false
+					return temp
 				}
 
 				// * shutting TypeScript up...
-				return recursive() as number[]
+				return recursive() as RecursiveArray<number>
 			}
 
+			// ! this thing should get some documentation. very very much should...
+			// * finds the first index and sets the thing to it...
+			first(shouldSet: boolean = true): RecursiveArray<number> {
+				this.index = counters.sameStructure<boolean>(
+					this.index,
+					() => false
+				)
+				const index: RecursiveArray<number> = []
+				let current: RecursiveArray<boolean> = this.index
+				// TODO: create a function in a different library for general dealing with these things... Later, pray do change this for that too...
+				while (true) {
+					if (typeof current[0] !== "boolean") {
+						index.push(
+							index.length < constants.js.MAX_ARRAY_LENGTH - 1
+								? 0
+								: []
+						)
+						current = current[0]
+						continue
+					}
+					break
+				}
+				if (shouldSet) current[0] = true
+				return index
+			}
+
+			last() {}
+
 			// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
-			constructor(objects: RecursiveArray<Type>) {
+			constructor(
+				objects: RecursiveArray<Type>,
+				typechecker: (x: any) => x is Type
+			) {
 				this.array = objects
-				counters.sameStructure<Type>(this.array, () => false)
-				if (this.index.length >= 1) this.index[0] = true
+				this.index = counters.sameStructure<Type>(
+					this.array,
+					() => false
+				)
+				this.first(true)
+				this.typechecker = typechecker
 			}
 		}
 
