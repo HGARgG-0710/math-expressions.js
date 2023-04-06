@@ -425,7 +425,7 @@ class Tests {
 	}
 }
 
-// * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type; 
+// * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type;
 /**
  * This class represents a mathematical rectangular matrix.
  */
@@ -1390,7 +1390,7 @@ class VarMapping {
 
 // TODO: this thing it to be rewritten (both the JSDoc and the function...)
 // TODO: the OperatorDefinitions should be different; should also take a type of the arguments into account;
-// * This thing should take an array of things of different arities (any[]); 
+// * This thing should take an array of things of different arities (any[]);
 // ! The repeatedOperation should not take strings -- fix that...
 /**
  * Executes an arithmetic expression with two numbers
@@ -1424,7 +1424,6 @@ function op(firstObj: any, secondObj: any, operator: string): any {
 			throw new Error("Unknown airphmetic operator passed!")
 	}
 }
-
 
 // TODO: rewrite this later, as a repeated application of the same function on itself...
 // * Example of how one's future Code might look like (currrently, won't work; no dependency):
@@ -1553,6 +1552,8 @@ function median(nums: number[] = []): number {
 		: average([firstIndex, sorted[nums.length / 2]])
 }
 
+// TODO: create a type definition for this '(a: any, b: any) => boolean' thing; Replace it everywhere in the codebase...
+// * The same way, pray name all the redundant (appearing more than once) types;
 /**
  * Takes an array and returns most "popular" number in it.
  * @param {number[]} elems An array of numbers passed to the function.
@@ -1567,7 +1568,7 @@ function mostPopular(
 	if (elems.length === 0) return noneValue
 	const freq = new UniversalMap(
 		elems,
-		elems.map((el) => countAppearences(elems, el, 0, comparison)),
+		elems.map((el) => countAppearences(elems, el, 0, comparison))
 	)
 	return indexOfMult(freq.values, max(freq.values), comparison).map(
 		(a: number) => freq.keys[a]
@@ -1586,7 +1587,7 @@ function leastPopular(
 	if (elems.length === 0) return noneValue
 	const freq = new UniversalMap(
 		elems,
-		elems.map((el) => countAppearences(elems, el, 0, comparison)),
+		elems.map((el) => countAppearences(elems, el, 0, comparison))
 	)
 	return indexOfMult(freq.values, min(freq.values), comparison).map(
 		(a: number) => freq.keys[a]

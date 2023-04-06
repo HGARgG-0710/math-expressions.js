@@ -6,7 +6,7 @@
 
 // TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
 
-import { dim, max } from "./oldapi"
+import { dim, max, generate } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
@@ -105,13 +105,13 @@ export namespace util {
 	export const countAppearences = (
 		array: any[],
 		element: any,
-		i: number,
+		i: number = 0,
 		comparison: (a: any, b: any) => boolean = (a: any, b: any): boolean =>
 			a === b
 	): number =>
 		i < array.length
 			? Number(comparison(array[i], element)) +
-			  countAppearences(array, element, i + 1)
+			  countAppearences(array, element, i + 1, comparison)
 			: 0
 
 	export function indexOfMult(
@@ -124,6 +124,20 @@ export namespace util {
 			if (comparison(array[i], el)) indexes.push(i)
 		return indexes
 	}
+
+	// ? which one to use as an export? (they will both be kept in any case...)
+	// * Current decision: the newer one (one below);
+	// * Alternative implementation (this time, with a searchIndex -- i parameter):
+	// export const indexOfMult = (
+	// 	array: any[],
+	// 	el: any,
+	// 	comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b,
+	//  i: number = 0
+	// ) => {
+	//		if (i >= array.length) return []
+	// 		const next = indexOfMult(array, el, comparison, i + 1)
+	// 		return comparison(array[i], el) ? [i, ...next]: [...next]
+	// }
 
 	// * clears all but the first `tokeep` repetition of `el`
 	export function clearRepetitions(
@@ -174,6 +188,8 @@ export namespace util {
 		return returned
 	}
 
+	// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
+	// * Rewrite so that it returns a new one...
 	export function gutInnerArrsRecursive(array: any[]): any[] {
 		while (hasArrays(array)) array = gutInnerArrs(array)
 		return array
@@ -201,6 +217,14 @@ export namespace util {
 		}
 
 		return copied
+	}
+
+	// todo: generalize (using the notion of 'level'); Having generalized, pray get rid of this thing...
+	// * copies array's structure deeply without copying the elements
+	// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
+	export function arrStructureCopy(thing: any): any {
+		if (thing instanceof Array) return thing.map(arrStructureCopy)
+		return thing
 	}
 
 	// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
@@ -264,7 +288,7 @@ export namespace abstract {
 					// ! noticed another "percularity" about TypeScript (one of those things that had been previously called "stupidity");
 					// * When an expression is being checked for something without the value of that expression changeing...
 					// * The thing won't react to the type-check! This is a very bright example: one would not call the thing in question 'indexed' had it worked without it;
-					// ? should this be submitted to their Issues?
+					// ? should this be submitted to their Issues? (one didn't check if this was an actual thing with the compiler, though Linter's behaviour suggests that it is)
 					const indexed = a[i[i.length - 1]]
 					if (indexed instanceof Array) {
 						if (indexed.length < abstract.constants.js.MAX_INT)
@@ -298,7 +322,9 @@ export namespace abstract {
 					break
 				}
 
+				// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
 				const finalDimension = dim(a) - resultIndexes.length
+
 				// todo: again, the same thing as below...
 				for (let i = 0; i < finalDimension; i++) {
 					result.push([])
@@ -356,10 +382,16 @@ export namespace abstract {
 			)
 		}
 
-		// TODO: finish this thing (add orders, other things from the previous file)...
 		// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
+
+		// TODO: finish this thing (add orders, other things from the previous file)...
 		// TODO: add ways of 'jumping' forward onto a 'number | InfiniteCounter' of steps, along with an order of some kind (which would map the wanted thing to the wanted quantity of steps);
-		// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
+		// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
+
+		// ! There is a problem with this class: The array is used for "InfiniteCounter.previous"; Because of this, there is only limited number of previous members that can be;
+		// TODO: create an InfiniteArray type and put it there (not just an `InfiniteArray<T = any> := InfiniteMap<InfiniteCounter<number>, T, undefined>)...
+		// * With the approach outlined in the brackets, there is a difficulty -- infinite recursion (dependency); So, instead, one should pick an alternative one...
+		// * Example of an implementation -- same, but the InfiniteCounter of an InfiniteArray is hardcoded into itself (uses the numberCounter, for example...);
 		export class InfiniteCounter<Type = types.RecursiveArray<number>> {
 			next(): InfiniteCounter<Type> {
 				return new InfiniteCounter<Type>(
@@ -414,6 +446,37 @@ export namespace abstract {
 			n = BigInt(n) - 1n
 			for (let i = 0n; i < n; i++) result = result.next()
 			return result
+		}
+
+		// TODO document what does this do properly...
+		// TODO: pray re-order the library's new API again (don't seem to completely like the way it looks like currently...)
+		export function sameStructure<T = any>(
+			array: types.RecursiveArray<T>,
+			generator: (x?: any) => any,
+			currval: any = undefined,
+			copy: boolean = true,
+			subcall: boolean = false
+		): any {
+			const copied = copy ? util.deepCopy(array) : array
+
+			for (let i = 0; i < copied.length; i++) {
+				const index = copied[i]
+				if (index instanceof Array) {
+					currval = sameStructure<T>(
+						index,
+						generator,
+						currval,
+						false,
+						true
+					)
+					continue
+				}
+				currval =
+					currval === undefined ? generator() : generator(currval)
+				copied[i] = currval
+			}
+
+			return !subcall ? currval : copied
 		}
 
 		export function isBigInt(x: any): x is BigInt {
@@ -556,6 +619,69 @@ export namespace abstract {
 			}
 		}
 
+		// TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
+		// * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
+		// TODO: finish this thing... (as well as others...)
+		export class InfiniteArray<Type = any> {
+			private index: RecursiveArray<boolean>
+			private array: RecursiveArray<Type>
+
+			currIndex() {
+				return this.index
+			}
+
+			next() {
+				const path: number[] = this.currElement()
+				let index: RecursiveArray<boolean> | boolean = this.index
+				let array: RecursiveArray<Type> | Type = this.array
+				// TODO: library... repeatedIndexation... refactor...(these todos are just markers for the future...)
+				for (let i = 0; i < path.length - 1; i++) {
+					index = index[path[i]]
+					array = array[path[i]]
+				}
+				index[path[path.length - 1]] = 0
+				// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this
+			}
+
+			currElement(): number[] {
+				let current: RecursiveArray<boolean> | boolean = this.index
+
+				function recursive(): number[] | false {
+					let prevCurrent = current
+					let temp: number[] | boolean = false
+
+					if (prevCurrent instanceof Array) {
+						for (let i = 0; i < prevCurrent.length; i++) {
+							current = prevCurrent[i]
+
+							if (typeof current === "boolean") {
+								if (current) return [i]
+								continue
+							}
+
+							temp = recursive()
+							if (temp !== false) return [i, ...temp]
+						}
+
+						current = prevCurrent
+					}
+
+					return false
+				}
+
+				// * shutting TypeScript up...
+				return recursive() as number[]
+			}
+
+			// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
+			constructor(objects: RecursiveArray<Type>) {
+				this.array = objects
+				counters.sameStructure<Type>(this.array, () => false)
+				if (this.index.length >= 1) this.index[0] = true
+			}
+		}
+
+		// ? Should one not then write the InfiniteArray class, then use it in the InfiniteString class (not to repeat the same things all over again)?
 		// TODO: finish the InfiniteString class; It would allow work like with a string, though would be based on the InfiniteCounter/TrueInteger classes...
 		// * Let it have all the capabilities (methods, properties) of a string and more -- let there be a way to reverse() it natively...;
 		export class InfiniteString<IndexType = number> {
