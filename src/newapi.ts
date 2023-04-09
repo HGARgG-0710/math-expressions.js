@@ -6,7 +6,7 @@
 
 // TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
 
-import { dim, max, generate, sameOperator } from "./oldapi"
+import { dim, max } from "./oldapi"
 
 export namespace statistics {}
 export namespace util {
@@ -620,6 +620,21 @@ export namespace abstract {
 			}
 		}
 
+		// * Not to write TypeCheckers every time...
+		// TODO: using those two, pray do refactor the code that uses the ': x is Type' kind of type; Let they be defined in terms of these unctions... 
+		export function typechecker<Type>(
+			_function: (x: any) => boolean
+		): (x: any) => x is Type {
+			return (x: any): x is Type => _function(x)
+		}
+
+		export function typecheck<Type>(
+			x: any,
+			f: (x: any) => boolean
+		): x is Type {
+			return typechecker<Type>(f)(x)
+		}
+
 		// TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
 		// * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
 		// * Also, the library (probably) should export this thing from the different library as well (would give the user a way of getting less dependencies...)
@@ -680,8 +695,8 @@ export namespace abstract {
 				const lastIndex = path[path.length - 1]
 				if (typeof lastIndex === "number") index[lastIndex] = false
 
-				// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this; 
-				// * There is a strong feeling for far more advanced API for working with the RecursiveArrays; This API is to be added 
+				// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this;
+				// * There is a strong feeling for far more advanced API for working with the RecursiveArrays; This API is to be added
 				// ! Pray do walk the code up and down and decide what to do about this...
 			}
 
@@ -727,15 +742,21 @@ export namespace abstract {
 					() => false
 				)
 				const index: RecursiveArray<number> = []
+				let indexpointer = index
 				let current: RecursiveArray<boolean> = this.index
 				// TODO: create a function in a different library for general dealing with these things... Later, pray do change this for that too...
 				while (true) {
 					if (typeof current[0] !== "boolean") {
-						index.push(
-							index.length < constants.js.MAX_ARRAY_LENGTH - 1
-								? 0
-								: []
-						)
+						const isFull =
+							indexpointer.length ===
+							constants.js.MAX_ARRAY_LENGTH - 1
+						indexpointer.push(isFull ? [] : 0)
+
+						const lastPointer =
+							indexpointer[indexpointer.length - 1]
+						if (isFull && lastPointer instanceof Array)
+							indexpointer = lastPointer
+
 						current = current[0]
 						continue
 					}
@@ -744,6 +765,25 @@ export namespace abstract {
 				if (shouldSet) current[0] = true
 				return index
 			}
+
+			// * IDEAS FOR UNITED API OF WORKING WITH THE RECURSIVEARRAYS:
+			// * 1. Function for indexation by means of some RecursiveArray<number>; There should be a way to establish the order of following (DECIDE HOW IT WOULD BE IMPLEMENTED WITHIN THIS LIBRARY);
+			// * 2. Function for setting values to an array value based on a RecursiveArray<number>-index, with the same kind of "order" thing as in 1.
+			// ? Currently, that's just the stuff that the InfiniteArray implementation is concerned with;
+			// ! Now, if one was to write it for the InfiniteArray<Type>, one would then generalize the stuff to an arbitrary RecursiveArray<Type> and then just define InfiniteArray as a convinient in-built wrapper around the stuff...
+
+			// ? This still don't solve the problem of generalizing the specific cases of recursive functions that are a part of the InfiniteArray methods, though;
+			// * This would have in it the ideas of the order, structure of the given array (ways of copying it, changing it flexibly, reading via some handy InfiniteMap-structure);
+			// * Also, should be ways of assigning to it an "index-array" with the same structure, which would contain various kinds of datatypes in it, allowing to read the array in various ways (simplest example -- boolean for marking an element; one could have one type with some "n" different modes, allowing for different ways of accessing it...);
+			// * The "index-arrays" along with the orders and different comparison functions should be useable to read something from a recursive array...
+			// ! Then, the InfiniteArray would simply become a special case of all this with it having the index array being boolean, or something (or it would become a truly general wrapper with 'boolean' as merely a default case...);
+
+			// ! There is also another small trouble preventing the swift generalization of all these things -- lack of singular form for checking the same stuff (somewhere, 'typeof' is used and somewhere else 'instanceof', for example);
+			// * Also: to avoid "if-else" (branching), one uses 'if-continue' or 'if-break';
+			// * Different things are checked and the return types are not unanimous (they differ, though could (probably) be made to be in the same general form);
+			// * Different loops are used;
+
+			// ! Also, there should be ways of transforming a non-infinite Array into an Infinite one;
 
 			last() {}
 
