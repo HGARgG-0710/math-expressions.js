@@ -1,3 +1,8 @@
+/**
+ * * This is the Old API source code, version pre-1.0 (in work).
+ * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
+ */
+
 // deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
 import { util, abstract } from "./newapi"
 
@@ -33,11 +38,6 @@ const { UniversalMap } = abstract.types
 // * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality...
 // * 7. Add new in-editor documentation for the new definitions...
 // * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
-
-/**
- * * This is the Old API source code, version pre-1.0 (in work).
- * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
- */
 
 // Global variables
 
@@ -525,10 +525,20 @@ class RectMatrix {
 		}
 	}
 
+	// ! does one not want this to become a more generalized thing, like matrixOperator for example (one could attach this to op, then)?
 	addMatrix(matrix) {
+		// ! This should be thrown out, for user to implement...
+		// * The library should have 2 different "kinds" matricies -- generalized generic ones and those for Numbers (based on the first ones); 
+		// * As an example: NumberRectMatrix and RectMatrix; NumberRectMatrix extends RectMatrix; 
 		if (!arrayEquality(matrix.sidelen, this.sidelen))
 			throw new Error("Trying to add matrices with different lengths. ")
 
+		// ! This here should be replaced with copying the thing (Question: should this be achieved via the constructor or via the deepCopy?)
+		// ? funny, this oughtn't have worked before... Is it another one of those bugs that didn't get fixed in math-expressions.js 0.8?
+		// * Current decision: use a deepCopy; That is because the constructor also checks for validity of a thing and one don't really care for that all that much...
+		// * Current decision: do not copy (ignore the previous one :D); This thing (general version) should simply run the 'op' with corresponding operator definitions table, operator and also Matricies; 
+		// ! Considering the current development of things... Is it not best one gets rid of the old 'op' thing for good? As in... It all just comes down to getting a thing from a table
+		// * No, let it stay; one will do the next: try to change the operators tables definitions to (TODO: refactor this with other libraries later) {[a: string | symbol | number]: <anything extends any[], type = any>(x: anything) => type}
 		const thisCopy = new RectMatrix(this.sidelen, this.dimentions)
 
 		for (let i = 0; i < matrix.sidelen[0]; i++)

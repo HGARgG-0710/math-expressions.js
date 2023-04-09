@@ -1,10 +1,9 @@
 // deno-lint-ignore-file no-namespace no-explicit-any ban-types no-inferrable-types
 /**
  * * This is the New API source code, version pre-1.0;
- * @copyright HGARgG-0710 (Igor Kuznetsov, 2023
+ * @copyright HGARgG-0710 (Igor Kuznetsov, 2023)
  */
 
-// TODO: create here a UniversalMap class; let it be virtually a mapwhich can have arbitrary values for both the key and the value of a key...
 
 import { dim, max } from "./oldapi"
 
@@ -621,7 +620,7 @@ export namespace abstract {
 		}
 
 		// * Not to write TypeCheckers every time...
-		// TODO: using those two, pray do refactor the code that uses the ': x is Type' kind of type; Let they be defined in terms of these unctions... 
+		// TODO: using those two, pray do refactor the code that uses the ': x is Type' kind of types; Let they be defined in terms of these functions... 
 		export function typechecker<Type>(
 			_function: (x: any) => boolean
 		): (x: any) => x is Type {
