@@ -4,7 +4,7 @@
  */
 
 // deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
-import { util, abstract } from "./newapi"
+import { util, types } from "./newapi"
 
 // TODO: add all of those functions that seem fit from the new api into the old one...
 const {
@@ -14,9 +14,10 @@ const {
 	indexOfMult,
 	valueCompare,
 	clearRepetitions,
-	gutInnerArrs
+	gutInnerArrs,
+	arrIntersections
 } = util
-const { UniversalMap } = abstract.types
+const { UniversalMap } = types
 
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
@@ -53,6 +54,21 @@ export let fixedSize: number = 11
 export const exp = op
 export const repeatedArithmetic = repeatedOperation
 export const sameOperator = repeatedArithmetic
+
+export const defaultTable: OperatorDefinitions = {
+	"+": (a: number, b: number) => realAddition(a, b)[0],
+	"-": (a: number, b: number) => realAddition(a, -b)[0],
+	"/": (a: number, b: number) => a / b,
+	"*": (a: number, b: number) => a * b,
+	"**": (a: number, b: number) => a ** b,
+	"^": (a: number, b: number) => a ** b,
+	xor: (a: number, b: number) => a ^ b,
+	">>": (a: number, b: number) => a >> b,
+	"<<": (a: number, b: number) => a << b,
+	"&": (a: number, b: number) => a & b,
+	"|": (a: number, b: number) => a | b,
+	"%": (a: number, b: number) => a % b
+}
 
 // Classes
 
@@ -254,8 +270,9 @@ class Surface {
  * It can also come in helpful when evaluating the same expression various number of times.
  */
 class Expression {
-	objects: any[] = []
-	operators: string[] = []
+	objects: any[]
+	operators: string[]
+	table: OperatorDefinitions
 
 	/**
 	 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), repeatedArithmetic(), fullExp(), repeatExp().)
@@ -263,9 +280,14 @@ class Expression {
 	 * @param {string[]} operators An array, containing operators of expression.
 	 */
 
-	constructor(objects: any[] = [], operators: string[] = []) {
+	constructor(
+		objects: any[] = [],
+		operators: string[] = [],
+		table: OperatorDefinitions = defaultTable
+	) {
 		this.objects = objects
 		this.operators = operators
+		this.table = table
 	}
 
 	/**
@@ -326,8 +348,10 @@ class Tests {
 
 		return floor(
 			exp(
-				Math.abs(exp(averages[0], averages[1], "-")),
-				Math.sqrt(exp(errors[0], errors[1], "+")),
+				[
+					Math.abs(exp([averages[0], averages[1]], "-")),
+					Math.sqrt(exp([errors[0], errors[1]], "+"))
+				],
 				"/"
 			),
 			fixedSize
@@ -349,8 +373,10 @@ class Tests {
 		const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
 
 		const difference = exp(
-			dispersions[biggerDispersionIndex],
-			dispersions[Number(!biggerDispersionIndex)],
+			[
+				dispersions[biggerDispersionIndex],
+				dispersions[Number(!biggerDispersionIndex)]
+			],
 			"/"
 		)
 
@@ -418,8 +444,7 @@ class Tests {
 	 */
 	static Z_score(testedNum, numbers) {
 		return exp(
-			testedNum - average(numbers),
-			standardDeviation(numbers),
+			[testedNum - average(numbers), standardDeviation(numbers)],
 			"/"
 		)
 	}
@@ -566,6 +591,7 @@ class Matrix extends RectMatrix {
 	 * @param {number} newSidelen New sidelen.
 	 */
 	set sidelen(newSidelen) {
+		// ? again, the stuff with missing 'dimensions'; 
 		Matrix.dimensionCheck(newSidelen)
 		this._sidelen = [newSidelen, newSidelen]
 	}
@@ -598,7 +624,7 @@ class Matrix extends RectMatrix {
 
 		if (this.sidelen > 2) {
 			if (this.sidelen === 1) return this.matrix.byIndex(0).byIndex(0)
-			const matricesDeterminants = {}
+			const matricesDeterminants: { [a: number]: any } = {}
 
 			let n = 0
 			let finale = 0
@@ -611,7 +637,7 @@ class Matrix extends RectMatrix {
 				)
 
 			for (const pair in matricesDeterminants) {
-				finale += matricesDeterminants[pair] * pair * (-1) ** n
+				finale += matricesDeterminants[pair] * Number(pair) * (-1) ** n
 				n++
 			}
 
@@ -884,19 +910,19 @@ class Vector {
  * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
  */
 class Ratio {
-	#beenSet = 0
+	numerator: number
+	denomenator: number
 
-	constructor(numerator, denomenator) {
+	constructor(numerator: number, denomenator: number) {
 		this.numerator = numerator
 		this.denomenator = denomenator
-		this.#beenSet++
 	}
 
-	evaluate() {
+	evaluate(): number {
 		return this.numerator / this.denomenator
 	}
 
-	add(ratio) {
+	add(ratio: Ratio): Ratio {
 		return Ratio.simplify(
 			new Ratio(
 				this.numerator * ratio.denomenator +
@@ -906,39 +932,43 @@ class Ratio {
 		)
 	}
 
-	static simplify(ratio) {
+	static simplify(ratio: Ratio): Ratio {
 		const len = Math.max(
 			allFactors(ratio.numerator).length,
 			allFactors(ratio.denomenator).length
 		)
 
-		let currMultiple
+		let currMultiple: number
 
 		for (let i = 0; i < len; i++) {
-			if (
-				(currMultiple = leastCommonMultiple(
-					ratio.numerator,
-					ratio.denomenator
-				)) !== null
-			) {
-				ratio.numerator /= currMultiple
-				ratio.denomenator /= currMultiple
-			}
+			// ? haha, another one!
+			// * That's a bug; it's not leastCommonMultiple, but leastCommonDivisor! (which hasn't even been introduced to the library yet!)
+			// TODO: create the function in question and then pray do replace this...
+			currMultiple = leastCommonMultiple(
+				ratio.numerator,
+				ratio.denomenator
+			)
+			if (!currMultiple) break
+			ratio.numerator /= currMultiple
+			ratio.denomenator /= currMultiple
 		}
 
 		return ratio
 	}
 
-	divide(ratio) {
-		return Ratio.simplify(
-			new Ratio(
-				ratio.denomenator * this.numerator,
-				this.denomenator * ratio.numerator
-			)
-		)
+	divide(ratio: Ratio): Ratio {
+		return this.multiply(ratio.multinverse())
 	}
 
-	multiply(ratio) {
+	multinverse(): Ratio {
+		return new Ratio(this.denomenator, this.numerator)
+	}
+
+	addinverse(): Ratio {
+		return new Ratio(-this.numerator, this.denomenator)
+	}
+
+	multiply(ratio: Ratio): Ratio {
 		return Ratio.simplify(
 			new Ratio(
 				this.numerator * ratio.numerator,
@@ -947,52 +977,19 @@ class Ratio {
 		)
 	}
 
-	subtract(ratio) {
-		return Ratio.simplify(
-			new Ratio(
-				this.numerator * ratio.denomenator -
-					this.denomenator * ratio.numerator,
-				this.denomenator * ratio.denomenator
-			)
-		)
+	subtract(ratio: Ratio): Ratio {
+		return this.add(ratio.addinverse())
 	}
 
-	root(base) {
+	power(exponent: number): Ratio {
 		return new Ratio(
-			this.numerator ** (1 / base),
-			this.denomenator ** (1 / base)
+			this.numerator ** exponent,
+			this.denomenator ** exponent
 		)
 	}
 
-	get numerator() {
-		return this._numerator
-	}
-
-	get denomenator() {
-		return this._denomenator
-	}
-
-	set numerator(numerator) {
-		this.#set(() => {
-			this._numerator = numerator
-		})
-	}
-
-	set denomenator(denomenator) {
-		this.#set(() => {
-			this._denomenator = denomenator
-		})
-	}
-
-	#set(handler) {
-		if (this.#beenSet === 0) {
-			handler()
-			return 1
-		}
-
-		throw new Error(
-			"You are not allowed to modify the fields of Ratio class instance. "
-		)
+	root(exponent: number): Ratio {
+		return this.power(1 / exponent)
 	}
 }
 
@@ -1065,7 +1062,8 @@ class Algorithms {
 	}
 }
 
-// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers; ALSO -- decide what to do about the matter of numbers within the library;
+// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
+// * CURRENT IDEA FOR A NAME: NumberEquation...
 /**
  * This class's purpose is to represent a mathematical equation of multiple variables.
  * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
@@ -1413,26 +1411,17 @@ class VarMapping {
  * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
  * @returns {number} Result of a mathematical expression.
  */
-function op(firstObj: any, secondObj: any, operator: string): any {
-	// TODO: make this nice...
-	switch (operator) {
-		case "+":
-			return realAddition(firstObj, secondObj)[0]
-		case "-":
-			return realAddition(firstObj, -secondObj)[0]
-
-		case "/":
-		case "*":
-		case "**":
-		case "^":
-		case "%":
-			return eval(
-				`${firstObj} ${operator === "^" ? "**" : operator} ${secondObj}`
-			)
-
-		default:
-			throw new Error("Unknown airphmetic operator passed!")
-	}
+function op(
+	objects: any[],
+	operator: string,
+	operatorTable: OperatorDefinitions = defaultTable
+): any {
+	// TODO: in a different library of mr. body, there's a _switch function that works on a passed object like a generalized switch; use this here, when code-reworking for 1.1;
+	const values = Object.values(operatorTable)
+	const keys = Object.keys(operatorTable)
+	for (let i = 0; i < values.length; i++)
+		if (operator === keys[i]) return values[i](...objects)
+	throw new Error(`Undefined operator ${operator}!`)
 }
 
 // TODO: rewrite this later, as a repeated application of the same function on itself...
@@ -1466,11 +1455,16 @@ function repeatedOperation(objects: any[] = [], operator: string) {
  * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
  */
 function fullExp(expression: Expression): any {
+	// TODO: decide which one value to use as a "default" for library's "unknown value" -- null or undefined;
+	// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 	if (expression.objects.length === 0) return null
 	let result: any = expression.objects[0]
 
 	for (let i = 0; i < expression.objects.length - 1; i++)
-		result = exp(result, expression.objects[i + 1], expression.operators[i])
+		result = exp(
+			[result, expression.objects[i + 1]],
+			expression.operators[i]
+		)
 
 	return result
 }
@@ -1494,7 +1488,7 @@ function repeatExp(
 	let result = (tempRes = fullExp(expression))
 
 	for (let i = 0; i < timesRepeat - 1; i++)
-		result = exp(result, tempRes, repeatOperator)
+		result = exp([result, tempRes], repeatOperator)
 
 	return result
 }
@@ -1786,42 +1780,30 @@ function truncate(nums: number[], percents: number = 10): number[] {
 	return shortened
 }
 
+// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
+export function multiples(n: number, range: number): number[] {
+	return generate(1, range).map((a) => a * n)
+}
+
+// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
+// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the newapi.util.arrIntersections)
 /**
  * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
  * @param {number} firstNum First number.
  * @param {number} secondNum Second number.
- * @param {number} searchRange A number, representing range of searches(if you get null from this function, then try to make range bigger). By default 100.
  */
-function leastCommonMultiple(
-	firstNum: number,
-	secondNum: number,
-	searchRange: number = 100
-) {
-	const firstMultiples = []
-	const secondMultiples = []
-
-	let firstCount = firstNum
-	let secondCount = secondNum
-
-	let result = null
-
-	for (
-		let i = 0;
-		i < searchRange;
-		i++, firstCount += firstNum, secondCount += secondNum
-	) {
-		firstMultiples.push(firstCount)
-		secondMultiples.push(secondCount)
+function leastCommonMultiple(...nums: number[]) {
+	if (nums.length === 0) return undefined
+	if (nums.length === 1) return nums[0]
+	if (nums.length === 2) {
+		return min(
+			arrIntersections([
+				multiples(nums[0], nums[1]),
+				multiples(nums[1], nums[0])
+			])
+		)
 	}
-
-	loop1: for (const multiple1 of firstMultiples)
-		for (const multiple2 of secondMultiples)
-			if (multiple1 === multiple2) {
-				result = multiple1
-				break loop1
-			}
-
-	return result
+	return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
 }
 
 /**
@@ -1922,11 +1904,11 @@ function standardError(
 
 	return isDispersion
 		? floor(
-				exp(dispersion(row, false), Math.sqrt(newArr.length), "/"),
+				exp([dispersion(row, false), Math.sqrt(newArr.length)], "/"),
 				fixedSize
 		  )
 		: floor(
-				exp(standardDeviation(row), Math.sqrt(newArr.length), "/"),
+				exp([standardDeviation(row), Math.sqrt(newArr.length)], "/"),
 				fixedSize
 		  )
 }
@@ -1960,6 +1942,9 @@ function expectedValue(numbers: number[], probabilities: number[]): number {
 	return floor(repeatedArithmetic(values.map(String), "+"))
 }
 
+// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
+// TODO: write such a function as well for both old api and new api!
+// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
 /**
  * Floors the given number to the needed level of precision.
  * @param {number} number Number to be floored.
@@ -2132,12 +2117,19 @@ function binomial(n: number, k: number): number {
 /**
  * * This type (name) will (most likely) not last for a long amount of time in the library, being replaced by Table (same, but generalized);
  *
- * ! REQUEST NOT TO USE, either specify the type directly, or use other independent alternative...
+ * ! WARNING NOT TO USE IN CODE
+ * * Instead, either just specify the type directly, or use some other independent alternative that you know won't break...
  */
 export type OperatorDefinitions = { [opname: string]: Function }
 
-export function isArray(x: any): x is any[] {
-	return x instanceof Array
+export function isArray<Type = any>(
+	x: any,
+	typechecker: (a: any) => a is Type = (_a: any): _a is Type => true
+): x is Type[] {
+	return (
+		x instanceof Array &&
+		min(x.map((a: any) => Number(typechecker(a)))) === 1
+	)
 }
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim;

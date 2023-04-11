@@ -1,10 +1,10 @@
 // TODO: this todo list is outdated. It is in reworking proces... As the package progresses, one's views of it and the goals change; 
 
-1. math-expressions.js 1.0: 
+1. expressions.ts 1.0: 
 
     THIS TODO IS A REMINDER; 
 
-    The new math-expressions.js (1.0) should not have (direct) backwards-compatibility 
+    expressions.ts (1.0 and further) should not have (direct) backwards-compatibility with either new/old versions of itself or the preceeding math-expressions.js
     (though, it is quasi-compatible, and given some little manual effort can be used similarly); 
     It is separated onto New Api (newapi) and Old Api (oldapi); both will get updates and new things...; 
     The Old Api does not support infinite types and is written for use within-JavaScript; 
@@ -62,6 +62,9 @@
 
     Separate the new one onto namespaces; 
     Separate the old one onto classes and functions; 
+
+    Change the in-editor JSDoc documentation...
+    Fix presence of the inappropriate (id est, simply unwanted) comments; 
 
 3. Library's Style: 
 

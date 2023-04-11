@@ -234,6 +234,41 @@ export namespace util {
 
 	// TODO: add more methods to UniversalMap and InfiniteMap;
 	// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
+
+	// ! There is something I do not like about the 'comparison' parameter...
+	// * It is only of 2 variables...
+	// TODO: think about generalizing to arbitrary number of variables...
+	// * IDEA: a recursive function-building type: RecursiveFunctionType<ArgType, Type> = (a: ArgType) => RecursiveFunctionType<Type> | Type
+	// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
+	export function arrIntersections(
+		arrs: any[][],
+		comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b
+	): any[] {
+		if (arrs.length === 0) return []
+		if (arrs.length === 1) return arrs[1]
+		if (arrs.length === 2) {
+			const result: any[] = []
+			for (let i = 0; i < arrs[0].length; i++) {
+				for (let j = 0; j < arrs[1].length; j++) {
+					// TODO: change for the use of indexOfMult... the .includes thing...
+					if (
+						comparison(arrs[0][i], arrs[1][j]) &&
+						!result.includes(arrs[0][i])
+					) {
+						// ? Problem: this thing is not very useful (as in, general); It throws out the information concerning the arrs[1][j];
+						// * This is not good...
+						// TODO: fix; restructure it somehow...
+						result.push(arrs[0][i])
+					}
+				}
+			}
+			return result
+		}
+		return arrIntersections(
+			[arrs[0], arrIntersections(arrs.slice(1), comparison)],
+			comparison
+		)
+	}
 }
 
 export namespace types {
