@@ -1,30 +1,26 @@
 {
-	"name": "math-expressions.js",
-	"version": "0.8.0",
-	"description": "Math-expressions.js is a JavaScript library, allowing you to work with mathematical expressions, statistics and 2D surfaces.",
-	"main": "src/math-expressions.mjs",
+	"name": "expressions.ts",
+	"version": "1.0.0",
+	"description": "expressions.ts is a general-purpose TypeScript and JavaScript programming library. It provides various handy utils and infinite apis, some being in a certain sense equivalent to those native to JavaScript amongst other things; ",
+	"main": "out/main.js",
 	"type": "module",
 	"scripts": {
 		"test": "node src/examples.mjs"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/HGARgG-0710/math-expressions.js.git"
+		"url": "git+https://github.com/HGARgG-0710/expressions.ts.git"
 	},
 	"keywords": [
-		"mathematics",
-		"algebra",
-		"surfaces",
 		"expressions",
-		"statistics",
-		"numeric arrays",
 		"algorithms",
-		"farey"
+		"infinite",
+		"arrays"
 	],
 	"author": "hgargg-0710",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/HGARgG-0710/math-expressions.js/issues"
+		"url": "https://github.com/HGARgG-0710/expressions.ts/issues"
 	},
-	"homepage": "https://github.com/HGARgG-0710/math-expressions.js#readme"
+	"homepage": "https://github.com/HGARgG-0710/expressions.ts#readme"
 }

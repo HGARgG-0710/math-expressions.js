@@ -96,33 +96,10 @@
     There should be ways to convert an arabic numeral into an InfiniteCounter (and conversely, using the InfiniteString); 
     Thus: to the list of things to be added, the numerals add; 
 
-8. Name of the package; 
+8. Deprecate the math-expressions.js <= 0.8 package...
 
-    Considering the major changes... 
-    It seems inappropriate; 
-    Feels too narrow...
+    This is now an entirely new project, library and package (though keeping many of its original elements)...
 
-    Ideas for a new name: 
-
-        1. expressions.ts
-
-    Will do the next thing: publish first as math-expressions.js 1.0, then deprecate this thing, 
-    publishing a new version of the thing as a new package (this is already for the expressions.ts 1.1); 
-
-    I'm now thinking...
-    Would it not be a better idea for oneself to deprecate the 0.8 thing, then? 
- 
-    (About changing the name) On the other hand... There is still statistics, and a lot of other things too; 
-
-    So, no, "expressions.ts" certainly don't do...
-    One wants a different name, one that would outline both the origin of the package and its destination (that is, far greater diversity and generality); 
-    For now, the current title is good. 
-    Later will create some other one, probably...
-
-    (Rethinking again) Nah, "expressions.ts" is very good and untaken (currently); Plus, the thing is very different from the previous one; 
-    It's almost a different library; Take this name, will be synonymous with other such libraries of oneself -- simple and robust; 
-
-INDEPENDENT NOTE: Funny. The more I use types, the less I start to like them as a way of limitation and the more I start to like them as a mean of conversion between shapes...
 
 9. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
 
@@ -142,3 +119,5 @@ INDEPENDENT NOTE: Funny. The more I use types, the less I start to like them as 
     Let Mr. Body look through the code on the matter of types by oneself; 
     Seek potential problems, fix them...
     Then, compile and test (using the both environments); 
+
+14. Reminder -- after the 1.0 release, pray do work with the other libraries, publish them and then use as dependnecies (their previous versions) of this one in the 1.1 release; 
