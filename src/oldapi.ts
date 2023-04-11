@@ -14,7 +14,7 @@ const {
 	indexOfMult,
 	valueCompare,
 	clearRepetitions,
-	gutInnerArrs,
+	gutInnerArrs
 } = util
 const { UniversalMap } = abstract.types
 
@@ -321,7 +321,7 @@ class Tests {
 		const averages = Object.freeze([average(rows[0]), average(rows[1])])
 		const errors = Object.freeze([
 			Math.pow(standardError(rows[0]), 2),
-			Math.pow(standardError(rows[1]), 2),
+			Math.pow(standardError(rows[1]), 2)
 		])
 
 		return floor(
@@ -343,7 +343,7 @@ class Tests {
 
 		const dispersions = Object.freeze([
 			dispersion(rows[0], true),
-			dispersion(rows[1], true),
+			dispersion(rows[1], true)
 		])
 
 		const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
@@ -528,15 +528,15 @@ class RectMatrix {
 	// ! does one not want this to become a more generalized thing, like matrixOperator for example (one could attach this to op, then)?
 	addMatrix(matrix) {
 		// ! This should be thrown out, for user to implement...
-		// * The library should have 2 different "kinds" matricies -- generalized generic ones and those for Numbers (based on the first ones); 
-		// * As an example: NumberRectMatrix and RectMatrix; NumberRectMatrix extends RectMatrix; 
+		// * The library should have 2 different "kinds" matricies -- generalized generic ones and those for Numbers (based on the first ones);
+		// * As an example: NumberRectMatrix and RectMatrix; NumberRectMatrix extends RectMatrix;
 		if (!arrayEquality(matrix.sidelen, this.sidelen))
 			throw new Error("Trying to add matrices with different lengths. ")
 
 		// ! This here should be replaced with copying the thing (Question: should this be achieved via the constructor or via the deepCopy?)
 		// ? funny, this oughtn't have worked before... Is it another one of those bugs that didn't get fixed in math-expressions.js 0.8?
 		// * Current decision: use a deepCopy; That is because the constructor also checks for validity of a thing and one don't really care for that all that much...
-		// * Current decision: do not copy (ignore the previous one :D); This thing (general version) should simply run the 'op' with corresponding operator definitions table, operator and also Matricies; 
+		// * Current decision: do not copy (ignore the previous one :D); This thing (general version) should simply run the 'op' with corresponding operator definitions table, operator and also Matricies;
 		// ! Considering the current development of things... Is it not best one gets rid of the old 'op' thing for good? As in... It all just comes down to getting a thing from a table
 		// * No, let it stay; one will do the next: try to change the operators tables definitions to (TODO: refactor this with other libraries later) {[a: string | symbol | number]: <anything extends any[], type = any>(x: anything) => type}
 		const thisCopy = new RectMatrix(this.sidelen, this.dimentions)
@@ -643,7 +643,7 @@ class Vector {
 		"function",
 		"object",
 		"bigint",
-		"any",
+		"any"
 	]
 
 	static default = {
@@ -653,7 +653,7 @@ class Vector {
 		boolean: false,
 		bigint: 0n,
 		function: () => {},
-		any: null,
+		any: null
 	}
 
 	constructor(type = "number", length = 0, vector = []) {
@@ -748,7 +748,7 @@ class Vector {
 				vector.vector[0] * this.vector[2] -
 					this.vector[0] * vector.vector[2],
 				this.vector[0] * vector.vector[1] -
-					this.vector[1] * vector.vector[0],
+					this.vector[1] * vector.vector[0]
 			])
 
 		// TODO: Use the RectMatrix product formula on wikipedia page.
@@ -1096,7 +1096,7 @@ class Equation {
 			"7",
 			"8",
 			"9",
-			".",
+			"."
 		])
 
 		let metEquality = false
@@ -2190,5 +2190,5 @@ export {
 	setPrecision,
 	arrayEquality,
 	dim,
-	binomial,
+	binomial
 }

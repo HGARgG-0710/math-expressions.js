@@ -4,7 +4,8 @@
         "outDir": "out",
         "module": "ES2020",
         "lib": [
-            "es2020"
+            "es2020",
+            "dom"
         ],
         "target": "ES2020"
     },

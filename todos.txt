@@ -22,33 +22,18 @@
         1. The New Api does the thing already and more generally (but without employing new types); 
         2. The thing can be vastly generalized (especially IF generalization allows the previously accepted use); 
 
-    // TODO: change this list, I do not like it; 
-    // Current Idea for a list (for now too short -- create more ideas and expand): 
-    // 1. types - everything related to types [includes all insofar added and all yet planned]; 
-    // 2. util - various utils; 
-    // 3. ... (perhaps, something related to equation-parsing? some in-built things?)
-    // 4. algorithms - as says, different algorithms; 
-    // 5. ... (something that is an extension of the idea of drawing and the current concept for the Surface class)
-
-    Current namespaces: 
-
-        1. linear (for linear-algebra-related stuff; add more of it, btw): 
-        2. statistics (for statistics-related-stuff; )
-        3. util (for various nice functions like generate, dim or copy)
-        4. algorithms (various algorithms)
-            4.1. algs.sort (sorting algorithms, not only for number arrays; generalized)
-        5. abstract (for the new ideas);  
-            5.1. counters (for counter-related stuff); 
-                5.1.1. numerals (stuff for number-to-InfiniteCounter transitions and also the numbers system creation things)
-            5.2. orders (for order-related stuff); 
-        6. numbers (for the older number-related things)
-        
-        (Question: where do all the old things go?)
-        They would do perfectly with the newer objects (InfiniteCounter-based ones;)...
-        DECISION: goes to "numbers"; there, in every function the InfiniteCounter is used by means of transforming the user's input via "abstract.counters.numerals"; 
-        Then, all the initial library code gets rewritten (that is, generalized, the code itself is the same); 
-        
+    Current Idea for a list (create more things for it): 
+    1. types - everything related to types [includes all insofar added and all yet planned]; 
+        has got statistics, numeral-related stuff, counters, orders, linear algebra stuff, infinite types, extension of the oldapi to infinite types (everything)
+        ? question: should one not create sub-divisions inside it?
+    2. util - various utils; 
+    3. ... (perhaps, something related to equation-parsing? some in-built things?)
+    4. algorithms - as says, different algorithms; 
+        Has in itself sorting algorithms, other interesting ones...
+        ? again: question about sub-namespaces...
+    5. ... (something that is an extension of the idea of drawing and the current concept for the Surface class)  
     
+    // TODO: rework this part of the first TODO...
     New things to add: 
 
         1. ideas of TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
