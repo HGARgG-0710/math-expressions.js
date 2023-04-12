@@ -453,38 +453,46 @@ class Tests {
 	}
 }
 
-// * Current idea for the list of features: 
-// * 1. Arbitrarily shaped matrix; 
+// * Current idea for the list of features:
+// * 1. Arbitrarily shaped matrix;
 // * 2. Merely a Data-keeping thing (don't actually have any of the 'number' properties -- bunch of arrays...)
-// * 3. Generic typeing (by default -- untyped); 
-class Matrix<Type = any>{
+// * 3. Generic typeing (by default -- untyped);
+class Matrix<Type = any> {}
 
-}
+// * Current idea for the list of features:
+// * 1. Arbitrarily shaped;
+// * 2. Full of numbers;
+// * 3. Can have user-defined operations for doing certain things with numbers;
+class NumberMatrix extends Matrix<number> {}
 
-// * Current idea for the list of features: 
-// * 1. Arbitrarily shaped; 
-// * 2. Full of numbers; 
-// * 3. Can have user-defined operations for doing certain things with numbers; 
-class NumberMatrix extends Matrix<number> {
-
-}
-
-// TODO: create an implementation of the next idea: 
-// * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap; 
-// * Alternative, of 'just' Wrapper for the oldapi (same, yet finite...; uses UniversalMap); 
-// ? Question: should UniversalMap not be brought to the oldapi? 
-// * Current decision: no; 
+// TODO: create an implementation of the next idea:
+// * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap;
+// * Alternative, of 'just' Wrapper for the oldapi (same, yet finite...; uses UniversalMap);
+// ? Question: should UniversalMap not be brought to the oldapi?
+// * Current decision: no;
 // ? Question: should 'oldapi' not be named 'finite' and the 'newapi' be named 'infinite' or some other such renaming to better represent what are they in truth? Pray do think about that...
+
+// * Current idea for the list of features:
+// * 1. Only numbers ;
+// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
+// * 3. Rectangular-shaped;
+class RectNumberMatrix extends NumberMatrix {}
+
+// * Current idea for the list of features:
+// * 1. Only numbers ;
+// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
+// * 3. Square-shaped;
+class SquareNumberMatrix extends RectNumberMatrix {}
 
 // * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type;
 /**
  * This class represents a mathematical rectangular matrix.
  */
 class RectMatrix {
-	_matrix = new Vector("object")
-	_sidelen = [0, 0]
+	protected _matrix = new Vector("object")
+	protected _sidelen: [number, number] = [0, 0]
 
-	constructor(sidelens = [0, 0], dimensions = []) {
+	constructor(sidelens: [number, number] = [0, 0], dimensions = []) {
 		RectMatrix.dimensionCheck(sidelens, dimensions)
 
 		this._sidelen = sidelens
@@ -515,7 +523,7 @@ class RectMatrix {
 		return this._sidelen
 	}
 
-	set sidelen(sides = [0, 0]) {
+	set sidelen(sides: [number, number]) {
 		RectMatrix.dimensionCheck(sides)
 		this._sidelen = copy(sides)
 	}
@@ -604,26 +612,15 @@ class RectMatrix {
  * It allows only numbers in itself.
  */
 export class SquareMatrix extends RectMatrix {
-	constructor(sidelen = 0, dimensions = []) {
+	constructor(sidelen: number = 0, dimensions = []) {
 		super([sidelen, sidelen], dimensions)
 	}
 
-	static dimensionCheck(sidelen, dimensions) {
-		RectMatrix.dimensionCheck([sidelen, sidelen], dimensions)
-	}
-
-	/**
-	 * Sets the siedelen of a square matrix.
-	 * @param {number} newSidelen New sidelen.
-	 */
-	set sidelen(newSidelen) {
-		// ? again, the stuff with missing 'dimensions';
-		Matrix.dimensionCheck(newSidelen)
-		this._sidelen = [newSidelen, newSidelen]
-	}
-
-	get sidelen() {
-		return this._sidelen[0]
+	static dimensionCheck(sidelen: number | number[], dimensions: any[]) {
+		RectMatrix.dimensionCheck(
+			typeof sidelen === "number" ? [sidelen, sidelen] : sidelen,
+			dimensions
+		)
 	}
 
 	/**
@@ -640,22 +637,22 @@ export class SquareMatrix extends RectMatrix {
 							matrix.toArray()[index][jndex]
 						)
 
-			return new Matrix(final.length, final).determinant()
+			return new SquareMatrix(final.length, final).determinant()
 		}
 
-		if (this.sidelen < 2) {
+		if (this.sidelen[0] < 2) {
 			if (this.sidelen[0] === 1) return this.navigate([0, 0])
 			return 0
 		}
 
-		if (this.sidelen > 2) {
-			if (this.sidelen === 1) return this.matrix.byIndex(0).byIndex(0)
+		if (this.sidelen[0] > 2) {
+			if (this.sidelen[0] === 1) return this.matrix.byIndex(0).byIndex(0)
 			const matricesDeterminants: { [a: number]: any } = {}
 
 			let n = 0
 			let finale = 0
 
-			for (let j = 0; j < this.sidelen; j++)
+			for (let j = 0; j < this.sidelen[0]; j++)
 				matricesDeterminants[this.navigate([0, j])] = findAdditional(
 					this,
 					0,
@@ -677,11 +674,14 @@ export class SquareMatrix extends RectMatrix {
 	}
 }
 
+// TODO: this thing represents a Vector, that is in fact GeneralVector; It is for data keeping; (Make this thing generic... Let it keep the runtime type-safety; Add the runtime type-safety to all the data-keeping types...)
+// ? Suggestion: Add the runtime type-safety to all the things within the library...
+// * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime (one for the developer and one for the user);
 /**
  * This class represents a length-safe array with some nice stuff added to it.
  * It also may behave like a mathematical vector.
  */
-class Vector {
+class Vector<Type = any> {
 	#setTimes = 0
 
 	_type = "number"
@@ -845,7 +845,8 @@ class Vector {
 				: this
 		const other = main.vector == vector.vector ? this : vector
 		return repeatedArithmetic(
-			other.vector.map((el, i) => el * main.vector[i])
+			other.vector.map((el, i) => el * main.vector[i]),
+			"+"
 		)
 	}
 
@@ -932,7 +933,10 @@ class Vector {
 	}
 }
 
-
+// * Current idea for a list of features:
+// * 1. All number-related methods and features;
+// * 2. Based on number-version of the Vector
+class NumberVector extends Vector<number> {}
 
 // TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 // TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
