@@ -9,6 +9,7 @@ import { util, types } from "./newapi"
 // TODO: add all of those functions that seem fit from the new api into the old one...
 const {
 	flatCopy,
+	deepCopy,
 	countAppearences,
 	arrApply,
 	indexOfMult,
@@ -576,9 +577,7 @@ class RectMatrix {
 			case 1:
 				return this._matrix.index(coordinate[0])
 			case 2:
-				return this._matrix
-					.index(coordinate[0])
-					.index(coordinate[1])
+				return this._matrix.index(coordinate[0]).index(coordinate[1])
 
 			default:
 				throw new Error(
@@ -677,8 +676,8 @@ export class SquareMatrix extends RectMatrix {
 	}
 }
 
-// * This stuff corresponds to the JavaScript's 'typeof', but not TypeScript's 'typeof';
-export type VectorType =
+// * This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
+export type VectorType = (
 	| "number"
 	| "string"
 	| "boolean"
@@ -688,6 +687,7 @@ export type VectorType =
 	| "any"
 	| "undefined"
 	| "symbol"
+)[]
 
 export const vectortypes = [
 	"number",
@@ -701,9 +701,6 @@ export const vectortypes = [
 	"symbol"
 ]
 
-// * This corresponds to combinations of various runtime Vector Types...
-export type VectorConditional = VectorType | VectorType[]
-
 // TODO: this thing represents a Vector, that is in fact GeneralVector; It is for data keeping; (Make this thing generic... Let it keep the runtime type-safety; Add the runtime type-safety to all the data-keeping types...)
 // ? Suggestion: Add the runtime type-safety to all the things within the library...
 // * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime (one for the developer and one for the user);
@@ -712,11 +709,15 @@ export type VectorConditional = VectorType | VectorType[]
  * It also may behave like a mathematical vector.
  */
 class Vector<Type = any> {
-	protected _type: VectorConditional = "any"
-	protected _length = 0
-	protected _vector: Type[] = []
+	protected _type: VectorType
+	protected _length: number
+	protected _vector: Type[]
+	protected transform: Function | null
+	protected default: Function
 
 	// TODO: some things use it... Redo it to be UniversalMap... (trouble with useing arrays, see...)
+	// ? question: which defaults to use for the mixed types???
+	// * Current decision: let the user decide themselves for the defaults...
 	static default = {
 		string: "",
 		number: 0,
@@ -728,20 +729,32 @@ class Vector<Type = any> {
 	}
 
 	constructor(
-		type: VectorConditional = "number",
+		type: VectorType = ["any"],
 		length: number = 0,
-		vector: Type[] = []
+		vector: Type[] = [],
+		defaultelement: Function = () => null,
+		transform: Function | null = null
 	) {
 		this.length = length
 		this.type = type
 		this.vector = vector
+		this.default = defaultelement
+		this.transform = transform
 	}
 
-	static typecheck<T = any>(item: T, type: VectorConditional): void | never {
-		if (typeof item !== type && type !== "any")
+	static typecheck<T = any>(
+		item: T,
+		type: VectorType,
+		transform: Function | null = null
+	): void | never {
+		if (!type.includes(typeof item) && !type.includes("any")) {
+			if (transform) return transform(item)
 			throw new Error(
-				`Type of item ${item} is not equal to vector type: ${type}. Item type: ${typeof item}`
+				`Type of item ${item} is not equal to vector type: [${type
+					.map((a) => `"${a}"`)
+					.join(",")}]. Item type: ${typeof item}`
 			)
+		}
 	}
 
 	delete(index: number): Type {
@@ -758,9 +771,11 @@ class Vector<Type = any> {
 	}
 
 	add(item: Type) {
-		Vector.typecheck(item, this._type)
+		if (!this.transform) Vector.typecheck(item, this._type)
 		this._length++
-		return this.vector.push(item) - 1
+		return (
+			this.vector.push(this.transform ? this.transform(item) : item) - 1
+		)
 	}
 
 	swap(index1: number, index2: number) {
@@ -831,31 +846,34 @@ class Vector<Type = any> {
 
 	map<T = any>(
 		f: (a: Type) => T = (x: any): any => x,
-		type: VectorConditional = this.type
+		type: VectorType = this.type
 	): Vector<T> {
 		return new Vector<T>(type, this.length, this.vector.map(f))
 	}
 
-	// ? what izh thish?
-	// todo: decide what to do with this thing (first -- renaming?)
-	elementByElement(vector, operation) {
+	byElement<T>(vector: Vector<T>, operation: Function): Vector<Type> {
+		const newVec = this.copy()
 		for (let i = 0; i < Math.min(vector.length, this.length); i++)
-			this.set(
-				i,
-				eval(`this.vector[${i}] ${operation} vector.vector[${i}]`)
-			)
+			newVec.set(i, operation(this.vector[i], vector.vector[i]))
+		return newVec
 	}
 
-	static type(array: any[]): VectorConditional {
-		let type: VectorConditional =
-			array[0] !== undefined ? typeof array[0] : "any"
+	copy() {
+		return new Vector<Type>(
+			copy(this.type),
+			this.length,
+			deepCopy(this.vector),
+			this.default
+		)
+	}
 
+	static type(array: any[]): VectorType {
+		if (!array.length) return ["any"]
+
+		// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
+		const type: VectorType = [typeof array[0]]
 		for (const element of array)
-			if (typeof element !== type) {
-				type = "any"
-				break
-			}
-
+			if (!type.includes(typeof element)) type.push(typeof element)
 		return type
 	}
 
@@ -867,16 +885,18 @@ class Vector<Type = any> {
 		return this._vector
 	}
 
-	get type(): VectorConditional {
+	get type(): VectorType {
 		return this._type
 	}
 
-	set type(newType: VectorConditional) {
-		//TODO :  Return back the thign (but pray differently...)
-		if (!Vector.allowedTypes.includes(newType))
-			throw new Error(`Unknown vector type: ${newType}`)
+	set type(newType: VectorType) {
+		// TODO: create a separate function for this (isSubset or something); then, define isSuperset as its arguments' permutation...
+		for (let i = 0; i < newType.length; i++)
+			if (!vectortypes.includes(newType[i]))
+				throw new Error(`Unknown vector type: ${newType}`)
 
 		this._type = newType
+		Vector.typecheck(this.vector, this.type)
 	}
 
 	set length(newLength: number) {
@@ -888,33 +908,20 @@ class Vector<Type = any> {
 
 		if (newLength > this._length)
 			for (let i = this._length; i < newLength; i++)
-				this._vector[i] = Vector.default[this._type]
+				this._vector[i] = this.default(this.type)
 
 		this._length = newLength
 	}
 
-	// TODO: make this thing more flexible...
-	// * Instead of banning a new type, convert to it (allow user to provide a conversion of their own)...
 	set vector(newVector: Type[]) {
 		const type = Vector.type(newVector)
-
-		if (this._length < newVector.length)
-			throw new Error(
-				`The length of new vector is too big. Length of current vector: ${this.length}. Length of the new vector: ${newVector.length}`
-			)
-
-		if (type !== this._type && this._type !== "any")
-			throw new TypeError(
-				`Type of the new vector is different to the one to which you are trying to assign. Old type: ${this._type}. New type: ${type}`
-			)
-
-		newVector.forEach((element) => Vector.typecheck(element, this._type))
-
 		this._vector = newVector
 		this.length = newVector.length
+		if (!valueCompare(type, this.type)) this._type = type
 	}
 }
 
+// TODO: rewrite; finish...
 // * Current idea for a list of features:
 // * 1. All number-related methods and features;
 // * 2. Based on number-version of the Vector
@@ -941,7 +948,7 @@ export class NumberVector extends Vector<number> {
 			)
 
 		if (vector.length === 3)
-			return new Vector("number", 3, [
+			return new Vector(["number"], 3, [
 				this.vector[1] * vector.vector[2] -
 					vector.vector[1] * this.vector[2],
 				vector.vector[0] * this.vector[2] -
