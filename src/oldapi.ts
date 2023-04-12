@@ -34,9 +34,9 @@ const { UniversalMap } = types
 // *        1.1.1. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
 // * 2. Rewrite the in-editor JSDoc documentation (most probably, from scratch...)...
 // * 3. Add proper types to everywhere in the code (especially, places with dots...);
-// * 4. Fix all the TypeErrors...
-// * 5. Make code more permissive (get rid of Object.freeze and other such "safety" things, get rid of the Error throws...);
-// * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality...
+// * 4. Fix all the compilers' TypeErrors...
+// * 5. Make code more permissive (get rid of all the "safety" things, get rid of some of the Error throws -- replace them with special function values, where want to);
+// * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
 // * 7. Add new in-editor documentation for the new definitions...
 // * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
 
@@ -55,6 +55,7 @@ export const exp = op
 export const repeatedArithmetic = repeatedOperation
 export const sameOperator = repeatedArithmetic
 
+// ? Add more stuff here? (This table is supposed to be like a small calculator for binary things...)
 export const defaultTable: OperatorDefinitions = {
 	"+": (a: number, b: number) => realAddition(a, b)[0],
 	"-": (a: number, b: number) => realAddition(a, -b)[0],
@@ -62,12 +63,14 @@ export const defaultTable: OperatorDefinitions = {
 	"*": (a: number, b: number) => a * b,
 	"**": (a: number, b: number) => a ** b,
 	"^": (a: number, b: number) => a ** b,
-	xor: (a: number, b: number) => a ^ b,
+	xor: (a: number | boolean, b: number | boolean) => Number(a) ^ Number(b),
 	">>": (a: number, b: number) => a >> b,
 	"<<": (a: number, b: number) => a << b,
 	"&": (a: number, b: number) => a & b,
 	"|": (a: number, b: number) => a | b,
-	"%": (a: number, b: number) => a % b
+	"%": (a: number, b: number) => a % b,
+	"&&": (a: boolean, b: boolean) => a && b,
+	"||": (a: any, b: any) => a || b
 }
 
 // Classes
@@ -340,11 +343,11 @@ class Tests {
 	static t_Students_test(...rows) {
 		Tests.checkArrSize(rows, 2)
 
-		const averages = Object.freeze([average(rows[0]), average(rows[1])])
-		const errors = Object.freeze([
+		const averages = [average(rows[0]), average(rows[1])]
+		const errors = [
 			Math.pow(standardError(rows[0]), 2),
 			Math.pow(standardError(rows[1]), 2)
-		])
+		]
 
 		return floor(
 			exp(
@@ -365,10 +368,10 @@ class Tests {
 	static F_test(...rows) {
 		Tests.checkArrSize(rows, 2)
 
-		const dispersions = Object.freeze([
+		const dispersions = [
 			dispersion(rows[0], true),
 			dispersion(rows[1], true)
-		])
+		]
 
 		const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
 
@@ -449,6 +452,29 @@ class Tests {
 		)
 	}
 }
+
+// * Current idea for the list of features: 
+// * 1. Arbitrarily shaped matrix; 
+// * 2. Merely a Data-keeping thing (don't actually have any of the 'number' properties -- bunch of arrays...)
+// * 3. Generic typeing (by default -- untyped); 
+class Matrix<Type = any>{
+
+}
+
+// * Current idea for the list of features: 
+// * 1. Arbitrarily shaped; 
+// * 2. Full of numbers; 
+// * 3. Can have user-defined operations for doing certain things with numbers; 
+class NumberMatrix extends Matrix<number> {
+
+}
+
+// TODO: create an implementation of the next idea: 
+// * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap; 
+// * Alternative, of 'just' Wrapper for the oldapi (same, yet finite...; uses UniversalMap); 
+// ? Question: should UniversalMap not be brought to the oldapi? 
+// * Current decision: no; 
+// ? Question: should 'oldapi' not be named 'finite' and the 'newapi' be named 'infinite' or some other such renaming to better represent what are they in truth? Pray do think about that...
 
 // * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type;
 /**
@@ -577,7 +603,7 @@ class RectMatrix {
  * This class represents a square mathematical matrix.
  * It allows only numbers in itself.
  */
-class Matrix extends RectMatrix {
+export class SquareMatrix extends RectMatrix {
 	constructor(sidelen = 0, dimensions = []) {
 		super([sidelen, sidelen], dimensions)
 	}
@@ -591,7 +617,7 @@ class Matrix extends RectMatrix {
 	 * @param {number} newSidelen New sidelen.
 	 */
 	set sidelen(newSidelen) {
-		// ? again, the stuff with missing 'dimensions'; 
+		// ? again, the stuff with missing 'dimensions';
 		Matrix.dimensionCheck(newSidelen)
 		this._sidelen = [newSidelen, newSidelen]
 	}
@@ -906,6 +932,10 @@ class Vector {
 	}
 }
 
+
+
+// TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
+// TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
 /**
  * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
  */
@@ -938,22 +968,20 @@ class Ratio {
 			allFactors(ratio.denomenator).length
 		)
 
-		let currMultiple: number
+		let currDivisor: number
 
 		for (let i = 0; i < len; i++) {
-			// ? haha, another one!
-			// * That's a bug; it's not leastCommonMultiple, but leastCommonDivisor! (which hasn't even been introduced to the library yet!)
-			// TODO: create the function in question and then pray do replace this...
-			currMultiple = leastCommonMultiple(
-				ratio.numerator,
-				ratio.denomenator
-			)
-			if (!currMultiple) break
-			ratio.numerator /= currMultiple
-			ratio.denomenator /= currMultiple
+			currDivisor = leastCommonDivisor(ratio.numerator, ratio.denomenator)
+			if (!currDivisor) break
+			ratio.numerator /= currDivisor
+			ratio.denomenator /= currDivisor
 		}
 
 		return ratio
+	}
+
+	array(): [number, number] {
+		return [this.numerator, this.denomenator]
 	}
 
 	divide(ratio: Ratio): Ratio {
@@ -1081,21 +1109,9 @@ class Equation {
 	 * @param {string[]} variables Additional variable names.
 	 */
 	static ParseEquation(equationLine, origmappings, variables) {
-		const operators = Object.freeze(["+", "*", "/", "-", "^"])
-		const brackets = Object.freeze(["[", "]", "(", ")", "{", "}"])
-		const digits = Object.freeze([
-			"0",
-			"1",
-			"2",
-			"3",
-			"4",
-			"5",
-			"6",
-			"7",
-			"8",
-			"9",
-			"."
-		])
+		const operators = ["+", "*", "/", "-", "^"]
+		const brackets = ["[", "]", "(", ")", "{", "}"]
+		const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
 
 		let metEquality = false
 
@@ -1795,15 +1811,56 @@ export function multiples(n: number, range: number): number[] {
 function leastCommonMultiple(...nums: number[]) {
 	if (nums.length === 0) return undefined
 	if (nums.length === 1) return nums[0]
-	if (nums.length === 2) {
+	if (nums.length === 2)
 		return min(
 			arrIntersections([
 				multiples(nums[0], nums[1]),
 				multiples(nums[1], nums[0])
 			])
 		)
-	}
 	return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
+}
+
+export function commonMultiples(
+	range: number[],
+	...nums: number[]
+): number[] | undefined | number {
+	if (nums.length === 0) return undefined
+	if (nums.length === 1) return nums[0]
+	if (nums.length === 2) {
+		const found: number[] = arrIntersections([
+			multiples(nums[0], range[range.length - 1]),
+			multiples(nums[1], nums[range[range.length - 2]])
+		])
+		range.pop()
+		range.pop()
+		return found
+	}
+	const rest: number[] = commonMultiples(range, ...nums.slice(1)) as number[]
+	return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
+}
+
+export function leastCommonDivisor(...nums: number[]) {
+	if (nums.length === 0) return undefined
+	if (nums.length === 1) return nums[0]
+	if (nums.length === 2)
+		return min(arrIntersections([factorOut(nums[0]), factorOut(nums[1])]))
+
+	return leastCommonDivisor(nums[0], leastCommonDivisor(...nums.slice(1)))
+}
+
+export function commonDivisors(
+	...nums: number[]
+): number[] | undefined | number {
+	if (nums.length === 0) return undefined
+	if (nums.length === 1) return nums[0]
+	if (nums.length === 2)
+		return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
+
+	return arrIntersections([
+		factorOut(nums[0]),
+		commonDivisors(...nums.slice(1)) as number[]
+	])
 }
 
 /**
