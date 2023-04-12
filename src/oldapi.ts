@@ -312,6 +312,7 @@ class Expression {
 	}
 }
 
+// TODO: look through this stuff; rename, refactor/shorten, generalize code where want to;
 /**
  * This a class that contains various statistical tests.
  * It is a static class, i.e. it is supposed to be like this:
@@ -328,20 +329,19 @@ class Tests {
 	 * @param {number} size A number, equality to which is checked.
 	 * @throws Error, if the length of given array is not equal to the size parameter.
 	 */
-	static checkArrSize(arr, size) {
-		if (arr.length != size) {
+	static sizecheck(arr: any[], size: number): void | never {
+		if (arr.length !== size)
 			throw new Error(
 				`Expected ${size} elements inside of the passed array, got ${arr.length}.`
 			)
-		}
 	}
 
 	/**
 	 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
 	 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
 	 */
-	static t_Students_test(...rows) {
-		Tests.checkArrSize(rows, 2)
+	static t_Students_test(...rows: [number[], number[]]) {
+		Tests.sizecheck(rows, 2)
 
 		const averages = [average(rows[0]), average(rows[1])]
 		const errors = [
@@ -361,12 +361,15 @@ class Tests {
 		)
 	}
 
+	// ? question: should one keep the runtime checks if the compile-time check is already there?
+	// TODO: make a decision and change/keep correspondently;
+	// * CURRENT DECISION: nah, let it stay; one likes it, that is cute;
 	/**
 	 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
 	 * @param {number[]} rows Two one-dimensional arrays, the equality of dispersions of which shall be found.
 	 */
-	static F_test(...rows) {
-		Tests.checkArrSize(rows, 2)
+	static F_test(...rows: [number[], number[]]) {
+		Tests.sizecheck(rows, 2)
 
 		const dispersions = [
 			dispersion(rows[0], true),
@@ -391,8 +394,8 @@ class Tests {
 	 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
 	 * @param {number[][]} rows Two one-dimensional arrays, using which the u-test is to be done.
 	 */
-	static U_test(...rows) {
-		Tests.checkArrSize(rows, 2)
+	static U_test(...rows: [number[], number[]]) {
+		Tests.sizecheck(rows, 2)
 
 		let firstSum = 0
 		let secondSum = 0
@@ -445,7 +448,7 @@ class Tests {
 	 * @param {number} testedNum A number for which the Z-score is to be found.
 	 * @param {number[]} numbers An array of numbers, required to calculate the Z-score for the given number.
 	 */
-	static Z_score(testedNum, numbers) {
+	static Z_score(testedNum: number, numbers: number[]) {
 		return exp(
 			[testedNum - average(numbers), standardDeviation(numbers)],
 			"/"
@@ -463,7 +466,7 @@ class Matrix<Type = any> {}
 // * 1. Arbitrarily shaped;
 // * 2. Full of numbers;
 // * 3. Can have user-defined operations for doing certain things with numbers;
-class NumberMatrix extends Matrix<number> {}
+export class NumberMatrix extends Matrix<number> {}
 
 // TODO: create an implementation of the next idea:
 // * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap;
@@ -476,13 +479,13 @@ class NumberMatrix extends Matrix<number> {}
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 // * 3. Rectangular-shaped;
-class RectNumberMatrix extends NumberMatrix {}
+export class RectNumberMatrix extends NumberMatrix {}
 
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 // * 3. Square-shaped;
-class SquareNumberMatrix extends RectNumberMatrix {}
+export class SquareNumberMatrix extends RectNumberMatrix {}
 
 // * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type;
 /**
@@ -534,18 +537,18 @@ class RectMatrix {
 
 	scalarAdd(scalar) {
 		for (let i = 0; i < this.sidelen[0]; i++)
-			this.matrix.byIndex(i).scalarAdd(scalar)
+			this.matrix.index(i).scalarAdd(scalar)
 	}
 
 	scalarMultiply(scalar) {
 		for (let i = 0; i < this.sidelen[0]; i++)
-			this.matrix.byIndex(i).scalarMultiply(scalar)
+			this.matrix.index(i).scalarMultiply(scalar)
 	}
 
 	toArray() {
 		const final = []
 		for (let i = 0; i < this._sidelen[0]; i++) {
-			final.push(this.matrix.byIndex(i).vector)
+			final.push(this.matrix.index(i).vector)
 		}
 		return final
 	}
@@ -571,11 +574,11 @@ class RectMatrix {
 	navigate(coordinate) {
 		switch (coordinate.length) {
 			case 1:
-				return this._matrix.byIndex(coordinate[0])
+				return this._matrix.index(coordinate[0])
 			case 2:
 				return this._matrix
-					.byIndex(coordinate[0])
-					.byIndex(coordinate[1])
+					.index(coordinate[0])
+					.index(coordinate[1])
 
 			default:
 				throw new Error(
@@ -646,7 +649,7 @@ export class SquareMatrix extends RectMatrix {
 		}
 
 		if (this.sidelen[0] > 2) {
-			if (this.sidelen[0] === 1) return this.matrix.byIndex(0).byIndex(0)
+			if (this.sidelen[0] === 1) return this.matrix.index(0).index(0)
 			const matricesDeterminants: { [a: number]: any } = {}
 
 			let n = 0
@@ -674,6 +677,33 @@ export class SquareMatrix extends RectMatrix {
 	}
 }
 
+// * This stuff corresponds to the JavaScript's 'typeof', but not TypeScript's 'typeof';
+export type VectorType =
+	| "number"
+	| "string"
+	| "boolean"
+	| "function"
+	| "object"
+	| "bigint"
+	| "any"
+	| "undefined"
+	| "symbol"
+
+export const vectortypes = [
+	"number",
+	"string",
+	"boolean",
+	"function",
+	"object",
+	"bigint",
+	"any",
+	"undefined",
+	"symbol"
+]
+
+// * This corresponds to combinations of various runtime Vector Types...
+export type VectorConditional = VectorType | VectorType[]
+
 // TODO: this thing represents a Vector, that is in fact GeneralVector; It is for data keeping; (Make this thing generic... Let it keep the runtime type-safety; Add the runtime type-safety to all the data-keeping types...)
 // ? Suggestion: Add the runtime type-safety to all the things within the library...
 // * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime (one for the developer and one for the user);
@@ -682,22 +712,11 @@ export class SquareMatrix extends RectMatrix {
  * It also may behave like a mathematical vector.
  */
 class Vector<Type = any> {
-	#setTimes = 0
+	protected _type: VectorConditional = "any"
+	protected _length = 0
+	protected _vector: Type[] = []
 
-	_type = "number"
-	_length = 0
-	_vector = []
-
-	static allowedTypes = [
-		"number",
-		"string",
-		"boolean",
-		"function",
-		"object",
-		"bigint",
-		"any"
-	]
-
+	// TODO: some things use it... Redo it to be UniversalMap... (trouble with useing arrays, see...)
 	static default = {
 		string: "",
 		number: 0,
@@ -708,22 +727,24 @@ class Vector<Type = any> {
 		any: null
 	}
 
-	constructor(type = "number", length = 0, vector = []) {
+	constructor(
+		type: VectorConditional = "number",
+		length: number = 0,
+		vector: Type[] = []
+	) {
 		this.length = length
 		this.type = type
 		this.vector = vector
-
-		this.#setTimes++
 	}
 
-	static typeCheck(item, type) {
+	static typecheck<T = any>(item: T, type: VectorConditional): void | never {
 		if (typeof item !== type && type !== "any")
 			throw new Error(
 				`Type of item ${item} is not equal to vector type: ${type}. Item type: ${typeof item}`
 			)
 	}
 
-	delete(index) {
+	delete(index: number): Type {
 		const deleted = this._vector[index]
 
 		if (index < this._length - 1)
@@ -736,14 +757,13 @@ class Vector<Type = any> {
 		return deleted
 	}
 
-	add(item) {
-		Vector.typeCheck(item, this._type)
+	add(item: Type) {
+		Vector.typecheck(item, this._type)
 		this._length++
-
 		return this.vector.push(item) - 1
 	}
 
-	swap(index1, index2) {
+	swap(index1: number, index2: number) {
 		if (
 			typeof index1 !== "number" ||
 			typeof index2 !== "number" ||
@@ -757,20 +777,22 @@ class Vector<Type = any> {
 		this._vector[index2] = temp
 	}
 
-	fill(item) {
-		Vector.typeCheck(item, this._type)
+	fill(item: Type): Vector<Type> {
+		Vector.typecheck(item, this._type)
 		this._vector.fill(item)
 		return this
 	}
 
-	set(index, value) {
+	// TODO: here, implement a beautiful construction way for arbitrary Vectors;
+	construct() {}
+
+	set(index: number, value: Type) {
 		if (this._vector[index] === undefined)
 			throw new Error("Invalid index passed into the set function.")
-
 		this._vector[index] = value
 	}
 
-	byIndex(i) {
+	index(i: number): Type {
 		return this._vector[i]
 	}
 
@@ -779,10 +801,135 @@ class Vector<Type = any> {
 		return new Vector(this._type, sliced.length, sliced)
 	}
 
-	index(element) {
+	indexof(element: Type): number {
 		return this._vector.indexOf(element)
 	}
 
+	indexes(element: Type): number[] {
+		const indexes: number[] = [this._vector.indexOf(element)]
+
+		if (indexes[0] >= 0)
+			for (let i = indexes[0] + 1; i < this._length; i++)
+				if (this._vector[i] === element) indexes.push(i)
+
+		return indexes
+	}
+
+	concat(vector: Vector<Type>) {
+		const vecCopy = copy(this.vector)
+		this.elementByElement(vector, "+")
+
+		const retCopy = copy(this.vector)
+		this.vector = vecCopy
+
+		return new Vector(
+			this.type,
+			Math.max(this.length, vector.length),
+			retCopy
+		)
+	}
+
+	map<T = any>(
+		f: (a: Type) => T = (x: any): any => x,
+		type: VectorConditional = this.type
+	): Vector<T> {
+		return new Vector<T>(type, this.length, this.vector.map(f))
+	}
+
+	// ? what izh thish?
+	// todo: decide what to do with this thing (first -- renaming?)
+	elementByElement(vector, operation) {
+		for (let i = 0; i < Math.min(vector.length, this.length); i++)
+			this.set(
+				i,
+				eval(`this.vector[${i}] ${operation} vector.vector[${i}]`)
+			)
+	}
+
+	static type(array: any[]): VectorConditional {
+		let type: VectorConditional =
+			array[0] !== undefined ? typeof array[0] : "any"
+
+		for (const element of array)
+			if (typeof element !== type) {
+				type = "any"
+				break
+			}
+
+		return type
+	}
+
+	get length(): number {
+		return this._length
+	}
+
+	get vector(): Type[] {
+		return this._vector
+	}
+
+	get type(): VectorConditional {
+		return this._type
+	}
+
+	set type(newType: VectorConditional) {
+		//TODO :  Return back the thign (but pray differently...)
+		if (!Vector.allowedTypes.includes(newType))
+			throw new Error(`Unknown vector type: ${newType}`)
+
+		this._type = newType
+	}
+
+	set length(newLength: number) {
+		if (newLength < 0)
+			throw new Error(`Passed negative length: ${newLength}`)
+
+		if (newLength < this._length)
+			for (let i = this._length; i > newLength; i--) this._vector.pop()
+
+		if (newLength > this._length)
+			for (let i = this._length; i < newLength; i++)
+				this._vector[i] = Vector.default[this._type]
+
+		this._length = newLength
+	}
+
+	// TODO: make this thing more flexible...
+	// * Instead of banning a new type, convert to it (allow user to provide a conversion of their own)...
+	set vector(newVector: Type[]) {
+		const type = Vector.type(newVector)
+
+		if (this._length < newVector.length)
+			throw new Error(
+				`The length of new vector is too big. Length of current vector: ${this.length}. Length of the new vector: ${newVector.length}`
+			)
+
+		if (type !== this._type && this._type !== "any")
+			throw new TypeError(
+				`Type of the new vector is different to the one to which you are trying to assign. Old type: ${this._type}. New type: ${type}`
+			)
+
+		newVector.forEach((element) => Vector.typecheck(element, this._type))
+
+		this._vector = newVector
+		this.length = newVector.length
+	}
+}
+
+// * Current idea for a list of features:
+// * 1. All number-related methods and features;
+// * 2. Based on number-version of the Vector
+export class NumberVector extends Vector<number> {
+	vectorScalarMultiply(vector) {
+		const main =
+			Math.max(this.length, vector.length) == vector.length
+				? vector
+				: this
+		const other = main.vector == vector.vector ? this : vector
+		return repeatedArithmetic(
+			other.vector.map((el, i) => el * main.vector[i]),
+			"+"
+		)
+	}
 	crossProduct(vector) {
 		if (this.length != 3 && this.length != 7)
 			throw new Error(
@@ -813,130 +960,7 @@ class Vector<Type = any> {
 	scalarAdd(scalar) {
 		for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
 	}
-
-	indexes(element) {
-		const indexes = [this._vector.indexOf(element)]
-
-		if (indexes[0] >= 0)
-			for (let i = indexes[0] + 1; i < this._length; i++)
-				if (this._vector[i] === element) indexes.push(i)
-
-		return indexes
-	}
-
-	addVector(vector) {
-		const vecCopy = copy(this.vector)
-		this.elementByElement(vector, "+")
-
-		const retCopy = copy(this.vector)
-		this.vector = vecCopy
-
-		return new Vector(
-			this.type,
-			Math.max(this.length, vector.length),
-			retCopy
-		)
-	}
-
-	vectorScalarMultiply(vector) {
-		const main =
-			Math.max(this.length, vector.length) == vector.length
-				? vector
-				: this
-		const other = main.vector == vector.vector ? this : vector
-		return repeatedArithmetic(
-			other.vector.map((el, i) => el * main.vector[i]),
-			"+"
-		)
-	}
-
-	map(f = (x) => x, type = this.type) {
-		return new Vector(type, this.length, this.vector.map(f))
-	}
-
-	elementByElement(vector, operation) {
-		for (let i = 0; i < Math.min(vector.length, this.length); i++)
-			this.set(
-				i,
-				eval(`this.vector[${i}] ${operation} vector.vector[${i}]`)
-			)
-	}
-
-	static getArrType(array) {
-		let type = array[0] !== undefined ? typeof array[0] : "nulllength"
-
-		for (const element of array)
-			if (typeof element !== type) {
-				type = "any"
-				break
-			}
-
-		return type
-	}
-
-	get length() {
-		return this._length
-	}
-
-	get vector() {
-		return this._vector
-	}
-
-	get type() {
-		return this._type
-	}
-
-	set type(newType) {
-		if (this.#setTimes === 1)
-			throw new Error("Type parameter is not modifyable by default.")
-		if (!Vector.allowedTypes.includes(newType))
-			throw new Error(`Unknown vector type: ${newType}`)
-
-		this._type = newType
-	}
-
-	set length(newLength) {
-		if (newLength < 0)
-			throw new Error(
-				`Length cannot be negative! Passed length: ${newLength}`
-			)
-		if (newLength < this._length)
-			for (let i = this._length; i > newLength; i--) this._vector.pop()
-
-		if (newLength > this._length && this.#setTimes === 1)
-			for (let i = this._length; i < newLength; i++)
-				this._vector[i] = Vector.default[this._type]
-
-		this._length = newLength
-	}
-
-	set vector(newVector) {
-		const type = Vector.getArrType(newVector)
-
-		if (this._length < newVector.length && this.#setTimes === 1)
-			throw new Error(
-				`The length of new vector is too big. Length of current vector: ${this.length}. Length of the new vector: ${newVector.length}`
-			)
-		if (
-			type !== this._type &&
-			this._type !== "any" &&
-			type !== "nulllength"
-		)
-			throw new TypeError(
-				`Type of the new vector is different to the one to which you are trying to assign. Old type: ${this._type}. New type: ${type}`
-			)
-
-		newVector.forEach((element) => Vector.typeCheck(element, this._type))
-
-		this._vector = newVector
-		this.length = newVector.length
-	}
 }
-
-// * Current idea for a list of features:
-// * 1. All number-related methods and features;
-// * 2. Based on number-version of the Vector
-class NumberVector extends Vector<number> {}
 
 // TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 // TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
