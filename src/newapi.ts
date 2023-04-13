@@ -216,7 +216,7 @@ export namespace util {
 		return copied
 	}
 
-	// todo: generalize (using the notion of 'level'); Having generalized, pray get rid of this thing...
+	// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
 	// * copies array's structure deeply without copying the elements
 	// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
 	export function arrStructureCopy(thing: any): any {
@@ -231,6 +231,8 @@ export namespace util {
 
 	// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
 	// * Same permutations for the InfiniteMap and UniversalMap...
+
+	// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
 
 	// TODO: add more methods to UniversalMap and InfiniteMap;
 	// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
@@ -885,7 +887,8 @@ export namespace types {
 		}
 	}
 
-	// TODO: add an InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
+	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
+	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
 	export class InfiniteMap<KeyType = any, ValueType = any, NotFoundType = any>
 		implements
 			map<

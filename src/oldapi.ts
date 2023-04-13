@@ -461,7 +461,11 @@ class Tests {
 // * 1. Arbitrarily shaped matrix;
 // * 2. Merely a Data-keeping thing (don't actually have any of the 'number' properties -- bunch of arrays...)
 // * 3. Generic typeing (by default -- untyped);
-class Matrix<Type = any> {}
+class Matrix<Type = any> {
+	protected _matrix: Vector<Vector<Type>>
+
+	constructor() {}
+}
 
 // * Current idea for the list of features:
 // * 1. Arbitrarily shaped;
@@ -488,12 +492,10 @@ export class RectNumberMatrix extends NumberMatrix {}
 // * 3. Square-shaped;
 export class SquareNumberMatrix extends RectNumberMatrix {}
 
-// * DECISION: this thing gets transformed into a type (to add the use of 'Omit' on the corresponding things...) + a generic function for giving objects of the correponding type;
 /**
  * This class represents a mathematical rectangular matrix.
  */
-class RectMatrix {
-	protected _matrix = new Vector("object")
+class RectMatrix<Type> extends Matrix<Type> {
 	protected _sidelen: [number, number] = [0, 0]
 
 	constructor(sidelens: [number, number] = [0, 0], dimensions = []) {
@@ -674,6 +676,44 @@ export class SquareMatrix extends RectMatrix {
 			this.navigate([1, 0]) * this.navigate([0, 1])
 		)
 	}
+}
+
+// * IDEA: a general n-dimensional array factory-function;
+// TODO: implement...
+// TODO: implement the infinite counterpart...
+// TODO: implement the Matrices (and NumberMatrices) as a special case of it... One doesn't like the current implementation's basic approach...
+
+// ? this thing is the type for nest n-vectors of a given type (the single thing about it is that they are only for compile-time type support)
+export type NestVector<
+	n extends number = 1,
+	Type = any,
+	arr extends number[] = []
+> = arr["length"] extends n ? Type : Vector<NestVector<n, Type, [...arr, n]>>
+
+// ? wonder... Does TypeScript allow to generalize this thing? Seemingly not;
+export type NArray<
+	n extends number = 1,
+	Type = any,
+	numarr extends number[] = []
+> = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
+
+// ! Problem: what kind of factory does one want? /:
+// * current decision: let it simply take an arbitrarily-dimensional array and then create and return something that is virtually a NestVector of the same depth...
+// ? Problem: what about the type of an N-Array?...
+// * current decision: take it from a different library...; It was still of little use there;
+// ? Problem: the thing has got the compile-time typing and runtime-typing being two separate things; 
+// * Pity; Not the library's problem; It's 'cause TypeScript is a ridiculous and in-99-percent-cases-useless piece of shit which don't have anything to do with anything which is the actual app, but only the polishing process... It also weighs 16 tons; 
+// ! Problem: TypeScript don't do recursion... The thing one wants is (seemingly) not possible in it (go line above ;)); Question: what is to be done? 
+// * Solution 1: ignore the types completely (use 'any', id est, write JavaScript); 
+// * Solution 2: f*** TS, rewrite the library in JavaScript (again; id est, write JavaScript); 
+// * CONCLUSION: one does not want TypeScript for this particular library's bit; 
+// ? Question: should it be got rid of for all the others? (This'll mean either: 1. manually rewriting; or 2. compiling to JS after some little more work and then finishing the stuff...;)
+// * For the oldapi, it looks rather a nice thing (would simplify things, though one would then make testing more thorough (more time on development)); 
+// ? what about the newapi? Some of the other things TypeScript does give are rather nice (all these function types...)
+export function nestedVector<n extends number = 1, Type = any>(
+	vector: NArray<n>
+): NestVector<n> {
+	return new Vector<NestVector<n>>("objects", vector.map((el) => nestedVector<n, Type>(el)))
 }
 
 // * This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
