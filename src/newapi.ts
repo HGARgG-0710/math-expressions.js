@@ -563,7 +563,9 @@ export namespace types {
 			this.typechecker = typechecker
 		}
 	}
+
 	// * This is pretty. In C would probably be more explicit with all the manual dynamic allocations, de-allocations...
+	// ? question: add a new type RecursiveElement, which would be this thing's element? 
 	export type RecursiveArray<ElementType> = (
 		| RecursiveArray<ElementType>
 		| ElementType

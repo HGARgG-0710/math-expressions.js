@@ -1,6 +1,9 @@
+// TODO: Suggestion: why not take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi? 
+// * Then, one would be using the names of 'finite' and 'infinite' accordingly, instead of 'old' and 'new'; 
+
 /**
  * * This is the Old API source code, version pre-1.0 (in work).
- * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
+ * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
 // deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
@@ -25,19 +28,17 @@ const { UniversalMap, isNumber, isUndefined } = types
 
 // todo: new things to add:
 // * 1. more number-theoretic functions...;
-// * 2. an entirely new system for the definition of the "op" function -- current operator set won't do; one wants user to be capable of adding their own ones...
-// ? 	2.1?. Maybe some kind of object type OperatorDefinitions, that would get taken? And have some default one that is used and can be changed by the user as well?
 
 // TODO: things to do (generally):
 // * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
 // *    or, just add the old alias (like in the case of sameOperator...)
 // *    1.1. Special cases of it:
-// *        1.1.1. repeatedArighmetic -- rename to repeated (add a ton of new possibilities of use for this...)
+// *        1.1.1. repeatedArithmetic -- rename to repeated (add a ton of new possibilities of use for this...)
 // * 2. Rewrite the in-editor JSDoc documentation (most probably, from scratch...)...
 // * 3. Add proper types to everywhere in the code (especially, places with dots...);
 // * 4. Fix all the compilers' TypeErrors...
 // * 5. Make code more permissive (get rid of all the "safety" things, get rid of some of the Error throws -- replace them with special function values, where want to);
-// * 6. Simplify function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
+// * 6. Simplify and generalize function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
 // * 7. Add new in-editor documentation for the new definitions...
 // * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
 
@@ -471,7 +472,7 @@ type Matrix<Type> = NestVector<2, Type>
 
 // ? Should one also add one that is related to shape-things? (Consider)
 export function Matrix<Type>(
-	vector: any[][],
+	vector: Type[][],
 	typechecker: (x: any) => x is Type,
 	defaultMatrix: [Function, Function] = [() => null, () => null],
 	defaultTransform: [Function | null, Function | null] = [null, null]
@@ -485,12 +486,6 @@ export function Matrix<Type>(
 		0
 	) as Matrix<Type>
 }
-
-// * Current idea for the list of features:
-// * 1. Arbitrarily shaped;
-// * 2. Full of numbers;
-// * 3. Can have user-defined operations for doing certain things with numbers;
-export class NumberMatrix implements Matrix<number> {}
 
 // TODO: create an implementation of the next idea:
 // * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap;
@@ -624,23 +619,23 @@ export type NArray<
 > = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
 
 // * Infinitely mixed-typed vector type;
-export type VectorDepth<type> = type | Vector<VectorDepth<type>>
+export type VectorDepth<type, TypeofType = TypeOf> = type | Vector<VectorDepth<type, TypeofType>, TypeofType>
 
 // * This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
 // * Depth of the final vector is equal to the depth of the original array...
-export function nestedVector<Type = any>(
-	vector: any[],
+export function nestedVector<Type = any, TypeofType = TypeOf>(
+	vector: types.RecursiveArray<Type>,
 	typechecker: (x: any) => x is Type,
 	defaultElems: Function[] = vector.map(() => () => null),
 	transform: (Function | null)[] = vector.map(() => null),
 	dimensions: number = Infinity,
 	currDim: number = 0
-): Vector<VectorDepth<Type>> {
-	return new Vector<VectorDepth<Type>>(
+): Vector<VectorDepth<Type, TypeofType>> {
+	return new Vector<VectorDepth<Type, TypeofType>>(
 		["any"],
 		vector.map((el: any) =>
 			el instanceof Array && !typechecker(el) && currDim < dimensions
-				? nestedVector<Type>(
+				? nestedVector<Type, TypeofType>(
 						el,
 						typechecker,
 						defaultElems.slice(1),
@@ -670,31 +665,21 @@ export function totalElems(array: any): number {
 }
 
 // * This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
-export type VectorType = (
-	| "number"
-	| "string"
-	| "boolean"
-	| "function"
-	| "object"
-	| "bigint"
-	| "any"
-	| "undefined"
-	| "symbol"
-)[]
+// More general than, but also corresponds to:
+// | "number"
+// | "string"
+// | "boolean"
+// | "function"
+// | "object"
+// | "bigint"
+// | "any"
+// | "undefined"
+// | "symbol"
+export type TypeOf = ReturnType<(x: any) => typeof x>
+export type VectorType = TypeOf[]
 
 // * IDEA: add a way for user to specify their own typing of vectors; add an argument for the 'typing' function, which is by default 'typeof', same as the 'vectortypes'; this thing (then) would become a field of a class instance (becuase one don't have templates...);
 // TODO: yes, pray do add that...
-export const vectortypes = [
-	"number",
-	"string",
-	"boolean",
-	"function",
-	"object",
-	"bigint",
-	"any",
-	"undefined",
-	"symbol"
-]
 
 // TODO: this thing represents a Vector, that is in fact GeneralVector; It is for data keeping; (Make this thing generic... Let it keep the runtime type-safety; Add the runtime type-safety to all the data-keeping types...)
 // ? Suggestion: Add the runtime type-safety to all the things within the library...
@@ -703,28 +688,46 @@ export const vectortypes = [
  * This class represents a length-safe array with some nice stuff added to it.
  * It also may behave like a mathematical vector.
  */
-class Vector<Type = any> {
-	protected _type: VectorType
+class Vector<Type = any, TypeofType = TypeOf> {
+	protected _type: TypeofType
 	protected _length: number
 	protected _vector: Type[]
 	public transform: Function | null
 	public default: Function
 
-	// TODO: some things use it... Redo it to be UniversalMap... (trouble with useing arrays, see...)
-	// ? question: which defaults to use for the mixed types???
-	// * Current decision: let the user decide themselves for the defaults...
-	static default = {
-		string: "",
-		number: 0,
-		object: null,
-		boolean: false,
-		bigint: 0n,
-		function: () => {},
-		any: null
-	}
+	public vectortypes: TypeofType[]
+	public typefunction: (x: any)=> TypeofType
+
+	// ? question: look below... same as there...
+	// = [
+	// 	"number",
+	// 	"string",
+	// 	"boolean",
+	// 	"function",
+	// 	"object",
+	// 	"bigint",
+	// 	"any",
+	// 	"undefined",
+	// 	"symbol"
+	// ]
+
+	// ? question: should this thing go? Or perhaps, one would define a separate class which would (in essence) be this? Or better, define a separate function so that one could diretly create new Vector<...>(...) with the use of it?
+	// static default = {
+	// 	string: "",
+	// 	number: 0,
+	// 	object: null,
+	// 	boolean: false,
+	// 	bigint: 0n,
+	// 	function: () => {},
+	// 	any: null
+	// }
+
+	// typefunction = (x: any): TypeOf => typeof x
 
 	constructor(
-		type: VectorType = ["any"],
+		vectortypes: TypeofType[],	
+		typefunction: (x: any) => TypeofType,	
+		type: TypeofType,
 		vector: Type[] = [],
 		defaultelement: Function = () => null,
 		transform: Function | null = null
@@ -734,6 +737,8 @@ class Vector<Type = any> {
 		this.type = type
 		this.default = defaultelement
 		this.transform = transform
+		this.vectortypes = vectortypes
+		this.typefunction = typefunction
 	}
 
 	static typecheck<T = any>(
@@ -786,7 +791,7 @@ class Vector<Type = any> {
 		this._vector[index2] = temp
 	}
 
-	fill(item: Type): Vector<Type> {
+	fill(item: Type): Vector<Type, TypeofType> {
 		Vector.typecheck(item, this._type)
 		this._vector.fill(item)
 		return this
@@ -824,28 +829,21 @@ class Vector<Type = any> {
 		return indexes
 	}
 
-	concat(vector: Vector<Type>) {
-		const vecCopy = copy(this.vector)
-		this.elementByElement(vector, "+")
-
-		const retCopy = copy(this.vector)
-		this.vector = vecCopy
-
-		return new Vector(
-			this.type,
-			Math.max(this.length, vector.length),
-			retCopy
-		)
+	concat(vector: Vector<Type, TypeofType>) {
+		return this.vector.concat(vector.vector)
 	}
 
 	map<T = any>(
 		f: (a: Type) => T = (x: any): any => x,
 		type: VectorType = this.type
-	): Vector<T> {
-		return new Vector<T>(type, this.length, this.vector.map(f))
+	): Vector<T, TypeofType> {
+		return new Vector<T, TypeofType>(, type, this.vector.map(f))
 	}
 
-	byElement<T>(vector: Vector<T>, operation: Function): Vector<Type> {
+	byElement<T, TypesType>(
+		vector: Vector<T, TypesType>,
+		operation: Function
+	): Vector<Type, TypeofType> {
 		const newVec = this.copy()
 		for (let i = 0; i < Math.min(vector.length, this.length); i++)
 			newVec.set(i, operation(this.vector[i], vector.vector[i]))
@@ -853,10 +851,11 @@ class Vector<Type = any> {
 	}
 
 	copy() {
-		return new Vector<Type>(
+		return new Vector<Type, TypeofType>(
+			deepCopy(this.vectortypes),
+			this.typefunction, 
+			deepCopy(this.vector),	
 			copy(this.type),
-			this.length,
-			deepCopy(this.vector),
 			this.default
 		)
 	}
@@ -879,14 +878,15 @@ class Vector<Type = any> {
 		return this._vector
 	}
 
-	get type(): VectorType {
+	get type(): TypeofType {
 		return this._type
 	}
 
-	set type(newType: VectorType) {
-		// TODO: create a separate function for this (isSubset or something); then, define isSuperset as its arguments' permutation...
+	set type(newType: TypeofType) {
+		// TODO: create a separate function for this kind of algorithm (isSubset or something); then, define isSuperset as its arguments' permutation...
+		// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
 		for (let i = 0; i < newType.length; i++)
-			if (!vectortypes.includes(newType[i]))
+			if (!this.vectortypes.includes(newType[i]))
 				throw new Error(`Unknown vector type: ${newType}`)
 
 		this._type = newType
@@ -961,7 +961,15 @@ export class NumberVector extends Vector<number> {
 	scalarAdd(scalar) {
 		for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
 	}
+	// TODO: add the addition of vectors... Should return one with length of the largest...
 }
+
+// * Current idea for the list of features:
+// * 1. Arbitrarily shaped;
+// * 2. Full of numbers;
+// * 3. Can have user-defined operations for doing certain things with numbers;
+// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
+export class NumberMatrix extends Vector<NumberVector> {}
 
 // TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 // TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
