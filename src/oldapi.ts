@@ -466,17 +466,31 @@ class Tests {
 // * 1. Arbitrarily shaped matrix;
 // * 2. Merely a Data-keeping thing (don't actually have any of the 'number' properties -- bunch of arrays...)
 // * 3. Generic typeing (by default -- untyped);
-class Matrix<Type = any> {
-	protected _matrix: Vector<Vector<Type>>
+// ? perhaps, export this thing too (that would mean renaming it);
+type Matrix<Type> = NestVector<2, Type>
 
-	constructor() {}
+// ? Should one also add one that is related to shape-things? (Consider)
+export function Matrix<Type>(
+	vector: any[][],
+	typechecker: (x: any) => x is Type,
+	defaultMatrix: [Function, Function] = [() => null, () => null],
+	defaultTransform: [Function | null, Function | null] = [null, null]
+): Matrix<Type> {
+	return nestedVector<Type>(
+		vector,
+		typechecker,
+		defaultMatrix,
+		defaultTransform,
+		2,
+		0
+	) as Matrix<Type>
 }
 
 // * Current idea for the list of features:
 // * 1. Arbitrarily shaped;
 // * 2. Full of numbers;
 // * 3. Can have user-defined operations for doing certain things with numbers;
-export class NumberMatrix extends Matrix<number> {}
+export class NumberMatrix implements Matrix<number> {}
 
 // TODO: create an implementation of the next idea:
 // * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap;
@@ -594,96 +608,8 @@ export class SquareNumberMatrix extends RectNumberMatrix {
 	}
 }
 
-/**
- * This class represents a mathematical rectangular matrix.
- */
-class RectMatrix<Type> extends Matrix<Type> {
-	protected _sidelen: [number, number] = [0, 0]
-
-	constructor(sidelens: [number, number] = [0, 0], dimensions = []) {
-		RectMatrix.dimensionCheck(sidelens, dimensions)
-
-		this._sidelen = sidelens
-		for (let i = 0; i < dimensions.length; i++)
-			this._matrix.add(new Vector("number", sidelens[0], dimensions[i]))
-	}
-
-	static dimensionCheck(sidelens = [0, 0], dimensions = []) {
-		while (sidelens[0] < dimensions.length) dimensions.pop()
-		while (sidelens[0] > dimensions.length)
-			dimensions.push(generate(1, sidelens[1]).map(() => 0))
-
-		for (let i = 0; i < sidelens[0] - 1; i++)
-			if (dimensions[i].length !== dimensions[i + 1].length) {
-				const biggerDimIndex =
-					dimensions[i].length < dimensions[i + 1].length ? i + 1 : i
-				const smallerDimIndex = biggerDimIndex === i ? i + 1 : i
-
-				for (let j = 0; j < dimensions.length[biggerDimIndex]; j++)
-					dimensions[smallerDimIndex].push(0)
-			}
-
-		for (let i = 0; i < sidelens[0]; i++)
-			while (dimensions[i].length > sidelens[1]) dimensions[i].pop()
-	}
-
-	get sidelen() {
-		return this._sidelen
-	}
-
-	set sidelen(sides: [number, number]) {
-		RectMatrix.dimensionCheck(sides)
-		this._sidelen = copy(sides)
-	}
-
-	get matrix() {
-		return this._matrix
-	}
-
-	toArray() {
-		const final = []
-		for (let i = 0; i < this._sidelen[0]; i++) {
-			final.push(this.matrix.index(i).vector)
-		}
-		return final
-	}
-
-	navigate(coordinate) {
-		switch (coordinate.length) {
-			case 1:
-				return this._matrix.index(coordinate[0])
-			case 2:
-				return this._matrix.index(coordinate[0]).index(coordinate[1])
-
-			default:
-				throw new Error(
-					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
-				)
-		}
-	}
-}
-
-/**
- * This class represents a square mathematical matrix.
- * It allows only numbers in itself.
- */
-export class SquareMatrix extends RectMatrix {
-	constructor(sidelen: number = 0, dimensions = []) {
-		super([sidelen, sidelen], dimensions)
-	}
-
-	static dimensionCheck(sidelen: number | number[], dimensions: any[]) {
-		RectMatrix.dimensionCheck(
-			typeof sidelen === "number" ? [sidelen, sidelen] : sidelen,
-			dimensions
-		)
-	}
-}
-
-// * IDEA: a general n-dimensional array factory-function;
+// * IDEA: a general n-dimensional vector factory-function;
 // TODO: implement the infinite counterpart...
-// TODO: implement the Matrices (and NumberMatrices) as a special case of it... One doesn't like the current implementation's basic approach...
-// * Problem: it don't work like that now...
 
 export type NestVector<
 	n extends number = 1,
@@ -2312,7 +2238,6 @@ export {
 	Ratio,
 	Algorithms,
 	Vector,
-	Matrix,
 	RectMatrix,
 	VarMapping,
 	Equation,
