@@ -18,7 +18,7 @@ const {
 	gutInnerArrs,
 	arrIntersections
 } = util
-const { UniversalMap } = types
+const { UniversalMap, isNumber, isUndefined } = types
 
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
@@ -697,23 +697,49 @@ export type NArray<
 	numarr extends number[] = []
 > = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
 
-// ! Problem: what kind of factory does one want? /:
-// * current decision: let it simply take an arbitrarily-dimensional array and then create and return something that is virtually a NestVector of the same depth...
-// ? Problem: what about the type of an N-Array?...
-// * current decision: take it from a different library...; It was still of little use there;
-// ? Problem: the thing has got the compile-time typing and runtime-typing being two separate things; 
-// * Pity; Not the library's problem; It's 'cause TypeScript is a ridiculous and in-99-percent-cases-useless piece of shit which don't have anything to do with anything which is the actual app, but only the polishing process... It also weighs 16 tons; 
-// ! Problem: TypeScript don't do recursion... The thing one wants is (seemingly) not possible in it (go line above ;)); Question: what is to be done? 
-// * Solution 1: ignore the types completely (use 'any', id est, write JavaScript); 
-// * Solution 2: f*** TS, rewrite the library in JavaScript (again; id est, write JavaScript); 
-// * CONCLUSION: one does not want TypeScript for this particular library's bit; 
-// ? Question: should it be got rid of for all the others? (This'll mean either: 1. manually rewriting; or 2. compiling to JS after some little more work and then finishing the stuff...;)
-// * For the oldapi, it looks rather a nice thing (would simplify things, though one would then make testing more thorough (more time on development)); 
-// ? what about the newapi? Some of the other things TypeScript does give are rather nice (all these function types...)
-export function nestedVector<n extends number = 1, Type = any>(
-	vector: NArray<n>
-): NestVector<n> {
-	return new Vector<NestVector<n>>("objects", vector.map((el) => nestedVector<n, Type>(el)))
+// * Check that out! It can do:
+export type VectorDepth<type> = type | Vector<VectorDepth<type>>
+// ! But it can't do (error):
+// export type VectorDepth<type> = type | VectorDepth<Vector<type>>
+// Just silly...
+
+// * This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
+// * Depth of the final vector is equal to the depth of the original array...
+export function nestedVector<Type = any>(
+	vector: any[],
+	typechecker: (x: any) => x is Type,
+	defaultElems: Function[] = vector.map(() => () => null),
+	transform: (Function | null)[] = vector.map(() => null)
+): Vector<VectorDepth<Type>> {
+	return new Vector<VectorDepth<Type>>(
+		["any"],
+		vector.map((el: any) =>
+			el instanceof Array && !typechecker(el)
+				? nestedVector<Type>(
+						el,
+						typechecker,
+						defaultElems.slice(1),
+						transform.slice(1)
+				  )
+				: el
+		),
+		defaultElems[0],
+		transform[0]
+	)
+}
+
+// * Counts all non-array elements within a multidimensional array passed...
+export function nonArrElems(array: any): number {
+	return array instanceof Array
+		? repeatedArithmetic(array.map(nonArrElems), "+")
+		: 1
+}
+
+// * Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+export function totalElems(array: any): number {
+	return array instanceof Array
+		? array.length + repeatedArithmetic(array.map(totalElems), "+")
+		: 0
 }
 
 // * This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
@@ -752,8 +778,8 @@ class Vector<Type = any> {
 	protected _type: VectorType
 	protected _length: number
 	protected _vector: Type[]
-	protected transform: Function | null
-	protected default: Function
+	public transform: Function | null
+	public default: Function
 
 	// TODO: some things use it... Redo it to be UniversalMap... (trouble with useing arrays, see...)
 	// ? question: which defaults to use for the mixed types???
@@ -770,14 +796,13 @@ class Vector<Type = any> {
 
 	constructor(
 		type: VectorType = ["any"],
-		length: number = 0,
 		vector: Type[] = [],
 		defaultelement: Function = () => null,
 		transform: Function | null = null
 	) {
-		this.length = length
+		this._vector = vector
+		this._length = vector.length
 		this.type = type
-		this.vector = vector
 		this.default = defaultelement
 		this.transform = transform
 	}
@@ -1515,6 +1540,7 @@ function op(
 	throw new Error(`Undefined operator ${operator}!`)
 }
 
+// ? make the Expressions' api more complex? Add orders of following, arities, that sort of thing?
 // TODO: rewrite this later, as a repeated application of the same function on itself...
 // * Example of how one's future Code might look like (currrently, won't work; no dependency):
 // const repeatedOperation = (objects: string[], operator: string) =>
@@ -1529,14 +1555,23 @@ function op(
  * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
  * @param {string} operator - A string, containing an operator, with which expression will be executed.
  */
-function repeatedOperation(objects: any[] = [], operator: string) {
+function repeatedOperation(
+	objects: any[] = [],
+	operator: string,
+	table: OperatorDefinitions = defaultTable
+) {
 	return new Expression(
 		objects,
-		objects.map(() => operator)
+		objects.map(() => operator),
+		table
 	).execute()
 }
 
 // TODO: same as the function above -- use the repeatedApplication...
+// * code-rework
+
+// TODO: problem -- this thing does not take the number of operands into account (always uses the expression.operators[i] as binary); This should change...
+// * Rework this thing capitally...
 /**
  * Executes mathematical expression with different operators and numbers.
  *
@@ -1560,6 +1595,7 @@ function fullExp(expression: Expression): any {
 	return result
 }
 
+// TODO: same difficulty as above. WORKS ONLY WITH BINARY OPERATORS...
 /**
  * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
  *
@@ -1915,13 +1951,10 @@ export function commonMultiples(
 	return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
 }
 
-export function leastCommonDivisor(...nums: number[]) {
-	if (nums.length === 0) return undefined
-	if (nums.length === 1) return nums[0]
-	if (nums.length === 2)
-		return min(arrIntersections([factorOut(nums[0]), factorOut(nums[1])]))
-
-	return leastCommonDivisor(nums[0], leastCommonDivisor(...nums.slice(1)))
+export function leastCommonDivisor(...nums: number[]): undefined | number {
+	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value; 
+	return ((x: number[] | number | undefined) =>
+		isNumber(x) || isUndefined(x) ? x : min(x))(commonDivisors(...nums))
 }
 
 export function commonDivisors(
@@ -2139,7 +2172,7 @@ function allFactors(number: number): number[] {
 function factorial(number: number): number {
 	const numbers = []
 
-	// TODO: after having implemented the Gamma function for the old API (?maybe just extend this one?), pray do make this thing work properly...
+	// TODO: after having implemented the Gamma function for the old API (?maybe just extend this one?), pray do make this thing more general...
 	if (number < 0)
 		throw new Error(
 			"factorial() function is not supposed to be used with the negative numbers. "

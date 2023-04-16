@@ -124,3 +124,9 @@
     Then, compile and test (using the both environments); 
 
 14. Reminder -- after the 1.0 release, pray do work with the other libraries, publish them and then use as dependnecies (their previous versions) of this one in the 1.1 release; 
+
+15. Create some sort of a mark for the code-reworking todos... The library floods with them already and its first version is not even finished yet...
+
+    Tidy up the TODOS generally... 
+    Let they still lie around the code like that (because otherwise one may lose where was it supposed to belong to...), 
+    but pray do create some sort of self-syntax for it or something...

@@ -233,6 +233,7 @@ export namespace util {
 	// * Same permutations for the InfiniteMap and UniversalMap...
 
 	// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
+	// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
 
 	// TODO: add more methods to UniversalMap and InfiniteMap;
 	// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
@@ -385,8 +386,14 @@ export namespace types {
 		return _result
 	}
 
+	// TODO: define such similar "default" types' typecheckers; TypeScript is an unworkable piece of shit and a pain to work with; Let the library make this easier about working with it, at the very least; 
+	// TODO: pray do define all such for all types present within the library; 
 	export function isNumber(x: any): x is number {
 		return typeof x === "number"
+	}
+
+	export function isUndefined(x: any): x is undefined {
+		return x === undefined
 	}
 
 	// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library...
@@ -473,7 +480,7 @@ export namespace types {
 		return result
 	}
 
-	// TODO document what does this do properly...
+	// TODO: document what does this do exactly... Along with everything else...
 	// TODO: pray re-order the library's new API again (don't seem to completely like the way it looks like currently...)
 	export function sameStructure<T = any>(
 		array: types.RecursiveArray<T>,
