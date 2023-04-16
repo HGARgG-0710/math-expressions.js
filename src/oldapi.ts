@@ -457,6 +457,11 @@ class Tests {
 	}
 }
 
+// ? does one want matricies after all?
+// * There is the nestedVector() function now... It can generate objects of corresponding kind...
+// ! No, let it be; The matricies will turn into the special case of the nestedVector(); All the methods of theirs are just special cases of reuses-redefinitions of the Vector stuff...
+// * The Number-related Matricies will be transformed into something else too, but their stuff will still be general and the defaults will stay too...
+
 // * Current idea for the list of features:
 // * 1. Arbitrarily shaped matrix;
 // * 2. Merely a Data-keeping thing (don't actually have any of the 'number' properties -- bunch of arrays...)
@@ -476,86 +481,13 @@ export class NumberMatrix extends Matrix<number> {}
 // TODO: create an implementation of the next idea:
 // * IDEA: a class of InfiniteWrapper, which would allow to 'wrap' anything into a class with arbitrary InfiniteMap;
 // * Alternative, of 'just' Wrapper for the oldapi (same, yet finite...; uses UniversalMap);
-// ? Question: should UniversalMap not be brought to the oldapi?
-// * Current decision: no;
 // ? Question: should 'oldapi' not be named 'finite' and the 'newapi' be named 'infinite' or some other such renaming to better represent what are they in truth? Pray do think about that...
 
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 // * 3. Rectangular-shaped;
-export class RectNumberMatrix extends NumberMatrix {}
-
-// * Current idea for the list of features:
-// * 1. Only numbers ;
-// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
-// * 3. Square-shaped;
-export class SquareNumberMatrix extends RectNumberMatrix {}
-
-/**
- * This class represents a mathematical rectangular matrix.
- */
-class RectMatrix<Type> extends Matrix<Type> {
-	protected _sidelen: [number, number] = [0, 0]
-
-	constructor(sidelens: [number, number] = [0, 0], dimensions = []) {
-		RectMatrix.dimensionCheck(sidelens, dimensions)
-
-		this._sidelen = sidelens
-		for (let i = 0; i < dimensions.length; i++)
-			this._matrix.add(new Vector("number", sidelens[0], dimensions[i]))
-	}
-
-	static dimensionCheck(sidelens = [0, 0], dimensions = []) {
-		while (sidelens[0] < dimensions.length) dimensions.pop()
-		while (sidelens[0] > dimensions.length)
-			dimensions.push(generate(1, sidelens[1]).map(() => 0))
-
-		for (let i = 0; i < sidelens[0] - 1; i++)
-			if (dimensions[i].length !== dimensions[i + 1].length) {
-				const biggerDimIndex =
-					dimensions[i].length < dimensions[i + 1].length ? i + 1 : i
-				const smallerDimIndex = biggerDimIndex === i ? i + 1 : i
-
-				for (let j = 0; j < dimensions.length[biggerDimIndex]; j++)
-					dimensions[smallerDimIndex].push(0)
-			}
-
-		for (let i = 0; i < sidelens[0]; i++)
-			while (dimensions[i].length > sidelens[1]) dimensions[i].pop()
-	}
-
-	get sidelen() {
-		return this._sidelen
-	}
-
-	set sidelen(sides: [number, number]) {
-		RectMatrix.dimensionCheck(sides)
-		this._sidelen = copy(sides)
-	}
-
-	get matrix() {
-		return this._matrix
-	}
-
-	scalarAdd(scalar) {
-		for (let i = 0; i < this.sidelen[0]; i++)
-			this.matrix.index(i).scalarAdd(scalar)
-	}
-
-	scalarMultiply(scalar) {
-		for (let i = 0; i < this.sidelen[0]; i++)
-			this.matrix.index(i).scalarMultiply(scalar)
-	}
-
-	toArray() {
-		const final = []
-		for (let i = 0; i < this._sidelen[0]; i++) {
-			final.push(this.matrix.index(i).vector)
-		}
-		return final
-	}
-
+export class RectNumberMatrix extends NumberMatrix {
 	matrixMultiply(matrix) {
 		if (this.sidelen[0] !== matrix.sidelen[1])
 			throw new Error(
@@ -573,21 +505,6 @@ class RectMatrix<Type> extends Matrix<Type> {
 
 		return new RectMatrix([matrix.sidelen[0], this.sidelen[1]], result)
 	}
-
-	navigate(coordinate) {
-		switch (coordinate.length) {
-			case 1:
-				return this._matrix.index(coordinate[0])
-			case 2:
-				return this._matrix.index(coordinate[0]).index(coordinate[1])
-
-			default:
-				throw new Error(
-					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
-				)
-		}
-	}
-
 	// ! does one not want this to become a more generalized thing, like matrixOperator for example (one could attach this to op, then)?
 	addMatrix(matrix) {
 		// ! This should be thrown out, for user to implement...
@@ -609,24 +526,23 @@ class RectMatrix<Type> extends Matrix<Type> {
 
 		return thisCopy
 	}
+
+	scalarAdd(scalar) {
+		for (let i = 0; i < this.sidelen[0]; i++)
+			this.matrix.index(i).scalarAdd(scalar)
+	}
+
+	scalarMultiply(scalar) {
+		for (let i = 0; i < this.sidelen[0]; i++)
+			this.matrix.index(i).scalarMultiply(scalar)
+	}
 }
 
-/**
- * This class represents a square mathematical matrix.
- * It allows only numbers in itself.
- */
-export class SquareMatrix extends RectMatrix {
-	constructor(sidelen: number = 0, dimensions = []) {
-		super([sidelen, sidelen], dimensions)
-	}
-
-	static dimensionCheck(sidelen: number | number[], dimensions: any[]) {
-		RectMatrix.dimensionCheck(
-			typeof sidelen === "number" ? [sidelen, sidelen] : sidelen,
-			dimensions
-		)
-	}
-
+// * Current idea for the list of features:
+// * 1. Only numbers ;
+// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
+// * 3. Square-shaped;
+export class SquareNumberMatrix extends RectNumberMatrix {
 	/**
 	 * Finds the determinant of a square matrix it's invoked onto.
 	 */
@@ -678,30 +594,111 @@ export class SquareMatrix extends RectMatrix {
 	}
 }
 
+/**
+ * This class represents a mathematical rectangular matrix.
+ */
+class RectMatrix<Type> extends Matrix<Type> {
+	protected _sidelen: [number, number] = [0, 0]
+
+	constructor(sidelens: [number, number] = [0, 0], dimensions = []) {
+		RectMatrix.dimensionCheck(sidelens, dimensions)
+
+		this._sidelen = sidelens
+		for (let i = 0; i < dimensions.length; i++)
+			this._matrix.add(new Vector("number", sidelens[0], dimensions[i]))
+	}
+
+	static dimensionCheck(sidelens = [0, 0], dimensions = []) {
+		while (sidelens[0] < dimensions.length) dimensions.pop()
+		while (sidelens[0] > dimensions.length)
+			dimensions.push(generate(1, sidelens[1]).map(() => 0))
+
+		for (let i = 0; i < sidelens[0] - 1; i++)
+			if (dimensions[i].length !== dimensions[i + 1].length) {
+				const biggerDimIndex =
+					dimensions[i].length < dimensions[i + 1].length ? i + 1 : i
+				const smallerDimIndex = biggerDimIndex === i ? i + 1 : i
+
+				for (let j = 0; j < dimensions.length[biggerDimIndex]; j++)
+					dimensions[smallerDimIndex].push(0)
+			}
+
+		for (let i = 0; i < sidelens[0]; i++)
+			while (dimensions[i].length > sidelens[1]) dimensions[i].pop()
+	}
+
+	get sidelen() {
+		return this._sidelen
+	}
+
+	set sidelen(sides: [number, number]) {
+		RectMatrix.dimensionCheck(sides)
+		this._sidelen = copy(sides)
+	}
+
+	get matrix() {
+		return this._matrix
+	}
+
+	toArray() {
+		const final = []
+		for (let i = 0; i < this._sidelen[0]; i++) {
+			final.push(this.matrix.index(i).vector)
+		}
+		return final
+	}
+
+	navigate(coordinate) {
+		switch (coordinate.length) {
+			case 1:
+				return this._matrix.index(coordinate[0])
+			case 2:
+				return this._matrix.index(coordinate[0]).index(coordinate[1])
+
+			default:
+				throw new Error(
+					`Coordinate array with invalid length passed. Expected 1 or 2, but got ${coordinate.length}.`
+				)
+		}
+	}
+}
+
+/**
+ * This class represents a square mathematical matrix.
+ * It allows only numbers in itself.
+ */
+export class SquareMatrix extends RectMatrix {
+	constructor(sidelen: number = 0, dimensions = []) {
+		super([sidelen, sidelen], dimensions)
+	}
+
+	static dimensionCheck(sidelen: number | number[], dimensions: any[]) {
+		RectMatrix.dimensionCheck(
+			typeof sidelen === "number" ? [sidelen, sidelen] : sidelen,
+			dimensions
+		)
+	}
+}
+
 // * IDEA: a general n-dimensional array factory-function;
-// TODO: implement...
 // TODO: implement the infinite counterpart...
 // TODO: implement the Matrices (and NumberMatrices) as a special case of it... One doesn't like the current implementation's basic approach...
+// * Problem: it don't work like that now...
 
-// ? this thing is the type for nest n-vectors of a given type (the single thing about it is that they are only for compile-time type support)
 export type NestVector<
 	n extends number = 1,
 	Type = any,
 	arr extends number[] = []
 > = arr["length"] extends n ? Type : Vector<NestVector<n, Type, [...arr, n]>>
 
-// ? wonder... Does TypeScript allow to generalize this thing? Seemingly not;
 export type NArray<
 	n extends number = 1,
 	Type = any,
 	numarr extends number[] = []
 > = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
 
-// * Check that out! It can do:
+// * Infinitely mixed-typed vector type;
 export type VectorDepth<type> = type | Vector<VectorDepth<type>>
-// ! But it can't do (error):
-// export type VectorDepth<type> = type | VectorDepth<Vector<type>>
-// Just silly...
 
 // * This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
 // * Depth of the final vector is equal to the depth of the original array...
@@ -709,17 +706,21 @@ export function nestedVector<Type = any>(
 	vector: any[],
 	typechecker: (x: any) => x is Type,
 	defaultElems: Function[] = vector.map(() => () => null),
-	transform: (Function | null)[] = vector.map(() => null)
+	transform: (Function | null)[] = vector.map(() => null),
+	dimensions: number = Infinity,
+	currDim: number = 0
 ): Vector<VectorDepth<Type>> {
 	return new Vector<VectorDepth<Type>>(
 		["any"],
 		vector.map((el: any) =>
-			el instanceof Array && !typechecker(el)
+			el instanceof Array && !typechecker(el) && currDim < dimensions
 				? nestedVector<Type>(
 						el,
 						typechecker,
 						defaultElems.slice(1),
-						transform.slice(1)
+						transform.slice(1),
+						dimensions,
+						currDim + 1
 				  )
 				: el
 		),
@@ -755,6 +756,8 @@ export type VectorType = (
 	| "symbol"
 )[]
 
+// * IDEA: add a way for user to specify their own typing of vectors; add an argument for the 'typing' function, which is by default 'typeof', same as the 'vectortypes'; this thing (then) would become a field of a class instance (becuase one don't have templates...);
+// TODO: yes, pray do add that...
 export const vectortypes = [
 	"number",
 	"string",
@@ -1952,7 +1955,7 @@ export function commonMultiples(
 }
 
 export function leastCommonDivisor(...nums: number[]): undefined | number {
-	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value; 
+	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
 	return ((x: number[] | number | undefined) =>
 		isNumber(x) || isUndefined(x) ? x : min(x))(commonDivisors(...nums))
 }
