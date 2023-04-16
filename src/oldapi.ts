@@ -1,5 +1,5 @@
-// TODO: Suggestion: why not take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi? 
-// * Then, one would be using the names of 'finite' and 'infinite' accordingly, instead of 'old' and 'new'; 
+// TODO: Suggestion: why not take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi?
+// * Then, one would be using the names of 'finite' and 'infinite' accordingly, instead of 'old' and 'new';
 
 /**
  * * This is the Old API source code, version pre-1.0 (in work).
@@ -49,6 +49,7 @@ const { UniversalMap, isNumber, isUndefined } = types
  * * This variable characterizes how many fixed numbers are outputted.
  * * You can change it freely using setPrecision() function, if you want a more "precise" output of some of the functions.
  */
+// ? should this thing be kept even? (Consider)
 export let fixedSize: number = 11
 
 // Aliases
@@ -492,6 +493,414 @@ export function Matrix<Type>(
 // * Alternative, of 'just' Wrapper for the oldapi (same, yet finite...; uses UniversalMap);
 // ? Question: should 'oldapi' not be named 'finite' and the 'newapi' be named 'infinite' or some other such renaming to better represent what are they in truth? Pray do think about that...
 
+// * IDEA: a general n-dimensional vector factory-function;
+// TODO: implement the infinite counterpart...
+
+export type NestVector<
+	n extends number = 1,
+	Type = any,
+	arr extends number[] = []
+> = arr["length"] extends n ? Type : Vector<NestVector<n, Type, [...arr, n]>>
+
+export type NArray<
+	n extends number = 1,
+	Type = any,
+	numarr extends number[] = []
+> = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
+
+// Infinitely mixed-typed vector type;
+export type VectorDepth<type, TypeofType = TypeOf> =
+	| type
+	| Vector<VectorDepth<type, TypeofType>, TypeofType>
+
+// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
+// Depth of the final vector is equal to the depth of the original array...
+export function nestedVector<Type = any, TypeofType = TypeOf>(
+	vector: types.RecursiveArray<Type>,
+	typechecker: (x: any) => x is Type,
+	defaultElems: Function[] = vector.map(() => () => null),
+	transform: (Function | null)[] = vector.map(() => null),
+	dimensions: number = Infinity,
+	currDim: number = 0
+): Vector<VectorDepth<Type, TypeofType>> {
+	return new Vector<VectorDepth<Type, TypeofType>>({
+		vectortypes: ["any"],
+		typefunction: vector.map((el: any) =>
+			types.isRecursiveArray<Type>(el, typechecker) &&
+			!typechecker(el) &&
+			currDim < dimensions
+				? nestedVector<Type, TypeofType>(
+						el,
+						typechecker,
+						defaultElems.slice(1),
+						transform.slice(1),
+						dimensions,
+						currDim + 1
+				  )
+				: el
+		),
+		type: defaultElems[0],
+		vector: transform[0]
+	})
+}
+
+// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
+// * Counts all non-array elements within a multidimensional array passed...
+export function nonArrElems(array: any): number {
+	return array instanceof Array
+		? repeatedArithmetic(array.map(nonArrElems), "+")
+		: 1
+}
+
+// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+export function totalElems(array: any): number {
+	return array instanceof Array
+		? array.length + repeatedArithmetic(array.map(totalElems), "+")
+		: 0
+}
+
+// This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
+// More general than, but also corresponds to:
+// | "number"
+// | "string"
+// | "boolean"
+// | "function"
+// | "object"
+// | "bigint"
+// | "any"
+// | "undefined"
+// | "symbol"
+export type TypeOf = ReturnType<(x: any) => typeof x>
+export type VectorType = TypeOf[]
+
+// TODO: Add the runtime type-safety to all the data-keeping types...
+// ? Suggestion: Add the runtime type-safety to all the things within the library...
+// * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime;
+/**
+ * This class represents a length-safe array with some nice stuff added to it.
+ * It also may behave like a mathematical vector.
+ */
+class Vector<Type = any, TypeofType = TypeOf> {
+	protected _type: TypeofType
+	protected _length: number
+	protected _vector: Type[]
+
+	public transform: Function | null
+	public default: Function
+	public vectortypes: TypeofType[]
+	public typefunction: (x: any) => TypeofType
+
+	// ? question: look below... same as there...
+	// = [
+	// 	"number",
+	// 	"string",
+	// 	"boolean",
+	// 	"function",
+	// 	"object",
+	// 	"bigint",
+	// 	"any",
+	// 	"undefined",
+	// 	"symbol"
+	// ]
+
+	// ? question: should this thing go? Or perhaps, one would define a separate class which would (in essence) be this? Or better, define a separate function so that one could diretly create new Vector<...>(...) with the use of it?
+	// static default = {
+	// 	string: "",
+	// 	number: 0,
+	// 	object: null,
+	// 	boolean: false,
+	// 	bigint: 0n,
+	// 	function: () => {},
+	// 	any: null
+	// }
+
+	// typefunction = (x: any): TypeOf => typeof x
+
+	public typecheck: (x: any) => boolean
+	public typefail: Function
+
+	// TODO: make this thing into a separate type or something... It is very big and clumsy (though, useful...)
+	constructor({
+		vectortypes,
+		typefunction,
+		type,
+		vector = [],
+		defaultelement = () => null,
+		transform = null,
+		typecheck,
+		typefail
+	}: {
+		vectortypes: TypeofType[]
+		typefunction: (x: any) => TypeofType
+		type: TypeofType
+		vector: Type[]
+		defaultelement: Function
+		transform: Function | null
+		typecheck: (x: any) => boolean
+		typefail: Function
+	}) {
+		this._vector = vector
+		this._length = vector.length
+		this.type = type
+		this.default = defaultelement
+		this.transform = transform
+		this.vectortypes = vectortypes
+		this.typefunction = typefunction
+		this.typecheck = typecheck
+		this.typefail = typefail
+	}
+
+	static typecheck<Type = any, TypeofType = TypeOf, T = any>(
+		item: T,
+		vector: Vector<Type, TypeofType>
+	): any {
+		if (!vector.typecheck(item)) {
+			if (!vector.transform) {
+				vector.typefail()
+				return
+			}
+			return vector.transform(item)
+		}
+		// TODO:
+		// * Again, the defaults..?
+		// if (!type.includes(typeof item) && !type.includes("any")) {
+		// 	if (transform) return transform(item)
+		// 	throw new Error(
+		// 		`Type of item ${item} is not equal to vector type: [${type
+		// 			.map((a) => `"${a}"`)
+		// 			.join(",")}]. Item type: ${typeof item}`
+		// 	)
+		// }
+	}
+
+	delete(index: number): Type {
+		const deleted = this._vector[index]
+
+		if (index < this._length - 1)
+			for (let i = index; i < this._length - 1; i++)
+				this._vector[i] = this._vector[i + 1]
+
+		this._length--
+		this._vector.pop()
+
+		return deleted
+	}
+
+	// TODO: make arbitrary indexes writeable...
+	add(item: Type) {
+		if (!this.transform) Vector.typecheck(item, this)
+		this._length++
+		return (
+			this.vector.push(this.transform ? this.transform(item) : item) - 1
+		)
+	}
+
+	swap(index1: number, index2: number) {
+		if (
+			typeof index1 !== "number" ||
+			typeof index2 !== "number" ||
+			this._vector[index1] === undefined ||
+			this._vector[index2] === undefined
+		)
+			throw new Error("Invalid indexes passed. ")
+
+		const temp = this._vector[index1]
+		this._vector[index1] = this._vector[index2]
+		this._vector[index2] = temp
+	}
+
+	fill(item: Type): Vector<Type, TypeofType> {
+		Vector.typecheck(item, this)
+		this._vector.fill(item)
+		return this
+	}
+
+	// TODO: here, implement a beautiful construction way for arbitrary Vectors;
+	construct() {}
+
+	set(index: number, value: Type) {
+		if (this._vector[index] === undefined)
+			throw new Error("Invalid index passed into the set function.")
+		this._vector[index] = value
+	}
+
+	index(i: number): Type {
+		return this._vector[i]
+	}
+
+	slice(start, end = this.vector.length) {
+		const sliced = this._vector.slice(start, end)
+		return new Vector({
+			vectortypes: this._type,
+			typefunction: sliced.length,
+			type: sliced
+		})
+	}
+
+	indexof(element: Type): number {
+		return this._vector.indexOf(element)
+	}
+
+	indexes(element: Type): number[] {
+		const indexes: number[] = [this._vector.indexOf(element)]
+
+		if (indexes[0] >= 0)
+			for (let i = indexes[0] + 1; i < this._length; i++)
+				if (this._vector[i] === element) indexes.push(i)
+
+		return indexes
+	}
+
+	concat(vector: Vector<Type, TypeofType>) {
+		return this.vector.concat(vector.vector)
+	}
+
+	map<T = any>(
+		f: (a: Type) => T = (x: any): any => x,
+		type: VectorType = this.type
+	): Vector<T, TypeofType> {
+		return new Vector<T, TypeofType>({
+			vectortypes: type,
+			typefunction: this.vector.map(f)
+		})
+	}
+
+	byElement<T, TypesType>(
+		vector: Vector<T, TypesType>,
+		operation: Function
+	): Vector<Type, TypeofType> {
+		const newVec = this.copy()
+		for (let i = 0; i < Math.min(vector.length, this.length); i++)
+			newVec.set(i, operation(this.vector[i], vector.vector[i]))
+		return newVec
+	}
+
+	copy() {
+		return new Vector<Type, TypeofType>({
+			vectortypes: deepCopy(this.vectortypes),
+			typefunction: this.typefunction,
+			type: deepCopy(this.vector),
+			vector: copy(this.type),
+			defaultelement: this.default
+		})
+	}
+
+	static type(array: any[]): VectorType {
+		if (!array.length) return ["any"]
+
+		// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
+		const type: VectorType = [typeof array[0]]
+		for (const element of array)
+			if (!type.includes(typeof element)) type.push(typeof element)
+		return type
+	}
+
+	get length(): number {
+		return this._length
+	}
+
+	get vector(): Type[] {
+		return this._vector
+	}
+
+	get type(): TypeofType {
+		return this._type
+	}
+
+	set type(newType: TypeofType) {
+		// TODO: create an isSubset array function; would check if one array is having all the elements of the other using some chosen 'comparison'; then, define isSuperset as its arguments' permutation...
+		// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
+		// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
+		// for (let i = 0; i < newType.length; i++)
+		// 	if (!this.vectortypes.includes(newType[i]))
+		// 		throw new Error(`Unknown vector type: ${newType}`)
+
+		this._type = newType
+		Vector.typecheck(this.vector, this)
+	}
+
+	set length(newLength: number) {
+		if (newLength < 0)
+			throw new Error(`Passed negative length: ${newLength}`)
+
+		if (newLength < this._length)
+			for (let i = this._length; i > newLength; i--) this._vector.pop()
+
+		if (newLength > this._length)
+			for (let i = this._length; i < newLength; i++)
+				this._vector[i] = this.default(this.type)
+
+		this._length = newLength
+	}
+
+	set vector(newVector: Type[]) {
+		const type = Vector.type(newVector)
+		this._vector = newVector
+		this.length = newVector.length
+		if (!valueCompare(type, this.type)) this._type = type
+	}
+}
+
+// TODO: rewrite; finish...
+// * Current idea for a list of features:
+// * 1. All number-related methods and features;
+// * 2. Based on number-version of the Vector
+export class NumberVector extends Vector<number> {
+	vectorScalarMultiply(vector) {
+		const main =
+			Math.max(this.length, vector.length) == vector.length
+				? vector
+				: this
+		const other = main.vector == vector.vector ? this : vector
+		return repeatedArithmetic(
+			other.vector.map((el, i) => el * main.vector[i]),
+			"+"
+		)
+	}
+	crossProduct(vector) {
+		if (this.length != 3 && this.length != 7)
+			throw new Error(
+				"Cross product is not defined for vectors, which lengths aren't 3 or 7. "
+			)
+		if (this.length != vector.length)
+			throw new Error(
+				"Trying to cross product vectors with different lengths. "
+			)
+
+		if (vector.length === 3)
+			return new Vector({
+				vectortypes: ["number"],
+				typefunction: 3,
+				type: [
+					this.vector[1] * vector.vector[2] -
+						vector.vector[1] * this.vector[2],
+					vector.vector[0] * this.vector[2] -
+						this.vector[0] * vector.vector[2],
+					this.vector[0] * vector.vector[1] -
+						this.vector[1] * vector.vector[0]
+				]
+			})
+
+		// TODO: Use the RectMatrix product formula on wikipedia page.
+	}
+
+	scalarMultiply(scalar) {
+		for (let i = 0; i < this._vector.length; i++) this._vector[i] *= scalar
+	}
+
+	scalarAdd(scalar) {
+		for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
+	}
+	// TODO: add the addition of vectors... Should return one with length of the largest...
+}
+
+// * Current idea for the list of features:
+// * 1. Arbitrarily shaped;
+// * 2. Full of numbers;
+// * 3. Can have user-defined operations for doing certain things with numbers;
+// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
+export class NumberMatrix extends Vector<NumberVector> {}
+
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
@@ -602,374 +1011,6 @@ export class SquareNumberMatrix extends RectNumberMatrix {
 		)
 	}
 }
-
-// * IDEA: a general n-dimensional vector factory-function;
-// TODO: implement the infinite counterpart...
-
-export type NestVector<
-	n extends number = 1,
-	Type = any,
-	arr extends number[] = []
-> = arr["length"] extends n ? Type : Vector<NestVector<n, Type, [...arr, n]>>
-
-export type NArray<
-	n extends number = 1,
-	Type = any,
-	numarr extends number[] = []
-> = numarr["length"] extends n ? Type : NArray<n, Type, [...numarr, n]>[]
-
-// * Infinitely mixed-typed vector type;
-export type VectorDepth<type, TypeofType = TypeOf> = type | Vector<VectorDepth<type, TypeofType>, TypeofType>
-
-// * This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
-// * Depth of the final vector is equal to the depth of the original array...
-export function nestedVector<Type = any, TypeofType = TypeOf>(
-	vector: types.RecursiveArray<Type>,
-	typechecker: (x: any) => x is Type,
-	defaultElems: Function[] = vector.map(() => () => null),
-	transform: (Function | null)[] = vector.map(() => null),
-	dimensions: number = Infinity,
-	currDim: number = 0
-): Vector<VectorDepth<Type, TypeofType>> {
-	return new Vector<VectorDepth<Type, TypeofType>>(
-		["any"],
-		vector.map((el: any) =>
-			el instanceof Array && !typechecker(el) && currDim < dimensions
-				? nestedVector<Type, TypeofType>(
-						el,
-						typechecker,
-						defaultElems.slice(1),
-						transform.slice(1),
-						dimensions,
-						currDim + 1
-				  )
-				: el
-		),
-		defaultElems[0],
-		transform[0]
-	)
-}
-
-// * Counts all non-array elements within a multidimensional array passed...
-export function nonArrElems(array: any): number {
-	return array instanceof Array
-		? repeatedArithmetic(array.map(nonArrElems), "+")
-		: 1
-}
-
-// * Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-export function totalElems(array: any): number {
-	return array instanceof Array
-		? array.length + repeatedArithmetic(array.map(totalElems), "+")
-		: 0
-}
-
-// * This stuff corresponds to the combinations of JavaScript's 'typeof' values, but not TypeScript's 'typeof''s;
-// More general than, but also corresponds to:
-// | "number"
-// | "string"
-// | "boolean"
-// | "function"
-// | "object"
-// | "bigint"
-// | "any"
-// | "undefined"
-// | "symbol"
-export type TypeOf = ReturnType<(x: any) => typeof x>
-export type VectorType = TypeOf[]
-
-// * IDEA: add a way for user to specify their own typing of vectors; add an argument for the 'typing' function, which is by default 'typeof', same as the 'vectortypes'; this thing (then) would become a field of a class instance (becuase one don't have templates...);
-// TODO: yes, pray do add that...
-
-// TODO: this thing represents a Vector, that is in fact GeneralVector; It is for data keeping; (Make this thing generic... Let it keep the runtime type-safety; Add the runtime type-safety to all the data-keeping types...)
-// ? Suggestion: Add the runtime type-safety to all the things within the library...
-// * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime (one for the developer and one for the user);
-/**
- * This class represents a length-safe array with some nice stuff added to it.
- * It also may behave like a mathematical vector.
- */
-class Vector<Type = any, TypeofType = TypeOf> {
-	protected _type: TypeofType
-	protected _length: number
-	protected _vector: Type[]
-	public transform: Function | null
-	public default: Function
-
-	public vectortypes: TypeofType[]
-	public typefunction: (x: any)=> TypeofType
-
-	// ? question: look below... same as there...
-	// = [
-	// 	"number",
-	// 	"string",
-	// 	"boolean",
-	// 	"function",
-	// 	"object",
-	// 	"bigint",
-	// 	"any",
-	// 	"undefined",
-	// 	"symbol"
-	// ]
-
-	// ? question: should this thing go? Or perhaps, one would define a separate class which would (in essence) be this? Or better, define a separate function so that one could diretly create new Vector<...>(...) with the use of it?
-	// static default = {
-	// 	string: "",
-	// 	number: 0,
-	// 	object: null,
-	// 	boolean: false,
-	// 	bigint: 0n,
-	// 	function: () => {},
-	// 	any: null
-	// }
-
-	// typefunction = (x: any): TypeOf => typeof x
-
-	constructor(
-		vectortypes: TypeofType[],	
-		typefunction: (x: any) => TypeofType,	
-		type: TypeofType,
-		vector: Type[] = [],
-		defaultelement: Function = () => null,
-		transform: Function | null = null
-	) {
-		this._vector = vector
-		this._length = vector.length
-		this.type = type
-		this.default = defaultelement
-		this.transform = transform
-		this.vectortypes = vectortypes
-		this.typefunction = typefunction
-	}
-
-	static typecheck<T = any>(
-		item: T,
-		type: VectorType,
-		transform: Function | null = null
-	): void | never {
-		if (!type.includes(typeof item) && !type.includes("any")) {
-			if (transform) return transform(item)
-			throw new Error(
-				`Type of item ${item} is not equal to vector type: [${type
-					.map((a) => `"${a}"`)
-					.join(",")}]. Item type: ${typeof item}`
-			)
-		}
-	}
-
-	delete(index: number): Type {
-		const deleted = this._vector[index]
-
-		if (index < this._length - 1)
-			for (let i = index; i < this._length - 1; i++)
-				this._vector[i] = this._vector[i + 1]
-
-		this._length--
-		this._vector.pop()
-
-		return deleted
-	}
-
-	add(item: Type) {
-		if (!this.transform) Vector.typecheck(item, this._type)
-		this._length++
-		return (
-			this.vector.push(this.transform ? this.transform(item) : item) - 1
-		)
-	}
-
-	swap(index1: number, index2: number) {
-		if (
-			typeof index1 !== "number" ||
-			typeof index2 !== "number" ||
-			this._vector[index1] === undefined ||
-			this._vector[index2] === undefined
-		)
-			throw new Error("Invalid indexes passed. ")
-
-		const temp = this._vector[index1]
-		this._vector[index1] = this._vector[index2]
-		this._vector[index2] = temp
-	}
-
-	fill(item: Type): Vector<Type, TypeofType> {
-		Vector.typecheck(item, this._type)
-		this._vector.fill(item)
-		return this
-	}
-
-	// TODO: here, implement a beautiful construction way for arbitrary Vectors;
-	construct() {}
-
-	set(index: number, value: Type) {
-		if (this._vector[index] === undefined)
-			throw new Error("Invalid index passed into the set function.")
-		this._vector[index] = value
-	}
-
-	index(i: number): Type {
-		return this._vector[i]
-	}
-
-	slice(start, end = this.vector.length) {
-		const sliced = this._vector.slice(start, end)
-		return new Vector(this._type, sliced.length, sliced)
-	}
-
-	indexof(element: Type): number {
-		return this._vector.indexOf(element)
-	}
-
-	indexes(element: Type): number[] {
-		const indexes: number[] = [this._vector.indexOf(element)]
-
-		if (indexes[0] >= 0)
-			for (let i = indexes[0] + 1; i < this._length; i++)
-				if (this._vector[i] === element) indexes.push(i)
-
-		return indexes
-	}
-
-	concat(vector: Vector<Type, TypeofType>) {
-		return this.vector.concat(vector.vector)
-	}
-
-	map<T = any>(
-		f: (a: Type) => T = (x: any): any => x,
-		type: VectorType = this.type
-	): Vector<T, TypeofType> {
-		return new Vector<T, TypeofType>(, type, this.vector.map(f))
-	}
-
-	byElement<T, TypesType>(
-		vector: Vector<T, TypesType>,
-		operation: Function
-	): Vector<Type, TypeofType> {
-		const newVec = this.copy()
-		for (let i = 0; i < Math.min(vector.length, this.length); i++)
-			newVec.set(i, operation(this.vector[i], vector.vector[i]))
-		return newVec
-	}
-
-	copy() {
-		return new Vector<Type, TypeofType>(
-			deepCopy(this.vectortypes),
-			this.typefunction, 
-			deepCopy(this.vector),	
-			copy(this.type),
-			this.default
-		)
-	}
-
-	static type(array: any[]): VectorType {
-		if (!array.length) return ["any"]
-
-		// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
-		const type: VectorType = [typeof array[0]]
-		for (const element of array)
-			if (!type.includes(typeof element)) type.push(typeof element)
-		return type
-	}
-
-	get length(): number {
-		return this._length
-	}
-
-	get vector(): Type[] {
-		return this._vector
-	}
-
-	get type(): TypeofType {
-		return this._type
-	}
-
-	set type(newType: TypeofType) {
-		// TODO: create a separate function for this kind of algorithm (isSubset or something); then, define isSuperset as its arguments' permutation...
-		// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
-		for (let i = 0; i < newType.length; i++)
-			if (!this.vectortypes.includes(newType[i]))
-				throw new Error(`Unknown vector type: ${newType}`)
-
-		this._type = newType
-		Vector.typecheck(this.vector, this.type)
-	}
-
-	set length(newLength: number) {
-		if (newLength < 0)
-			throw new Error(`Passed negative length: ${newLength}`)
-
-		if (newLength < this._length)
-			for (let i = this._length; i > newLength; i--) this._vector.pop()
-
-		if (newLength > this._length)
-			for (let i = this._length; i < newLength; i++)
-				this._vector[i] = this.default(this.type)
-
-		this._length = newLength
-	}
-
-	set vector(newVector: Type[]) {
-		const type = Vector.type(newVector)
-		this._vector = newVector
-		this.length = newVector.length
-		if (!valueCompare(type, this.type)) this._type = type
-	}
-}
-
-// TODO: rewrite; finish...
-// * Current idea for a list of features:
-// * 1. All number-related methods and features;
-// * 2. Based on number-version of the Vector
-export class NumberVector extends Vector<number> {
-	vectorScalarMultiply(vector) {
-		const main =
-			Math.max(this.length, vector.length) == vector.length
-				? vector
-				: this
-		const other = main.vector == vector.vector ? this : vector
-		return repeatedArithmetic(
-			other.vector.map((el, i) => el * main.vector[i]),
-			"+"
-		)
-	}
-	crossProduct(vector) {
-		if (this.length != 3 && this.length != 7)
-			throw new Error(
-				"Cross product is not defined for vectors, which lengths aren't 3 or 7. "
-			)
-		if (this.length != vector.length)
-			throw new Error(
-				"Trying to cross product vectors with different lengths. "
-			)
-
-		if (vector.length === 3)
-			return new Vector(["number"], 3, [
-				this.vector[1] * vector.vector[2] -
-					vector.vector[1] * this.vector[2],
-				vector.vector[0] * this.vector[2] -
-					this.vector[0] * vector.vector[2],
-				this.vector[0] * vector.vector[1] -
-					this.vector[1] * vector.vector[0]
-			])
-
-		// TODO: Use the RectMatrix product formula on wikipedia page.
-	}
-
-	scalarMultiply(scalar) {
-		for (let i = 0; i < this._vector.length; i++) this._vector[i] *= scalar
-	}
-
-	scalarAdd(scalar) {
-		for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
-	}
-	// TODO: add the addition of vectors... Should return one with length of the largest...
-}
-
-// * Current idea for the list of features:
-// * 1. Arbitrarily shaped;
-// * 2. Full of numbers;
-// * 3. Can have user-defined operations for doing certain things with numbers;
-// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
-export class NumberMatrix extends Vector<NumberVector> {}
 
 // TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 // TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
