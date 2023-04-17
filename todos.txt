@@ -70,22 +70,8 @@
 
     This'll simplify much of the code enormously; 
 
-10. Current sketch of a first version of a plan for getting rid of TypeScript: 
-
-    10.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
-    10.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
-    10.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
-    10.4. (Suggested) Get rid of the "math-expressions.js" file? 
-
-    Should one not omit the last element instead? 
-    For, some may wish to have the old api together with the renewed and largely generalized versions... 
-    Besides... 
-    There were many bugs in it! 
-    One should do just that... 
-    This way, 1.0 will still (sort of) be compatible with the previous things; 
-
-11. Decide the look of the comments...
-12. Create a sketch of a code organization on which one would be content: 
+10. Decide the look of the comments...
+11. Create a sketch of a code organization on which one would be content: 
 
     At the moment of first writing the todo, it is: 
 
@@ -100,3 +86,14 @@
         and let the finite keep where it is + get added to itself new things (namely, the new finite methods...)
 
         Let also, the universal methods be stored with the finite ones; 
+
+12. Change all the desired so JS-classes for the function-object combinations: 
+
+    This is mimicking the behaviour of templates: the abstraction turns into a 
+    sequence of "layers" to get called, each allowing for an extension of the thing in question;
+    For example, one such is used to generate different "classes" (in truth, constructor functions...)
+
+13. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
+
+    What to add, what to delete, what to change and so on...
+    

@@ -29,4 +29,5 @@ function flatCopy(a) {
 	return a instanceof Array ? [...a] : typeof a === "object" ? { ...a } : a
 }
 
+
 export { deepCopy, valueCompare, flatCopy }

@@ -1,12 +1,12 @@
-// TODO: get rid of all the redundant (due to moving from TS) definitions... (that is, those that can work for many different kinds of objects the same way, but have a type-counterpart which is essentially the same thing...); 
-// TODO: tidy up; 
-// TODO: see that all the algorithms here are, in fact, finite; 
+// TODO: get rid of all the redundant (due to moving from TS) definitions... (that is, those that can work for many different kinds of objects the same way, but have a type-counterpart which is essentially the same thing...);
+// TODO: tidy up;
+// TODO: see that all the algorithms here are, in fact, finite;
 
-// ? Question: what to do with those definitions that happen to be universal? 
+// ? Question: what to do with those definitions that happen to be universal?
 // * Example: the "valueCompare" -- it would work for both the "finite" and "infinite" apis the same, though if had an "infinite" counterpart, the latter would be rather more intuitive relative to those types...
 // * But underneath, it's still all an object...
 // * Same goes for deepCopy, flatCopy
-// * Decision: all such will go to the "infinite"; 
+// * Decision: all such will go to the "infinite";
 
 // TODO: let the "finite.mjs" have the same structure as "infinite.mjs" (them being dual), whilst the "math-expressions.js" will stay (mostly, apart from bug fixes), untouched...
 // * For this, pray distribute the contents of the file through others... (For this, create a particular distribution first)
@@ -188,19 +188,19 @@ function arrIntersections(arrs, comparison = (a, b) => a === b) {
 export {
 	replaceStr,
 	replaceStrInd,
-	replaceStrMany, 
-	replaceStrIndMany, 
-	replaceArr, 
-	arrThisApply, 
-	arrApply, 
-	countAppearences, 
-	indexOfMult, 
-	clearRepetitions, 
-	splitArr, 
-	gutInnerArrs, 
-	gutInnerArrsRecursive, 
-	hasArrays, 
-	arrEncircle, 
-	arrStructureCopy, 
+	replaceStrMany,
+	replaceStrIndMany,
+	replaceArr,
+	arrThisApply,
+	arrApply,
+	countAppearences,
+	indexOfMult,
+	clearRepetitions,
+	splitArr,
+	gutInnerArrs,
+	gutInnerArrsRecursive,
+	hasArrays,
+	arrEncircle,
+	arrStructureCopy,
 	arrIntersections
 }

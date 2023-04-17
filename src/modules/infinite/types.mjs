@@ -3,6 +3,7 @@
 import { constants } from "../../infinite.mjs"
 import { dim } from "../../finite.mjs"
 import { valueCompare } from "./util.mjs"
+import { template } from "../finite/types.mjs"
 
 // TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 // * That's an example of an infinite counter;
@@ -85,23 +86,9 @@ function numberCounter(a) {
 	return _result
 }
 
-// ? Now that TypeScript's gone from the project... Should one still support these?
-// * Pray decide...
-// * They may actually be useful for actual decisions of actual behaviour of actual things of actually actual apps even, actually...
-// * First three are rather simple, no? They could be all generalized to (x, type) => typeof x === type;
-// ? does one want them, still..? All these things are v
-// * Current decision: they go.
-// TODO: define such similar "default" types' typecheckers;
-function isNumber(x) {
-	return typeof x === "number"
-}
-function isUndefined(x) {
-	return x === undefined
-}
-function isBigInt(x) {
-	return typeof x === "bigint"
-}
-// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library...
+// ? delete this as well?
+// * pray decide too...
+// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library (boolmap)...
 // * an example of a typechecker for the recursive arrays...
 function isRecursiveArray(x, typechecker) {
 	return (
@@ -162,42 +149,17 @@ class IterableSet {
 		return this.elements.add(x)
 	}
 	has(x) {
-		if (!this.typechecker(x)) return false
 		return this.elements.has(x)
 	}
 	get size() {
 		return this.elements.size
 	}
 	delete(x) {
-		if (!this.typechecker(x)) return false
 		return this.elements.delete(x)
 	}
-	constructor(elems = new Set([]), typechecker = (x) => true) {
+	constructor(elems = new Set([])) {
 		this.currindex = 0
 		this.elements = elems
-		this.typechecker = typechecker
-	}
-}
-class UniversalMap {
-	get(key, comparison = valueCompare, number = 1) {
-		const indexes = util.indexOfMult(this.keys, key, comparison)
-		if (indexes.length === 0) return this.notFound
-		return indexes.slice(0, number).map((i) => this.values[i])
-	}
-	set(key, value, comparison = (a, b) => a === b) {
-		const index = util.indexOfMult(this.keys, key, comparison)
-		if (index.length !== 0) {
-			for (const _index of index) this.values[_index] = value
-			return value
-		}
-		this.keys.push(key)
-		this.values.push(value)
-		return value
-	}
-	constructor(keys = [], values = [], notFound = undefined) {
-		this.keys = keys
-		this.values = values
-		this.notFound = notFound
 	}
 }
 // TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
@@ -211,37 +173,23 @@ class InfiniteArray {
 	next() {
 		// TODO: these recursive functions should get generalizations that would become dependencies...
 		// ? perhaps, the library function that does this kind of stuff should too be rewritten (after adding math-expressions.js as a dependency) to work with InfiniteCounter(s)
-		function recursive(array, index, path, typechecker) {
+		function recursive(array, index, path) {
 			for (let i = 0; i < path.length; i++) {
 				const indexed = path[i]
 				if (typeof indexed !== "number") {
-					;[array, index] = recursive(
-						array,
-						index,
-						indexed,
-						typechecker
-					)
+					;[array, index] = recursive(array, index, indexed)
 					continue
 				}
 				const indexindexed = index[indexed]
 				const arrayindexed = array[indexed]
-				if (
-					typeof indexindexed === "boolean" ||
-					typechecker(arrayindexed)
-				)
-					break
+				if (typeof indexindexed === "boolean") break
 				index = indexindexed
 				array = arrayindexed
 			}
 			return [array, index]
 		}
 		const path = this.currElement()
-		let [array, index] = recursive(
-			this.array,
-			this.index,
-			path,
-			this.typechecker
-		)
+		let [array, index] = recursive(this.array, this.index, path)
 		const lastIndex = path[path.length - 1]
 		if (typeof lastIndex === "number") index[lastIndex] = false
 		// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this;
@@ -315,11 +263,10 @@ class InfiniteArray {
 	// ! Also, there should be ways of transforming a non-infinite Array into an Infinite one;
 	last() {}
 	// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
-	constructor(objects, typechecker) {
+	constructor(objects) {
 		this.array = objects
 		this.index = sameStructure(this.array, () => false)
 		this.first(true)
-		this.typechecker = typechecker
 	}
 }
 // ? Should one not then write the InfiniteArray class, then use it in the InfiniteString class (not to repeat the same things all over again)?
@@ -389,88 +336,84 @@ class InfiniteString {
 
 // TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
 // TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
-class InfiniteMap {
-	// TODO: finish this later... Mr. Body feels tired...
-	// * Here, one should implement the algorithms for setting an index of interest (which depends on the current length of the array), to a given value; It comes down to finding the first free index, restructuring the array recursively and creating one, if there isn't...;
-	set(key, value) {}
-	// * Here, one finds the fitting keys, returns an array of their values;
-	get(key, comparison = (a, b) => a === b, number) {}
-	constructor(keys, values, notFound) {
-		this.keys = keys
-		this.values = values
-		this.notFound = notFound
-	}
+function InfiniteMap(notfound) {
+	return template({ notfound: notfound }, function (keys, values) {
+		return {
+			keys: keys,
+			values: values,
+			set(key, value) {},
+			// * Here, one finds the fitting keys, returns an InfiniteArray of their values;
+			get(key, comparison = (a, b) => a === b, number) {}
+		}
+	})
 }
 
 // TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 // TODO: finish this thing (add orders, other things from the previous file)...
 // TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
 // ! There is a problem with this class: The array is used for "InfiniteCounter.previous"; Because of this, there is only limited number of previous members that can be;
-// TODO: create an InfiniteArray type and put it there (not just an `InfiniteArray<T = any> := InfiniteMap<InfiniteCounter<number>, T, undefined>)...
+// TODO: create an InfiniteArray type and put it there (not just an `InfiniteArray<T = any> := InfiniteMap<InfiniteCounter<number>, T, undefined>)... The InfiniteArray should work independently...
 // * With the approach outlined in the brackets, there is a difficulty -- infinite recursion (dependency); So, instead, one should pick an alternative one...
 // * Example of an implementation -- same, but the InfiniteCounter of an InfiniteArray is hardcoded into itself (uses the numberCounter, for example...);
 function InfiniteCounter(generator) {
-	return {
-		generator: generator,
-		class: function (previous) {
-			return {
-				class: this,
-				previous: !previous ? new InfiniteArray() : previous,
-				value: !previous
-					? generator()
-					: generator(previous[previous.length - 1].value),
-				next() {
-					return this.class.class(
-						new InfiniteArray(this.previous).add(this)
-					)
-				},
-				previous() {
-					return this.previous.index(this.length - 1)
-				},
-				// * 'true' means 'follows after'
-				// * 'false' means 'is followed after'
-				// * 'null' means 'no following';
-				// TODO: add the 'comparison' argument here. One may want to abstract from the references (current thing in certain circumstances don't work)...
-				compare(ic) {
-					return this.previous.includes(ic)
-						? true
-						: ic.previous.includes(this)
-						? false
-						: null
-				},
-				// TODO: code-rework... repeatedApplication...
-				// TODO: this thing don't work (both methods...); fix; generalize the .compare() and fix it here...
-				jumpForward(x) {
-					x = typeof x === "number" ? fromNumber(x, numberCounter) : x
-					if (x === undefined) return this
-					let result = { ...deepCopy(this), class: this.class }
-					for (
-						let i = InfiniteCounter(numberCounter);
-						x.compare(i);
-						i = i.next()
-					)
-						result = result.next()
-					return result
-				},
-				jumpBackward(x) {
-					x = typeof x === "number" ? fromNumber(x, numberCounter) : x
-					if (x === undefined) return this
-					let result = { ...deepCopy(this), class: this.class }
-					for (
-						let i = InfiniteCounter(numberCounter);
-						x.compare(i);
-						i = i.next()
-					)
-						result = result.prev()
-					return result
-				},
-				// ? what kind of a structure is to be returned? It is to be an InfiniteArray like other things...
-				// TODO: pray do see that all the things within all parts of the code fit together nicely afterwards...
-				// TODO: add a way of mapping one infinite counter to another...
-				map(icClass, thisIC) {}
-			}
+	return template({ generator: generator }, function (previous) {
+		return {
+			class: this,
+			previous: !previous ? new InfiniteArray() : previous,
+			value: !previous
+				? generator()
+				: generator(previous[previous.length - 1].value),
+			next() {
+				return this.class.class(
+					new InfiniteArray(this.previous).add(this)
+				)
+			},
+			previous() {
+				return this.previous.index(this.length - 1)
+			},
+			// * 'true' means 'follows after'
+			// * 'false' means 'is followed after'
+			// * 'null' means 'no following';
+			// TODO: add the 'comparison' argument here. One may want to abstract from the references (current thing in certain circumstances don't work)...
+			compare(ic) {
+				return this.previous.includes(ic)
+					? true
+					: ic.previous.includes(this)
+					? false
+					: null
+			},
+			// TODO: code-rework... repeatedApplication...
+			// TODO: this thing don't work (both methods...); fix; generalize the .compare() and fix it here...
+			jumpForward(x) {
+				x = typeof x === "number" ? fromNumber(x, numberCounter) : x
+				if (x === undefined) return this
+				let result = { ...deepCopy(this), class: this.class }
+				for (
+					let i = InfiniteCounter(numberCounter);
+					x.compare(i);
+					i = i.next()
+				)
+					result = result.next()
+				return result
+			},
+			jumpBackward(x) {
+				x = typeof x === "number" ? fromNumber(x, numberCounter) : x
+				if (x === undefined) return this
+				let result = { ...deepCopy(this), class: this.class }
+				for (
+					let i = InfiniteCounter(numberCounter);
+					x.compare(i);
+					i = i.next()
+				)
+					result = result.prev()
+				return result
+			},
+			// ? what kind of a structure is to be returned? It is to be an InfiniteArray like other things...
+			// TODO: pray do see that all the things within all parts of the code fit together nicely afterwards...
+			// TODO: add a way of mapping one infinite counter to another...
+			map(icClass, thisIC) {}
 		}
-	}
+	})
 }
 
 export {
@@ -479,7 +422,6 @@ export {
 	fromNumber,
 	sameStructure,
 	IterableSet,
-	UniversalMap,
 	InfiniteArray,
 	InfiniteString,
 	InfiniteMap
