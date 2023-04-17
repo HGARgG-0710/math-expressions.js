@@ -7,7 +7,7 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 // deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
-import { util, types } from "./infinite"
+import { util, types } from "./infinite.mjs"
 // TODO: add all of those functions that seem fit from the new api into the old one...
 const {
 	flatCopy,
@@ -1802,7 +1802,6 @@ export {
 	Ratio,
 	Algorithms,
 	Vector,
-	RectMatrix,
 	VarMapping,
 	Equation,
 	op,

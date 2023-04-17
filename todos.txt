@@ -154,7 +154,7 @@
 18. Current sketch of a first version of a plan for getting rid of TypeScript: 
 
     18.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
-    18.2. Get rid of the TypeScript files;
+    18.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
     18.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
     18.4. (Suggested) Get rid of the "math-expressions.js" file? 
 
