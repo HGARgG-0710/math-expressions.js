@@ -1,4 +1,9 @@
-// TODO: tidy up...
+// TODO: tidy up...add exports
+// TODO: get rid of all the redundant definitions...
+
+// TODO: let the "finite.mjs" have the same structure as "infinite.mjs" (them being dual), whilst the "math-expressions.js" will stay (mostly, apart from bug fixes), untouched...
+// * For this, pray distribute the contents of the file through others... (For this, create a particular distribution first)
+// * (One would want a separate file for everything related to numbers...)
 
 import { max } from "./finite.mjs"
 
@@ -34,6 +39,16 @@ function flatCopy(a) {
 // * Replaces a value within a string...
 function replaceStr(string, x, y) {
 	return string.split(x).join(y)
+}
+function replaceStrInd(string, ind, value) {
+	return `${string.slice(0, ind)}${value}${string.slice(ind)}`
+}
+// TODO: code-rework -- rewrite as repeated application of the replaceStrInd...
+function replaceStrIndMany(string, inds, values) {
+	let copy = string
+	for (let i = 0; i < inds.length; i++)
+		copy = replaceStrInd(copy, inds[i], values[i])
+	return copy
 }
 function replaceStrMany(string, x, y) {
 	// TODO: again, the repeatedApplication from a different library could do this in 1 line... Same thing with the versions...
@@ -189,4 +204,27 @@ function arrIntersections(arrs, comparison = (a, b) => a === b) {
 		[arrs[0], arrIntersections(arrs.slice(1), comparison)],
 		comparison
 	)
+}
+
+// TODO: match the order of the functions with the order of exports... Do the same for all the files...
+export {
+	deepCopy,
+	valueCompare,
+	flatCopy,
+	replaceStr,
+	replaceStrInd,
+	replaceStrMany, 
+	replaceStrIndMany, 
+	replaceArr, 
+	arrThisApply, 
+	arrApply, 
+	countAppearences, 
+	indexOfMult, 
+	clearRepetitions, 
+	splitArr, 
+	gutInnerArrs, 
+	gutInnerArrsRecursive, 
+	hasArrays, 
+	arrStructureCopy, 
+	arrIntersections
 }

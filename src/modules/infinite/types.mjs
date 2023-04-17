@@ -1,6 +1,6 @@
 // TODO: get rid of all the "typechecking" stuff with this... (Leftovers from TS); Do the same for the entire repository; 
-import { constants } from "../infinite.mjs"
-import { dim } from "../finite.mjs"
+import { constants } from "../../infinite.mjs"
+import { dim } from "../../finite.mjs"
 
 // TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 // * That's an example of an infinite counter;

@@ -44,4 +44,4 @@ export const constants = {
 }
 
 export * as types from "./modules/types.mjs"
-export * as util from "./modules/util.mjs"
+export * as util from "./modules/infinite/util.mjs"
