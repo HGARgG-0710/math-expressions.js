@@ -1,2 +1,2 @@
-export * as newapi from "./newapi"
-export * as oldapi from "./oldapi"
+export * as infinite from "./infinite"
+export * as finite from "./finite"

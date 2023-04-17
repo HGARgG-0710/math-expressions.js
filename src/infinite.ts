@@ -4,7 +4,7 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov, 2023)
  */
 
-import { dim, max } from "./oldapi"
+import { dim, max } from "./finite"
 
 export namespace util {
 	// ? some of these things are quite good with the arrays.... Question: should Mr. Body be adding those for some kind of "uniter" structure? (Like the Statistics and other such classes from the oldapi, other classes from other packages?)

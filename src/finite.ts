@@ -1,5 +1,7 @@
-// TODO: Suggestion: why not take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi?
-// * Then, one would be using the names of 'finite' and 'infinite' accordingly, instead of 'old' and 'new';
+// TODO: take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi?
+// * Since starting to rewrite the library, oneself's discontent with TypeScript has grown tremendously. One is planning to abandon it, and instead use good old plain JS for both this one and all the other projects...
+// ! Once one has finished to fix the errors within this library, that is...
+// * Then, it would become "expressions.js"; One would add things to it, test it and repeat in varying orders and lengths until one has decided to have it published like so...
 
 /**
  * * This is the Old API source code, version pre-1.0 (in work).
@@ -7,7 +9,7 @@
  */
 
 // deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
-import { util, types } from "./newapi"
+import { util, types } from "./infinite"
 
 // TODO: add all of those functions that seem fit from the new api into the old one...
 const {
@@ -74,6 +76,19 @@ export const defaultTable: OperatorDefinitions = {
 	"%": (a: number, b: number) => a % b,
 	"&&": (a: boolean, b: boolean) => a && b,
 	"||": (a: any, b: any) => a || b
+}
+
+// TODO: Change the property names of this thing into something that the Vector implements...
+export type VectorArgs<Type = any, TT = TypeOf> = {
+	vectortypes?: TT[]
+	typefunction?: (x: any) => TT
+	type?: TT
+	vector?: Type[]
+	defaultelement?: Function
+	transform?: Function | null
+	// TODO: write the defaults for these two as well...
+	typecheck?: (x: any) => boolean
+	typefail: Function
 }
 
 // Classes
@@ -525,7 +540,7 @@ export function nestedVector<Type = any, TypeofType = TypeOf>(
 ): Vector<VectorDepth<Type, TypeofType>> {
 	return new Vector<VectorDepth<Type, TypeofType>>({
 		vectortypes: ["any"],
-		typefunction: vector.map((el: any) =>
+		vector: vector.map((el: any) =>
 			types.isRecursiveArray<Type>(el, typechecker) &&
 			!typechecker(el) &&
 			currDim < dimensions
@@ -540,7 +555,7 @@ export function nestedVector<Type = any, TypeofType = TypeOf>(
 				: el
 		),
 		type: defaultElems[0],
-		vector: transform[0]
+		transform: transform[0]
 	})
 }
 
@@ -581,7 +596,9 @@ export type VectorType = TypeOf[]
  * It also may behave like a mathematical vector.
  */
 class Vector<Type = any, TypeofType = TypeOf> {
-	protected _type: TypeofType
+	// ! no, one is still unhappy with the way this api works...
+	// TODo: pray generzlize the types properly... this won't do...
+	protected _type: TypeofType[]
 	protected _length: number
 	protected _vector: Type[]
 
@@ -591,17 +608,7 @@ class Vector<Type = any, TypeofType = TypeOf> {
 	public typefunction: (x: any) => TypeofType
 
 	// ? question: look below... same as there...
-	// = [
-	// 	"number",
-	// 	"string",
-	// 	"boolean",
-	// 	"function",
-	// 	"object",
-	// 	"bigint",
-	// 	"any",
-	// 	"undefined",
-	// 	"symbol"
-	// ]
+	// =
 
 	// ? question: should this thing go? Or perhaps, one would define a separate class which would (in essence) be this? Or better, define a separate function so that one could diretly create new Vector<...>(...) with the use of it?
 	// static default = {
@@ -620,36 +627,72 @@ class Vector<Type = any, TypeofType = TypeOf> {
 	public typefail: Function
 
 	// TODO: make this thing into a separate type or something... It is very big and clumsy (though, useful...)
-	constructor({
-		vectortypes,
-		typefunction,
-		type,
-		vector = [],
-		defaultelement = () => null,
-		transform = null,
-		typecheck,
-		typefail
-	}: {
-		vectortypes: TypeofType[]
-		typefunction: (x: any) => TypeofType
-		type: TypeofType
-		vector: Type[]
-		defaultelement: Function
-		transform: Function | null
-		typecheck: (x: any) => boolean
-		typefail: Function
-	}) {
-		this._vector = vector
-		this._length = vector.length
-		this.type = type
-		this.default = defaultelement
-		this.transform = transform
-		this.vectortypes = vectortypes
-		this.typefunction = typefunction
-		this.typecheck = typecheck
-		this.typefail = typefail
+	constructor(
+		vectorargs: VectorArgs<Type, TypeofType>
+		// 	{
+		// 	vectortypes,
+		// 	typefunction,
+		// 	type,
+		// 	vector = [],
+		// 	defaultelement = () => null,
+		// 	transform = null,
+		// 	typecheck,
+		// 	typefail
+		// }: {
+		// 	vectortypes: TypeofType[]
+		// 	typefunction: (x: any) => TypeofType
+		// 	type: TypeofType
+		// 	vector: Type[]
+		// 	defaultelement: Function
+		// 	transform: Function | null
+		// 	typecheck: (x: any) => boolean
+		// 	typefail: Function
+		// }
+	) {
+		// TODO: let there be way for user to give their own defaults for this thing...
+		ensureProperty(vectorargs, "vector", [])
+		ensureProperty(vectorargs, "defaultelement", () => null)
+		ensureProperty(vectorargs, "transform", null)
+		ensureProperty(vectorargs, "vectortypes", [
+			"number",
+			"string",
+			"boolean",
+			"function",
+			"object",
+			"bigint",
+			"any",
+			"undefined",
+			"symbol"
+		])
+		ensureProperty(vectorargs, "typefunction", (x: any) => typeof x)
+		ensureProperty(vectorargs, "type", ["any"])
+		// TODO: when having fixed all errors, give many things in the library a good renaming... Some of this stuff just don't sound right...
+		ensureProperty(vectorargs, "typecheck", (item: any) => {
+			if (
+				!this.type.includes(typeof item as TypeofType) &&
+				!this.type.includes("any" as TypeofType)
+			) {
+				if (this.transform) return this.transform(item)
+				throw new Error(
+					`Type of item ${item} is not equal to vector type: [${this.type
+						.map((a: TypeofType) => `"${a}"`)
+						.join(",")}]. Item type: ${typeof item}`
+				)
+			}
+		})
+
+		this._vector = vectorargs.vector
+		this._length = vectorargs.vector.length
+		this.type = vectorargs.type
+		this.default = vectorargs.defaultelement
+		this.transform = vectorargs.transform
+		this.vectortypes = vectorargs.vectortypes
+		this.typefunction = vectorargs.typefunction
+		this.typecheck = vectorargs.typecheck
+		this.typefail = vectorargs.typefail
 	}
 
+	// TODO: there should be a "defaultReturn" function for the cases like these (what should be returned on the failing of the typecheck?);
 	static typecheck<Type = any, TypeofType = TypeOf, T = any>(
 		item: T,
 		vector: Vector<Type, TypeofType>
@@ -661,16 +704,7 @@ class Vector<Type = any, TypeofType = TypeOf> {
 			}
 			return vector.transform(item)
 		}
-		// TODO:
-		// * Again, the defaults..?
-		// if (!type.includes(typeof item) && !type.includes("any")) {
-		// 	if (transform) return transform(item)
-		// 	throw new Error(
-		// 		`Type of item ${item} is not equal to vector type: [${type
-		// 			.map((a) => `"${a}"`)
-		// 			.join(",")}]. Item type: ${typeof item}`
-		// 	)
-		// }
+		return item
 	}
 
 	delete(index: number): Type {
@@ -803,11 +837,11 @@ class Vector<Type = any, TypeofType = TypeOf> {
 		return this._vector
 	}
 
-	get type(): TypeofType {
+	get type(): TypeofType[] {
 		return this._type
 	}
 
-	set type(newType: TypeofType) {
+	set type(newType: TypeofType[]) {
 		// TODO: create an isSubset array function; would check if one array is having all the elements of the other using some chosen 'comparison'; then, define isSuperset as its arguments' permutation...
 		// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
 		// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
@@ -815,8 +849,10 @@ class Vector<Type = any, TypeofType = TypeOf> {
 		// 	if (!this.vectortypes.includes(newType[i]))
 		// 		throw new Error(`Unknown vector type: ${newType}`)
 
+		// TODO: fix... Give the entire code a very good look-through once have fixed the TypeErrors...
+		// * Apply the generics where want to...
 		this._type = newType
-		Vector.typecheck(this.vector, this)
+		this._vector = this.vector.map((a: any) => Vector.typecheck(a, this))
 	}
 
 	set length(newLength: number) {
@@ -839,6 +875,16 @@ class Vector<Type = any, TypeofType = TypeOf> {
 		this.length = newVector.length
 		if (!valueCompare(type, this.type)) this._type = type
 	}
+}
+
+// TODO: use the 'Key' from a different library here...
+// ? add generics and typeing here?
+export function ensureProperty(
+	object: object,
+	property: number | string | symbol,
+	value: any
+): void {
+	if (!object.hasOwnProperty(property)) object[property] = value
 }
 
 // TODO: rewrite; finish...
