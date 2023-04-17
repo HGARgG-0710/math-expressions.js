@@ -2,8 +2,8 @@
 // * Also, make code more "clever" (or rather less "silly" like the way typescript wanted...); change it to what one wants it to be...
 import { constants } from "../../infinite.mjs"
 import { dim } from "../../finite.mjs"
-import { valueCompare } from "./util.mjs"
-import { template } from "../finite/types.mjs"
+import { deepCopy } from "./util.mjs"
+import { template,  } from "../finite/types.mjs"
 
 // TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 // * That's an example of an infinite counter;
@@ -130,37 +130,6 @@ function sameStructure(
 		copied[i] = currval
 	}
 	return !subcall ? currval : copied
-}
-// * For iteration over an array; this thing is index-free; handles them for the user;
-// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
-class IterableSet {
-	curr() {
-		return Array.from(this.elements.values())[this.currindex]
-	}
-	next() {
-		// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
-		// * Current decision: yes, let it be.
-		// TODO: pray do that...
-		this.currindex = (this.currindex + 1) % this.elements.size
-		return this.curr()
-	}
-	add(x) {
-		return this.elements.add(x)
-	}
-	has(x) {
-		return this.elements.has(x)
-	}
-	get size() {
-		return this.elements.size
-	}
-	delete(x) {
-		return this.elements.delete(x)
-	}
-	constructor(elems = new Set([])) {
-		this.currindex = 0
-		this.elements = elems
-	}
 }
 // TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
 // * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
@@ -361,8 +330,8 @@ function InfiniteCounter(generator) {
 			class: this,
 			previous: !previous ? new InfiniteArray() : previous,
 			value: !previous
-				? generator()
-				: generator(previous[previous.length - 1].value),
+				? this.generator()
+				: this.generator(previous.index(previous.length - 1).value),
 			next() {
 				return this.class.class(
 					new InfiniteArray(this.previous).add(this)

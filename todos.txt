@@ -70,7 +70,7 @@
 
     This'll simplify much of the code enormously; 
 
-10. Decide the look of the comments...
+10. Decide the look of the comments... (Stars, no stars? other symbols/colors there...)
 11. Create a sketch of a code organization on which one would be content: 
 
     At the moment of first writing the todo, it is: 
