@@ -72,10 +72,10 @@
 
 10. Current sketch of a first version of a plan for getting rid of TypeScript: 
 
-    11.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
-    11.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
-    11.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
-    11.4. (Suggested) Get rid of the "math-expressions.js" file? 
+    10.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
+    10.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
+    10.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
+    10.4. (Suggested) Get rid of the "math-expressions.js" file? 
 
     Should one not omit the last element instead? 
     For, some may wish to have the old api together with the renewed and largely generalized versions... 
@@ -85,3 +85,18 @@
     This way, 1.0 will still (sort of) be compatible with the previous things; 
 
 11. Decide the look of the comments...
+12. Create a sketch of a code organization on which one would be content: 
+
+    At the moment of first writing the todo, it is: 
+
+        1. All things related to finite native JS types go to "finite";
+        2. All thing related to infinite derived types go to "infinite"; 
+        3. All things that are universal and work for both the kinds of types go to "infinite"; 
+        4. The original math-expression api is within the "math-expressions.mjs"
+    
+    IDEA (currently chosen): 
+        Move it all back to the "math-expressions.mjs" file, but separate the infinite 
+        into the "infinite" object (within are classes, functions and other things...) from all other things, 
+        and let the finite keep where it is + get added to itself new things (namely, the new finite methods...)
+
+        Let also, the universal methods be stored with the finite ones; 
