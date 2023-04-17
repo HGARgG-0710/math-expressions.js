@@ -132,3 +132,35 @@
     but pray do create some sort of self-syntax for it or something...
 
 16. When nearing the end and things are not as bad as when writing this particular note, pray do make the comments colourful again -- add stars to some of them (those that want to)...
+
+17. Name; 
+
+    As one have decided to abandon TypeScript for the project within the nearest possible time, 
+    one'd also like to change the name; 
+    But "expressions.js" is already taken and "expressions.ts" no longer represents what library is...
+    So, the question of name still stands... (Previous one won't do...)
+
+    The nature of library have grown so vast and blurred... 
+    Current ideas for the names: 
+
+        1. misc.js/miscellaneous.js (latter seems to have been taken, former -- not yet)
+        2. various.js (untaken)
+
+    Perhaps, one should just keep it "math-expressions.js"? 
+    "misc.js" or any such other aren't felt by one to have much of a... character... 
+
+    (Currently, chosen math-expressions.js; like before)
+
+18. Current sketch of a first version of a plan for getting rid of TypeScript: 
+
+    18.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
+    18.2. Get rid of the TypeScript files;
+    18.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
+    18.4. (Suggested) Get rid of the "math-expressions.js" file? 
+
+    Should one not omit the last element instead? 
+    For, some may wish to have the old api together with the renewed and largely generalized versions... 
+    Besides... 
+    There were many bugs in it! 
+    One should do just that... 
+    This way, 1.0 will still (sort of) be compatible with the previous things; 
