@@ -1,26 +1,6 @@
 // TODO: this todo list is outdated. It is in reworking proces... As the package progresses, one's views of it and the goals change; 
 
-1. expressions.ts 1.0: 
-
-    THIS TODO IS A REMINDER; 
-
-    expressions.ts (1.0 and further) should not have (direct) backwards-compatibility with either new/old versions of itself or the preceeding math-expressions.js
-    (though, it is quasi-compatible, and given some little manual effort can be used similarly); 
-    It is separated onto New Api (newapi) and Old Api (oldapi); both will get updates and new things...; 
-    The Old Api does not support infinite types and is written for use within-JavaScript; 
-
-    The New Api is by definition noticeably more complex both notationally and in the sense of ideas employed/capabilities of itself due to: 
-
-        1. Their structure (example: a lot of recursion, manual work with this stuff may require it; though this particular one is in work...); 
-        2. TypeScript syntax; 
-        3. Naming conventions and package structure; 
-        4. Much beautiful, beautiful abstractions...
-
-    Both new and old api are written (re-written) in TypeScript; 
-    The Old Api does not get to be changed in a destructive manner (deletion of definitions, their capital change), unless: 
-
-        1. The New Api does the thing already and more generally (but without employing new types); 
-        2. The thing can be vastly generalized (especially IF generalization allows the previously accepted use); 
+1. math-expressions.js 1.0: 
 
     Current Idea for a list (create more things for it): 
     1. types - everything related to types [includes all insofar added and all yet planned]; 
@@ -39,7 +19,7 @@
         1. ideas of TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
         2. ideas of Order[s], OrderedArray, IterableSet, generators; note: TypeScript is bad for these things representation, its got Generics, but no templates;
         3. new sorting algorithms, for generalized versions of orders; more new funny/interesting algorithms; 
-        4. The previous log, logHack functions (they are quite nice...)
+        4. The previous log, logHack functions (they are quite nice...) and other stuff from 'that other project'
 
     Old things to (maybe?) delete/rework: 
 
@@ -47,18 +27,14 @@
 
             note: 
 
-        2. exp function (either expand it enormously, or delete entirely; this thing can be so much more beautiful...)
-        3. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
-        4. repeatedArithmetic -- if one does happen to generalize it much, pray let one make it repeatedOperator; 
+        2. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
     
-    The old api gets to be "typezated" -- made such as to contain the implementations for the original ideas with the least change of the original implementations (excepting only if to greatly generalize); 
-    This goes for the classes especially (they are a greater problem for the package); 
-    The thing should be useable as a Deno dependency (via `import`) -- check that it does, indeed, work like one...
+    The published thing should be useable as a Deno dependency (via `import`) -- check that it does, indeed, work like one (just in case)...
         
 2. Documentation
 
     Rewrite the introduction; 
-    Separate it onto NEW API and OLD API; 
+    Separate it onto ORIGINAL (before 0.8), FINITE and INFINITE sections; 
 
     Separate the new one onto namespaces; 
     Separate the old one onto classes and functions; 
@@ -66,45 +42,18 @@
     Change the in-editor JSDoc documentation...
     Fix presence of the inappropriate (id est, simply unwanted) comments; 
 
-3. Library's Style: 
-
-    Create more generalized "style" for the project; 
-    things like "copy" should be documented and defined to be general; 
-    What can be generalized gets generalized; 
-    Each and every function solves one particular task; 
-    There are many "uniter" classes for making systems of functions "rotating" around the same types and structures work together laconically using object notation; 
-        
-
-4. New things: 
+3. New things: 
 
     Create a great deal of new definitions; 
 // TODO: create ideas for what new stuff to add...
 
-5. Examples: 
+4. Examples: 
 
     Rewrite the old examples (make them more comprehensive) and create more new ones; 
 
-6. Finish the package.json (particular: fix the keywords); 
+5. Finish the package.json (particular: fix the keywords); 
 
-7. PROBLEM : there is a difficulty with the package; 
-
-    It is such: what does one do about the default numbers? 
-    Should the library even be supporting them now? 
-    It does have a far more unlimited alternative -- the InfiniteCounter; 
-    Should one remove them completely, then? 
-    The previous functions get rewritten for the numbers, et voila; 
-
-    But wait: there's a problem with doing that too: it is the arabic numerals; 
-    The library should have a good way of representation of them; 
-    There should be ways to convert an arabic numeral into an InfiniteCounter (and conversely, using the InfiniteString); 
-    Thus: to the list of things to be added, the numerals add; 
-
-8. Deprecate the math-expressions.js <= 0.8 package...
-
-    This is now an entirely new project, library and package (though keeping many of its original elements)...
-
-
-9. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
+6. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
 
     Make it a part of a library...
 
@@ -113,50 +62,20 @@
     Write it using one's (for now unpublished) library for parsing things...
 
 
-10. (reminder) Before the 1.0 release, pray clear all the TODOs, questions and stars unrelated to the 1.1. code-updating procedures...
+7. (reminder) Before the 1.0 release, pray clear all the TODOs, questions and stars unrelated to the 1.1. code-updating procedures...
 
-11. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
-12. Change the package.json "version" field (always almost forgetting before the release...)
-13. I don't trust these two exactly -- TypeScript and Deno linters; both tend to overlook some small potential difficulties; 
+8. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 
-    Let Mr. Body look through the code on the matter of types by oneself; 
-    Seek potential problems, fix them...
-    Then, compile and test (using the both environments); 
+9. Reminder (code-rework) -- after the 1.0 release, pray do work with the other libraries, publish them and then use as dependnecies (their previous versions) of this one in the 1.1 release; 
 
-14. Reminder -- after the 1.0 release, pray do work with the other libraries, publish them and then use as dependnecies (their previous versions) of this one in the 1.1 release; 
+    This'll simplify much of the code enormously; 
 
-15. Create some sort of a mark for the code-reworking todos... The library floods with them already and its first version is not even finished yet...
+10. Current sketch of a first version of a plan for getting rid of TypeScript: 
 
-    Tidy up the TODOS generally... 
-    Let they still lie around the code like that (because otherwise one may lose where was it supposed to belong to...), 
-    but pray do create some sort of self-syntax for it or something...
-
-16. When nearing the end and things are not as bad as when writing this particular note, pray do make the comments colourful again -- add stars to some of them (those that want to)...
-
-17. Name; 
-
-    As one have decided to abandon TypeScript for the project within the nearest possible time, 
-    one'd also like to change the name; 
-    But "expressions.js" is already taken and "expressions.ts" no longer represents what library is...
-    So, the question of name still stands... (Previous one won't do...)
-
-    The nature of library have grown so vast and blurred... 
-    Current ideas for the names: 
-
-        1. misc.js/miscellaneous.js (latter seems to have been taken, former -- not yet)
-        2. various.js (untaken)
-
-    Perhaps, one should just keep it "math-expressions.js"? 
-    "misc.js" or any such other aren't felt by one to have much of a... character... 
-
-    (Currently, chosen math-expressions.js; like before)
-
-18. Current sketch of a first version of a plan for getting rid of TypeScript: 
-
-    18.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
-    18.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
-    18.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
-    18.4. (Suggested) Get rid of the "math-expressions.js" file? 
+    11.1. Fix the outputted .js files (make them more readable), fix errors within them (go over what is where, read the code manually); 
+    11.2. Get rid of the TypeScript files (equiv. "empty the 'outtamyproject' directory");
+    11.3. Make the finite.js look the same as the good old math-expressions.js (so that it's literally its extended version); 
+    11.4. (Suggested) Get rid of the "math-expressions.js" file? 
 
     Should one not omit the last element instead? 
     For, some may wish to have the old api together with the renewed and largely generalized versions... 
@@ -164,3 +83,5 @@
     There were many bugs in it! 
     One should do just that... 
     This way, 1.0 will still (sort of) be compatible with the previous things; 
+
+11. Decide the look of the comments...
