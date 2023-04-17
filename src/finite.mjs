@@ -1,4 +1,4 @@
-// TODO: take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the oldapi?
+// TODO: take all the functions from the newapi.util, newapi.types and others that are working with default (finite) JS types and then put them to the 'finits.mjs'?
 // * Since starting to rewrite the library, oneself's discontent with TypeScript has grown tremendously. One is planning to abandon it, and instead use good old plain JS for both this one and all the other projects...
 // ! Once one has finished to fix the errors within this library, that is...
 // * Then, it would become "expressions.js"; One would add things to it, test it and repeat in varying orders and lengths until one has decided to have it published like so...
@@ -6,7 +6,6 @@
  * * This is the Old API source code, version pre-1.0 (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
-// deno-lint-ignore-file no-explicit-any ban-types no-inferrable-types
 import { util, types } from "./infinite.mjs"
 // TODO: add all of those functions that seem fit from the new api into the old one...
 const {

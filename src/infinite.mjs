@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-namespace no-explicit-any ban-types no-inferrable-types
 /**
  * * This is the New API source code, version pre-1.0;
  * @copyright HGARgG-0710 (Igor Kuznetsov, 2023)

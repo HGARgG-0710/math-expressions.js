@@ -1,5 +1,5 @@
 /**
- * * This is the source code, version pre-1.0.
+ * * This is the source code of versions 0.8.0+; It comes with newer versions...
  * @copyright HGARgG-0710(Igor Kuznetsov), 2020-2023
  */
 
