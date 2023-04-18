@@ -8,18 +8,7 @@
  */
 import { util, types } from "./infinite.mjs"
 // TODO: solve the organizational problems concerning dependencies...
-const {
-	flatCopy,
-	deepCopy,
-	countAppearences,
-	arrApply,
-	indexOfMult,
-	valueCompare,
-	clearRepetitions,
-	gutInnerArrs,
-	arrIntersections
-} = util
-const { UniversalMap, isNumber, isUndefined } = types
+const { flatCopy, deepCopy, valueCompare } = util
 // TODO: finish;
 // ! These things had previously been the math-expressions.js 0.8; They are now being updated using TypeScript;
 // todo: new things to add:
@@ -76,7 +65,6 @@ export const defaultTable = {
  * Useful when needing a lot of info about data in one place.
  */
 class Statistics {
-	// ? use the newapi.isNumber for this thing (they are the same, just less repetition...)
 	static isNumeric(data) {
 		for (let i = 0; i < data.length; i++)
 			if (typeof data[i] !== "number") return false
@@ -1561,7 +1549,8 @@ export function commonMultiples(range, ...nums) {
 
 export function leastCommonDivisor(...nums) {
 	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-	return ((x) => (isNumber(x) || isUndefined(x) ? x : min(x)))(
+	return ((x) =>
+		typeof x === "number" || typeof x === "undefined" ? x : min(x))(
 		commonDivisors(...nums)
 	)
 }
@@ -1853,6 +1842,293 @@ export function isArray(x, typechecker = (_a) => true) {
 }
 // TODO: Implement the compareUniversal(...arrays), which uses dim;
 
+// ! This stuff has once been in finite/utils.mjs
+// * Replaces a value within a string...
+function replaceStr(string, x, y) {
+	return string.split(x).join(y)
+}
+function replaceStrInd(string, ind, value) {
+	return `${string.slice(0, ind)}${value}${string.slice(ind)}`
+}
+function replaceStrIndMany(string, inds, values) {
+	// TODO: use the min() instead of Math.min here...
+	return repeatedApplicationIndex(
+		(val, i) => replaceStrInd(val, inds[i], values[i]),
+		Math.min(inds.length, values.length),
+		string
+	)
+	// * Previous: before refactoring (check that they are the same thing...)
+	// let copy = string
+	// for (let i = 0; i < inds.length; i++)
+	// 	copy = replaceStrInd(copy, inds[i], values[i])
+	// return copy
+}
+function replaceStrMany(string, x, y) {
+	// TODO: use min() instead of Math.min() here...
+	return repeatedApplicationIndex(
+		(v, i) => replaceStr(v, x[i], y[i]),
+		Math.min(x.length, y.length),
+		string
+	)
+	// * Previous: before refactoring (check that they are, indeed, the same in functionality)
+	// let final = string
+	// for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
+	// return final
+}
+// * Replaces values within an array and returns the obtained copy...
+function replaceArr(array, x, y, transformation = (a) => a) {
+	const resArray = [...array]
+	for (let i = 0; i < array.length; i++) {
+		const index = x.indexOf(array[i])
+		if (index !== -1) resArray[i] = transformation(y[index])
+	}
+	return resArray
+}
+// * just a convinient syntax...
+function arrThisApply(f, arr, thisArg = null) {
+	return f.apply(thisArg, arr)
+}
+function arrApply(f, arr) {
+	return f(...arr)
+}
+const countAppearences = (
+	array,
+	element,
+	i = 0,
+	comparison = (a, b) => a === b
+) =>
+	i < array.length
+		? Number(comparison(array[i], element)) +
+		  countAppearences(array, element, i + 1, comparison)
+		: 0
+function indexOfMult(array, el, comparison = (a, b) => a === b) {
+	const indexes = []
+	for (let i = 0; i < array.length; i++)
+		if (comparison(array[i], el)) indexes.push(i)
+	return indexes
+}
+// ? which one to use as an export? (they will both be kept in any case...)
+// * Current decision: the newer one (one below);
+// * Alternative implementation (this time, with a searchIndex -- i parameter):
+// export const indexOfMult = (
+// 	array: any[],
+// 	el: any,
+// 	comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b,
+//  i: number = 0
+// ) => {
+//		if (i >= array.length) return []
+// 		const next = indexOfMult(array, el, comparison, i + 1)
+// 		return comparison(array[i], el) ? [i, ...next]: [...next]
+// }
+// * clears all but the first `tokeep` repetition of `el`
+function clearRepetitions(arr, el, tokeep = 0, comparison = (a, b) => a === b) {
+	const firstMet = indexOfMult(arr, el, comparison)
+	return firstMet.length
+		? arr.filter(
+				(a, i) => firstMet.indexOf(i) < tokeep || !comparison(a, el)
+		  )
+		: [...arr]
+}
+function splitArr(arr, el, comparison) {
+	const segments = []
+	let begInd = 0
+	let endInd = 0
+	for (let i = 0; i < arr.length; i++)
+		if (comparison(el, arr[i])) {
+			begInd = endInd + Number(Boolean(endInd))
+			endInd = i
+			segments.push([begInd, endInd])
+		}
+	return segments.map((seg) => arr.slice(...seg))
+}
+// * "guts" the first layer inner arrays into the current one...
+function gutInnerArrs(array) {
+	const returned = []
+	for (let i = 0; i < array.length; i++) {
+		if (array[i] instanceof Array) {
+			array[i].forEach(returned.push)
+			continue
+		}
+		returned.push(array[i])
+	}
+	return returned
+}
+// TODO: also -- repeatedApplication, code-rework...
+// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
+// * Rewrite so that it returns a new one...
+function gutInnerArrsRecursive(array) {
+	while (hasArrays(array)) array = gutInnerArrs(array)
+	return array
+}
+// TODO: another one's library has a method for this thing (boolmapMult; maps a set of boolean functions to a set of values forming a 2d boolean array...)
+// * code-update...
+const hasArrays = (array) =>
+	max(array.map((a) => Number(a instanceof Array))) === 1
+// * "reverses" the gutInnerArrs (only once, at a given place)
+function arrEncircle(a, from = 0, to = a.length) {
+	const copied = []
+	for (let i = 0; i < a.length; i++) {
+		if (i >= from && i <= to) {
+			copied.push(a.slice(from, to + 1))
+			i = to
+		}
+		copied.push(a[i])
+	}
+	return copied
+}
+// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
+// * copies array's structure deeply without copying the elements
+// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
+function arrStructureCopy(thing) {
+	if (thing instanceof Array) return thing.map(arrStructureCopy)
+	return thing
+}
+// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
+// TODO: the same way, write objEncircle; there'd also be an argument for the key;
+// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
+// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
+// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
+// * Same permutations for the InfiniteMap and UniversalMap...
+// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
+// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
+// TODO: add more methods to UniversalMap and InfiniteMap;
+// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
+// ! There is something I do not like about the 'comparison' parameter...
+// * It is only of 2 variables...
+// TODO: think about generalizing to arbitrary number of variables...
+// * IDEA: a recursive function-building type: RecursiveFunctionType<ArgType, Type> = (a: ArgType) => RecursiveFunctionType<Type> | Type
+// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
+function arrIntersections(arrs, comparison = (a, b) => a === b) {
+	if (arrs.length === 0) return []
+	if (arrs.length === 1) return arrs[1]
+	if (arrs.length === 2) {
+		const result = []
+		for (let i = 0; i < arrs[0].length; i++) {
+			for (let j = 0; j < arrs[1].length; j++) {
+				// TODO: change for the use of indexOfMult... the .includes thing...
+				if (
+					comparison(arrs[0][i], arrs[1][j]) &&
+					!result.includes(arrs[0][i])
+				) {
+					// ? Problem: this thing is not very useful (as in, general); It throws out the information concerning the arrs[1][j];
+					// * This is not good...
+					// TODO: fix; restructure it somehow...
+					result.push(arrs[0][i])
+				}
+			}
+		}
+		return result
+	}
+	return arrIntersections(
+		[arrs[0], arrIntersections(arrs.slice(1), comparison)],
+		comparison
+	)
+}
+
+function repeatedApplication(a, n, initial = undefined) {
+	if (n <= 0) return undefined
+	if (n === 1) return a(initial)
+	return a(repeatedApplication(a, n - 1))
+}
+
+function repeatedApplicationIndex(a, n, initial = undefined, offset = 1) {
+	if (n <= 0) return undefined
+	if (n === 1) return a(initial, n - offset)
+	return a(repeatedApplicationIndex(a, n - 1, initial, offset), n - offset)
+}
+
+// * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
+function repeatedApplicationWhilst(function_, property, initial = undefined) {
+	return property()
+		? repeatedApplicationWhilst(function_, property, function_(initial))
+		: initial
+}
+
+const repeatedApplicationWhile = repeatedApplicationWhilst
+
+// ? should this be kept? It is a special case of the function below....
+// * Current decision: let it stay; it may be nice to just "get it"; without taking the first index...
+function _multmap(a, fs) {
+	return multmap([a], fs)[0]
+}
+
+// * Finds use in Mr. Body's code all the time.
+// ^ Note: The first index stays for the elements, the second one stays for the function...
+function multmap(a, fs) {
+	return a.map((el) => fs.map((f) => f(el)))
+}
+
+// TODO: match the order of the definitions with the order of exports... Do the same for all the files...
+// * Also, match with the original "math-expressions.js" file...
+
+// ! This has once been in "finite/types.mjs"
+
+import { valueCompare } from "../infinite/util.mjs"
+
+function UniversalMap(notfound) {
+	return template({ notfound: notfound }, function (keys = [], values = []) {
+		return {
+			keys: keys,
+			values: values,
+			class: this,
+			get(key, comparison = valueCompare, number = 1) {
+				const indexes = indexOfMult(this.keys, key, comparison)
+				if (indexes.length === 0) return this.notFound
+				return indexes.slice(0, number).map((i) => this.values[i])
+			},
+			set(key, value, comparison = valueCompare) {
+				const index = indexOfMult(this.keys, key, comparison)
+				if (index.length !== 0) {
+					for (const _index of index) this.values[_index] = value
+					return value
+				}
+				this.keys.push(key)
+				this.values.push(value)
+				return value
+			}
+		}
+	})
+}
+
+// TODO: work with the idea! Create nestedTemplate and so on...
+// * Create the Universal and infinite versions for this...
+// * Same todo stands for the infinite and universal versions...
+function template(defaultobject, classObj) {
+	return { ...defaultobject, class: classObj }
+}
+
+// * For iteration over an array; this thing is index-free; handles them for the user;
+// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
+class IterableSet {
+	curr() {
+		return Array.from(this.elements.values())[this.currindex]
+	}
+	next() {
+		// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
+		// * Current decision: yes, let it be.
+		// TODO: pray do that...
+		this.currindex = (this.currindex + 1) % this.elements.size
+		return this.curr()
+	}
+	add(x) {
+		return this.elements.add(x)
+	}
+	has(x) {
+		return this.elements.has(x)
+	}
+	get size() {
+		return this.elements.size
+	}
+	delete(x) {
+		return this.elements.delete(x)
+	}
+	constructor(elems = new Set([])) {
+		this.currindex = 0
+		this.elements = elems
+	}
+}
+
 // * Exports (constants are being exported separately).
 
 export {
@@ -1899,5 +2175,31 @@ export {
 	setPrecision,
 	arrayEquality,
 	dim,
-	binomial
+	binomial,
+	replaceStr,
+	replaceStrInd,
+	replaceStrMany,
+	replaceStrIndMany,
+	replaceArr,
+	arrThisApply,
+	arrApply,
+	countAppearences,
+	indexOfMult,
+	clearRepetitions,
+	splitArr,
+	gutInnerArrs,
+	gutInnerArrsRecursive,
+	hasArrays,
+	arrEncircle,
+	arrStructureCopy,
+	arrIntersections,
+	repeatedApplication,
+	repeatedApplicationIndex,
+	repeatedApplicationWhile,
+	repeatedApplicationWhilst,
+	_multmap,
+	multmap,
+	UniversalMap,
+	template,
+	IterableSet
 }
