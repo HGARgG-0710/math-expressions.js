@@ -2,7 +2,7 @@
 
 1. math-expressions.js 1.0: 
 
-    Current Idea for a list (create more things for it): 
+    Current Idea for a list of kinds of things to add (create more things for it): 
     1. types - everything related to types [includes all insofar added and all yet planned]; 
         has got statistics, numeral-related stuff, counters, orders, linear algebra stuff, infinite types, extension of the oldapi to infinite types (everything)
         ? question: should one not create sub-divisions inside it?
@@ -34,13 +34,11 @@
 2. Documentation
 
     Rewrite the introduction; 
-    Separate it onto ORIGINAL (before 0.8), FINITE and INFINITE sections; 
+    Separate it onto different versions, including <= 0.8 (for each one separate, maybe based on the old readme.md files)
 
-    Separate the new one onto namespaces; 
-    Separate the old one onto classes and functions; 
+    (Suggestion?) Separate both old and new ones onto classes and functions; 
 
     Change the in-editor JSDoc documentation...
-    Fix presence of the inappropriate (id est, simply unwanted) comments; 
 
 3. New things: 
 
@@ -49,7 +47,7 @@
 
 4. Examples: 
 
-    Rewrite the old examples (make them more comprehensive) and create more new ones; 
+    Update the old examples (make them more comprehensible) and create (much) more new ones; 
 
 5. Finish the package.json (particular: fix the keywords); 
 
@@ -70,34 +68,19 @@
 
     This'll simplify much of the code enormously; 
 
-10. Decide the look of the comments... (Stars, no stars? other symbols/colors there...)
-11. Create a sketch of a code organization on which one would be content: 
+10. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
 
-    At the moment of first writing the todo, it is: 
-
-        1. All things related to finite native JS types go to "finite";
-        2. All thing related to infinite derived types go to "infinite"; 
-        3. All things that are universal and work for both the kinds of types go to "infinite"; 
-        4. The original math-expression api is within the "math-expressions.mjs"
-    
-    IDEA (currently chosen): 
-        Move it all back to the "math-expressions.mjs" file, but separate the infinite 
-        into the "infinite" object (within are classes, functions and other things...) from all other things, 
-        and let the finite keep where it is + get added to itself new things (namely, the new finite methods...)
-
-        Let also, the universal methods be stored with the finite ones; 
-
-12. Change all the desired so JS-classes for the function-object combinations: 
+11. Change all the desired so JS-classes for the function-object combinations: 
 
     This is mimicking the behaviour of templates: the abstraction turns into a 
     sequence of "layers" to get called, each allowing for an extension of the thing in question;
     For example, one such is used to generate different "classes" (in truth, constructor functions...)
 
-13. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
+12. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
 
     What to add, what to delete, what to change and so on...
 
     Suggestion 1: After it is done, pray rename the newer "finite.mjs" into "math-expressions.mjs" and delete the previous version...
     Suggestion 2: still keep the older api in a separate file, keep them away with namespaces, keep supporting the old one and fix errors in it...
 
- 14. Pray add a good descripttion to the GitHub repository...
+13. Pray add a good descripttion to the GitHub repository...
