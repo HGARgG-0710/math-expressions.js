@@ -1,3 +1,2 @@
-export * as infinite from "./infinite.mjs";
-export * as finite from "./finite.mjs";
+export * as ver10 from "./_ver10.mjs";
 export * as original from "./math-expressions.mjs"
