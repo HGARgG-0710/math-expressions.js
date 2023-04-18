@@ -3,7 +3,8 @@
 import { constants } from "../../infinite.mjs"
 import { dim } from "../../finite.mjs"
 import { deepCopy } from "./util.mjs"
-import { template,  } from "../finite/types.mjs"
+import { template } from "../finite/types.mjs"
+import { repeatedApplicationWhilst } from "../finite/util.mjs"
 
 // TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 // * That's an example of an infinite counter;
@@ -350,32 +351,26 @@ function InfiniteCounter(generator) {
 					: ic.previous.includes(this)
 					? false
 					: null
-			},
-			// TODO: code-rework... repeatedApplication...
-			// TODO: this thing don't work (both methods...); fix; generalize the .compare() and fix it here...
-			jumpForward(x) {
+			},	
+			// TODO: this thing don't work; fix; generalize the .compare() and fix it here [because 'comparison' is not used...]...
+			jump(x, jumping = (k) => k.next()) {
 				x = typeof x === "number" ? fromNumber(x, numberCounter) : x
 				if (x === undefined) return this
-				let result = { ...deepCopy(this), class: this.class }
-				for (
-					let i = InfiniteCounter(numberCounter);
-					x.compare(i);
-					i = i.next()
+				let i = InfiniteCounter(numberCounter)
+				return repeatedApplicationWhilst(
+					(r) => {
+						i = i.next()
+						return jumping(r)
+					},
+					() => x.compare(i),
+					{ ...deepCopy(this), class: this.class }
 				)
-					result = result.next()
-				return result
+			},
+			jumpForward(x) {
+				return this.jump(x)
 			},
 			jumpBackward(x) {
-				x = typeof x === "number" ? fromNumber(x, numberCounter) : x
-				if (x === undefined) return this
-				let result = { ...deepCopy(this), class: this.class }
-				for (
-					let i = InfiniteCounter(numberCounter);
-					x.compare(i);
-					i = i.next()
-				)
-					result = result.prev()
-				return result
+				return this.jump(x, (k) => k.prev())
 			},
 			// ? what kind of a structure is to be returned? It is to be an InfiniteArray like other things...
 			// TODO: pray do see that all the things within all parts of the code fit together nicely afterwards...

@@ -7,7 +7,7 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 import { util, types } from "./infinite.mjs"
-// TODO: add all of those functions that seem fit from the new api into the old one...
+// TODO: solve the organizational problems concerning dependencies...
 const {
 	flatCopy,
 	deepCopy,
@@ -36,7 +36,9 @@ const { UniversalMap, isNumber, isUndefined } = types
 // * 6. Simplify and generalize function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
 // * 7. Add new in-editor documentation for the new definitions...
 // * 8. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
+
 // Global variables
+
 /**
  *
  * * This variable characterizes how many fixed numbers are outputted.
@@ -65,7 +67,9 @@ export const defaultTable = {
 	"&&": (a, b) => a && b,
 	"||": (a, b) => a || b
 }
+
 // Classes
+
 /**
  * This class represents an assembly of various statistics on the array of numeric data given.
  *
@@ -116,6 +120,7 @@ class Statistics {
 		this.dim = dim(nums)
 	}
 }
+
 // TODO: add the user interface to the window of the Surface.draw(), such that it would be possible to modify a surface given right there....
 // TODO: get rid of the inLimits: let the thing be scalable: that is, if there is
 /**
@@ -123,6 +128,7 @@ class Statistics {
  * They are represented via coordinates.
  */
 class Surface {
+	static n = 0
 	// TODO: add capability to have the initial Surface not being empty (unlike it is at the moment...)
 	// TODO: use the Tuple type from one's library for the [number...] arrays...
 	/**
@@ -143,7 +149,7 @@ class Surface {
 		this.dots = []
 		this.lines = []
 		this.segments = []
-		this.n = ++Surface._n
+		this.n = ++Surface.n
 	}
 	// ? make the "line" have the same shape as a segment? This way, one could have lines that are "not full" in the middle...
 	// * CURRENT DECISION: sure, why not?
@@ -192,7 +198,7 @@ class Surface {
 		// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
 	}
 }
-Surface._n = 0
+
 /**
  * This class represents a mathematical arithmetic expression.
  *
@@ -226,6 +232,7 @@ class Expression {
 		return repeatExp(this, operator, times)
 	}
 }
+
 // TODO: look through this stuff; rename, refactor/shorten, generalize code where want to;
 /**
  * This a class that contains various statistical tests.
@@ -349,6 +356,7 @@ class Tests {
 		)
 	}
 }
+
 // ? Should one also add one that is related to shape-things? (Consider)
 export function Matrix(
 	vector,
@@ -365,6 +373,7 @@ export function Matrix(
 		0
 	)
 }
+
 // This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
 // Depth of the final vector is equal to the depth of the original array...
 export function nestedVector(
@@ -395,6 +404,7 @@ export function nestedVector(
 		transform: transform[0]
 	})
 }
+
 // TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
 // * Counts all non-array elements within a multidimensional array passed...
 export function nonArrElems(array) {
@@ -402,12 +412,14 @@ export function nonArrElems(array) {
 		? repeatedArithmetic(array.map(nonArrElems), "+")
 		: 1
 }
+
 // Counts all the elements within a multi-dimensional array (including the arrays themselves...)
 export function totalElems(array) {
 	return array instanceof Array
 		? array.length + repeatedArithmetic(array.map(totalElems), "+")
 		: 0
 }
+
 // TODO: Add the runtime type-safety to all the data-keeping types...
 // ? Suggestion: Add the runtime type-safety to all the things within the library...
 // * There is a 'feature' about this thing -- the separate typesafety for the TypeScript and for the runtime;
@@ -602,11 +614,13 @@ class Vector {
 		if (!valueCompare(type, this.type)) this._type = type
 	}
 }
+
 // TODO: use the 'Key' from a different library here...
 // ? add generics and typeing here?
 export function ensureProperty(object, property, value) {
 	if (!object.hasOwnProperty(property)) object[property] = value
 }
+
 // TODO: rewrite; finish...
 // * Current idea for a list of features:
 // * 1. All number-related methods and features;
@@ -660,6 +674,7 @@ export class NumberVector extends Vector {
 // * 3. Can have user-defined operations for doing certain things with numbers;
 // TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
 export class NumberMatrix extends Vector {}
+
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
@@ -706,6 +721,7 @@ export class RectNumberMatrix extends NumberMatrix {
 			this.matrix.index(i).scalarMultiply(scalar)
 	}
 }
+
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
@@ -752,6 +768,7 @@ export class SquareNumberMatrix extends RectNumberMatrix {
 		)
 	}
 }
+
 // TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 // TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
 /**
@@ -821,6 +838,7 @@ class Ratio {
 		return this.power(1 / exponent)
 	}
 }
+
 /**
  * This class has a bunch of useful algorithms.
  * This is one of the static classes, it contains only methods,
@@ -1183,6 +1201,7 @@ function op(objects, operator, operatorTable = defaultTable) {
 		if (operator === keys[i]) return values[i](...objects)
 	throw new Error(`Undefined operator ${operator}!`)
 }
+
 // ? make the Expressions' api more complex? Add orders of following, arities, that sort of thing?
 // TODO: rewrite this later, as a repeated application of the same function on itself...
 // * Example of how one's future Code might look like (currrently, won't work; no dependency):
@@ -1205,6 +1224,7 @@ function repeatedOperation(objects = [], operator, table = defaultTable) {
 		table
 	).execute()
 }
+
 // TODO: same as the function above -- use the repeatedApplication...
 // * code-rework
 // TODO: problem -- this thing does not take the number of operands into account (always uses the expression.operators[i] as binary); This should change...
@@ -1229,6 +1249,7 @@ function fullExp(expression) {
 		)
 	return result
 }
+
 // TODO: same difficulty as above. WORKS ONLY WITH BINARY OPERATORS...
 /**
  * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
@@ -1247,6 +1268,7 @@ function repeatExp(expression, repeatOperator, timesRepeat = 1) {
 		result = exp([result, tempRes], repeatOperator)
 	return result
 }
+
 /**
  * Takes the number array and rerturns an average of it.
  * @param {number[]} nums An array of numbers passed to the function.
@@ -1270,6 +1292,7 @@ function average(nums = [], isTruncated = false, percents = 10) {
 		fixedSize
 	)
 }
+
 /**
  * Takes an array of numbers and returns the smallest of thems.
  * @param {number[]} nums An array of numbers passed to the function.
@@ -1278,6 +1301,7 @@ function average(nums = [], isTruncated = false, percents = 10) {
 function min(nums = []) {
 	return arrApply(Math.min, nums)
 }
+
 /**
  * Takes an array of numbers and returns the largest of them.
  * @param {number[]} nums An array of numbers passed to the function.
@@ -1286,6 +1310,7 @@ function min(nums = []) {
 function max(nums = []) {
 	return arrApply(Math.max, nums)
 }
+
 /**
  * Takes an array of numbers, which length can be odd or even and returns the median of it.
  * @param {number[]} nums An array of numbers, passed to the function.
@@ -1297,6 +1322,7 @@ function median(nums = []) {
 		? firstIndex
 		: average([firstIndex, sorted[nums.length / 2]])
 }
+
 // TODO: create a type definition for this '(a: any, b: any) => boolean' thing; Replace it everywhere in the codebase...
 // * The same way, pray name all the redundant (appearing more than once) types;
 /**
@@ -1318,8 +1344,10 @@ function mostPopular(
 		(a) => freq.keys[a]
 	)
 }
+
 export const mostPopularElem = mostPopular
 export const mostPopularNum = mostPopular
+
 function leastPopular(
 	elems = [],
 	noneValue = null,
@@ -1334,6 +1362,7 @@ function leastPopular(
 		(a) => freq.keys[a]
 	)
 }
+
 // TODO: make the range of truncation an argument too... Generalize...
 /**
  * @param {number[]} nums An array of numbers passed to the function.
@@ -1344,6 +1373,7 @@ function range(nums = [], isInterquartile = false) {
 	const newArr = isInterquartile ? truncate(nums, 25) : copy(nums)
 	return floor(max(newArr) - min(newArr))
 }
+
 /**
  * Takes an array of numbers and returns sorted version of it.
  * @param {number[]} nums An array of numbers, passed to the function to sort.
@@ -1367,6 +1397,7 @@ function sort(nums = [], forward = true) {
 	}
 	return sorted
 }
+
 // TODO: rewrite the docs...
 /**
  * Copies an array without referencing its object.
@@ -1395,6 +1426,7 @@ function generate(start, end, step = 1, precision = 1) {
 		generated.push(floor(i, precision))
 	return generated
 }
+
 // TODO: this should also separate onto findValue and findReference;
 // * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
 // TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
@@ -1429,6 +1461,7 @@ function find(searchArr, searchVal) {
 				: null
 	return [result, foundTimes, foundIndexes]
 }
+
 /**
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
@@ -1448,6 +1481,7 @@ function readable(num) {
 	})
 	return changeStr
 }
+
 /**
  * Factors out a passed number to the prime numbers. Works quite quickly.
  * @param {number} num Number, to be factored out.
@@ -1467,6 +1501,7 @@ function factorOut(number) {
 	}
 	return factors
 }
+
 /**
  * Takes a numeric array and a number and truncates the passed array, using the second paramater as a count of percents of numbers, that shall be deleted.
  * @param {number[]} nums An array to be truncated.
@@ -1482,10 +1517,12 @@ function truncate(nums, percents = 10) {
 	}
 	return shortened
 }
+
 // TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
 export function multiples(n, range) {
 	return generate(1, range).map((a) => a * n)
 }
+
 // TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
 // TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the newapi.util.arrIntersections)
 /**
@@ -1505,6 +1542,7 @@ function leastCommonMultiple(...nums) {
 		)
 	return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
 }
+
 export function commonMultiples(range, ...nums) {
 	if (nums.length === 0) return undefined
 	if (nums.length === 1) return nums[0]
@@ -1520,12 +1558,14 @@ export function commonMultiples(range, ...nums) {
 	const rest = commonMultiples(range, ...nums.slice(1))
 	return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
 }
+
 export function leastCommonDivisor(...nums) {
 	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
 	return ((x) => (isNumber(x) || isUndefined(x) ? x : min(x)))(
 		commonDivisors(...nums)
 	)
 }
+
 export function commonDivisors(...nums) {
 	if (nums.length === 0) return undefined
 	if (nums.length === 1) return nums[0]
@@ -1536,6 +1576,7 @@ export function commonDivisors(...nums) {
 		commonDivisors(...nums.slice(1))
 	])
 }
+
 /**
  * Takes an a array(or a row, if you prefer) and returns an array of all deviations from its average.
  * @param {number[]} row An array, in which deviations should be found.
@@ -1554,6 +1595,7 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 	deviations.length = row.length
 	return deviations
 }
+
 /**
  * Returns a dispersion of a numeric array(or a row, if you prefer). It can be of a population variance or a sample variance, depending on the second parameter.
  * @param {number[]} row A numeric array, dispersion for which is to be found and returned.
@@ -1580,6 +1622,7 @@ function dispersion(
 	// TODO: if don't like, pray do something about...
 	return floor(average(deviations(newRow, isSquare), true, 0)) // ! DO NOT DO LIKE THIS, WHEN USING THE LIBRARY(I mean the last two arguments of average()).
 }
+
 /**
  * Takes an array of numbers and returns (general or sample) standard deviation of it depending on the second parameter. (Indexes of sample, if it's a sample, are set using the last argument.)
  * @param {number[]} row Row(or an array if you prefer) of numbers, (sample or population) standard deviation for which shall be found.
@@ -1592,6 +1635,7 @@ function standardDeviation(row = [], isPopulation = true, indexes = []) {
 		fixedSize
 	)
 }
+
 /**
  * Takes an array of numbers and returns the standard error of it.
  * @param {number[]} row An array of numbers, standard error for which is to be found.
@@ -1623,6 +1667,7 @@ function standardError(
 				fixedSize
 		  )
 }
+
 /**
  * Takes a two-dimensional array, containing one dimensional number arrays and returns the number of degrees of freedom for all of them.
  * @param {number[]} numRows Multiple one-dimensional arrays for which the degree of freedom is to be found.
@@ -1632,6 +1677,7 @@ function degreeOfFreedom(...numRows) {
 	for (let i = 0; i < numRows.length; i++) lenSum += numRows[i].length
 	return lenSum - numRows.length
 }
+
 /**
  * Takes a numbers array and an array of probabilities for each of the given numbers to appear and returns expected value for them.
  * @param {number[]} numbers A number array, expected value for which is to be found.
@@ -1647,6 +1693,7 @@ function expectedValue(numbers, probabilities) {
 		values.push(numbers[i] * probabilities[i])
 	return floor(repeatedArithmetic(values.map(String), "+"))
 }
+
 // TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
 // TODO: write such a function as well for both old api and new api!
 // ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
@@ -1659,6 +1706,8 @@ function expectedValue(numbers, probabilities) {
 function floor(number, afterDot = fixedSize) {
 	return Number(number.toFixed(afterDot))
 }
+
+// TODO: generalize to allow for arbitrary "random" function...
 /**
  * Takes the max length of the random array, it's max value, the flag, characterizing whether numbers in it should be integers.
  * @param {number} maxLength The largest count of numbers, that can appear in the random array. (It can be different from the given value).
@@ -1676,6 +1725,7 @@ function randomArray(maxLength, maxValue, integers = false) {
 		)
 	return storage
 }
+
 /**
  * Checks whether the number passed is perfect or not.
  * @param {number} number Number, perfectness of which is to be checked.
@@ -1683,6 +1733,7 @@ function randomArray(maxLength, maxValue, integers = false) {
 function isPerfect(number) {
 	return repeatedArithmetic(allFactors(number).map(String), "+") === number
 }
+
 /**
  * Takes one integer and returns all of its factors (not only primes, but others also).
  * @param {number} number An integer, factors for which are to be found.
@@ -1693,6 +1744,7 @@ function allFactors(number) {
 		if (number % currFactor === 0) factors.push(currFactor)
 	return factors
 }
+
 /**
  * This function calculates the factorial of a positive integer given.
  * @param {number} number A positive integer, factorial for which is to be calculated.
@@ -1708,6 +1760,7 @@ function factorial(number) {
 	if (!numbers.length) return 1
 	return repeatedArithmetic(numbers.map(String), "*")
 }
+
 /**
  * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
  * @param {number} float1 First number to be added.
@@ -1720,6 +1773,7 @@ function realAddition(float1, float2) {
 	const fix = float2 - fixedB
 	return [sum + fix, fix]
 }
+
 /**
  * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
  * @param {number} newPrecision The new value of fixedSize.
@@ -1727,6 +1781,7 @@ function realAddition(float1, float2) {
 function setPrecision(newPrecision = 0) {
 	return (fixedSize = newPrecision | 0) // in case someone malisciously decides to put floats in there, hehe :D
 }
+
 // TODO : separate onto reference-equality (current) and value-equality (for this, one could employ newapi.utils.valueComparison)
 /**
  * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
@@ -1744,6 +1799,7 @@ function arrayEquality(...arrays) {
 		if (!equalBinary(arrays[i - 1], arrays[i])) return false
 	return true
 }
+
 /**
  * This function takes in array and determines how nested it is (its dimensions).
  * If it is not array, dimension is 0.
@@ -1760,6 +1816,7 @@ function dim(array) {
 		return 1 + (array.length === 0 ? 0 : max(array.map((a) => dim(a))))
 	return 0
 }
+
 // function dim(array: any): number {
 // 	const d = (elem: any) => (elem instanceof Array ? t(elem) : 0)
 // 	const t = (arr: any[]) =>
@@ -1770,6 +1827,7 @@ function dim(array) {
 // * first is 4 function calls per level;
 // * second is 3 function calls per level;
 // * CURRENT DECISION: both shall stay, but the first one will be commented out...
+
 /**
  * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
  * (What it actually does is it takes their binomial coefficient, but never mind about that. )
@@ -1788,11 +1846,15 @@ function binomial(n, k) {
 		) / factorial(k)
 	)
 }
+
+// ? Should this stay? Decide, pray;
 export function isArray(x, typechecker = (_a) => true) {
 	return x instanceof Array && min(x.map((a) => Number(typechecker(a)))) === 1
 }
 // TODO: Implement the compareUniversal(...arrays), which uses dim;
+
 // * Exports (constants are being exported separately).
+
 export {
 	Statistics,
 	Surface,

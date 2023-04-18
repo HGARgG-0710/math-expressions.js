@@ -21,19 +21,30 @@ function replaceStr(string, x, y) {
 function replaceStrInd(string, ind, value) {
 	return `${string.slice(0, ind)}${value}${string.slice(ind)}`
 }
-// TODO: code-rework -- rewrite as repeated application of the replaceStrInd...
 function replaceStrIndMany(string, inds, values) {
-	let copy = string
-	for (let i = 0; i < inds.length; i++)
-		copy = replaceStrInd(copy, inds[i], values[i])
-	return copy
+	// TODO: use the min() instead of Math.min here...
+	return repeatedApplicationIndex(
+		(val, i) => replaceStrInd(val, inds[i], values[i]),
+		Math.min(inds.length, values.length),
+		string
+	)
+	// * Previous: before refactoring (check that they are the same thing...)
+	// let copy = string
+	// for (let i = 0; i < inds.length; i++)
+	// 	copy = replaceStrInd(copy, inds[i], values[i])
+	// return copy
 }
 function replaceStrMany(string, x, y) {
-	// TODO: again, the repeatedApplication from a different library could do this in 1 line... Same thing with the versions...
-	// * do code-update...
-	let final = string
-	for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
-	return final
+	// TODO: use min() instead of Math.min() here...
+	return repeatedApplicationIndex(
+		(v, i) => replaceStr(v, x[i], y[i]),
+		Math.min(x.length, y.length),
+		string
+	)
+	// * Previous: before refactoring (check that they are, indeed, the same in functionality)
+	// let final = string
+	// for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
+	// return final
 }
 // * Replaces values within an array and returns the obtained copy...
 function replaceArr(array, x, y, transformation = (a) => a) {
@@ -193,10 +204,7 @@ function repeatedApplication(a, n, initial = undefined) {
 function repeatedApplicationIndex(a, n, initial = undefined, offset = 1) {
 	if (n <= 0) return undefined
 	if (n === 1) return a(initial, n - offset)
-	return a(
-		repeatedApplicationIndex(a, n - 1, initial, offset),
-		n - offset - 1
-	)
+	return a(repeatedApplicationIndex(a, n - 1, initial, offset), n - offset)
 }
 
 // * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
