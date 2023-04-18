@@ -184,6 +184,42 @@ function arrIntersections(arrs, comparison = (a, b) => a === b) {
 	)
 }
 
+function repeatedApplication(a, n, initial = undefined) {
+	if (n <= 0) return undefined
+	if (n === 1) return a(initial)
+	return a(repeatedApplication(a, n - 1))
+}
+
+function repeatedApplicationIndex(a, n, initial = undefined, offset = 1) {
+	if (n <= 0) return undefined
+	if (n === 1) return a(initial, n - offset)
+	return a(
+		repeatedApplicationIndex(a, n - 1, initial, offset),
+		n - offset - 1
+	)
+}
+
+// * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
+function repeatedApplicationWhilst(function_, property, initial = undefined) {
+	return property()
+		? repeatedApplicationWhilst(function_, property, function_(initial))
+		: initial
+}
+
+const repeatedApplicationWhile = repeatedApplicationWhilst
+
+// ? should this be kept? It is a special case of the function below....
+// * Current decision: let it stay; it may be nice to just "get it"; without taking the first index...
+function _multmap(a, fs) {
+	return multmap([a], fs)[0]
+}
+
+// * Finds use in Mr. Body's code all the time.
+// ^ Note: The first index stays for the elements, the second one stays for the function...
+function multmap(a, fs) {
+	return a.map((el) => fs.map((f) => f(el)))
+}
+
 // TODO: match the order of the functions with the order of exports... Do the same for all the files...
 export {
 	replaceStr,
@@ -202,5 +238,11 @@ export {
 	hasArrays,
 	arrEncircle,
 	arrStructureCopy,
-	arrIntersections
+	arrIntersections,
+	repeatedApplication,
+	repeatedApplicationIndex,
+	repeatedApplicationWhile,
+	repeatedApplicationWhilst,
+	_multmap,
+	multmap
 }
