@@ -12,6 +12,10 @@
 // ! On one hand, one has that these things tend to be implementation-specific (and one wouldn't like to just add constants that 'happen' to be the same as these things);
 // * On the other, some of this stuff would be quite useful when dealing with various limitations of different tools and programmatically getting rid of them (like with InfiniteCounter, for instance)...
 // ? what should one do? as to the numberCounter's use of it, one could simply add an in-library constant that would be used (then, perhaps, make it smaller, to make more independent of how the used JavaScript's implementation work in particular?)...
+// ! This is still under much consideration for addition/removal; 
+// ? (Perhaps, create some separate package with this kind of stuff in it? Some such in-code-abstract-mini-pl-os-arch-related-encyclopedia kind-of-thing?)
+// * One would (largely) not want to bother with all that... (Though, a nice idea...)
+// * CURRENT DECISION: nah, this goes. The one constant which is JS will be kept for the sake of these things...
 export const constants = {
 	js: {
 		MAX_ARRAY_LENGTH: 2 ** 32 - 1,
@@ -42,6 +46,3 @@ export const constants = {
 		MAX_VARIABLE_NAME_LENGTH: Infinity
 	}
 }
-
-export * as types from "./modules/infnite/types.mjs"
-export * as util from "./modules/infinite/util.mjs"
