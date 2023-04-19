@@ -10,8 +10,6 @@
 // ! Delete after fullfilling the TODO...
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
 
-// TODO: tidy up! The source code is a mess of beautiful things...
-
 /**
  * * This is the Old API source code, version pre-1.0 (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
@@ -1918,6 +1916,7 @@ function find(searchArr, searchVal) {
 	return [result, foundTimes, foundIndexes]
 }
 
+// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
 /**
  * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
  * @param {number} num A number, from which to make a better-looking version of it.
@@ -1958,6 +1957,14 @@ function factorOut(number) {
 	return factors
 }
 
+function isPrime(x) {
+	return factorOut(x).length === 1
+}
+
+function primesBefore(x) {
+	return generate(1, x).filter((a) => isPrime(a))
+}
+
 /**
  * Takes a numeric array and a number and truncates the passed array, using the second paramater as a count of percents of numbers, that shall be deleted.
  * @param {number[]} nums An array to be truncated.
@@ -1975,8 +1982,20 @@ function truncate(nums, percents = 10) {
 }
 
 // TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
+// ? This thing don't include 0. Should it include 0?
 function multiples(n, range) {
 	return generate(1, range).map((a) => a * n)
+}
+
+function multiplesBefore(n, x) {
+	return multiples(
+		n,
+		(() => {
+			let i = 0
+			while (n * i < x) i++
+			return i
+		})()
+	)
 }
 
 // TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
@@ -2660,8 +2679,11 @@ export {
 	find,
 	readable,
 	factorOut,
+	isPrime,
+	primesBefore,
 	truncate,
 	multiples,
+	multiplesBefore, 
 	leastCommonMultiple,
 	commonMultiples,
 	leastCommonDivisor,
