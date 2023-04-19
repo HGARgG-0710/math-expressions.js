@@ -4,10 +4,10 @@
 // * Get rid of 'let's that can become 'const's
 // * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
 
-// TODO: make numberCounter and other places that use these constants more general and flexible;
+// TODO: make places that use these constants more general and flexible;
 // (Later, one may expect to use this particular version in a different language transpiled -- for this, pray, do add ways of changing the number limit used here; EVEN IF, for JavaScript that would not be truly possible to use some of them...)
 // * Instead of entirely rewriting it then, one would far more prefer simply "choosing" a different version -- substituting a different argument or so...
-// ! these are temporary! Pray, do look at the TODO above...
+// ! Delete after fullfilling the TODO...
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
 
 // TODO: tidy up! The source code is a mess of beautiful things...
@@ -41,15 +41,14 @@ const MAX_ARRAY_LENGTH = 2 ** 32 - 1
  * * You can change it freely using setPrecision() function, if you want a more "precise" output of some of the functions.
  */
 // ? should this thing be kept even? (Consider)
-export let fixedSize = 16
-// Aliases
-export const exp = op
-export const repeatedArithmetic = repeatedOperation
-export const sameOperator = repeatedArithmetic
+let globalPrecision = 16
+
+// Objects
+
 // ? Add more stuff here? (This table is supposed to be like a small calculator for binary things...)
 // TODO: change the architecture of these tables -- they should contain information concerning the Arity of the stuff that is within them...
 // * That is one's solution to the problem of the "all functions that work with them currently support only binary operations..., et cetera"
-export const defaultTable = {
+const defaultTable = {
 	"+": [(a, b) => realAddition(a, b)[0], 2],
 	"-": [(a, b) => realAddition(a, -b)[0], 2],
 	"/": [(a, b) => a / b, 2],
@@ -67,7 +66,7 @@ export const defaultTable = {
 }
 
 // * IDEA to the organization of the duality of library's codebase: have a finite version of something, then precisely after it, a definition of infinite.[thing's name] -- its infinite counterpart; For stuff that don't have an explicit finite/infinite counterpart it is left alone/put into the original definition of the 'infinite'
-export const infinite = {
+const infinite = {
 	// ? some of these things are quite good with the arrays.... Question: should Mr. Body be adding those for some kind of "uniter" structure? (Like the Statistics and other such classes from the oldapi, other classes from other packages?)
 	// ? considering the fact that there is now the deepCopy() function (which is a generalization of copy)
 	deepCopy(a) {
@@ -484,6 +483,30 @@ export const infinite = {
 	}
 }
 
+// Aliases
+
+const exp = op
+const repeatedArithmetic = repeatedOperation
+const sameOperator = repeatedArithmetic
+const mostPopularElem = mostPopular
+const mostPopularNum = mostPopular
+const repeatedApplicationWhile = repeatedApplicationWhilst
+
+// TODO: rewrite the docs...
+/**
+ * Copies an array without referencing its object.
+ * @param {any[]} nums An array that needs to be copied.
+ * @returns {number[]} Copy of a passed array, without referencing its object.
+ */
+const copy = infinite.flatCopy
+// * Previous definition (later, clear?)
+// function copy(nums = [1, 2, 3, 4, 5]) {
+// 	return nums.map(id)
+// }
+
+// * Identity map (just a nice piece of notation, that's all);
+const id = (a) => a
+
 // Classes
 
 /**
@@ -697,7 +720,7 @@ class Tests {
 				],
 				"/"
 			),
-			fixedSize
+			globalPrecision
 		)
 	}
 	// ? question: should one keep the runtime checks if the compile-time check is already there?
@@ -721,7 +744,7 @@ class Tests {
 			],
 			"/"
 		)
-		return floor(difference, fixedSize)
+		return floor(difference, globalPrecision)
 	}
 	/**
 	 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
@@ -778,67 +801,6 @@ class Tests {
 			"/"
 		)
 	}
-}
-
-// ? Should one also add one that is related to shape-things? (Consider)
-export function Matrix(
-	vector,
-	typechecker,
-	defaultMatrix = [() => null, () => null],
-	defaultTransform = [null, null]
-) {
-	return nestedVector(
-		vector,
-		typechecker,
-		defaultMatrix,
-		defaultTransform,
-		2,
-		0
-	)
-}
-
-// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
-// Depth of the final vector is equal to the depth of the original array...
-export function nestedVector(
-	vector,
-	typechecker,
-	defaultElems = vector.map(() => () => null),
-	transform = vector.map(() => null),
-	dimensions = Infinity,
-	currDim = 0
-) {
-	return new Vector({
-		vectortypes: ["any"],
-		vector: vector.map((el) =>
-			el instanceof Array && !typechecker(el) && currDim < dimensions
-				? nestedVector(
-						el,
-						typechecker,
-						defaultElems.slice(1),
-						transform.slice(1),
-						dimensions,
-						currDim + 1
-				  )
-				: el
-		),
-		type: defaultElems[0],
-		transform: transform[0]
-	})
-}
-
-// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
-// * Counts all non-array elements within a multidimensional array passed...
-export function nonArrElems(array) {
-	return array instanceof Array
-		? repeatedArithmetic(array.map(nonArrElems), "+")
-		: 1
-}
-
-// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-export function totalElems(array) {
-	return array instanceof Array
-		? array.length + repeatedArithmetic(array.map(totalElems), "+")
-		: 0
 }
 
 // TODO: Add the runtime type-safety to all the data-keeping types...
@@ -1035,15 +997,11 @@ class Vector {
 	}
 }
 
-export function ensureProperty(object, property, value) {
-	if (!object.hasOwnProperty(property)) object[property] = value
-}
-
 // TODO: rewrite; finish...
 // * Current idea for a list of features:
 // * 1. All number-related methods and features;
 // * 2. Based on number-version of the Vector
-export class NumberVector extends Vector {
+class NumberVector extends Vector {
 	vectorScalarMultiply(vector) {
 		const main =
 			Math.max(this.length, vector.length) == vector.length
@@ -1092,13 +1050,13 @@ export class NumberVector extends Vector {
 // * 2. Full of numbers;
 // * 3. Can have user-defined operations for doing certain things with numbers;
 // TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
-export class NumberMatrix extends Vector {}
+class NumberMatrix extends Vector {}
 
 // * Current idea for the list of features:
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 // * 3. Rectangular-shaped;
-export class RectNumberMatrix extends NumberMatrix {
+class RectNumberMatrix extends NumberMatrix {
 	matrixMultiply(matrix) {
 		if (this.sidelen[0] !== matrix.sidelen[1])
 			throw new Error(
@@ -1145,7 +1103,7 @@ export class RectNumberMatrix extends NumberMatrix {
 // * 1. Only numbers ;
 // * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 // * 3. Square-shaped;
-export class SquareNumberMatrix extends RectNumberMatrix {
+class SquareNumberMatrix extends RectNumberMatrix {
 	/**
 	 * Finds the determinant of a square matrix it's invoked onto.
 	 */
@@ -1596,11 +1554,108 @@ class VarMapping {
 		this.varmap.variables.pop()
 	}
 }
+
+// * For iteration over an array; this thing is index-free; handles them for the user;
+// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
+class IterableSet {
+	curr() {
+		return Array.from(this.elements.values())[this.currindex]
+	}
+	next() {
+		// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
+		// * Current decision: yes, let it be.
+		// TODO: pray do that...
+		this.currindex = (this.currindex + 1) % this.elements.size
+		return this.curr()
+	}
+	add(x) {
+		return this.elements.add(x)
+	}
+	has(x) {
+		return this.elements.has(x)
+	}
+	get size() {
+		return this.elements.size
+	}
+	delete(x) {
+		return this.elements.delete(x)
+	}
+	constructor(elems = new Set([])) {
+		this.currindex = 0
+		this.elements = elems
+	}
+}
+
 // Functions
+
+// ? Question: how does one want to be ordering all this stuff within a file???
+function ensureProperty(object, property, value) {
+	if (!object.hasOwnProperty(property)) object[property] = value
+}
+
+// ? Should one also add one that is related to shape-things? (Consider)
+function Matrix(
+	vector,
+	typechecker,
+	defaultMatrix = [() => null, () => null],
+	defaultTransform = [null, null]
+) {
+	return nestedVector(
+		vector,
+		typechecker,
+		defaultMatrix,
+		defaultTransform,
+		2,
+		0
+	)
+}
+
+// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
+// Depth of the final vector is equal to the depth of the original array...
+function nestedVector(
+	vector,
+	typechecker,
+	defaultElems = vector.map(() => () => null),
+	transform = vector.map(() => null),
+	dimensions = Infinity,
+	currDim = 0
+) {
+	return new Vector({
+		vectortypes: ["any"],
+		vector: vector.map((el) =>
+			el instanceof Array && !typechecker(el) && currDim < dimensions
+				? nestedVector(
+						el,
+						typechecker,
+						defaultElems.slice(1),
+						transform.slice(1),
+						dimensions,
+						currDim + 1
+				  )
+				: el
+		),
+		type: defaultElems[0],
+		transform: transform[0]
+	})
+}
+
+// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
+// * Counts all non-array elements within a multidimensional array passed...
+function nonArrElems(array) {
+	return array instanceof Array
+		? repeatedArithmetic(array.map(nonArrElems), "+")
+		: 1
+}
+
+// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+function totalElems(array) {
+	return array instanceof Array
+		? array.length + repeatedArithmetic(array.map(totalElems), "+")
+		: 0
+}
+
 // TODO: this thing it to be rewritten (both the JSDoc and the function...)
-// TODO: the OperatorDefinitions should be different; should also take a type of the arguments into account;
-// * This thing should take an array of things of different arities (any[]);
-// ! The repeatedOperation should not take strings -- fix that...
 /**
  * Executes an arithmetic expression with two numbers
  *
@@ -1699,7 +1754,7 @@ function average(nums = [], isTruncated = false, percents = 10) {
 		return floor(
 			repeatedArithmetic(newArr, "+") /
 				(nums.length + ((nums.length === newArr.length) - 1)),
-			fixedSize
+			globalPrecision
 		)
 	})(isTruncated && percents > 0 ? truncate(nums, percents) : nums)
 }
@@ -1758,9 +1813,6 @@ function mostPopular(
 	)
 }
 
-export const mostPopularElem = mostPopular
-export const mostPopularNum = mostPopular
-
 function leastPopular(
 	elems = [],
 	noneValue = null,
@@ -1812,21 +1864,6 @@ function sort(nums = [], forward = true) {
 	return sorted
 }
 
-// TODO: rewrite the docs...
-/**
- * Copies an array without referencing its object.
- * @param {any[]} nums An array that needs to be copied.
- * @returns {number[]} Copy of a passed array, without referencing its object.
- */
-const copy = infinite.flatCopy
-// * Previous definition (later, clear?)
-// function copy(nums = [1, 2, 3, 4, 5]) {
-// 	return nums.map(id)
-// }
-
-// * Identity map (just a nice piece of notation, that's all);
-export const id = (a) => a
-
 /**
  * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
  * @param {number} start Start number in array(it's supposed to be the least number in it)
@@ -1860,7 +1897,7 @@ function find(searchArr, searchVal) {
 	let result = false
 	let foundTimes = 0
 	const foundIndexes = []
-	if (isArray(searchVal) && isArray(searchArr))
+	if (searchVal instanceof Array && searchArr instanceof Array)
 		searchVal.forEach((value) =>
 			searchArr.forEach((arr, index) =>
 				arr.forEach((obj) => {
@@ -1938,7 +1975,7 @@ function truncate(nums, percents = 10) {
 }
 
 // TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
-export function multiples(n, range) {
+function multiples(n, range) {
 	return generate(1, range).map((a) => a * n)
 }
 
@@ -1962,7 +1999,7 @@ function leastCommonMultiple(...nums) {
 	return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
 }
 
-export function commonMultiples(range, ...nums) {
+function commonMultiples(range, ...nums) {
 	if (nums.length === 0) return undefined
 	if (nums.length === 1) return nums[0]
 	if (nums.length === 2) {
@@ -1978,7 +2015,7 @@ export function commonMultiples(range, ...nums) {
 	return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
 }
 
-export function leastCommonDivisor(...nums) {
+function leastCommonDivisor(...nums) {
 	// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
 	return ((x) =>
 		typeof x === "number" || typeof x === "undefined" ? x : min(x))(
@@ -1986,7 +2023,7 @@ export function leastCommonDivisor(...nums) {
 	)
 }
 
-export function commonDivisors(...nums) {
+function commonDivisors(...nums) {
 	if (nums.length === 0) return undefined
 	if (nums.length === 1) return nums[0]
 	if (nums.length === 2)
@@ -2009,8 +2046,12 @@ function deviations(row, isSquare = false, isTruncated = false, percents = 10) {
 	const deviations = []
 	row.forEach((num) => {
 		isSquare
-			? deviations.push(floor(Math.pow(num - rowAverage, 2), fixedSize))
-			: deviations.push(floor(Math.abs(num - rowAverage), fixedSize))
+			? deviations.push(
+					floor(Math.pow(num - rowAverage, 2), globalPrecision)
+			  )
+			: deviations.push(
+					floor(Math.abs(num - rowAverage), globalPrecision)
+			  )
 	})
 	deviations.length = row.length
 	return deviations
@@ -2052,7 +2093,7 @@ function dispersion(
 function standardDeviation(row = [], isPopulation = true, indexes = []) {
 	return floor(
 		Math.sqrt(dispersion(row, true, isPopulation, indexes)),
-		fixedSize
+		globalPrecision
 	)
 }
 
@@ -2080,11 +2121,11 @@ function standardError(
 	return isDispersion
 		? floor(
 				exp([dispersion(row, false), Math.sqrt(newArr.length)], "/"),
-				fixedSize
+				globalPrecision
 		  )
 		: floor(
 				exp([standardDeviation(row), Math.sqrt(newArr.length)], "/"),
-				fixedSize
+				globalPrecision
 		  )
 }
 
@@ -2123,7 +2164,7 @@ function expectedValue(numbers, probabilities) {
  * @param {number} afterDot How many positions after dot should there be.
  * @returns {number}
  */
-function floor(number, afterDot = fixedSize) {
+function floor(number, afterDot = globalPrecision) {
 	return Number(number.toFixed(afterDot))
 }
 
@@ -2141,7 +2182,7 @@ function randomArray(maxLength, maxValue, integers = false) {
 		storage.push(
 			integers
 				? floor(Math.random() * maxValue, 0)
-				: floor(Math.random() * maxValue, fixedSize)
+				: floor(Math.random() * maxValue, globalPrecision)
 		)
 	return storage
 }
@@ -2199,7 +2240,7 @@ function realAddition(float1, float2) {
  * @param {number} newPrecision The new value of fixedSize.
  */
 function setPrecision(newPrecision = 0) {
-	return (fixedSize = newPrecision | 0) // in case someone malisciously decides to put floats in there, hehe :D
+	return (globalPrecision = newPrecision | 0) // in case someone malisciously decides to put floats in there, hehe :D
 }
 
 // TODO : separate onto reference-equality (current) and value-equality (for this, one could employ newapi.utils.valueComparison)
@@ -2267,20 +2308,18 @@ function binomial(n, k) {
 	)
 }
 
-// ? Should this stay? Decide, pray;
-export function isArray(x, typechecker = (_a) => true) {
-	return x instanceof Array && min(x.map((a) => Number(typechecker(a)))) === 1
-}
 // TODO: Implement the compareUniversal(...arrays), which uses dim;
 
-// ! This stuff has once been in finite/utils.mjs
 // * Replaces a value within a string...
+// TODO: this replaces All -- write replaceFirst(n: number) function, which would only replace first appearing...
 function replaceStr(string, x, y) {
 	return string.split(x).join(y)
 }
+
 function replaceStrInd(string, ind, value) {
 	return `${string.slice(0, ind)}${value}${string.slice(ind)}`
 }
+
 function replaceStrIndMany(string, inds, values) {
 	// TODO: use the min() instead of Math.min here...
 	return repeatedApplicationIndex(
@@ -2294,6 +2333,7 @@ function replaceStrIndMany(string, inds, values) {
 	// 	copy = replaceStrInd(copy, inds[i], values[i])
 	// return copy
 }
+
 function replaceStrMany(string, x, y) {
 	// TODO: use min() instead of Math.min() here...
 	return repeatedApplicationIndex(
@@ -2306,6 +2346,7 @@ function replaceStrMany(string, x, y) {
 	// for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
 	// return final
 }
+
 // * Replaces values within an array and returns the obtained copy...
 function replaceArr(array, x, y, transformation = (a) => a) {
 	const resArray = [...array]
@@ -2315,33 +2356,39 @@ function replaceArr(array, x, y, transformation = (a) => a) {
 	}
 	return resArray
 }
+
 // * just a convinient syntax...
 function arrThisApply(f, arr, thisArg = null) {
 	return f.apply(thisArg, arr)
 }
+
 function arrApply(f, arr) {
 	return f(...arr)
 }
-const countAppearences = (
+
+function countAppearences(
 	array,
 	element,
 	i = 0,
 	comparison = (a, b) => a === b
-) =>
-	i < array.length
+) {
+	return i < array.length
 		? Number(comparison(array[i], element)) +
-		  countAppearences(array, element, i + 1, comparison)
+				countAppearences(array, element, i + 1, comparison)
 		: 0
+}
+
 function indexOfMult(array, el, comparison = (a, b) => a === b) {
 	const indexes = []
 	for (let i = 0; i < array.length; i++)
 		if (comparison(array[i], el)) indexes.push(i)
 	return indexes
 }
+
 // ? which one to use as an export? (they will both be kept in any case...)
 // * Current decision: the newer one (one below);
 // * Alternative implementation (this time, with a searchIndex -- i parameter):
-// export const indexOfMult = (
+//  const indexOfMult = (
 // 	array: any[],
 // 	el: any,
 // 	comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b,
@@ -2360,6 +2407,7 @@ function clearRepetitions(arr, el, tokeep = 0, comparison = (a, b) => a === b) {
 		  )
 		: [...arr]
 }
+
 function splitArr(arr, el, comparison) {
 	const segments = []
 	let begInd = 0
@@ -2372,6 +2420,7 @@ function splitArr(arr, el, comparison) {
 		}
 	return segments.map((seg) => arr.slice(...seg))
 }
+
 // * "guts" the first layer inner arrays into the current one...
 function gutInnerArrs(array) {
 	const returned = []
@@ -2384,6 +2433,7 @@ function gutInnerArrs(array) {
 	}
 	return returned
 }
+
 // TODO: also -- repeatedApplication, code-rework...
 // TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
 // * Rewrite so that it returns a new one...
@@ -2391,10 +2441,13 @@ function gutInnerArrsRecursive(array) {
 	while (hasArrays(array)) array = gutInnerArrs(array)
 	return array
 }
+
 // TODO: another one's library has a method for this thing (boolmapMult; maps a set of boolean functions to a set of values forming a 2d boolean array...)
 // * code-update...
-const hasArrays = (array) =>
-	max(array.map((a) => Number(a instanceof Array))) === 1
+function hasArrays(array) {
+	return max(array.map((a) => Number(a instanceof Array))) === 1
+}
+
 // * "reverses" the gutInnerArrs (only once, at a given place)
 function arrEncircle(a, from = 0, to = a.length) {
 	const copied = []
@@ -2407,6 +2460,7 @@ function arrEncircle(a, from = 0, to = a.length) {
 	}
 	return copied
 }
+
 // todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
 // * copies array's structure deeply without copying the elements
 // ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
@@ -2475,8 +2529,6 @@ function repeatedApplicationWhilst(function_, property, initial = undefined) {
 		: initial
 }
 
-const repeatedApplicationWhile = repeatedApplicationWhilst
-
 // ? should this be kept? It is a special case of the function below....
 // * Current decision: let it stay; it may be nice to just "get it"; without taking the first index...
 function _multmap(a, fs) {
@@ -2492,8 +2544,7 @@ function multmap(a, fs) {
 // TODO: match the order of the definitions with the order of exports... Do the same for all the files...
 // * Also, match with the original "math-expressions.js" file...
 
-// ! This has once been in "finite/types.mjs"
-
+// TODO: ORDER THE stuff further -- separate the "class" functions from other ones (those that are made as object generators, that is...)
 function UniversalMap(notfound) {
 	return classTemplate(
 		{ notfound: notfound },
@@ -2522,6 +2573,10 @@ function UniversalMap(notfound) {
 	)
 }
 
+function template(defobj, label, finObj) {
+	return { ...defobj, [label]: finObj }
+}
+
 // TODO: work with the idea! Create nestedTemplate and so on...
 // * Create the Universal and infinite versions for this...
 // * Same todo stands for the infinite and universal versions...
@@ -2529,57 +2584,21 @@ function classTemplate(defaultobject, classObj) {
 	return template(defaultobject, "class", classObj)
 }
 
-export function functionTemplate(defObj, functionObj) {
+function functionTemplate(defObj, functionObj) {
 	return template(defObj, "function", functionObj)
-}
-
-function template(defobj, label, finObj) {
-	return { ...defobj, [label]: finObj }
-}
-
-// * For iteration over an array; this thing is index-free; handles them for the user;
-// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
-class IterableSet {
-	curr() {
-		return Array.from(this.elements.values())[this.currindex]
-	}
-	next() {
-		// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
-		// * Current decision: yes, let it be.
-		// TODO: pray do that...
-		this.currindex = (this.currindex + 1) % this.elements.size
-		return this.curr()
-	}
-	add(x) {
-		return this.elements.add(x)
-	}
-	has(x) {
-		return this.elements.has(x)
-	}
-	get size() {
-		return this.elements.size
-	}
-	delete(x) {
-		return this.elements.delete(x)
-	}
-	constructor(elems = new Set([])) {
-		this.currindex = 0
-		this.elements = elems
-	}
 }
 
 // TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
 // * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
 // * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary sequence...
 // TODO: extend this thing (add more stuff to it, create powerful extensions)
-export function recursiveIndexation({ object, fields }) {
+function recursiveIndexation({ object, fields }) {
 	let res = object
 	for (const f of fields) res = res[f]
 	return res
 }
 
-export function recursiveSetting({ object, fields, value }) {
+function recursiveSetting({ object, fields, value }) {
 	return (recursiveIndexation({
 		object: object,
 		fields: fields.slice(0, fields.length - 1)
@@ -2588,16 +2607,43 @@ export function recursiveSetting({ object, fields, value }) {
 
 // * Exports (constants are being exported separately).
 
+// ? decide formatting?
+export { globalPrecision }
+
+export { defaultTable, infinite }
+
+export {
+	exp,
+	repeatedArithmetic,
+	sameOperator,
+	mostPopularElem,
+	mostPopularNum,
+	repeatedApplicationWhile
+}
+
 export {
 	Statistics,
 	Surface,
 	Expression,
 	Tests,
+	Vector,
+	NumberVector,
+	NumberMatrix,
+	RectNumberMatrix,
+	SquareNumberMatrix,
 	Ratio,
 	Algorithms,
-	Vector,
-	VarMapping,
 	Equation,
+	VarMapping,
+	IterableSet
+}
+
+export {
+	ensureProperty,
+	Matrix,
+	nestedVector,
+	nonArrElems,
+	totalElems,
 	op,
 	repeatedOperation,
 	fullExp,
@@ -2610,21 +2656,24 @@ export {
 	leastPopular,
 	range,
 	sort,
-	copy,
 	generate,
 	find,
 	readable,
 	factorOut,
 	truncate,
+	multiples,
 	leastCommonMultiple,
+	commonMultiples,
+	leastCommonDivisor,
+	commonDivisors,
 	deviations,
 	dispersion,
 	standardDeviation,
 	standardError,
 	degreeOfFreedom,
 	expectedValue,
-	randomArray,
 	floor,
+	randomArray,
 	isPerfect,
 	allFactors,
 	factorial,
@@ -2635,8 +2684,8 @@ export {
 	binomial,
 	replaceStr,
 	replaceStrInd,
-	replaceStrMany,
 	replaceStrIndMany,
+	replaceStrMany,
 	replaceArr,
 	arrThisApply,
 	arrApply,
@@ -2652,11 +2701,13 @@ export {
 	arrIntersections,
 	repeatedApplication,
 	repeatedApplicationIndex,
-	repeatedApplicationWhile,
 	repeatedApplicationWhilst,
 	_multmap,
 	multmap,
 	UniversalMap,
+	template,
 	classTemplate,
-	IterableSet
+	functionTemplate,
+	recursiveIndexation,
+	recursiveSetting
 }

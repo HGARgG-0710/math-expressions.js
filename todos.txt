@@ -64,23 +64,20 @@
 
 8. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 
-9. Reminder (code-rework) -- after the 1.0 release, pray do work with the other libraries, publish them and then use as dependnecies (their previous versions) of this one in the 1.1 release; 
+9. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
 
-    This'll simplify much of the code enormously; 
-
-10. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
-
-11. Change all the desired so JS-classes for the function-object combinations: 
+10. Change all the desired so JS-classes for the function-object combinations: 
 
     This is mimicking the behaviour of templates: the abstraction turns into a 
     sequence of "layers" to get called, each allowing for an extension of the thing in question;
     For example, one such is used to generate different "classes" (in truth, constructor functions...)
 
-12. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
+11. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
 
     What to add, what to delete, what to change and so on...
 
     Suggestion 1: After it is done, pray rename the newer "finite.mjs" into "math-expressions.mjs" and delete the other file...
     Suggestion 2: still keep the older api in a separate file, keep them away with namespaces, keep supporting the old one and fix errors in it...
 
-13. Pray add a good descripttion to the GitHub repository...
+12. Pray add a good descripttion to the GitHub repository...
+13. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
