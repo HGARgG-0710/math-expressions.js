@@ -1937,6 +1937,18 @@ function readable(num) {
 	return changeStr
 }
 
+function permutations(array) {
+	return ((perms) => {
+		while (perms.length != factorial(array.length))
+			perms.push([...perms.slice(1), perms[perms.length - 1][0]])
+		return perms
+	})([array])
+}
+
+function whileFunctional(prop, body, endElem = null) {
+	return prop() ? [body(), whileFunctional(prop, body, endElem)] : endElem
+}
+
 /**
  * Factors out a passed number to the prime numbers. Works quite quickly.
  * @param {number} num Number, to be factored out.
@@ -2678,12 +2690,14 @@ export {
 	generate,
 	find,
 	readable,
+	permutations,
+	whileFunctional,
 	factorOut,
 	isPrime,
 	primesBefore,
 	truncate,
 	multiples,
-	multiplesBefore, 
+	multiplesBefore,
 	leastCommonMultiple,
 	commonMultiples,
 	leastCommonDivisor,
