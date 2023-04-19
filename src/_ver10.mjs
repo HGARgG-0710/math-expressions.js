@@ -4,8 +4,10 @@
 // * Get rid of 'let's that can become 'const's
 // * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
 
+// TODO: make numberCounter and other places that use these constants more general and flexible;
+// (Later, one may expect to use this particular version in a different language transpiled -- for this, pray, do add ways of changing the number limit used here; EVEN IF, for JavaScript that would not be truly possible to use some of them...)
+// * Instead of entirely rewriting it then, one would far more prefer simply "choosing" a different version -- substituting a different argument or so...
 // ! these are temporary! Pray, do look at the TODO above...
-const MAX_INT = 2 ** 53 - 1
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
 
 // TODO: tidy up! The source code is a mess of beautiful things...
@@ -14,8 +16,6 @@ const MAX_ARRAY_LENGTH = 2 ** 32 - 1
  * * This is the Old API source code, version pre-1.0 (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
-import { types } from "./infinite.mjs"
-// TODO: solve the organizational problems concerning dependencies...
 // TODO: finish;
 
 // todo: new things to add:
@@ -108,88 +108,101 @@ export const infinite = {
 	// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 	// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 	// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
-	// TODO: make this thing more general and flexible;
-	// (Later, one may expect to use this particular version in a different language transpiled -- for this, pray, do add ways of changing the number limit used here; EVEN IF, for JavaScript that would not be truly possible to use some of them...)
-	// * Instead of entirely rewriting it then, one would far more prefer simply "choosing" a different version -- substituting a different argument or so...
-	numberCounter(a) {
-		if (a === undefined) return [0]
-		// ? put these two out of the function's context?
-		function findDeepUnfilledNum(a, prevArr = []) {
-			const i = [...prevArr, 0]
-			for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-				const indexed = a[i[i.length - 1]]
-				if (indexed instanceof Array) {
-					const temp = findDeepUnfilledNum(a, i)
-					if (temp) return temp
-					continue
+	numberCounter(MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1) {
+		return functionTemplate(
+			{
+				maxint: MAX_INT,
+				maxarrlen: MAX_ARRAY_LENGTH
+			},
+			function (a) {
+				if (a === undefined) return [0]
+				// ? put these two out of the function's context?
+				function findDeepUnfilledNum(a, prevArr = []) {
+					const i = [...prevArr, 0]
+					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
+						const indexed = a[i[i.length - 1]]
+						if (indexed instanceof Array) {
+							const temp = findDeepUnfilledNum(a, i)
+							if (temp) return temp
+							continue
+						}
+						if (indexed < MAX_INT) return i
+					}
+					return false
 				}
-				if (indexed < MAX_INT) return i
-			}
-			return false
-		}
-		function findDeepUnfilledArr(a, prevArr = []) {
-			const i = [...prevArr, 0]
-			for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-				const indexed = a[i[i.length - 1]]
-				if (indexed instanceof Array) {
-					if (indexed.length < MAX_INT) return i
-					const temp = findDeepUnfilledArr(a, i)
-					if (temp) return temp
+				function findDeepUnfilledArr(a, prevArr = []) {
+					const i = [...prevArr, 0]
+					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
+						const indexed = a[i[i.length - 1]]
+						if (indexed instanceof Array) {
+							if (indexed.length < this.maxarrlen) return i
+							const temp = findDeepUnfilledArr(a, i)
+							if (temp) return temp
+						}
+					}
+					return false
 				}
-			}
-			return false
-		}
-		let resultIndexes = findDeepUnfilledNum(a)
-		const _result = util.deepCopy(a)
-		let result = _result
-		if (!resultIndexes) {
-			resultIndexes = findDeepUnfilledArr(a)
-			if (!resultIndexes) return [a]
-			// TODO: again, the same thing as below...
-			for (let i = 0; i < resultIndexes.length - 1; i++) {
-				const indexed = result[resultIndexes[i]]
-				if (indexed instanceof Array) {
-					result = indexed
-					continue
+				let resultIndexes = findDeepUnfilledNum(a)
+				const _result = util.deepCopy(a)
+				let result = _result
+				if (!resultIndexes) {
+					resultIndexes = findDeepUnfilledArr(a)
+					if (!resultIndexes) return [a]
+
+					// TODO: get rid of such object-parameters... within both this library and others...
+					result = recursiveIndexation({
+						object: result,
+						fields: resultIndexes.slice(0, resultIndexes.length - 1)
+					})
+
+					// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
+					// ! As well -- resultIndexes IS A FINITE ARRAY; Wouldn't allow one do more than (2**53 - 1)**(2 ** 32 - 1) with this; Using InfiniteArray instead would allow for this thing to work properly...
+					// * Actually, not necessarily... One would just write one recursive and that would work just as well...
+					const finalDimension = dim(a) - resultIndexes.length
+					// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
+					// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
+					// * Pray decide...
+					// ! This is the finite version... Infinite one is required for the thing anyway...
+					// result = repeatedApplication(
+					// 	(value) => {
+					// 		value.push([])
+					// 		return value[value.length - 1]
+					// 	},
+					// 	finalDimension,
+					// 	result
+					// )
+					for (let i = 0; i < finalDimension; i++) {
+						result.push([])
+						result = result[result.length - 1]
+					}
+					result.push(0)
+					return _result
 				}
-				break
+
+				// ? Again! The resulting piece is longer than the original! (Try after having gotten rid of those braces, object notation...)
+				// result = recursiveIndexation({
+				// 	object: result,
+				// 	field: resultIndexes.slice(0, resultIndexes.length - 1)
+				// })
+				for (let i = 0; i < resultIndexes.length - 1; i++)
+					result = result[resultIndexes[i]]
+				result[resultIndexes[resultIndexes.length - 1]]++
+				return _result
 			}
-			// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
-			const finalDimension = dim(a) - resultIndexes.length
-			// todo: again, the same thing as below...
-			for (let i = 0; i < finalDimension; i++) {
-				result.push([])
-				const last = result[result.length - 1]
-				if (typeof last !== "number") result = last
-			}
-			result.push(0)
-			return _result
-		}
-		// * Hmmm... That's a very interesting thing there...
-		// * See, that thing is already in one of the unpublished projects that depend upon the math-expressions.js;
-		// ? Solution: if the versions of the dependant and the dependee are different, then it's alright...;
-		// TODO: implement, later, after publishing both the math-expressions.js 1.0 and the new thing...;
-		// ! the check is, again, only for TS to shut up...
-		for (let i = 0; i < resultIndexes.length - 1; i++) {
-			if (result[resultIndexes[i]] instanceof Array) {
-				result = result[resultIndexes[i]]
-				continue
-			}
-		}
-		result[resultIndexes[resultIndexes.length - 1]]++
-		return _result
+		)
 	},
 
 	// ? delete this as well?
 	// * pray decide too...
 	// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library (boolmap)...
 	// * an example of a typechecker for the recursive arrays...
-	isRecursiveArray(x, typechecker) {
+	// * This thing could be useful...
+	isRecursiveArray(x, checker) {
 		return (
 			x instanceof Array &&
 			Math.min(
 				...x.map((a) =>
-					Number(isRecursiveArray(a, typechecker) || typechecker(a))
+					Number(isRecursiveArray(a, checker) || checker(a))
 				)
 			) === 1
 		)
@@ -397,7 +410,7 @@ export const infinite = {
 	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
 	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
 	InfiniteMap(notfound) {
-		return template({ notfound: notfound }, function (keys, values) {
+		return classTemplate({ notfound: notfound }, function (keys, values) {
 			return {
 				keys: keys,
 				values: values,
@@ -416,7 +429,7 @@ export const infinite = {
 	// * With the approach outlined in the brackets, there is a difficulty -- infinite recursion (dependency); So, instead, one should pick an alternative one...
 	// * Example of an implementation -- same, but the InfiniteCounter of an InfiniteArray is hardcoded into itself (uses the numberCounter, for example...);
 	InfiniteCounter(generator) {
-		return template({ generator: generator }, function (previous) {
+		return classTemplate({ generator: generator }, function (previous) {
 			return {
 				class: this,
 				previous: !previous ? new InfiniteArray() : previous,
@@ -797,9 +810,7 @@ export function nestedVector(
 	return new Vector({
 		vectortypes: ["any"],
 		vector: vector.map((el) =>
-			types.isRecursiveArray(el, typechecker) &&
-			!typechecker(el) &&
-			currDim < dimensions
+			el instanceof Array && !typechecker(el) && currDim < dimensions
 				? nestedVector(
 						el,
 						typechecker,
@@ -2484,35 +2495,46 @@ function multmap(a, fs) {
 // ! This has once been in "finite/types.mjs"
 
 function UniversalMap(notfound) {
-	return template({ notfound: notfound }, function (keys = [], values = []) {
-		return {
-			keys: keys,
-			values: values,
-			class: this,
-			get(key, comparison = infinite.valueCompare, number = 1) {
-				const indexes = indexOfMult(this.keys, key, comparison)
-				if (indexes.length === 0) return this.notFound
-				return indexes.slice(0, number).map((i) => this.values[i])
-			},
-			set(key, value, comparison = infinite.valueCompare) {
-				const index = indexOfMult(this.keys, key, comparison)
-				if (index.length !== 0) {
-					for (const _index of index) this.values[_index] = value
+	return classTemplate(
+		{ notfound: notfound },
+		function (keys = [], values = []) {
+			return {
+				keys: keys,
+				values: values,
+				class: this,
+				get(key, comparison = infinite.valueCompare, number = 1) {
+					const indexes = indexOfMult(this.keys, key, comparison)
+					if (indexes.length === 0) return this.notFound
+					return indexes.slice(0, number).map((i) => this.values[i])
+				},
+				set(key, value, comparison = infinite.valueCompare) {
+					const index = indexOfMult(this.keys, key, comparison)
+					if (index.length !== 0) {
+						for (const _index of index) this.values[_index] = value
+						return value
+					}
+					this.keys.push(key)
+					this.values.push(value)
 					return value
 				}
-				this.keys.push(key)
-				this.values.push(value)
-				return value
 			}
 		}
-	})
+	)
 }
 
 // TODO: work with the idea! Create nestedTemplate and so on...
 // * Create the Universal and infinite versions for this...
 // * Same todo stands for the infinite and universal versions...
-function template(defaultobject, classObj) {
-	return { ...defaultobject, class: classObj }
+function classTemplate(defaultobject, classObj) {
+	return template(defaultobject, "class", classObj)
+}
+
+export function functionTemplate(defObj, functionObj) {
+	return template(defObj, "function", functionObj)
+}
+
+function template(defobj, label, finObj) {
+	return { ...defobj, [label]: finObj }
 }
 
 // * For iteration over an array; this thing is index-free; handles them for the user;
@@ -2545,6 +2567,23 @@ class IterableSet {
 		this.currindex = 0
 		this.elements = elems
 	}
+}
+
+// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
+// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
+// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary sequence...
+// TODO: extend this thing (add more stuff to it, create powerful extensions)
+export function recursiveIndexation({ object, fields }) {
+	let res = object
+	for (const f of fields) res = res[f]
+	return res
+}
+
+export function recursiveSetting({ object, fields, value }) {
+	return (recursiveIndexation({
+		object: object,
+		fields: fields.slice(0, fields.length - 1)
+	})[fields[fields.length - 1]] = value)
 }
 
 // * Exports (constants are being exported separately).
@@ -2618,6 +2657,6 @@ export {
 	_multmap,
 	multmap,
 	UniversalMap,
-	template,
+	classTemplate,
 	IterableSet
 }
