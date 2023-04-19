@@ -46,6 +46,7 @@ let globalPrecision = 16
 // ? Add more stuff here? (This table is supposed to be like a small calculator for binary things...)
 // TODO: change the architecture of these tables -- they should contain information concerning the Arity of the stuff that is within them...
 // * That is one's solution to the problem of the "all functions that work with them currently support only binary operations..., et cetera"
+// TODO: add the defaults to these functions...
 const defaultTable = {
 	"+": [(a, b) => realAddition(a, b)[0], 2],
 	"-": [(a, b) => realAddition(a, -b)[0], 2],
@@ -62,6 +63,71 @@ const defaultTable = {
 	"&&": [(a, b) => a && b, 2],
 	"||": [(a, b) => a || b, 2]
 }
+
+const defaultAlphabet = [
+	"0",
+	"1",
+	"2",
+	"3",
+	"4",
+	"5",
+	"6",
+	"7",
+	"8",
+	"9",
+	"a",
+	"b",
+	"c",
+	"d",
+	"e",
+	"f",
+	"j",
+	"h",
+	"i",
+	"j",
+	"k",
+	"l",
+	"m",
+	"n",
+	"o",
+	"p",
+	"q",
+	"r",
+	"s",
+	"t",
+	"u",
+	"v",
+	"w",
+	"x",
+	"y",
+	"z",
+	"A",
+	"B",
+	"C",
+	"D",
+	"E",
+	"F",
+	"J",
+	"H",
+	"I",
+	"J",
+	"K",
+	"L",
+	"M",
+	"N",
+	"O",
+	"P",
+	"Q",
+	"R",
+	"S",
+	"T",
+	"U",
+	"V",
+	"W",
+	"X",
+	"Y",
+	"Z"
+]
 
 // * IDEA to the organization of the duality of library's codebase: have a finite version of something, then precisely after it, a definition of infinite.[thing's name] -- its infinite counterpart; For stuff that don't have an explicit finite/infinite counterpart it is left alone/put into the original definition of the 'infinite'
 const infinite = {
@@ -99,6 +165,19 @@ const infinite = {
 			? { ...a }
 			: a
 	},
+
+	// * Probably the simplest infinite one would have in JS;
+	arrayCounter(a) {
+		return [a]
+	},
+
+	// * Generalization of the thing above...
+	objCounter(fieldname) {
+		return (a) => ({ [fieldname]: a })
+	},
+
+	// TODO: create a string's order and on it -- this thing...
+	stringCounter(a) {},
 
 	// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 	// * That's an example of an infinite counter;
@@ -1697,10 +1776,8 @@ function repeatedOperation(objects = [], operator, table = defaultTable) {
 	).execute()
 }
 
-// TODO: same as the function above -- use the repeatedApplication...
-// * code-rework
-// TODO: problem -- this thing does not take the number of operands into account (always uses the expression.operators[i] as binary); This should change...
 // * Rework this thing capitally...
+// TODO: make this more configurable -- let there be ways for user to set at which index is the things concatenated together (currently, the 'operated' argument is always the first to be passed)...
 /**
  * Executes mathematical expression with different operators and numbers.
  *
@@ -1712,17 +1789,28 @@ function repeatedOperation(objects = [], operator, table = defaultTable) {
 function fullExp(expression) {
 	// TODO: decide which one value to use as a "default" for library's "unknown value" -- null or undefined;
 	// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-	if (expression.objects.length === 0) return null
-	let result = expression.objects[0]
-	for (let i = 0; i < expression.objects.length - 1; i++)
-		result = exp(
-			[result, expression.objects[i + 1]],
-			expression.operators[i]
-		)
-	return result
+	return repeatedApplicationIndex(
+		(double) => [
+			exp(
+				[
+					double[0],
+					generate(
+						0,
+						expression.table[expression.operators[i]][1] - 2
+					).map((j) => expression.objects[double[1] + j])
+				],
+				expression.operators[i],
+				expression.table
+			),
+			double[1] + expression.table[expression.operators[i]][2] - (i > 0)
+		],
+		expression.operators.length,
+		[expression.objects[0], 0]
+	)[0]
 }
 
 // TODO: same difficulty as above. WORKS ONLY WITH BINARY OPERATORS...
+// * This can be rewritten as a repeatedApplication of fullExp...
 /**
  * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
  *
@@ -1734,10 +1822,10 @@ function fullExp(expression) {
  * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
  */
 function repeatExp(expression, repeatOperator, timesRepeat = 1) {
-	let tempRes = null
-	let result = (tempRes = fullExp(expression))
+	const tempRes = fullExp(expression)
+	let result = deepCopy(tempRes)
 	for (let i = 0; i < timesRepeat - 1; i++)
-		result = exp([result, tempRes], repeatOperator)
+		result = exp([result, ...generate()], repeatOperator)
 	return result
 }
 
@@ -1837,6 +1925,7 @@ function range(nums = [], isInterquartile = false) {
 	return floor(max(newArr) - min(newArr))
 }
 
+// TODO: what's below (star)...
 // * Make this thing into an object: let this be put under "bubble" (for bubble sort, if that's what this thing is...);
 /**
  * Takes an array of numbers and returns sorted version of it.
@@ -1975,6 +2064,40 @@ function isPrime(x) {
 
 function primesBefore(x) {
 	return generate(1, x).filter((a) => isPrime(a))
+}
+
+// * Brings whatever is given within the given base to base 10;
+// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
+function nbase(nstr, base, alphabet = defaultAlphabet) {
+	return repeatedArithmetic(
+		generate(0, nstr.length - 1).map(
+			(i) => alphabet.indexOf(nstr[i]) * base ** i
+		),
+		"+"
+	)
+}
+
+// * Brings whatever in base 10 to whatever in whatever base is given...
+function nbasereverse(n, base, alphabet = defaultAlphabet) {
+	const coefficients = []
+	// TODO: change this for either one's own implementation of log, or this, as an alias...
+	let i = Math.floor(Math.log(n) / Math.log(base))
+	while (n !== 0) {
+		// TODO: add an operator for that to the defaultTable...
+		n = (n - (n % base ** i)) / base
+		coefficients.push(n)
+		i--
+	}
+	// TODO: create a generalized map() function that would map to both functions, arrays and objects; 
+	return coefficients.map((i) => alphabet[i]).join("")
+}
+
+function strMap(str, symb) {
+	return str.split("").map(symb)
+}
+
+function baseconvert(a, basebeg, baseend) {
+	return nbasereverse(nbase(a, basebeg), baseend)
 }
 
 /**
@@ -2641,7 +2764,7 @@ function recursiveSetting({ object, fields, value }) {
 // ? decide formatting?
 export { globalPrecision }
 
-export { defaultTable, infinite }
+export { defaultTable, defaultAlphabet, infinite }
 
 export {
 	exp,
@@ -2695,6 +2818,10 @@ export {
 	factorOut,
 	isPrime,
 	primesBefore,
+	nbase,
+	nbasereverse,
+	strMap,
+	baseconvert,
 	truncate,
 	multiples,
 	multiplesBefore,
