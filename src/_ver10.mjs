@@ -8,7 +8,11 @@
 // (Later, one may expect to use this particular version in a different language transpiled -- for this, pray, do add ways of changing the number limit used here; EVEN IF, for JavaScript that would not be truly possible to use some of them...)
 // * Instead of entirely rewriting it then, one would far more prefer simply "choosing" a different version -- substituting a different argument or so...
 // ! Delete after fullfilling the TODO...
+// TODO: no, don't. Keep them as exported constants for the library (just don't use them apart as default arguments);
+// TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
+// TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
+const MAX_INT = 2 ** 53 - 1
 
 /**
  * * This is the Old API source code, version pre-1.0 (in work).
@@ -39,6 +43,8 @@ const MAX_ARRAY_LENGTH = 2 ** 32 - 1
  * * You can change it freely using setPrecision() function, if you want a more "precise" output of some of the functions.
  */
 // ? should this thing be kept even? (Consider)
+// TODO: create various numeric constants within the library (besides, some of ones functions' definitions may use it;)...
+// * A nice thing to have...
 let globalPrecision = 16
 
 // Objects
@@ -176,7 +182,7 @@ const infinite = {
 		return (a) => ({ [fieldname]: a })
 	},
 
-	// TODO: create a string's order and on it -- this thing...
+	// TODO: create a generalization of string's order as an argument and on it -- this thing...
 	stringCounter(a) {},
 
 	// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
@@ -234,6 +240,9 @@ const infinite = {
 					// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
 					// ! As well -- resultIndexes IS A FINITE ARRAY; Wouldn't allow one do more than (2**53 - 1)**(2 ** 32 - 1) with this; Using InfiniteArray instead would allow for this thing to work properly...
 					// * Actually, not necessarily... One would just write one recursive and that would work just as well...
+					// ^ Idea: use a two-index system -- compare each and every index sequence within the array in question...
+					// ! Problem: that would require InfiniteArray...
+					// * Conclusion: first finish the InfiniteArray...
 					const finalDimension = dim(a) - resultIndexes.length
 					// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
 					// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
@@ -273,6 +282,8 @@ const infinite = {
 	// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library (boolmap)...
 	// * an example of a typechecker for the recursive arrays...
 	// * This thing could be useful...
+	// ! Problem: did one check this thing (and others related to recursive arrays of any sort) with stuff like 'x := [a, x]'?
+	// * Pray do, seems like forming an infinite loop to oneself...
 	isRecursiveArray(x, checker) {
 		return (
 			x instanceof Array &&
@@ -286,12 +297,20 @@ const infinite = {
 
 	// TODO: in a library of oneself, there is a piece of code that does precisely this kind of a thing (recursiveApplication);
 	// * Again, the issue with inter-dependency; solution is the same -- first publish like so, then rewrite differently...
-	fromNumber(n, generator) {
-		if (n < 0) return undefined
-		let result = InfiniteCounter(generator)()
-		n = BigInt(n)
-		for (let i = 0n; i < n; i++) result = result.next()
-		return result
+	fromNumber(generator) {
+		return functionTemplate({ generator: generator }, function (n) {
+			if (n < 0) return undefined
+			// let result = InfiniteCounter(this.generator)()
+			// n = BigInt(n)
+			return repeatedApplication(
+				(r) => r.next(),
+				BigInt(n),
+				InfiniteCounter(this.generator)()
+			)
+			// ? Again; It is more complex [as in -- consisting of more parts] a construct, but takes less space...
+			// for (let i = 0n; i < n; i++) result = result.next()
+			// return result
+		})
 	},
 	// TODO: document what does this do exactly... Along with everything else...
 	// TODO: pray re-order the library's new API again (don't seem to completely like the way it looks like currently...)
@@ -375,6 +394,7 @@ const infinite = {
 		}
 		// ! this thing should get some documentation. very very much should...
 		// * finds the first index and sets the thing to it...
+		// TODO: should work differently... This thing (along with most of the infinite API) is poorly planned and designed...
 		first(shouldSet = true) {
 			this.index = sameStructure(this.index, () => false)
 			const index = []
@@ -412,13 +432,89 @@ const infinite = {
 		// * Different loops are used;
 		// ! Also, there should be ways of transforming a non-infinite Array into an Infinite one;
 		last() {}
+		// * retuns if the current index is the last...
+		isLast() {}
 		// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
-		constructor(objects) {
+		constructor(objects, order) {
 			this.array = objects
+			// ? Should indexes work this way?
 			this.index = sameStructure(this.array, () => false)
 			this.first(true)
 		}
 	},
+	// TODO: generalize.... Make this a template()... Let the arbitrary positional function 'k' be chosen, instead of current default `k := (_x) => MAX_ARRAY_LENGTH - 1`
+	// TODO: generalize even further -- give a number of different indexes to be pursued, add a pattern for choosing between them...
+	// TODO: generalize even further -- give the 'max_index=MAX_ARRAY_LENGTH' -- after this index, it would behave as if there's no index space left within the current level of recursive array...
+	// * After this is done, let the lastIndexArray() become a special case of this 'general' "indexArray" function...
+	lastIndexArray: function (arrays, currArr = [], deepen = true) {
+		let arr = currArr
+
+		if (arr.length === MAX_ARRAY_LENGTH) {
+			if (
+				(deepen && !(deepen instanceof Array)) ||
+				(deepen instanceof Array && deepen[0])
+			)
+				arr = [...arr.slice(0, arr.length - 1), [arr[arr.length - 1]]]
+			// TODO: create an alias last() for arrays...; last(x) := x[x.length - 1]
+			// TODO: create a generalization orderIndex(arr, indexes, i = 0) := arr[indexes[i]]
+			// ! Problem: with the 'deepen' argument -- it's not general enough... 
+			// TODO: generalize it to encompass any possible pattern...
+			return infinite.lastIndexArray(
+				arrays,
+				arrays[arrays.length - 1],
+				deepen instanceof Array && deepen.length > 1
+					? deepen.slice(1)
+					: deepen
+			)
+		}
+
+		for (let i = 0; i < arrays.length; i++) {
+			for (let j = 0; j < arrays[i].length; j++) {
+				if (arr.length < MAX_ARRAY_LENGTH - 1) {
+					arr.push(arrays[i][j])
+					continue
+				}
+				if (arr.length === MAX_ARRAY_LENGTH - 1) arr.push([])
+				return infinite.lastIndexArray(
+					arrays.slice(i).map((a, t) => (t > 0 ? a : a.slice(j))),
+					arr[arr.length - 1]
+				)
+			}
+		}
+
+		return arr
+	},
+
+	// TODO: for this thing, pray first introduce max() for an array of InfiniteCounters(generator) [that is a static method, so depend only upon chosen 'generator', not 'this.generator']...
+	dim(recarr) {},
+
+	// TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := lastIndexArray([1,2,3,4,5])
+	// TODO: let these thing NOT rely upon lastIndexArray, but rather allow to give some different infinite indexing structure [decide how should it work -- first write like that, then vastly generalize];
+	// ? generalize this thing too?
+	// ! THIS DOESN'T WORK. Because: 
+	// * There should be an API within this thing for 'mergeing' different kinds of recursive arrays -- that is the main problem. THEY AREN'T FLUID, like the way they are supposed to be. 
+	// ^ IDEAS for doing it: 
+	// * 1. Turn them to the same format (example: lastIndexArray); 
+	// * 2. Provide ways for user to define 'conversion' function-parameters for these kinds of things.
+	// ! Problems with 1: 
+	// * One could easily define conversion to lastIndexArray (because they're one format), but what about the reverse? If one chooses this, there should be recursiveRecerse function for this kind of stuff on emphasis of 'how does one keep the recursive pattern'...
+	// ! Problems with 2: 
+	// * This'd work, but would complicate ALL pieces of the 'infinite' api, not just some 1, like in the first one; 
+	// * CURRENT DECISION: unless one creates some better idea for it, 1 will be the way...
+	// TODO: after having done that, pray rewrite and fix.
+	depthOrder(array) {
+		if (!(array instanceof Array)) return array
+		let currarr = []
+		for (let i = 0; i < array.length; i++) {
+			// currarr = infinite.lastIndexArray(
+			// 	[infinite.depthOrder(array[i])],
+			// 	currarr,
+			// 	false
+			// )
+		}
+		return currarr
+	},
+
 	// ? Should one not then write the InfiniteArray class, then use it in the InfiniteString class (not to repeat the same things all over again)?
 	// TODO: finish the InfiniteString class; It would allow work like with a string, though would be based on the InfiniteCounter/TrueInteger classes...
 	// * Let it have all the capabilities (methods, properties) of a string and more -- let there be a way to reverse() it natively...;
@@ -478,7 +574,7 @@ const infinite = {
 					this.string[this.string.length - 1]
 				]
 			}
-			this.length = fromNumber(initial.length, indexGenerator)
+			this.length = fromNumber(indexGenerator)(initial.length)
 			this.indexGenerator = indexGenerator
 		}
 	},
@@ -533,9 +629,12 @@ const infinite = {
 				},
 				// TODO: this thing don't work; fix; generalize the .compare() and fix it here [because 'comparison' is not used...]...
 				jump(x, jumping = (k) => k.next()) {
-					x = typeof x === "number" ? fromNumber(x, numberCounter) : x
+					x =
+						typeof x === "number"
+							? infinite.fromNumber(infinite.numberCounter)(x)
+							: x
 					if (x === undefined) return this
-					let i = InfiniteCounter(numberCounter)
+					let i = infinite.InfiniteCounter(infinite.numberCounter)()
 					return repeatedApplicationWhilst(
 						(r) => {
 							i = i.next()
@@ -2080,6 +2179,7 @@ function nbase(nstr, base, alphabet = defaultAlphabet) {
 // * Brings whatever in base 10 to whatever in whatever base is given...
 function nbasereverse(n, base, alphabet = defaultAlphabet) {
 	const coefficients = []
+	// TODO: call this thing nrepresentation(), then use here...
 	// TODO: change this for either one's own implementation of log, or this, as an alias...
 	let i = Math.floor(Math.log(n) / Math.log(base))
 	while (n !== 0) {
@@ -2088,7 +2188,7 @@ function nbasereverse(n, base, alphabet = defaultAlphabet) {
 		coefficients.push(n)
 		i--
 	}
-	// TODO: create a generalized map() function that would map to both functions, arrays and objects; 
+	// TODO: create a generalized map() function that would map to both functions, arrays and objects;
 	return coefficients.map((i) => alphabet[i]).join("")
 }
 
@@ -2665,14 +2765,19 @@ function arrIntersections(arrs, comparison = (a, b) => a === b) {
 }
 
 function repeatedApplication(a, n, initial = undefined) {
-	if (n <= 0) return undefined
-	if (n === 1) return a(initial)
+	if (BigInt(n) <= 0) return initial
+	if (BigInt(n) === 1n) return a(initial)
 	return a(repeatedApplication(a, n - 1))
 }
 
-function repeatedApplicationIndex(a, n, initial = undefined, offset = 1) {
-	if (n <= 0) return undefined
-	if (n === 1) return a(initial, n - offset)
+function repeatedApplicationIndex(
+	a,
+	n,
+	initial = undefined,
+	offset = typeof n === "bigint" ? 1n : 1
+) {
+	if (BigInt(n) <= 0) return initial
+	if (BigInt(n) === 1) return a(initial, n - offset)
 	return a(repeatedApplicationIndex(a, n - 1, initial, offset), n - offset)
 }
 
@@ -2682,6 +2787,8 @@ function repeatedApplicationWhilst(function_, property, initial = undefined) {
 		? repeatedApplicationWhilst(function_, property, function_(initial))
 		: initial
 }
+
+// TODO: create a repeatedApplicationFor...
 
 // ? should this be kept? It is a special case of the function below....
 // * Current decision: let it stay; it may be nice to just "get it"; without taking the first index...

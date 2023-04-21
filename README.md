@@ -1,6 +1,6 @@
 # math-expressions.js
 
-THIS README IS OUTDATED. IS IN PROCESS OF BEING REPLACED...
+THIS README IS A BIT OF A MESS. IS IN PROCESS OF BEING TIDIED AND COMPLETED...
 
 math-expressions.js is a TypeScript (originally, JavaScript) library with a vast variety of covered areas of interest.
 <!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
@@ -24,7 +24,20 @@ or
 
     npm i math-expressions.js
 
-## Global Variables (links)
+# Documentation 
+
+Currently unwritten. 
+(Supposedly,) When written will appear in [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki);  
+
+# Source
+
+There are a couple of files currently: 
+
+1. math-expressions.js (pre-0.8 source code file; under question for replacement)
+2. _ver10.mjs (current source code for the in-development 1.0 version -- probably will change significantly over time)
+3. examples.mjs (file with examples; outdated, currently planned to be updated violently)
+
+<!-- ## Global Variables (links)
 
 1. [fixedSize](#1fixedsize)
 
@@ -981,7 +994,7 @@ By the way, it works not just with variables, which have length 1. In fact, the 
         // Properties
         varmap: { variables: string[], mappings: number[] };
     }
-```
+``` -->
 
 ## Notes:
 

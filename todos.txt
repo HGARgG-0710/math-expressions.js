@@ -81,3 +81,15 @@
 
 12. Pray add a good descripttion to the GitHub repository...
 13. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
+
+14. IDEA: create a 'test' folder, for tests; then, after having written those, pray do make the 'example.mjs' import them all, thus running them!
+
+    This will both solve the problem of 'waiting too long to test one particular thing whilst centralizing all tests within "examples.mjs"' 
+    and also allow to have a simple and direct way of looking at "how does this one particular thing "x" work like?"; 
+
+    Suggestion: one could add them all manually within the script, or [currently chosen; more elegant] just save all the names of all imports and things within a certain file, 
+    then read from it within 'examples.mjs', then import all things using some particular API that allows to import from a variable path, equivalent to the way 'import' does it (running it) 
+    [for example: https://github.com/ModuleLoader/es-module-loader]
+
+    Alternative suggestion [of all three currently prevalent; don't require any side-api or a separate file]: instead of using an API and 'implicitly' running the tests, one could just walk the directory and then run each and every file using 'execSync(`node ${filename}`)'; 
+    
