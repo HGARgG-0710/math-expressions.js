@@ -24,18 +24,32 @@ or
 
     npm i math-expressions.js
 
-# Documentation 
+## Documentation 
 
 Currently unwritten. 
-(Supposedly,) When written will appear in [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki);  
+(Supposedly, though this may change) When having been written will appear in [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki);  
+<!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
 
-# Source
+## Source
 
 There are a couple of files currently: 
 
 1. math-expressions.js (pre-0.8 source code file; under question for replacement)
 2. _ver10.mjs (current source code for the in-development 1.0 version -- probably will change significantly over time)
 3. examples.mjs (file with examples; outdated, currently planned to be updated violently)
+
+## Modules
+
+The package uses ES modules, not CommonJS. 
+Recommended versions to use with this package are >=13.2.0. 
+
+## Current Status 
+
+It is currently in development, so many things may (and most probably will) change. 
+The previous versions all had terrible amount of bugs due to not having been tested properly (though some have less than others...). 
+From version 1.0 onwards, one plans to break backward compatibility for versions >=0.8 and also the future versions. 
+This way, one would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
+experementation and new ideas in old places. 
 
 <!-- ## Global Variables (links)
 
@@ -996,15 +1010,3 @@ By the way, it works not just with variables, which have length 1. In fact, the 
     }
 ``` -->
 
-## Notes:
-
-### 1.
-
-The full documentation for all of these functions and classes is present in README.md (which you currently are reading).
-You can find examples of how to use them in examples.js file.
-
-For now the library is only at the starting point of being created, so any suggestions on the improvement of the project are only appreciated.
-
-### 2.
-
-The package uses ES6 modules (import/export) and not CommonJS modules(require() / module.exports), so it might not work in the old versions of Node.js. Recommended versions to use with this package are 15.x.x or higher. Also, don't forget that you shouldn't use the require() with it, use import instead (unless you have a CommonJS module (for some reason) and it happens to work (for some reason)).
