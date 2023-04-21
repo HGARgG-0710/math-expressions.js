@@ -27,6 +27,7 @@ or
 ## Documentation 
 
 Currently unwritten. 
+
 (Supposedly, though this may change) When having been written will appear in [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki);  
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
 
@@ -41,12 +42,15 @@ There are a couple of files currently:
 ## Modules
 
 The package uses ES modules, not CommonJS. 
-Recommended versions to use with this package are >=13.2.0. 
+
+Recommended Node versions to use with this package are >=13.2.0. 
 
 ## Current Status 
 
 It is currently in development, so many things may (and most probably will) change. 
+
 The previous versions all had terrible amount of bugs due to not having been tested properly (though some have less than others...). 
+
 From version 1.0 onwards, one plans to break backward compatibility for versions >=0.8 and also the future versions. 
 This way, one would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
 experementation and new ideas in old places. 
