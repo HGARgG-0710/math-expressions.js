@@ -43,6 +43,8 @@ There are a couple of files currently:
 
 The package uses ES modules, not CommonJS. 
 
+<!-- ? should one keep this?  -->
+<!-- TODO: work on the phrasing of README.md, decide truly which things does one want to stay and which not... -->
 Recommended Node versions to use with this package are >=13.2.0. 
 
 ## Current Status 
@@ -51,9 +53,12 @@ It is currently in development, so many things may (and most probably will) chan
 
 The previous versions all had terrible amount of bugs due to not having been tested properly (though some have less than others...). 
 
-From version 1.0 onwards, one plans to break backward compatibility for versions >=0.8 and also the future versions. 
-This way, one would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
+From version 1.0 onwards, one plans to break backward compatibility for versions >=0.8, as well as the future ones. 
+This way, self would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
 experementation and new ideas in old places. 
+At the same time, it would require the user to update manually for each new version (if they want to update, that be). 
+
+<!-- * idea : within the /wiki, for each and every thing, add a link to the definition of its' (even the bugged ones; if there's a bug in one, document it...) -->
 
 <!-- ## Global Variables (links)
 

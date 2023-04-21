@@ -457,7 +457,7 @@ const infinite = {
 				arr = [...arr.slice(0, arr.length - 1), [arr[arr.length - 1]]]
 			// TODO: create an alias last() for arrays...; last(x) := x[x.length - 1]
 			// TODO: create a generalization orderIndex(arr, indexes, i = 0) := arr[indexes[i]]
-			// ! Problem: with the 'deepen' argument -- it's not general enough... 
+			// ! Problem: with the 'deepen' argument -- it's not general enough...
 			// TODO: generalize it to encompass any possible pattern...
 			return infinite.lastIndexArray(
 				arrays,
@@ -491,15 +491,15 @@ const infinite = {
 	// TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := lastIndexArray([1,2,3,4,5])
 	// TODO: let these thing NOT rely upon lastIndexArray, but rather allow to give some different infinite indexing structure [decide how should it work -- first write like that, then vastly generalize];
 	// ? generalize this thing too?
-	// ! THIS DOESN'T WORK. Because: 
-	// * There should be an API within this thing for 'mergeing' different kinds of recursive arrays -- that is the main problem. THEY AREN'T FLUID, like the way they are supposed to be. 
-	// ^ IDEAS for doing it: 
-	// * 1. Turn them to the same format (example: lastIndexArray); 
+	// ! THIS DOESN'T WORK. Because:
+	// * There should be an API within this thing for 'mergeing' different kinds of recursive arrays -- that is the main problem. THEY AREN'T FLUID, like the way they are supposed to be.
+	// ^ IDEAS for doing it:
+	// * 1. Turn them to the same format (example: lastIndexArray);
 	// * 2. Provide ways for user to define 'conversion' function-parameters for these kinds of things.
-	// ! Problems with 1: 
+	// ! Problems with 1:
 	// * One could easily define conversion to lastIndexArray (because they're one format), but what about the reverse? If one chooses this, there should be recursiveRecerse function for this kind of stuff on emphasis of 'how does one keep the recursive pattern'...
-	// ! Problems with 2: 
-	// * This'd work, but would complicate ALL pieces of the 'infinite' api, not just some 1, like in the first one; 
+	// ! Problems with 2:
+	// * This'd work, but would complicate ALL pieces of the 'infinite' api, not just some 1, like in the first one;
 	// * CURRENT DECISION: unless one creates some better idea for it, 1 will be the way...
 	// TODO: after having done that, pray rewrite and fix.
 	depthOrder(array) {
@@ -2696,8 +2696,6 @@ function gutInnerArrsRecursive(array) {
 	return array
 }
 
-// TODO: another one's library has a method for this thing (boolmapMult; maps a set of boolean functions to a set of values forming a 2d boolean array...)
-// * code-update...
 function hasArrays(array) {
 	return max(array.map((a) => Number(a instanceof Array))) === 1
 }
@@ -2805,18 +2803,34 @@ function multmap(a, fs) {
 // TODO: match the order of the definitions with the order of exports... Do the same for all the files...
 // * Also, match with the original "math-expressions.js" file...
 
-// TODO: ORDER THE stuff further -- separate the "class" functions from other ones (those that are made as object generators, that is...)
+// TODO: ORDER THE stuff further -- separate the "classTemplate" functions from other ones (those that are made as object generators, that is...)
 function UniversalMap(notfound) {
 	return classTemplate(
 		{ notfound: notfound },
 		function (keys = [], values = []) {
+			// * Conversion from a non-array object...
+			if (!(keys instanceof Array)) {
+				// * Conversion from a UniversalMap...
+				if (keys.keys && keys.values) {
+					values = values.values
+					keys = keys.keys
+				} else {
+					keys = Object(keys)
+					values = Object.values(keys)
+					keys = Object.keys(keys)
+				}
+			}
 			return {
 				keys: keys,
 				values: values,
+				index: 0,
 				class: this,
+				// ? Question: should this work like that? Should 'comparison' be an argument of .get or should it be one of the template layer???
+				// TODO: pray decide here, and for each individual case throughout the library...
+				// * Current decision: no, it should be templated pretty much everywhere (and everywhere -- independently)...
 				get(key, comparison = infinite.valueCompare, number = 1) {
 					const indexes = indexOfMult(this.keys, key, comparison)
-					if (indexes.length === 0) return this.notFound
+					if (indexes.length === 0) return this.class.notfound
 					return indexes.slice(0, number).map((i) => this.values[i])
 				},
 				set(key, value, comparison = infinite.valueCompare) {
@@ -2828,6 +2842,42 @@ function UniversalMap(notfound) {
 					this.keys.push(key)
 					this.values.push(value)
 					return value
+				},
+				// TODO: define the [Symbol.iterator] for all the types of all objects;
+				// * Similarly, define 'forin'
+				// ^ Funny, that reminds oneself:
+				// Thorin
+				// Fili
+				// Kili
+				// Oin
+				// Gloin
+				// Forin
+				// Balin
+				// Dwalin
+				// Ori
+				// Dori
+				// Nori
+				// Bifur
+				// Bofur
+				// Bombur
+				// * Noticed anything different? :D 
+				// * hahaha!
+				// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
+				[Symbol.iterator]: function* () {
+					for (
+						this.index = 0;
+						this.index < this.keys.length;
+						this.index++
+					)
+						yield this.get(this.keys[this.index])
+				},
+				forin(body) {
+					for (
+						this.index = 0;
+						this.index < this.keys.length;
+						this.index++
+					)
+						body(this.keys[this.index])
 				}
 			}
 		}
@@ -2864,6 +2914,18 @@ function recursiveSetting({ object, fields, value }) {
 		object: object,
 		fields: fields.slice(0, fields.length - 1)
 	})[fields[fields.length - 1]] = value)
+}
+
+function objInverse(notfound, comparison = (a, b) => a === b) {
+	return functionTemplate(
+		{ notfound: notfound, comparison: comparison },
+		function (obj) {
+			return ((universal) =>
+				UniversalMap(notfound)(universal.values, universal.keys))(
+				UniversalMap(notfound)(obj)
+			)
+		}
+	)
 }
 
 // * Exports (constants are being exported separately).
@@ -2979,5 +3041,6 @@ export {
 	classTemplate,
 	functionTemplate,
 	recursiveIndexation,
-	recursiveSetting
+	recursiveSetting,
+	objInverse
 }
