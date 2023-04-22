@@ -93,3 +93,6 @@
 
     Alternative suggestion [of all three currently prevalent; don't require any side-api or a separate file]: instead of using an API and 'implicitly' running the tests, one could just walk the directory and then run each and every file using 'execSync(`node ${filename}`)'; 
     
+15. IDEA FOR A FUNCTION (not project related) -- take a string, find (in it), all the independent numbers and take the smallest one; 
+
+16. Conduct regular note-cleanups, checking if anything has become redundant.

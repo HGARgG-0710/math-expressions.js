@@ -35,7 +35,7 @@ Currently unwritten.
 
 There are a couple of files currently: 
 
-1. math-expressions.js (pre-0.8 source code file; under question for replacement)
+1. math-expressions.js (pre-1.0 source code file; under question for replacement)
 2. _ver10.mjs (current source code for the in-development 1.0 version -- probably will change significantly over time)
 3. examples.mjs (file with examples; outdated, currently planned to be updated violently)
 

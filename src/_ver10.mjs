@@ -277,21 +277,16 @@ const infinite = {
 		)
 	},
 
-	// ? delete this as well?
-	// * pray decide too...
-	// TODO: the thing with the booleans used can also be replaced by a function from a different unpublshed library (boolmap)...
-	// * an example of a typechecker for the recursive arrays...
-	// * This thing could be useful...
-	// ! Problem: did one check this thing (and others related to recursive arrays of any sort) with stuff like 'x := [a, x]'?
-	// * Pray do, seems like forming an infinite loop to oneself...
-	isRecursiveArray(x, checker) {
-		return (
-			x instanceof Array &&
-			Math.min(
-				...x.map((a) =>
-					Number(isRecursiveArray(a, checker) || checker(a))
-				)
-			) === 1
+	isSameStructure(arr1, arr2, comparison) {
+		// ? create an alias for the 'instanceof' instruction?
+		if (arr1 instanceof Array != arr2 instanceof Array)
+			return comparison(arr1, arr2)
+
+		// todo: PROPERTY-map? (or was this todo not made somwhere already???)
+		return min(
+			generate(1, max([arr1, arr2].map((a) => a.length))).map(
+				(i) => !!this.isSameStructure(arr1[i], arr2[i])
+			)
 		)
 	},
 
@@ -333,6 +328,55 @@ const infinite = {
 		}
 		return !subcall ? currval : copied
 	},
+
+	_InfiniteArray(
+		nextElem,
+		currElem,
+		prevElem,
+		prevIndex,
+		nextIndex,
+		notfound
+	) {
+		// TODO: from a different library -- sameForm... (use here;)
+		return classTemplate(
+			{
+				elem: { next: nextElem, curr: currElem, prev: prevElem },
+				index: { next: nextIndex, prev: prevIndex },
+				notfound: notfound
+			},
+			function (array, index) {
+				return {
+					array: array,
+					index: index,
+					class: this,
+					last(set = false) {},
+					first(set = false) {},
+					isLast() {
+						// ! PROBLEM: don't generally work. REDO.
+						return this.index === this.last()
+					},
+					next() {
+						this.index = this.class.index.next(this.index)
+					},
+					prev() {},
+					index(ind, search) {
+						const lastChosenIndex = deepCopy(this.index)
+						this.index = this.first(true)
+						while (!this.isLast()) {
+							this.index = this.class.index.next(this.index)
+							if (search(this.index, ind)) {
+								const foundInd = deepCopy(this.index)
+								this.index = lastChosenIndex
+								return this.elem.curr(array, foundInd)
+							}
+						}
+
+						return notfound
+					}
+				}
+			}
+		)
+	},
 	// TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
 	// * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
 	// * Also, the library (probably) should export this thing from the different library as well (would give the user a way of getting less dependencies...)
@@ -342,79 +386,85 @@ const infinite = {
 			return this.index
 		}
 		next() {
+			// * Same as below...
 			// TODO: these recursive functions should get generalizations that would become dependencies...
 			// ? perhaps, the library function that does this kind of stuff should too be rewritten (after adding math-expressions.js as a dependency) to work with InfiniteCounter(s)
-			function recursive(array, index, path) {
-				for (let i = 0; i < path.length; i++) {
-					const indexed = path[i]
-					if (typeof indexed !== "number") {
-						;[array, index] = recursive(array, index, indexed)
-						continue
-					}
-					const indexindexed = index[indexed]
-					const arrayindexed = array[indexed]
-					if (typeof indexindexed === "boolean") break
-					index = indexindexed
-					array = arrayindexed
-				}
-				return [array, index]
-			}
-			const path = this.currElement()
-			let [array, index] = recursive(this.array, this.index, path)
-			const lastIndex = path[path.length - 1]
-			if (typeof lastIndex === "number") index[lastIndex] = false
+			// function recursive(array, index, path) {
+			// 	for (let i = 0; i < path.length; i++) {
+			// 		const indexed = path[i]
+			// 		if (typeof indexed !== "number") {
+			// 			;[array, index] = recursive(array, index, indexed)
+			// 			continue
+			// 		}
+			// 		const indexindexed = index[indexed]
+			// 		const arrayindexed = array[indexed]
+			// 		if (typeof indexindexed === "boolean") break
+			// 		index = indexindexed
+			// 		array = arrayindexed
+			// 	}
+			// 	return [array, index]
+			// }
+			// const path = this.currElement()
+			// let [array, index] = recursive(this.array, this.index, path)
+			// const lastIndex = path[path.length - 1]
+			// if (typeof lastIndex === "number") index[lastIndex] = false
 			// TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this;
 			// * There is a strong feeling for far more advanced API for working with the RecursiveArrays; This API is to be added
 			// ! Pray do walk the code up and down and decide what to do about this...
 		}
 		currElement() {
-			let current = this.index
-			function recursive() {
-				const prevCurrent = current
-				let temp = false
-				if (prevCurrent instanceof Array) {
-					for (let i = 0; i < prevCurrent.length; i++) {
-						current = prevCurrent[i]
-						if (typeof current === "boolean") {
-							if (current) return [i]
-							continue
-						}
-						temp = recursive()
-						if (temp !== false) {
-							if (temp.length < MAX_ARRAY_LENGTH)
-								return [i, ...temp]
-							return [i, temp]
-						}
-					}
-					current = prevCurrent
-				}
-				return temp
-			}
-			return recursive()
+			// * Again, an algorithm. Should be a wrapper AROUND AN ARBITRARY algorithm...
+			// let current = this.index
+			// function recursive() {
+			// 	const prevCurrent = current
+			// 	let temp = false
+			// 	if (prevCurrent instanceof Array) {
+			// 		for (let i = 0; i < prevCurrent.length; i++) {
+			// 			current = prevCurrent[i]
+			// 			if (typeof current === "boolean") {
+			// 				if (current) return [i]
+			// 				continue
+			// 			}
+			// 			temp = recursive()
+			// 			if (temp !== false) {
+			// 				if (temp.length < MAX_ARRAY_LENGTH)
+			// 					return [i, ...temp]
+			// 				return [i, temp]
+			// 			}
+			// 		}
+			// 		current = prevCurrent
+			// 	}
+			// 	return temp
+			// }
+			// return recursive()
 		}
 		// ! this thing should get some documentation. very very much should...
 		// * finds the first index and sets the thing to it...
 		// TODO: should work differently... This thing (along with most of the infinite API) is poorly planned and designed...
 		first(shouldSet = true) {
-			this.index = sameStructure(this.index, () => false)
-			const index = []
-			let indexpointer = index
-			let current = this.index
-			// TODO: create a function in a different library for general dealing with these things... Later, pray do change this for that too...
-			while (true) {
-				if (typeof current[0] !== "boolean") {
-					const isFull = indexpointer.length === MAX_ARRAY_LENGTH - 1
-					indexpointer.push(isFull ? [] : 0)
-					const lastPointer = indexpointer[indexpointer.length - 1]
-					if (isFull && lastPointer instanceof Array)
-						indexpointer = lastPointer
-					current = current[0]
-					continue
-				}
-				break
-			}
-			if (shouldSet) current[0] = true
-			return index
+			// ^ These are nice algorithms, they should get their own functions -- this is a wrapper for algorithms of the user.
+			// * Library should provide general wrappers and particular algorithms separately from each other, this way alowing for infinitely greater diversity in the final code in question
+			// * (not necesserily neglecting presence of defaults...)
+			// TODO: create defaults for all manner of these things...
+			// this.index = sameStructure(this.index, () => false)
+			// const index = []
+			// let indexpointer = index
+			// let current = this.index
+			// // TODO: create a function in a different library for general dealing with these things... Later, pray do change this for that too...
+			// while (true) {
+			// 	if (typeof current[0] !== "boolean") {
+			// 		const isFull = indexpointer.length === MAX_ARRAY_LENGTH - 1
+			// 		indexpointer.push(isFull ? [] : 0)
+			// 		const lastPointer = indexpointer[indexpointer.length - 1]
+			// 		if (isFull && lastPointer instanceof Array)
+			// 			indexpointer = lastPointer
+			// 		current = current[0]
+			// 		continue
+			// 	}
+			// 	break
+			// }
+			// if (shouldSet) current[0] = true
+			// return index
 		}
 		// * IDEAS FOR UNITED API OF WORKING WITH THE RECURSIVEARRAYS:
 		// * 1. Function for indexation by means of some RecursiveArray<number>; There should be a way to establish the order of following (DECIDE HOW IT WOULD BE IMPLEMENTED WITHIN THIS LIBRARY);
@@ -437,8 +487,9 @@ const infinite = {
 		// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
 		constructor(objects, order) {
 			this.array = objects
+			// ! AGAIN: particular implementation, instead use the one given by the user here, set this [or something else] of self as default and then ...
 			// ? Should indexes work this way?
-			this.index = sameStructure(this.array, () => false)
+			// this.index = sameStructure(this.array, () => false)
 			this.first(true)
 		}
 	},
@@ -459,6 +510,8 @@ const infinite = {
 			// TODO: create a generalization orderIndex(arr, indexes, i = 0) := arr[indexes[i]]
 			// ! Problem: with the 'deepen' argument -- it's not general enough...
 			// TODO: generalize it to encompass any possible pattern...
+			// ? Should one even have that one???
+			// * Many difficulties as to how the API should look like precisely...
 			return infinite.lastIndexArray(
 				arrays,
 				arrays[arrays.length - 1],
@@ -485,6 +538,18 @@ const infinite = {
 		return arr
 	},
 
+	lastIndexArrayHas(array, thing, comparison) {
+		for (let i = 0; i < array.length - 1; i++)
+			if (comparison(array[i], thing)) return true
+		if (array[array.length - 1] instanceof Array)
+			return this.lastIndexArrayHas(
+				array[array.length - 1],
+				thing,
+				comparison
+			)
+		return comparison(array[array.length - 1], thing)
+	},
+
 	// TODO: for this thing, pray first introduce max() for an array of InfiniteCounters(generator) [that is a static method, so depend only upon chosen 'generator', not 'this.generator']...
 	dim(recarr) {},
 
@@ -502,18 +567,34 @@ const infinite = {
 	// * This'd work, but would complicate ALL pieces of the 'infinite' api, not just some 1, like in the first one;
 	// * CURRENT DECISION: unless one creates some better idea for it, 1 will be the way...
 	// TODO: after having done that, pray rewrite and fix.
-	depthOrder(array) {
-		if (!(array instanceof Array)) return array
+	depthOrder(array, isElement = (x) => !(x instanceof Array), first = true) {
 		let currarr = []
-		for (let i = 0; i < array.length; i++) {
-			// currarr = infinite.lastIndexArray(
-			// 	[infinite.depthOrder(array[i])],
-			// 	currarr,
-			// 	false
-			// )
+		// TODO: the library is in bad need of a very powerful and thorough clean-up... Both code, comments and TODOS. Do it, pray
+		const notAdd = (x) => x instanceof Array && !isElement(x)
+		for (
+			let copied = first ? this.deepCopy(array) : array;
+			copied.length;
+			copied = copied.slice(1)
+		) {
+			if (notAdd(copied[0])) {
+				currarr = margeLastIndexArrs(
+					currarr,
+					this.lastIndexArray(copied[0], isElement)
+				)
+				continue
+			}
+			// ! These structural things are supposed to have their API just like arrays, but defined in terms of user functions;
+			// TODO: create a GeneralArray template-class, that would do that thing; Then, pray do generalize powerfully, like one did intend...
+			pushToLastIndexArray(currarr, copied[0])
+			currarr = this.lastIndexArray([currarr])
 		}
+
 		return currarr
 	},
+
+	// todo: have some wrapper for all these "recursive structural" methods [to make the organization of all this simpler, it looks very dirty - having so many of these things flaying about];
+	// * the more general ones stay aside, not included...
+	mergeLastIndexArrs(arrs) {},
 
 	// ? Should one not then write the InfiniteArray class, then use it in the InfiniteString class (not to repeat the same things all over again)?
 	// TODO: finish the InfiniteString class; It would allow work like with a string, though would be based on the InfiniteCounter/TrueInteger classes...
@@ -593,6 +674,8 @@ const infinite = {
 		})
 	},
 
+	// TODO: generalize -- resolve difficulties within the recursive and infinite APIs' basic structure -- let this thing rely on user-defined inverse, not library-defined one. Let the current one be merely a default...
+	// * Doing that and defining basic (in-library) inverses [prev-functions] for the given counters may allow to use the InfiniteCounter within the InfiniteArray WITHOUT falling into infinite-recursion (for there, one would use an inversed version, is all...)
 	// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 	// TODO: finish this thing (add orders, other things from the previous file)...
 	// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
@@ -613,6 +696,8 @@ const infinite = {
 						new InfiniteArray(this.previous).add(this)
 					)
 				},
+				// ? 'previous'? or 'prev'? Or else?
+				// * Current decision: let it be 'prev'...
 				previous() {
 					return this.previous.index(this.length - 1)
 				},
@@ -2126,11 +2211,20 @@ function readable(num) {
 }
 
 function permutations(array) {
-	return ((perms) => {
-		while (perms.length != factorial(array.length))
-			perms.push([...perms.slice(1), perms[perms.length - 1][0]])
-		return perms
-	})([array])
+	if (array.length < 2) return [[...array]]
+
+	const pprev = permutations(array.slice(0, array.length - 1))
+	const pnext = []
+
+	for (let i = 0; i < array.length; i++)
+		for (let j = 0; j < pprev[i].length; j++)
+			pnext.push([
+				pprev[i].slice(0, i),
+				array[array.length - 1],
+				pprev[i].slice(i, pprev.length)
+			])
+
+	return pnext
 }
 
 function whileFunctional(prop, body, endElem = null) {
@@ -2860,7 +2954,7 @@ function UniversalMap(notfound) {
 				// Bifur
 				// Bofur
 				// Bombur
-				// * Noticed anything different? :D 
+				// * Noticed anything different? :D
 				// * hahaha!
 				// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
 				[Symbol.iterator]: function* () {
@@ -2878,6 +2972,20 @@ function UniversalMap(notfound) {
 						this.index++
 					)
 						body(this.keys[this.index])
+				},
+
+				// ! This thing assumes that the conversion in question is, in fact, a valid one
+				// * Example: [if there are objects for keys -- it will convert them to the JSON string of the object in question]...
+				// TODO: provide the InfiniteMap with this thing too -- there will [too] be a thing -- it will only alow first 2 **
+				toObject() {
+					const a = {}
+					for (let i = 0; i < this.keys.length; i++)
+						a[
+							(!["symbol", "number"].includes(this.keys[i])
+								? JSON.stringify
+								: id)(this.keys[i])
+						] = this.values[i]
+					return a
 				}
 			}
 		}
@@ -2927,6 +3035,11 @@ function objInverse(notfound, comparison = (a, b) => a === b) {
 		}
 	)
 }
+
+// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
+// * Would come in handy in one of one's projects...
+
+// TODO: generalize further (f, obj, depth) => ... [would with depth 'depth', map 'f' to keys/values of an object...]
 
 // * Exports (constants are being exported separately).
 
