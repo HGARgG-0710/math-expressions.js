@@ -53,7 +53,7 @@ It is currently in development, so many things may (and most probably will) chan
 
 The previous versions all had terrible amount of bugs due to not having been tested properly (though some have less than others...). 
 
-From version 1.0 onwards, one plans to break backward compatibility for versions >=0.8, as well as the future ones. 
+From version 1.0 onwards, one plans to break backward compatibility for versions <=0.8, as well as the future ones. 
 This way, self would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
 experementation and new ideas in old places. 
 At the same time, it would require the user to update manually for each new version (if they want to update, that be). 

@@ -1,3 +1,4 @@
 .npmignore
 .prettierrc
 node_modules
+privatenotes.txt

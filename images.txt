@@ -1,0 +1,61 @@
+? Question: define the InfiniteArray's true image as a special case for InfiniteMap? 
+
+
+? Question: define 'generator' field which is an argument within some of the InfiniteArray's templated methods as an InfiniteArray's template argument? (it does appear multiple times...)
+* Idea: do both -- let it be so: the methods in question will be defined the next way: they will have it as a template argument, BUT -- they will default to the InfiniteArray's chosen type...
+? Question: 'comparison' -- should that become an InfiniteArray 'defaulted' as well? 
+* Idea: better still -- skip a layer of templates if 'comparison' and 'generator' are both non-null: 
+// TODO: generalize this thing as well...
+[sketchy -- something like that...]
+method(a, b, ...) {
+	if (this.a != null && this.b != null && ...) 
+		return this.class.method(this.a, this.b, ...)(a, b, ...)
+	return this.class.method(a, b, ...)
+}
+PROBLEM: WITH THIS APPROACH -- it takes away from the user the power to do stuff like a(nondefaulttemp)(args) -- giving the non-default templates to a function....
+Shall then the second empty bracket stay? (simply use the "=" defaulting instead?)
+If one does not do this it just becomes funny -- checking for 'particular' types to arrive there, and THEN for the class to think that this is, indeed, called as a templated method. 
+nah, better just use the JS-defaulting...
+
+
+InfiniteArray<
+	defaultgenerator
+	defaultcomparison
+	pushback(thing) // add to the end
+	pushfront(thing) // add to the beginning
+	index<generator=defaultgenerator, comparison=defaultcomparison>(_index) // returns thing at a given index; [uses generator to get new indexes and 'comparison' to 'compare' with the given index, checking for the element...]
+	delete<generator=defaultgenerator>(index) // deletes at an appropriate index, with appropriate generator
+	[Symbol.iterator]
+	forin(body) // for-in construction
+	reverse()
+	map()
+	sort(pred) 
+	length() // length function
+	concat(infarr) // concatenate with another infinitearray [question -- should this thing be templated as well?]
+	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
+	every(func) // like Array.every(); min(Array.map(boolmapfunction))
+	any(func) // max(Array.map(boolmapfunction))
+	reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
+	slice<generator>(start, end) // uses the generator; same as Array.slice(), but both indexes are inclusive
+	[filter/property]() // like Array.filter()
+	indexes<comparison=defaultcomparison, generator>(ele) // generalized of Array.indexOf(), and Array.lastIndexOf() -- uses 'generator' to create indexes and 'comparison' to check for given element[?s array?] 'ele'; 
+	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes
+	each<generator=defaultgenerator>((ind, el, arr) => {...}) // same as Array.forEach()
+	fillfrom<generator=defaultgenerator>(index, value) // fills the array from the one moment when the given 'generator' becomes a 
+> (array) {}
+
+
+TODO: pray do, after having created the 'Order'-like [or generator/InfiniteArray-like] variable for the InfiniteMap (to provide with the other InfinteArray's methods [id est, make them equivalent...])
+Then, one would simply define the 'InfiniteArray' as InfiniteMap *without* that order-like argument and that's it! 
+CURRENT AGENDA: decide what kind of a structure to add to InfiniteMap for these kinds of things, think more about what stuff it should have...
+InfiniteMap<
+	set<comparison>(key, value)
+	get<comparison>(key)
+	entries<generator>() // like Object.entries()
+	map((value, key, obj) => [newvalue, newkey]) // Maps a map to a map. 
+	every((value, key) => boolean) // same as Array.
+	[Symbol.iterator]
+	>([keys, objects] or some: InfiniteMap or map: {})
+
+IDEA: ?separate the 'infinite' onto 'wrapper/abstract' and 'content/particular'? 
+InfiniteArray would be in abstract, whilst stuff like numberCounter or lastIndexArray -- in particular. 
