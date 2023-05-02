@@ -38,10 +38,10 @@ InfiniteArray<
 	reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
 	slice<generator>(start, end) // uses the generator; same as Array.slice(), but both indexes are inclusive
 	[filter/property]() // like Array.filter()
-	indexes<comparison=defaultcomparison, generator>(ele) // generalized of Array.indexOf(), and Array.lastIndexOf() -- uses 'generator' to create indexes and 'comparison' to check for given element[?s array?] 'ele'; 
+	indexesOf<comparison=defaultcomparison, generator>(ele) // generalized of Array.indexOf(), and Array.lastIndexOf() -- uses 'generator' to create indexes and 'comparison' to check for given element[?s array?] 'ele'; 
 	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes
 	each<generator=defaultgenerator>((ind, el, arr) => {...}) // same as Array.forEach()
-	fillfrom<generator=defaultgenerator>(index, value) // fills the array from the one moment when the given 'generator' becomes a 
+	fillfrom<generator=defaultgenerator, comparison>(index, value) // fills the array from the one moment when the given 'generator' becomes 'comparable' to the 'value'; 
 > (array) {}
 
 
@@ -59,3 +59,15 @@ InfiniteMap<
 
 IDEA: ?separate the 'infinite' onto 'wrapper/abstract' and 'content/particular'? 
 InfiniteArray would be in abstract, whilst stuff like numberCounter or lastIndexArray -- in particular. 
+
+Idea: 'order' is just a function for ordering an infinite array of things [from one infinite array to another infinite array!]; 
+Problem: one don't get to use InfiniteMap to define the InfiniteArray, rather using InfiniteArray to define the InfiniteMap; 
+Decision: so, let it be...
+
+Question: if one DOES base one's [general] InfiniteMap upon general InfiniteArray, why not base the particular cases of the InfiniteMap on InfiniteArray [another template, then???]? 
+
+IDEA: implement a 'convert' method for various such 'template' things; Let it do the next thing -- translate one template object into another; 
+??Work on a general matter of templates??
+
+IDEA: add a method indexes() to the InfiniteArray; Let it return all the indexes present within the array in question...
+It'd work useing the 'generator' template parameter...

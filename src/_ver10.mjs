@@ -1,8 +1,12 @@
+// TODO: test this thouroughly;
+// TODO: add defaults, make code tidy and to one's complete liking...
+
 // TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
-// * Get rid of unwanted explicit conversions...
+// * Get rid of unwanted explicit type conversions...
 // * Get rid of unwanted "const"'s
-// * Get rid of 'let's that can become 'const's
+// * Get rid of 'let's that can become 'const's [and one wants them to]
 // * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
+// * Generalize the code [along with making it more compact], simplify constructs...
 
 // TODO: make places that use these constants more general and flexible;
 // (Later, one may expect to use this particular version in a different language transpiled -- for this, pray, do add ways of changing the number limit used here; EVEN IF, for JavaScript that would not be truly possible to use some of them...)
@@ -293,6 +297,8 @@ const infinite = {
 
 	// TODO: in a library of oneself, there is a piece of code that does precisely this kind of a thing (recursiveApplication);
 	// * Again, the issue with inter-dependency; solution is the same -- first publish like so, then rewrite differently...
+	// ? Generalize for negatives? [one does have an inverse now...]
+	// ? Question: generalize for multiple inverses??? [Excellent; Decide how to do this better;]
 	fromNumber(generator) {
 		return functionTemplate({ generator: generator }, function (n) {
 			if (n < 0) return undefined
@@ -661,90 +667,171 @@ const infinite = {
 		}
 	},
 
-	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
-	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
-	// InfiniteMap(notfound) {
-	// 	return classTemplate({ notfound: notfound }, function (keys, values) {
-	// 		return {
-	// 			keys: keys,
-	// 			values: values,
-	// 			set(key, value) {},
-	// 			// * Here, one finds the fitting keys, returns an InfiniteArray of their values;
-	// 			get(key, comparison = (a, b) => a === b, number) {}
-	// 		}
-	// 	})
-	// },
-
-	// TODO: generalize -- resolve difficulties within the recursive and infinite APIs' basic structure -- let this thing rely on user-defined inverse, not library-defined one. Let the current one be merely a default...
-	// * Doing that and defining basic (in-library) inverses [prev-functions] for the given counters may allow to use the InfiniteCounter within the InfiniteArray WITHOUT falling into infinite-recursion (for there, one would use an inversed version, is all...)
 	// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 	// TODO: finish this thing (add orders, other things from the previous file)...
 	// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
-	// ! There is a problem with this class: The array is used for "InfiniteCounter.previous"; Because of this, there is only limited number of previous members that can be;
-	// TODO: create an InfiniteArray type and put it there (not just an `InfiniteArray<T = any> := InfiniteMap<InfiniteCounter<number>, T, undefined>)... The InfiniteArray should work independently...
-	// * With the approach outlined in the brackets, there is a difficulty -- infinite recursion (dependency); So, instead, one should pick an alternative one...
-	// * Example of an implementation -- same, but the InfiniteCounter of an InfiniteArray is hardcoded into itself (uses the numberCounter, for example...);
 	InfiniteCounter(generator, inversegenerator) {
-		return classTemplate({ generator: generator }, function (previous) {
-			return {
-				class: this,
-				previous: !previous ? new InfiniteArray() : previous,
-				value: !previous
-					? this.generator()
-					: this.generator(previous.index(previous.length - 1).value),
-				next() {
-					return this.class.class(
-						new InfiniteArray(this.previous).add(this)
-					)
-				},
-				// ? 'previous'? or 'prev'? Or else?
-				// * Current decision: let it be 'prev'...
-				previous() {
-					return this.previous.index(this.length - 1)
-				},
-				// * 'true' means 'follows after'
-				// * 'false' means 'is followed after'
-				// * 'null' means 'no following';
-				// TODO: add the 'comparison' argument here. One may want to abstract from the references (current thing in certain circumstances don't work)...
-				compare(ic) {
-					return this.previous.includes(ic)
-						? true
-						: ic.previous.includes(this)
-						? false
-						: null
-				},
-				// TODO: this thing don't work; fix; generalize the .compare() and fix it here [because 'comparison' is not used...]...
-				jump(x, jumping = (k) => k.next()) {
-					x =
-						typeof x === "number"
-							? infinite.fromNumber(infinite.numberCounter)(x)
-							: x
-					if (x === undefined) return this
-					let i = infinite.InfiniteCounter(infinite.numberCounter)()
-					return repeatedApplicationWhilst(
-						(r) => {
-							i = i.next()
-							return jumping(r)
-						},
-						() => x.compare(i),
-						{ ...deepCopy(this), class: this.class }
-					)
-				},
-				jumpForward(x) {
-					return this.jump(x)
-				},
-				jumpBackward(x) {
-					return this.jump(x, (k) => k.prev())
-				},
-				// ? what kind of a structure is to be returned? It is to be an InfiniteArray like other things...
-				// TODO: pray do see that all the things within all parts of the code fit together nicely afterwards...
-				// TODO: add a way of mapping one infinite counter to another...
-				map(icClass, thisIC) {}
+		return classTemplate(
+			{ generator: generator, inverse: inversegenerator },
+			function (previous) {
+				return {
+					class: this,
+					value: !previous
+						? this.generator()
+						: this.generator(previous.value),
+					next() {
+						return this.class.class(this)
+					},
+					// ? 'previous'? or 'prev'? Or something else?
+					// * Current decision: let it be 'prev'...
+					previous() {
+						return this.class.inverse(this)
+					},
+					// * 'true' means 'this follows ic'
+					// * 'false' means 'ic follows this'
+					// * 'null' means 'no following';
+					compare(
+						ic,
+						isendfro = () => false,
+						isendto = () => false,
+						comparison = infinite.valueCompare
+					) {
+						// ! PROBLEM: infinite types! Without any 'first' or 'last', one won't know until when to check!
+						// * Currently solved this with a 'hack' -- user gives their own way of telling this [isendto, isendfro];
+						// TODO: pray think on it and if do create something that is more wanted, pray implement it so...
+						// ? Thinking... Maybe that's not so much of a hack after all??? Perhaps one would even keep it...
+						let pointer = ic
+						let isIt = false
+
+						// ? Generalize this thing somehow? One ends up repeating the same code twice for two different values and methods...
+						// * Something like 'searchUntil', for instance?
+						while (
+							!isendfro(pointer) &&
+							!(isIt = comparison(pointer.value, this.value))
+						)
+							pointer = pointer.previous()
+						if (isIt) return true
+
+						pointer = ic
+						while (
+							!isendto(pointer) &&
+							!(isIt = comparison(pointer.value, this.value))
+						)
+							pointer = pointer.next()
+						if (isIt) return false
+
+						return null
+					},
+					jump(
+						x,
+						jumping = (k) => k.next(),
+						comparison = infinite.valueCompare,
+						isendto = () => false,
+						isendfro = () => false
+					) {
+						return ((x) => {
+							if (x === undefined) return this
+							return ((i) =>
+								repeatedApplicationWhilst(
+									(r) => {
+										i = i.next()
+										return jumping(r)
+									},
+									() =>
+										x.compare(
+											i,
+											isendfro,
+											isendto,
+											comparison
+										),
+									{ ...deepCopy(this), class: this.class }
+								))(
+								// TODO: numberCounter inverse -- write; For now -- null
+								infinite.InfiniteCounter(
+									infinite.numberCounter,
+									null
+								)()
+							)
+						})(
+							typeof x === "number"
+								? infinite.fromNumber(infinite.numberCounter)(x)
+								: x
+						)
+					},
+					jumpForward(x) {
+						return this.jump(x)
+					},
+					jumpBackward(x) {
+						return this.jump(x, (k) => k.previous())
+					},
+					map(icClass, comparison = infinite.valueCompare) {
+						let current = this.class.class()
+						let alterCurrent = icClass.class()
+						while (!comparison(current, this))
+							alterCurrent = alterCurrent.next()
+						return alterCurrent
+					}
+				}
 			}
-		})
+		)
 	},
 
-	InfiniteArray() {},
+	InfiniteArray(comparison, indexgenerator, notfound) {
+		return template(
+			{ comparison, indexgenerator, notfound },
+			function (
+				pushback,
+				pushfront,
+				index,
+				_delete,
+				// ? names: forof, forin
+				forof,
+				forin,
+				reverse,
+				map,
+				sort,
+				length,
+				concat,
+				copyWithin,
+				every,
+				any,
+				reduce,
+				slice,
+				property,
+				indexesOf,
+				entries,
+				each,
+				fillfrom
+			) {
+				return classTemplate(
+					{
+						pushback,
+						pushfront,
+						index,
+						delete: _delete,
+						forof,
+						forin,
+						reverse,
+						map,
+						sort,
+						length,
+						concat,
+						copyWithin,
+						every,
+						any,
+						reduce,
+						slice,
+						property,
+						indexesOf,
+						entries,
+						each,
+						fillfrom
+					},
+					function (array) {}
+				)
+			}
+		)
+	},
 
 	// ? Should one make the arguments for this sort of thing named (using a single object-argument, containing all the info instead of the separate ones containing information on each particular topic) ???
 	// * Pray think about it...
@@ -752,75 +839,79 @@ const infinite = {
 	// TODO: after having written InfiniteMap and InfiniteArray wrappers, pray write some implementations of it all... Align different methods to work with them particularly...
 	// ? Should one choose 'null' as a default, the '(a, b) => a === b' or the valueCompare?
 	// * Documentation, Documentation, Documentation. This thing badly needs it [which properties are in it, yada, yada, yada];
-	InfiniteMap(
-		set,
-		get,
-		entries,
-		every,
-		forof,
-		forin,
-		generator = null,
-		comparison = null
-	) {
+	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
+	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
+	InfiniteMap(keyorder) {
 		return classTemplate(
-			{
-				generator: generator,
-				comparison: comparison,
-				set: set,
-				get: get,
-				entries: entries,
-				every: every,
-				// ? Again, Forof? Rename?
-				forof: forof,
-				forin: forin
-			},
-			function (keys, values) {
-				if (!(keys instanceof Array) && typeof keys === "object") {
-					// TODO: isn't this code already used somewhere??? [UniversalMap, check if redundant...]
-					// ? use the objArr() here?
-					values = Object.values(keys)
-					keys = Object.keys(keys)
-				}
+			{ keyorder },
+			function (
+				set,
+				get,
+				entries,
+				every,
+				forof,
+				forin,
+				generator = null,
+				comparison = null
+			) {
+				return classTemplate(
+					{
+						generator,
+						comparison,
+						set,
+						get,
+						entries,
+						every,
+						// ? Again, Forof? Rename?
+						forof,
+						forin,
+						// TODO: this stuff [naming conventions] should really be re-thought; gets confusing with property names like that...
+						class: this.class
+					},
+					function (keys, values) {
+						if (
+							!(keys instanceof Array) &&
+							typeof keys === "object"
+						) {
+							// TODO: isn't this code already used somewhere??? [UniversalMap, check if redundant...]
+							// ? use the objArr() here?
+							values = Object.values(keys)
+							keys = Object.keys(keys)
+						}
 
-				// ! This code with the templates is very beautiful and useful, but with this syntax -- rather confusing (namely, the feature of having the 'this' equal to the parent object variable)
-				// * Check it thouroughly...
-				return {
-					keys: keys,
-					values: values,
-					class: this,
-					set(comparison = this.class.comparison) {
-						const t = this
-						return functionTemplate(
-							{ comparison: comparison },
-							function (key, value) {
-								return t.class.set(comparison)(key, value)
-							}
-						)
-					},
-					get(comparison = this.class.comparison) {
-						const t = this
-						return functionTemplate(
-							{ comparison: comparison },
-							function (key) {
-								return t.class.get(comparison)(key)
-							}
-						)
-					},
-					entries(generator = this.class.generator) {
-						return functionTemplate(
-							{ generator: generator },
-							function () {
-								return this.class.entries(generator)()
-							}
-						)
-					},
-					// TODO: this one is more troublesome -- one requires to know what kind of an InfiniteMap is it that one is in fact mapping to (first creating, then setting corresponding things...)
-					// ? Return back to the question of how are the arguments handled within this thing...
-					map() {},
-					every: this.class.every,
-					[Symbol.iterator]: this.class.forof,
-					forin: this.class.forin
-				}
+						// ! This code with the templates is very beautiful and useful, but with this syntax -- rather confusing (namely, the feature of having the 'this' equal to the parent object variable)
+						// * Check it thouroughly...
+						return {
+							keys,
+							values,
+							class: this,
+							set(comparison = this.class.comparison) {
+								return functionTemplate(
+									{ comparison },
+									this.class.set(comparison)
+								)
+							},
+							get(comparison = this.class.comparison) {
+								return functionTemplate(
+									{ comparison },
+									this.class.get(comparison)
+								)
+							},
+							entries(generator = this.class.generator) {
+								return functionTemplate(
+									{ generator: generator },
+									this.class.entries(generator)
+								)
+							},
+							// TODO: this one is more troublesome -- one requires to know what kind of an InfiniteMap is it that one is in fact mapping to (first creating, then setting corresponding things...)
+							// ? Return back to the question of how are the arguments handled within this thing...
+							map() {},
+							every: this.class.every,
+							[Symbol.iterator]: this.class.forof,
+							forin: this.class.forin
+						}
+					}
+				)
 			}
 		)
 	}
@@ -2985,7 +3076,7 @@ function multmap(a, fs) {
 // TODO: ORDER THE stuff further -- separate the "classTemplate" functions from other ones (those that are made as object generators, that is...)
 function UniversalMap(notfound, treatUniversal = false) {
 	return classTemplate(
-		{ notfound: notfound, treatUniversal: treatUniversal },
+		{ notfound, treatUniversal },
 		function (
 			keys = [],
 			values = [],
@@ -3080,7 +3171,8 @@ function UniversalMap(notfound, treatUniversal = false) {
 	)
 }
 
-function template(defobj, label, finObj) {
+// TODO: replace all the ambigious templates (where neither 'class' nor 'function' do) with this thing without the argument;
+function template(defobj, finObj, label = "template") {
 	return { ...defobj, [label]: finObj }
 }
 
@@ -3088,11 +3180,11 @@ function template(defobj, label, finObj) {
 // * Create the Universal and infinite versions for this...
 // * Same todo stands for the infinite and universal versions...
 function classTemplate(defaultobject, classObj) {
-	return template(defaultobject, "class", classObj)
+	return template(defaultobject, classObj, "class")
 }
 
 function functionTemplate(defObj, functionObj) {
-	return template(defObj, "function", functionObj)
+	return template(defObj, functionObj, "function")
 }
 
 // TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
@@ -3114,7 +3206,7 @@ function recursiveSetting({ object, fields, value }) {
 
 function objInverse(notfound, treatUniversal = false) {
 	return functionTemplate(
-		{ notfound: notfound, treatUniversal: treatUniversal },
+		{ notfound, treatUniversal },
 		function (obj, treatUniversal = this.treatUniversal) {
 			return ((a) =>
 				((universal) => a(universal.values, universal.keys))(
@@ -3127,7 +3219,7 @@ function objInverse(notfound, treatUniversal = false) {
 // TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
 
 function obj(keys, values) {
-	let length = min(keys.length, values.length)
+	let length = min([keys.length, values.length])
 	const returned = {}
 	for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
 	return returned

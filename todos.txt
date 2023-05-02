@@ -1,4 +1,5 @@
-This todo list is changing actively. 
+This is a temporary todo list. 
+It gets changed actively. 
 
 1. math-expressions.js 1.0: 
 
@@ -45,13 +46,9 @@ This todo list is changing actively.
     Create a great deal of new definitions; 
 // TODO: create ideas for what new stuff to add...
 
-4. Examples: 
+4. Finish the package.json (particular: fix the keywords); 
 
-    Update the old examples (make them more comprehensible) and create (much) more new ones; 
-
-5. Finish the package.json (particular: fix the keywords); 
-
-6. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
+5. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
 
     Make it a part of a library...
 
@@ -60,34 +57,31 @@ This todo list is changing actively.
     Write it using one's (for now unpublished) library for parsing things...
 
 
-7. (reminder) Before the 1.0 release, pray clear all the TODOs, ?s, *s and !s; 
+6. (reminder) Before the 1.0 release, pray clear all the TODOs, ?s, *s and !s; 
 
     All the privatenotes, as well as this very list...
 
-8. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
+7. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 
-9. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
+8. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
 
-10. Change all the desired so JS-classes for the function-object combinations: 
+9. Change all the desired so JS-classes for the function-object combinations: 
 
     This is mimicking the behaviour of templates: the abstraction turns into a 
     sequence of "layers" to get called, each allowing for an extension of the thing in question;
     For example, one such is used to generate different "classes" (in truth, constructor functions...)
 
-11. Compare the newer "finite.mjs" with "math-expressions.mjs" and decide... 
+10. Rename the _ver10.mjs into "math-expressions.js" after having tested it properly; Replace the old file; 
 
-    What to add, what to delete, what to change and so on...
+11. Pray add a good descripttion to the GitHub repository...
+12. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
 
-    Suggestion 1: After it is done, pray rename the newer "finite.mjs" into "math-expressions.mjs" and delete the other file...
-    Suggestion 2: still keep the older api in a separate file, keep them away with namespaces, keep supporting the old one and fix errors in it...
+13. Add the tests to the 'test' folder
 
-12. Pray add a good descripttion to the GitHub repository...
-13. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
-
-14. Add the tests to the 'test' folder
+    Update the old examples (make them more comprehensible) and create (much) more new ones; 
     
-15. Conduct regular note-cleanups, checking if anything has become redundant.
+14. Conduct regular note-cleanups, checking if anything has become redundant.
 
-16. IDEA: change the argument order for many of the functions (make them more intuitive;)
+15. IDEA: change the argument order for many of the functions (make them more intuitive;)
 
     For starters -- the new api, repeatedApplication, for example.
