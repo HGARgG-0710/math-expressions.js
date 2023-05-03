@@ -195,6 +195,7 @@ const infinite = {
 	// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 	// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 	// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
+	// TODO: create an inverse for this thing...;
 	numberCounter(MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1) {
 		return functionTemplate(
 			{
@@ -204,6 +205,7 @@ const infinite = {
 			function (a) {
 				if (a === undefined) return [0]
 				// ? put these two out of the function's context?
+				// TODO : generalize these greately, use here as special cases;
 				function findDeepUnfilledNum(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
@@ -776,6 +778,8 @@ const infinite = {
 		)
 	},
 
+	// ! PROBLEM: this thing don't actually use the 'notfound' in definitions...
+	// TOdo : let the particulars [implementations] use it instead [after having written some that do, pray delete the todo];
 	InfiniteArray(comparison, indexgenerator, notfound) {
 		return template(
 			{ comparison, indexgenerator, notfound },
@@ -825,9 +829,179 @@ const infinite = {
 						indexesOf,
 						entries,
 						each,
-						fillfrom
+						fillfrom,
+						template: this
 					},
-					function (array) {}
+					function (array) {
+						return {
+							array,
+							class: this,
+							pushback: this.pushback,
+							pushfront: this.pushfront,
+							// TODO: another [general] problem -- the classes are generally supposed to hide things like: push(arr, elem) -> arr.push(elem) [the methods should have the first 'this' argument replaced by the 'this.array'];
+							// * There's a couple of other problems concerning the function definitions within the InfiniteArray, InfiniteMap and InfiniteCounter; pray check them, and change throughout the entire code...;
+							// TODO: 'initial' should be given for generators everywhere as a conditional parameter [by default undefined -- calls generator(), like the way it is now...]
+							index(
+								indexgenerator = this.class.template
+									.indexgenerator,
+								comparison = this.class.template.comparison
+							) {
+								// todo: here, the 'this' feature with changing templates mid-stream don't really work [because the functionTemplate 'this' is not really used...]
+								// * Pray scan all the code that uses the in-library templates on the matter of having it working...
+								// ? Question: should the function templates within the methods in question also have the 'class' thing, or not???; Would seem appropriate...
+								// * Answer: yes; add that to all the things of the sort as well...
+								// ! Pray tidy up this todo/note from redundacies later...
+								return functionTemplate(
+									{
+										indexgenerator,
+										comparison,
+										object: this
+									},
+									function (_index) {
+										return this.object.class.index(
+											this.indexgenerator,
+											comparison
+										)(this.object.array, _index)
+									}
+								)
+							},
+							delete(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function (_index) {
+										return this.object.class.delete(
+											this.indexgenerator
+										)(this.object.array, _index)
+									}
+								)
+							},
+							[Symbol.iterator]: this.forof,
+							forin: this.forin,
+							reverse: this.reverse,
+							map: this.map,
+							sort: this.sort,
+							length: this.length,
+							concat: this.concat,
+							copyWithin(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function (beginind, endind, targetind) {
+										return this.object.class.copyWithin(
+											this.indexgenerator
+										)(
+											this.object.array,
+											beginind,
+											endind,
+											targetind
+										)
+									}
+								)
+							},
+							every: this.every,
+							any: this.any,
+							reduce(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function (initial, direction, callback) {
+										return this.object.class.reduce(
+											this.indexgenerator
+										)(
+											this.object.array,
+											initial,
+											direction,
+											callback
+										)
+									}
+								)
+							},
+							slice(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function (start, end) {
+										return this.object.class.slice(
+											this.indexgenerator
+										)(this.object.array, start, end)
+									}
+								)
+							},
+							property: this.property,
+							indexesOf(
+								comparison = this.class.template.comparison,
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{
+										indexgenerator,
+										comparison,
+										object: this
+									},
+									function (ele) {
+										return this.object.class.indexesOf(
+											this.indexgenerator
+										)(this.object.array, ele)
+									}
+								)
+							},
+							entries(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function () {
+										return this.object.class.entries(
+											this.indexgenerator
+										)(this.object.array)
+									}
+								)
+							},
+							each(
+								indexgenerator = this.class.template
+									.indexgenerator
+							) {
+								return functionTemplate(
+									{ indexgenerator, object: this },
+									function (callback) {
+										return this.object.class.each(
+											this.indexgenerator
+										)(this.object.array, callback)
+									}
+								)
+							},
+							fillfrom(
+								indexgenerator = this.class.template
+									.indexgenerator,
+								comparison = this.class.template.comparison
+							) {
+								return functionTemplate(
+									{
+										indexgenerator,
+										comparison,
+										object: this
+									},
+									function (index, value) {
+										return this.class.fillfrom(
+											this.indexgenerator,
+											this.comparison
+										)(this.object.array, index, value)
+									}
+								)
+							}
+						}
+					}
 				)
 			}
 		)
