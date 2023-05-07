@@ -1015,6 +1015,7 @@ const infinite = {
 	// * Documentation, Documentation, Documentation. This thing badly needs it [which properties are in it, yada, yada, yada];
 	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
 	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
+	// ? Question: store the pointer to the 'infinite' structure within the thing in question. 
 	InfiniteMap(keyorder) {
 		return classTemplate(
 			{ keyorder },
