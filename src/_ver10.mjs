@@ -142,6 +142,168 @@ const defaultAlphabet = [
 // * IDEA to the organization of the duality of library's codebase: have a finite version of something, then precisely after it, a definition of infinite.[thing's name] -- its infinite counterpart; For stuff that don't have an explicit finite/infinite counterpart it is left alone/put into the original definition of the 'infinite'
 // ^ These ones would use templates + general version of InfintieArray/InfiniteMap
 const infinite = {
+	// TODO: pray order the definitions within the 'infinite' object;
+
+	algorithms: {
+		recarrays: {
+			pushback: {
+				// TODO: generalize the 'lastIndex' arrays to a 'recursivePoints' arrays [sets of recursive (not lastIndex, then generalization won't work...)-array index arrays for the indexes of the 'recursion points'; lastIndex is trivial case -- with the 'points' being [MAX_ARRAY_LENGTH]];
+				// * then, add this one as a special case...
+				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
+					return functionTemplate(
+						{ MAX_ARRAY_LENGTH },
+						function (arr, elem) {
+							for (let i = 0; i < MAX_ARRAY_LENGTH - 1; i++) {
+								// TODO: this is an error-prone condition check!!! Fix it; add user-check for whether this is an 'undefined' position [by default -- will be (a) => a === undefined]
+								if (!arr[i]) {
+									arr[i] = elem
+									return elem
+								}
+							}
+							if (!arr[MAX_ARRAY_LENGTH - 1]) {
+								arr.push([elem])
+								return elem
+							}
+							return infinite.algorithms.recarrays.pushback.lastIndex(
+								arr[arr.length - 1],
+								elem
+							)
+						}
+					)
+				}
+			},
+			// TODO : pray add as a method for the InfiniteArray(s); Same goes for all the unadded methods from the 'algorithms'...
+			shiftForward: {
+				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
+					return functionTemplate(
+						{ MAX_ARRAY_LENGTH },
+						function (array, baseelem = undefined) {
+							return infinite.algorithms.recarrays.concat.lastIndex(
+								MAX_ARRAY_LENGTH
+							)([baseelem], array)
+						}
+					)
+				}
+			},
+			shiftForwardMult: {
+				lastIndex(
+					generator,
+					shiftValue,
+					comparison = infinite.valueCompare,
+					MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
+					baseelemfunc = () => undefined
+				) {
+					return functionTemplate(
+						{ MAX_ARRAY_LENGTH },
+						function (array) {
+							const newArr = []
+							let currGenerated
+							while (
+								!comparison(
+									((currGenerated = generator()), shiftValue)
+								)
+							)
+								infinite.algorithms.recarrays.push.lastIndex(
+									newArr,
+									baseelemfunc(currGenerated)
+								)
+							return infinite.algorithms.recarrays.concat.lastIndex(
+								MAX_ARRAY_LENGTH,
+								false
+							)(newArr, array)
+						}
+					)
+				}
+			},
+			concat: {
+				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH, copy = true) {
+					return functionTemplate(
+						{ MAX_ARRAY_LENGTH, copy },
+						function (...arrays) {
+							if (arrays.length < 2) return arrays[0]
+							if (arrays.length > 2)
+								return infinite.algorithms.recarrays.concat.lastIndex(
+									MAX_ARRAY_LENGTH,
+									false
+								)(
+									infinite.algorithms.recarrays.concat.lastIndex(
+										MAX_ARRAY_LENGTH,
+										arrays.length === 3
+									)(arrays.slice(0, arrays.length - 1)),
+									arrays[arrays.length - 1]
+								)
+
+							const copied = copy
+								? infinite.deepCopy(arrays[0])
+								: arrays[0]
+
+							for (let i = 0; i < arrays[1].length - 1; i++)
+								infinite.algorithms.recarrays.pushback.lastIndex(
+									MAX_ARRAY_LENGTH
+								)(copied, arrays[1][i])
+
+							// ? Now, this decision about the notation for the 'infinite' 'algorithms' subobject, one is happy. HOWEVER...
+							// * It does look raaather cumbersome. What to do?
+							// ^ IDEA: provide a 'shortcuts' object;
+							// ! PROBLEM: it either won't be meaningfully named [like the way one would want] or it would be in essence the same thing, but uglier
+							// * CONCLUSION: this thing shouldn't be done on the library level
+							// later, pray delete this note...
+							if (
+								arrays[1][arrays[1].length - 1] instanceof Array
+							)
+								return infinite.algorithms.recarrays.concat.lastIndex(
+									copied,
+									arrays[1][arrays[1].length - 1]
+								)
+
+							infinite.algorithms.recarrays.pushback.lastIndex(
+								copied,
+								arrays[1][arrays[1].length - 1]
+							)
+							return copied
+						}
+					)
+				}
+			},
+			delete: {
+				// TODO: implement...
+			},
+			shiftBackward: {
+				// ! PROBLEM: arrays like [..., [...]] would be treated ambigiously always when choosing between the arr.length - 1 and MAX_ARRAY_LENGTH as a 'recursion point'!
+				// * CONCLUSION: DON'T DO THAT 'choose the min-length' thing; keeping for this commit, but generally...
+				// TODO: GET RID OF IT. Make the 'place of recursion' static [like the way it is!]! Make algorithms implementations [generally] more internally integral and coherent.
+				// TODO: again, the 'object' thing -- this don't use the template's value; it's not useful for writing here; Rewrite all the stuff that ever uses templates in a manner which DOES use this...
+				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
+					return functionTemplate(
+						{ MAX_ARRAY_LENGTH },
+						function (array) {
+							// TODO: micro-optimize the library harshly; little things like "change all the 'i++' to '++i'" or "use 'p[p.length] = ...' instead of 'p.push(...)'"[that's just a tiny bit faster...]
+							// ^ IDEA: an alias 'fpush' for 'fast push' 'fpush := (a, e) => (a[a.length] = e);'; 
+							// * Add; 
+							for (let i = 0; i < array.length - 2; ++i)
+								array[i] = array[i + 1]
+							if (array[MAX_ARRAY_LENGTH - 1]) {
+								array[MAX_ARRAY_LENGTH - 2] =
+									array[MAX_ARRAY_LENGTH - 1][0]
+								infinite.algorithms.recarrays.shiftBackward.lastIndex(
+									MAX_ARRAY_LENGTH
+								)(array[MAX_ARRAY_LENGTH - 1])
+								return
+							}
+							delete array[array.length - 1]
+						}
+					)
+				}
+			},
+			// * Here, all the 'conversion' arrays go; This thing assumes an input to be either a 'flat' [id est, finite native to JS] array or its recursive extension used by the 'backward' methods...
+			convertForward: {},
+			// * Here, all the 'inverse-conversions' go; they convert all the supported types of the recursive arrays into the universal form used by the library which is an extension of the 'flat' arrays...
+			// TODO: create such a format;
+			// ! PROBLEM: may not turn out it to be an 'extension'; same problem as before -- format ambiguity -- questions like "is the array that is an element merely a part of the recursive structure or an actual element?";
+			convertBackward: {}
+		}
+	},
+
 	// ? some of these things are quite good with the arrays.... Question: should Mr. Body be adding those for some kind of "uniter" structure? (Like the Statistics and other such classes from the oldapi, other classes from other packages?)
 	// ? considering the fact that there is now the deepCopy() function (which is a generalization of copy)
 	deepCopy(a) {
@@ -805,7 +967,8 @@ const infinite = {
 				indexesOf,
 				entries,
 				each,
-				fillfrom
+				fillfrom,
+				has
 			) {
 				return classTemplate(
 					{
@@ -830,6 +993,7 @@ const infinite = {
 						entries,
 						each,
 						fillfrom,
+						has,
 						template: this
 					},
 					function (array) {
@@ -999,12 +1163,32 @@ const infinite = {
 										)(this.object.array, index, value)
 									}
 								)
+							},
+							has(comparison = this.class.template.comparison) {
+								return functionTemplate(
+									{ comparison, object: this },
+									function (elem) {
+										return this.class.has(this.comparison)(
+											this.object.array,
+											elem
+										)
+									}
+								)
 							}
 						}
 					}
 				)
 			}
 		)
+	},
+
+	// TODO: write the implementation for these two...
+	LastIndexArray(comparison, indexgenerator, notfound) {
+		return infinite.InfiniteArray(...arguments)()
+	},
+
+	DeepArray(comparison, indexgenerator, notfound) {
+		return infinite.InfiniteArray(...arguments)()
 	},
 
 	// ? Should one make the arguments for this sort of thing named (using a single object-argument, containing all the info instead of the separate ones containing information on each particular topic) ???
@@ -1015,7 +1199,7 @@ const infinite = {
 	// * Documentation, Documentation, Documentation. This thing badly needs it [which properties are in it, yada, yada, yada];
 	// TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
 	// TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
-	// ? Question: store the pointer to the 'infinite' structure within the thing in question. 
+	// ? Question: store the pointer to the 'infinite' structure within the thing in question.
 	InfiniteMap(keyorder) {
 		return classTemplate(
 			{ keyorder },
@@ -1101,6 +1285,7 @@ const mostPopularElem = mostPopular
 const mostPopularNum = mostPopular
 const repeatedApplicationWhile = repeatedApplicationWhilst
 
+// TODO: use the aliases in appropriate places within the code. Give it a good shortening session: walk about making aliases for repeating expressions and then replace those with the newly introduced names...
 const bind = (a, f, fieldName) => (a[fieldName] = f.bind(a))
 const last = (arr) => arr[arr.length - 1]
 
