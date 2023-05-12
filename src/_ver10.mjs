@@ -215,6 +215,15 @@ const infinite = {
 					)
 				}
 			},
+			// TODO: implement...
+			slice: {},
+			// * Projects a piece of an array onto another array of the same recursive type after having met certain index of the generator with a certain 'compared' property...; 
+			// ^ IDEA: into the docs, pray introduce the idea of 'array recursive type'; It'd allow to [more explicitly and structuredly on documentation level] separate all the 'recarrays' things from each other on a type level, not only the concept-level...
+			// ! MORE AND MORE OF THESE THINGS TEND TO BE ARRAY-TYPE-INDEPENDENT!
+			// TODO: create a list of array methods that are defining of the structure of it, then make them into separate algorithms, the general ones make into 'templated' methods [that being, just add a 'arrtypelabel' parameter]; 
+			// TODO: create the generalized templated elementary recursive functions for dealing with the recursive arrays [those that could be used by the user on a general basis for construction of new array types]; 
+			// TODO: after having done so, pray make the already available recursive array algorithms into the combinations of these elementary methods...
+			project: {}, 
 			concat: {
 				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH, copy = true) {
 					return functionTemplate(
@@ -233,6 +242,9 @@ const infinite = {
 									arrays[arrays.length - 1]
 								)
 
+							// todo: problem with using the 'deepCopy' on recursive arrays: fix;
+							// * Problem is such -- one wants only a ARRAY-STRUCTURAL copy, not the object copies;
+							// * SOLUTION: have a copying algorithm for each and every kind of recursive array [infinite.algorithms.recarrays.copy]...
 							const copied = copy
 								? infinite.deepCopy(arrays[0])
 								: arrays[0]
@@ -278,8 +290,8 @@ const infinite = {
 						{ MAX_ARRAY_LENGTH },
 						function (array) {
 							// TODO: micro-optimize the library harshly; little things like "change all the 'i++' to '++i'" or "use 'p[p.length] = ...' instead of 'p.push(...)'"[that's just a tiny bit faster...]
-							// ^ IDEA: an alias 'fpush' for 'fast push' 'fpush := (a, e) => (a[a.length] = e);'; 
-							// * Add; 
+							// ^ IDEA: an alias 'fpush' for 'fast push' 'fpush := (a, e) => (a[a.length] = e);';
+							// * Add;
 							for (let i = 0; i < array.length - 2; ++i)
 								array[i] = array[i + 1]
 							if (array[MAX_ARRAY_LENGTH - 1]) {
