@@ -80,9 +80,30 @@ It gets changed actively.
 13. Add the tests to the 'test' folder
 
     Update the old examples (make them more comprehensible) and create (much) more new ones; 
+	Use the examples as tests [id est, here they're equivalent]; 
     
 14. Conduct regular note-cleanups, checking if anything has become redundant.
 
 15. IDEA: change the argument order for many of the functions (make them more intuitive;)
 
     For starters -- the new api, repeatedApplication, for example.
+
+16. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
+
+	Continuation-passing style. 
+	JS programs with infinite stack. 
+
+	PROBLEM: THE MATH-EXPRESSIONS.JS INFINITE TYPES ARE [sort of] USELESS....
+	The problem is largely such: recursive calls; 
+	The stack of JS is limited...
+	SO, though the 'programmatically unlimited' types are [in truth] not STRUCTURALLY unlimited, 
+	they ARE limited by the V8 [or whatever other engine's] stack [which is only finite]. 
+	So, for instance, with the numberCounter method, one certainly (and that is a very rough upper bound only) won't be able to store numbers beyond 
+
+		(2**53)*((2**32 - 1)**(14000))
+
+	Which is a lot, but not programmatically unlimited. 
+	With infinite stack and continuation-passing style, one could achieve TRULY programmatically unlimited types + infinitely-stacked JS programs. 
+
+	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
+	will get tied to the corresponding library, so that user have a way of accessing it more directly from it...

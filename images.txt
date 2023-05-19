@@ -64,6 +64,10 @@ With 'counters' representing the one state to which the function in question hav
 To read the string, functions are called consequently to return the current index (also InfiniteCounter) of the string in question; 
 if it is 'greater' than the one that is currently read, one skips the function in question, gets to the next one! 
 This way, one gets the string 'symbol-by-symbol', after having 'found' the current index, one sets the corresponding counter for the corresponding function and starts search from there! 
+After-Note [forgotten to document]: Each such a set is given to a certain symbol from the encoding chosen [or, if that was the originally intended way for it...] the COUNTERS represent the letters!; 
+
+ALTERNATIVE IMPLEMENTATION [simpler, similar idea]: just map an index-function to each symbol of the charset, then add a way for the user to 'compare' the indexes in question, 
+then just 'seek' in the same fashion.  
 
 So long as the infinite string in question can be represented with the use of the elementary functions of the counter model in question, one can store it in a finite amount of memory! 
 Beautiful! [note also, that the InfiniteCounters in question must also be programmatically unlimited, so doing this stuff with finite integers won't really work; one only gets the usual string]; 

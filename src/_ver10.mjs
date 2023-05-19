@@ -149,13 +149,15 @@ const infinite = {
 			pushback: {
 				// TODO: generalize the 'lastIndex' arrays to a 'recursivePoints' arrays [sets of recursive (not lastIndex, then generalization won't work...)-array index arrays for the indexes of the 'recursion points'; lastIndex is trivial case -- with the 'points' being [MAX_ARRAY_LENGTH]];
 				// * then, add this one as a special case...
-				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
+				lastIndex(
+					MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
+					isUndefined = (a) => a === undefined
+				) {
 					return functionTemplate(
-						{ MAX_ARRAY_LENGTH },
+						{ MAX_ARRAY_LENGTH, isUndefined },
 						function (arr, elem) {
 							for (let i = 0; i < MAX_ARRAY_LENGTH - 1; i++) {
-								// TODO: this is an error-prone condition check!!! Fix it; add user-check for whether this is an 'undefined' position [by default -- will be (a) => a === undefined]
-								if (!arr[i]) {
+								if (this.isUndefined(arr[i])) {
 									arr[i] = elem
 									return elem
 								}
@@ -165,9 +167,9 @@ const infinite = {
 								return elem
 							}
 							return infinite.algorithms.recarrays.pushback.lastIndex(
-								arr[arr.length - 1],
-								elem
-							)
+								MAX_ARRAY_LENGTH,
+								isUndefined
+							)(arr[arr.length - 1], elem)
 						}
 					)
 				}
@@ -215,15 +217,112 @@ const infinite = {
 					)
 				}
 			},
-			// TODO: implement...
-			slice: {},
-			// * Projects a piece of an array onto another array of the same recursive type after having met certain index of the generator with a certain 'compared' property...; 
+			slice: {
+				lastIndex(
+					MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
+					generator,
+					comparison = valueCompare,
+					undefinedSymbol = undefined,
+					isUndefined = (x) => x === undefined
+				) {
+					return functionTemplate(
+						{
+							MAX_ARRAY_LENGTH,
+							generator,
+							comparison,
+							undefinedSymbol
+						},
+						function (
+							array,
+							begind,
+							enind,
+							currIndex = undefinedSymbol,
+							haveReached = false,
+							baseArr = []
+						) {
+							let newArr = baseArr
+							let curr = undefinedSymbol
+							let i = 0
+
+							// ? generalize???
+							// TODO: the code should be looked through thoroughly in search for generalizations, simplifications, making things more tangible [stuff like this.MAX_ARRAY_LENGTH, instead of JUST MAX_ARRAY_LENGTH and on and on and on...]
+							// * Mayhaps, do it only after the very first sketches of algorithms implementations have been written...
+							if (!haveReached) {
+								let isBegin = false
+								// TODO: repeatedApplication... replace with... refactor...
+								for (; i < MAX_ARRAY_LENGTH - 1; i++)
+									if (
+										(isBegin = comparison(
+											(curr = generator(curr)),
+											begind
+										)) ||
+										isUndefined(array[i])
+									)
+										break
+
+								if (!isBegin) {
+									if (
+										!isUndefined(
+											array[MAX_ARRAY_LENGTH - 2]
+										) &&
+										!isUndefined(
+											array[MAX_ARRAY_LENGTH - 1]
+										)
+									)
+										return infinite.algorithms.recarrays.slice.lastIndex(
+											MAX_ARRAY_LENGTH,
+											generator,
+											comparison,
+											curr
+										)(
+											array[MAX_ARRAY_LENGTH - 1],
+											begind,
+											enind,
+											currIndex
+										)
+
+									return baseArr
+								}
+							}
+
+							let isEnd = false
+							let j = i
+
+							// ! This thing with repeated 'loop for checking for element undefinedness' should really be generalized...
+							// TODO: pray do so...
+							// ? Shouldn't one place the 'if' within the "for"'s condition???
+							// * Pray think a bit on it...
+							for (; j < MAX_ARRAY_LENGTH - 1; j++) {
+								if (
+									(isEnd = comparison(
+										(curr = generator(curr)),
+										enind
+									)) ||
+									isUndefined(array[j])
+								)
+									break
+								infinite.algorithms.recarrays.pushback.lastIndex(
+									MAX_ARRAY_LENGTH,
+									isUndefined
+								)(newArr, array[j])
+							}
+
+							if (isEnd || isUndefined(array[j])) return newArr
+							return infinite.algorithms.recarrays.concat.lastIndex(
+								MAX_ARRAY_LENGTH,
+								false
+							)(newArr, array[j])
+						}
+					)
+				}
+			},
+			// * Projects a piece of an array onto another array of the same recursive type after and before having met certain index of the generator with a certain 'compared' property...;
 			// ^ IDEA: into the docs, pray introduce the idea of 'array recursive type'; It'd allow to [more explicitly and structuredly on documentation level] separate all the 'recarrays' things from each other on a type level, not only the concept-level...
 			// ! MORE AND MORE OF THESE THINGS TEND TO BE ARRAY-TYPE-INDEPENDENT!
-			// TODO: create a list of array methods that are defining of the structure of it, then make them into separate algorithms, the general ones make into 'templated' methods [that being, just add a 'arrtypelabel' parameter]; 
-			// TODO: create the generalized templated elementary recursive functions for dealing with the recursive arrays [those that could be used by the user on a general basis for construction of new array types]; 
+			// TODO: create a list of array methods that are defining of the structure of it, then make them into separate algorithms, the general ones make into 'templated' methods [that being, just add a 'arrtypelabel' parameter];
+			// TODO: create the generalized templated elementary recursive functions for dealing with the recursive arrays [those that could be used by the user on a general basis for construction of new array types];
 			// TODO: after having done so, pray make the already available recursive array algorithms into the combinations of these elementary methods...
-			project: {}, 
+			project: {},
 			concat: {
 				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH, copy = true) {
 					return functionTemplate(
@@ -245,6 +344,7 @@ const infinite = {
 							// todo: problem with using the 'deepCopy' on recursive arrays: fix;
 							// * Problem is such -- one wants only a ARRAY-STRUCTURAL copy, not the object copies;
 							// * SOLUTION: have a copying algorithm for each and every kind of recursive array [infinite.algorithms.recarrays.copy]...
+							// TODO: implement it...
 							const copied = copy
 								? infinite.deepCopy(arrays[0])
 								: arrays[0]
@@ -1299,7 +1399,32 @@ const repeatedApplicationWhile = repeatedApplicationWhilst
 
 // TODO: use the aliases in appropriate places within the code. Give it a good shortening session: walk about making aliases for repeating expressions and then replace those with the newly introduced names...
 const bind = (a, f, fieldName) => (a[fieldName] = f.bind(a))
-const last = (arr) => arr[arr.length - 1]
+const last = (arr, obj, comparison = valueCompare) => {
+	return max(indexOfMult(arr, obj, comparison))
+}
+const first = (arr, obj, comparison = valueCompare) => {
+	return min(indexOfMult(arr, obj, comparison))
+}
+const _last = (arr) => arr[arr.length - 1]
+const _first = (arr) => arr[0]
+// todo: to EXPORT
+const insert = (arr, index, values) =>
+	arr.slice(0, index).concat(values).concat(arr.slice(index))
+const _insert = (arr, index, val) => insert(arr, index, [val])
+const remove = (arr, start, end) =>
+	arr.slice(0, start).concat(arr.slice(end + 1))
+const _remove = (arr, index) => remove(arr, index, index)
+const minlen = (...arrs) => flen(min, ...arrs)
+const maxlen = (...arrs) => flen(max, ...arrs)
+const flen = (f, ...arrs) => {
+	return f(arrs.map((a) => a.length))
+}
+const flenarrs = (f, ...arrs) => {
+	const _f = f(...arrs)
+	return arrs.filter((a) => a.length === _f)
+}
+const minlenarrs = (...arrs) => flenarrs(minlen, ...arrs)
+const maxlenarrs = (...arrs) => flenarrs(maxlen, ...arrs)
 
 // TODO: rewrite the docs...
 /**
