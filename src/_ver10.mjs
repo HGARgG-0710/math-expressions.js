@@ -174,6 +174,8 @@ const infinite = {
 					)
 				}
 			},
+			// TODO: implement [perhaps as .concat([pushedelem], arr)?]
+			pushfront: {},
 			// TODO : pray add as a method for the InfiniteArray(s); Same goes for all the unadded methods from the 'algorithms'...
 			shiftForward: {
 				lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
@@ -217,6 +219,8 @@ const infinite = {
 					)
 				}
 			},
+			// TODO: implement; this thing is like the 'insert' alias...;
+			insert: {},
 			slice: {
 				lastIndex(
 					MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
@@ -377,8 +381,57 @@ const infinite = {
 					)
 				}
 			},
+			// ? Question: about the matter of whether to affect the arrays in question??? How should methods be implemented?
+			// TODO: think on it and decide [currently preferred: copying];
 			delete: {
-				// TODO: implement...
+				lastIndex(
+					MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
+					generator,
+					comparison = valueCompare,
+					undefinedSymbol = undefined,
+					isUndefined = (x) => x === undefined
+				) {
+					return functionTemplate(
+						{
+							MAX_ARRAY_LENGTH,
+							generator,
+							comparison,
+							isUndefined,
+							undefinedSymbol
+						},
+						function (array, index, currIndex = undefinedSymbol) {
+							let curr = currIndex
+							let haveFound = false
+							// TODO: again, refactor...
+							for (
+								let i = 0;
+								i < MAX_ARRAY_LENGTH &&
+								!(haveFound = comparison(
+									(curr = generator(curr)),
+									index
+								)) &&
+								!isUndefined(array[i]);
+								i++
+							) {}
+							// ! PROBLEM [format];
+							// * The ()() notation actually isn't correct. One forgot about the '.function' bit.
+							// TODO: for now, write like that, then fix everywhere else. These are rough sketches for now...
+							if (!haveFound)
+								return infinite.algorithms.recarrays.delete.lastIndex(
+									MAX_ARRAY_LENGTH,
+									generator,
+									comparison,
+									undefinedSymbol,
+									isUndefined
+								)(array, index, curr)
+
+							infinite.algorithms.recarrays.shiftBackward.lastIndex(
+								MAX_ARRAY_LENGTH
+							)(array)
+							return
+						}
+					)
+				}
 			},
 			shiftBackward: {
 				// ! PROBLEM: arrays like [..., [...]] would be treated ambigiously always when choosing between the arr.length - 1 and MAX_ARRAY_LENGTH as a 'recursion point'!
@@ -418,6 +471,11 @@ const infinite = {
 
 	// ? some of these things are quite good with the arrays.... Question: should Mr. Body be adding those for some kind of "uniter" structure? (Like the Statistics and other such classes from the oldapi, other classes from other packages?)
 	// ? considering the fact that there is now the deepCopy() function (which is a generalization of copy)
+	// TODO: create some sort of 'form-object's class for shaping which precise 'kind' of 'DeepArray' the templated version is...
+	// ^ IDEA: create a 'GeneralArray' kind of InfiniteArray, which would generalize all such; it would [in essence], provide a way of defining the accessing and writing procedures for the next element;
+	// ! Then, the InfiniteArray would simply be the 'combiner class' [which contains all the algorithms, generalized, without reference to the actual inside-definitions...];
+	// * This way, one would avoid all this stuff with 'algorithm copying' and write it both generally, quickly and to one's utter liking!
+	// TODO : YES, PRAY DO THAT...
 	deepCopy(a) {
 		if (a instanceof Array) return a.map((el) => infinite.deepCopy(el))
 		if (typeof a === "object") {
