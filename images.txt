@@ -122,3 +122,70 @@ Because:
 	2. one don't want to clutter the 'infinite' object with them - perhaps, better make a property of it which would be a subobject for 'algorithms', containing those?
 
 So, for example, one could do 'infinite.algorithms.arrays.lastIndexArrConcat(..., ...)'; 
+
+
+
+! PROBLEM: this idea, however beautiful, don't seem to 
+IterArray <begin, generator, inversegenerator>{
+	array
+	[private?] currindex = begin
+	// decreases index
+	previous() {
+		this.currindex = [this.]inversegenerator(currindex)
+	}
+	// increases index
+	next() {
+		this.currindex = [this.]generator(currindex)
+	}
+	setcurr(value) // sets new value to current index
+}
+
+// * Note: this will still require more of the elements of the template -- stuff like 'isUndefined' and so on...
+GeneralArray <begin, indexgenerator, inverseindexgenerator, comparison, undefinedSymbol> {
+	[...all the other general algorithms go here...]	
+	iterarray <- IterArray<begin, indexgenerator, inverseindexgenerator>
+	// These three sketches for algorithms make it possible to define everything else in terms of them generally... 
+	read(index) {
+		let curr = [this.]undefinedSymbol
+		let currElem = [this.]begin
+		while (!comparison(curr = indexgenerator(curr), index))
+			currElem = this.iterarray.next()	
+		return currElem
+	}
+	write(index, value) {	
+		let curr = [this.]undefinedSymbol
+		while (!comparison(curr = [this.]indexgenerator(curr), index)){}	
+		this.iterarray.setcurr(value)
+	}
+}
+
+// ^ THE BEAUTY OF IT : all the recursive part is taken by the 'IterArray', whilst the GeneralArray [or 'UnlimitedArray', better?], only contains flat algorithms, working with indexes and generators and comparisons and such. 
+That is what it is -- a generalization. 
+The iterations and inner index-representations are handled fully by the 'IterArray's. 
+PROBLEM: the 'currindex' thing. If it is finite, then this don't actually work...
+So. That must mean that if one was to keep the iteration state within the object itself, then the object must be governed by some manner of unlimited counter as well...
+
+IDEA: use the InfiniteCounters there instead of the IterArrays [that being, base the IterArrays on them]; 
+The InfiniteCounters, then, are based on generators and inverse-generators. 
+So, the IterArray just becomes the wrapper around them! 
+Beautiful! 
+
+TODO: for mr. flesh, pray implement...
+// ? Question: should the GeneralArray thingy even HAVE all that separation onto 2 indexgenerator systems???
+// * Current decision: no, they are [in the class case, that being the general one] united. But, in special cases [like .map, for instance...], instead allows for this kind of diversity.
+
+// ? Question: what about the conversions? Which element of this structure should they relate to? 
+// * Pray think on it... [Then, implement?] 
+
+IDEA [about conversions]: 'conversion' (or 'convert') would, too, become a general algorithm. 
+It would work like so: takes in corresponding read()/write() + the other arguments for the GeneralArray and then 're-creates' the array using it. 
+Returns the re-created version with the new structure defined specifically by these two. 
+
+IDEA : about the UnlimitedString; 
+One doesn't like the in-strings and all that work with them. 
+One'd like it to be done in terms of something else. 
+The UnlimitedString could work like so, for instance, have an UnlimitedMap of some objects [numbers, for intance] to "characters" [1-lengthed strings within a given encoding or any other things...], 
+a 'comparison' by which to '.get()' them, and an UnlimitedArray of the symbols from the UnlimitedMap.keys(); 
+Then, one has the 'read' and 'write' procedures + all the stuff from the UnlimitedArray, which would work just the same except for 1 difference - the input and output are converted using the 
+string's unlimited map in question. 
+TODO: wonderful! pray implement...

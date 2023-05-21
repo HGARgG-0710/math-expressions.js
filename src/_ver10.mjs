@@ -144,6 +144,10 @@ const defaultAlphabet = [
 const infinite = {
 	// TODO: pray order the definitions within the 'infinite' object;
 
+	GeneralArray() {
+		return classTemplate({}, function () {})
+	},
+
 	algorithms: {
 		recarrays: {
 			pushback: {
@@ -174,7 +178,7 @@ const infinite = {
 					)
 				}
 			},
-			// TODO: implement [perhaps as .concat([pushedelem], arr)?]
+			// TODO: implement [perhaps as .concat([pushedelem], arr)?]; which would really be ".shiftForward(array, pushedelem)"
 			pushfront: {},
 			// TODO : pray add as a method for the InfiniteArray(s); Same goes for all the unadded methods from the 'algorithms'...
 			shiftForward: {
