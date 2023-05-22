@@ -144,8 +144,121 @@ const defaultAlphabet = [
 const infinite = {
 	// TODO: pray order the definitions within the 'infinite' object;
 
-	GeneralArray() {
-		return classTemplate({}, function () {})
+	GeneralArray(
+		forindexgenerator,
+		backindexgenerator,
+		forelem,
+		backelem,
+		initindex,
+		setmethod,
+		comparison
+	) {
+		// ? Wonder: should one not 'separate' the part of the template object that is being passed to the 'template' function???
+		// * Current decision: yes, do that! Would be very nice and convinient. Allows for more comfortable 'general' access to all that stuff...
+		// TODO: next thing on the agenda [probably] -- tidying up the old, new and code of the new library's version generally; 
+		return classTemplate(
+			{
+				forindexgenerator,
+				backindexgenerator,
+				forelem,
+				backelem,
+				initindex,
+				setmethod
+			},
+			function (array) {
+				return {
+					array: infinite
+						.IterArray(
+							forindexgenerator,
+							backindexgenerator,
+							forelem,
+							backelem,
+							initindex,
+							setmethod
+						)
+						.class(array),
+					class: this,
+					read(index) {
+						let currelem
+						// ? Question: how to separate them both generally and properly???
+						while (!comparison(index, this.array.currindex))
+							currelem = this.array.next()
+						this.array.begin(comparison)
+						return currelem
+					},
+					write(index, value) {
+						while (!comparison(index, this.array.currindex))
+							this.array.next()
+						const returned = this.array.setcurr(value)
+						this.array.begin(comparison)
+						return returned
+					}, 
+					// TODO: add more algorithms here...
+				}
+			}
+		)
+	},
+
+	IterArray(
+		forindexgenerator,
+		backindexgenerator,
+		forelem,
+		backelem,
+		initindex,
+		setmethod
+	) {
+		return classTemplate(
+			{
+				initindex,
+				forindexgenerator,
+				backindexgenerator,
+				forelem,
+				backelem,
+				setmethod
+			},
+			function (array) {
+				return {
+					class: this,
+					currindex: initindex,
+					currelem: this.forelem(array, initindex),
+					array: array,
+					next() {
+						this.currindex = this.class.forindexgenerator(
+							this.currindex
+						)
+						this.currelem = this.class.forelem(
+							this.array,
+							this.currindex
+						)
+						return [this.currindex, this.currelem]
+					},
+					setcurr(newval) {
+						return this.class.setmethod(array, index, newval)
+					},
+					prev() {
+						this.currindex = this.class.backindexgenerator(
+							this.currindex
+						)
+						this.currelem = this.class.backelem(
+							this.array,
+							this.currindex
+						)
+						return [this.currindex, this.currelem]
+					},
+					// TODO: generalize; generally, about these things here... all very-very rough a sketch...
+					// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
+					begin(comparison) {
+						while (
+							!comparison(
+								this.class.currindex,
+								this.class.initindex
+							)
+						)
+							this.prev()
+					}
+				}
+			}
+		)
 	},
 
 	algorithms: {
