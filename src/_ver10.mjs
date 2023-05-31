@@ -144,6 +144,8 @@ const defaultAlphabet = [
 const infinite = {
 	// TODO: pray order the definitions within the 'infinite' object;
 
+	// TODO: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general...
+	// ? is the 'isUndefined' really wanted???
 	GeneralArray(
 		forindexgenerator,
 		backindexgenerator,
@@ -438,6 +440,38 @@ const infinite = {
 			}
 		)
 	},
+
+	// * Sketchy... tiny details to be fixed, decided for the library... general ought to be... most general...
+	// TODO: templates; second-level functions...
+	// ? That thing is... good??? But... sort of... also... useless; 
+	// TODO: redo for the IterArray(s), then perhaps delete the GeneralArray version...
+	_PointerArray(label, genarray) {
+		genarray.begin()
+		// ? Again, the defaults for the empty array??? A lot of these tiny things to decide through the library...
+		const newgenarr = genarray.class.class()
+		for (
+			let i = genarray.array.initindex;
+			!genarray.class.comparison(i, genarray.class.length());
+			i = genarray.array.forindexgenerator(i)
+		) 
+			newgenarr.push(Pointer(label)(genarray.read(i)))
+		return newgenarr
+	},
+
+	// ! Problem: the thing with IterArr too wouldn't work for the same reason -- 'tis rather useles...
+	// * So, the IterArr should [on input] expect the PointerArr...
+	// * But, one wants to have it general [so as not to write the PointerArr anew for each and every array type]...
+	// ^ IDEA: one would use only the reading methods of the IterArray; this way, it'd work -- one would have the IterArray being written for use with these ones, but the reading methods would work not only with them; 
+	// * So, conclusion: one would love to have the corresponding flag with the IterArray -- (name 'isWrite', for instance)
+	// TODO: pray rewrite correspondently...
+	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
+	PointerArray(label, iterarr) {
+		let newiterarr = iterarr.class.class()
+		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd' ; 
+		while (!iterarr.class.isEnd()) 
+			newiterarr.setcurr(Pointer(label)(iterarr.currelem))
+		return newiterarr
+	}, 
 
 	// TODO: delete or greatly rework after having finished with the GeneralArray stuff...;
 	algorithms: {
@@ -4049,8 +4083,8 @@ function objArr(obj) {
 }
 
 function objSwap(obj1, obj2) {
-	;((obj1Copy, obj2Copy) => {	
-		objClear(obj1, obj1Copy)	
+	;((obj1Copy, obj2Copy) => {
+		objClear(obj1, obj1Copy)
 		objClear(obj2, obj2Copy)
 		objInherit(obj1, obj2Copy)
 		objInherit(obj2, obj1Copy)
@@ -4073,12 +4107,12 @@ function propSwap(obj, prop1, prop2) {
 
 // * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
 // ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
-// ? document; like everything else...
-// TODO: make a template out of that thing...
-function Pointer(value, recognizedl, recognizedv) {
-	return {
-		value: value,
-		[recognizedl]: recognizedv
+// ? document it; like everything else...
+// TODO: make a proper template out of that thing...;
+// ? Question: should one not add a set of properties for recognition???
+function Pointer(vall = "value") {
+	return function (value) {
+		return { [vall]: value }
 	}
 }
 
@@ -4210,6 +4244,6 @@ export {
 	objSwap,
 	objClear,
 	objInherit,
-	propSwap, 
+	propSwap,
 	Pointer
 }
