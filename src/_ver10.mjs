@@ -377,17 +377,26 @@ const infinite = {
 						)
 						return [this.currindex, this.currelem]
 					},
-					setcurr(newval) {
+					// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
+					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep; 
+					setcurr(label, newval) {
 						// ! PROBLEM: the thing in question COULD work by means of putting in the "setting" method's definition right in there...
 						// * But! JS don't have pointers; In a language where they are (exampli gratia C/C++), one could just do `*this.class.currelem = newval`, for instance;
 						// * Unfortunately, with JS, this is not the case; it WOULD work on the object-elements, but not the number elements;
 						// * So, yes; unless one is writing a wrapper around the JS values for the sake of adding pointers, this kind of thing is not very possible within it generallyv...
 						// ^ IDEA: do just that; write a Pointer class for managing pointers within JS.
-						return this.class.setmethod(
-							this.array,
-							this.currindex,
-							newval
-						)
+						// return this.class.setmethod(
+						// 	this.array,
+						// 	this.currindex,
+						// 	newval
+						// )
+
+						// * Well, here it is. The rough sketch;
+						// TODO: create a function for getting the .currelem() [for instance, '.getcurr()']; either delete the .currelem property or make a note for it that it is read-only...
+						this.prev()
+						return (this.class.forelem(array, this.currindex)[
+							label
+						] = newval)
 					},
 					prev() {
 						this.currindex = this.class.backindexgenerator(
@@ -443,7 +452,7 @@ const infinite = {
 
 	// * Sketchy... tiny details to be fixed, decided for the library... general ought to be... most general...
 	// TODO: templates; second-level functions...
-	// ? That thing is... good??? But... sort of... also... useless; 
+	// ? That thing is... good??? But... sort of... also... useless;
 	// TODO: redo for the IterArray(s), then perhaps delete the GeneralArray version...
 	_PointerArray(label, genarray) {
 		genarray.begin()
@@ -453,7 +462,7 @@ const infinite = {
 			let i = genarray.array.initindex;
 			!genarray.class.comparison(i, genarray.class.length());
 			i = genarray.array.forindexgenerator(i)
-		) 
+		)
 			newgenarr.push(Pointer(label)(genarray.read(i)))
 		return newgenarr
 	},
@@ -461,17 +470,17 @@ const infinite = {
 	// ! Problem: the thing with IterArr too wouldn't work for the same reason -- 'tis rather useles...
 	// * So, the IterArr should [on input] expect the PointerArr...
 	// * But, one wants to have it general [so as not to write the PointerArr anew for each and every array type]...
-	// ^ IDEA: one would use only the reading methods of the IterArray; this way, it'd work -- one would have the IterArray being written for use with these ones, but the reading methods would work not only with them; 
+	// ^ IDEA: one would use only the reading methods of the IterArray; this way, it'd work -- one would have the IterArray being written for use with these ones, but the reading methods would work not only with them;
 	// * So, conclusion: one would love to have the corresponding flag with the IterArray -- (name 'isWrite', for instance)
 	// TODO: pray rewrite correspondently...
 	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
 	PointerArray(label, iterarr) {
 		let newiterarr = iterarr.class.class()
-		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd' ; 
-		while (!iterarr.class.isEnd()) 
+		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
+		while (!iterarr.class.isEnd())
 			newiterarr.setcurr(Pointer(label)(iterarr.currelem))
 		return newiterarr
-	}, 
+	},
 
 	// TODO: delete or greatly rework after having finished with the GeneralArray stuff...;
 	algorithms: {
