@@ -214,7 +214,7 @@ const infinite = {
 					// ? Make an IterArray method? Think about it...
 					// TODO: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
 					// ? Question: should one not make this a changed variable???
-					// * Then, one'd just add a setter and a getter and that's it, no?; 
+					// * Then, one'd just add a setter and a getter and that's it, no?;
 					length() {
 						let curr = this.array.begin(comparison)
 						while (!isEnd((curr = this.array.next())[1])) {}
@@ -222,81 +222,78 @@ const infinite = {
 					},
 					pushback(value) {
 						// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
-						// * 1. get the .length(); 
-						// * 2. write() 'value' at .length(); 
+						// * 1. get the .length();
+						// * 2. write() 'value' at .length();
 					},
 					pushfront(value) {
-						// * Sketch [not actual code]: 
+						// * Sketch [not actual code]:
 						// * 1. this.array = .concat([value], this.array)
 					},
 					concat(array) {
-						// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']: 
-						// * 1. define a new array [copy of 'array'; 'concatenated']; 
+						// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']:
+						// * 1. define a new array [copy of 'array'; 'concatenated'];
 						// * 2. run through 'this', pushing all the elements of it into the array in question; ['concatenated.push(this.array.currelem)']
-						// * 3. return concatenated; 
+						// * 3. return concatenated;
 					},
-					copy (f = (x) => x) {
-						// * Sketch: 
-						// * 1. create a new empty array of the same template-array-type as 'this' ['newarray']; 
-						// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))'; 
+					copy(f = (x) => x) {
+						// * Sketch:
+						// * 1. create a new empty array of the same template-array-type as 'this' ['newarray'];
+						// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
 						// * 3. return newarray
-					}, 
+					},
 					// TODO: 'end' should default to 'end=this.length()'
 					slice(begin, end) {
-						// * Sketch: 
-						// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it; 
+						// * Sketch:
+						// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
 						// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
-						// * 3. return the finally obtained array; 
-
-						// ? Question: should it be inclusive to 'end'? 
-						// * Current decision: yes. 
+						// * 3. return the finally obtained array;
+						// ? Question: should it be inclusive to 'end'?
+						// * Current decision: yes.
 					},
 					fillfrom(index, value) {
-						// * Sketch: 
-						// * 1. move to 'index'; 
-						// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)'; 
+						// * Sketch:
+						// * 1. move to 'index';
+						// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)';
 					},
 					convert(template) {
 						// TODO: re-organize the templates API [this one and the other 'tiny details' shall probably occupy the next element of the agenda;]...
-						// * Sketch: 
-						// * 1. Create a new GeneralArray with the given template; 
+						// * Sketch:
+						// * 1. Create a new GeneralArray with the given template;
 						// * 2. walk the current array and '.push()' every element in the new one;
-						// * 3. return the new array; 
+						// * 3. return the new array;
 					},
 					delete(index) {
-						// * Sketch [not the actual code]: 
+						// * Sketch [not the actual code]:
 						// * 1. this = this.slice(index, indexgenerator(index))
-
-						// ? Note: one could do it otherwise, as well -- deleting the index not the value; 
-						// * IDEA: create a method for this too! 
-						// TODO: yes. pray do; 
+						// ? Note: one could do it otherwise, as well -- deleting the index not the value;
+						// * IDEA: create a method for this too!
+						// TODO: yes. pray do;
 					},
 					deleteMult(startindex, endindex) {
-						// * sketch: 
+						// * sketch:
 						// * 1. this = this.slice(startindex, endindex)
-						// ? Question(idea): rewrite the '.delete' through 'deleteMult'? 
-					}, 
+						// ? Question(idea): rewrite the '.delete' through 'deleteMult'?
+					},
 					project(array, index) {
-						// * sketch: 
-						// * 1. move to the index 'index'; 
+						// * sketch:
+						// * 1. move to the index 'index';
 						// * 2. walk the passed general array [array], until reaching either its or the "this"'s .length(), 'this.write(array.array.currelem)'
 					},
 					insert(index, value) {
-						// * sketch [not the actual code]: 
-						// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index))); 
+						// * sketch [not the actual code]:
+						// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
 					},
 					// TODO: later, rewrite in terms of the 'indexesOf' function...
 					has(x) {
 						// ? generalize this double-array construction
-						// * Old; 
+						// * Old;
 						// let c = [this.array.currindex, this.array.currelem]
 						// let u
 						// while (!comparison(c[1], x) && (u = !isEnd(c[1])))
 						// 	c = this.array.next()
 						// return u
-
-						// * Sketch [not the actual code]: 
-						// * return this.firstIndex(x) == someUnFoundConstantPrayChooseItAlready; 
+						// * Sketch [not the actual code]:
+						// * return this.firstIndex(x) == someUnFoundConstantPrayChooseItAlready;
 					},
 					// * Just an alias...
 					index(i) {
@@ -304,39 +301,39 @@ const infinite = {
 					},
 					// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
 					indexesOf(x) {
-						// * Sketch [perephrase of what's above...; not actual code]: 
+						// * Sketch [perephrase of what's above...; not actual code]:
 						// TODO: problem: decide how to [generally] define an empty array...
-						// * 1. let newarr = GeneralArray(...)([]); 
+						// * 1. let newarr = GeneralArray(...)([]);
 						// * 2. let curr
 						// * 3. while ((curr = this.firstIndex(x)) != someUnfoundConstantToBeChosen)
 						// * 4. 	newarr.push(curr)
 						// * 5. return newarr
 					},
-					// ? Question[1]: should one template all the methods of this class? 
+					// ? Question[1]: should one template all the methods of this class?
 					// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
-						// * Something like 'comparison = this.comparison || this.class.comparison'? 
+					// * Something like 'comparison = this.comparison || this.class.comparison'?
 					firstIndex(x) {
-						// * Sketch: 
-						// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison'; 
-						// * 2. On find [from within the loop], return the 'currindex'; 
-						// * 3. On failure [outside the loop], return the 'unfoundConstant'; 
-					}, 
+						// * Sketch:
+						// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison';
+						// * 2. On find [from within the loop], return the 'currindex';
+						// * 3. On failure [outside the loop], return the 'unfoundConstant';
+					},
 					shiftForward(times, generator, baseelem) {
-						// * Sketch [change the '[]' for GeneralArray constructor]: 
-						// * 1. return this.concat([baseelem].repeat(times, generator)); 
+						// * Sketch [change the '[]' for GeneralArray constructor]:
+						// * 1. return this.concat([baseelem].repeat(times, generator));
 					},
 					shiftBackward(times, generator) {
-						// * Sketch: 
-						// * 0. let curr; 
-						// * 1. while (!comparison(curr = generator(curr), times)) 
+						// * Sketch:
+						// * 0. let curr;
+						// * 1. while (!comparison(curr = generator(curr), times))
 						// * 2. 	this = this.slice(indexgenerator(this.array.initindex))
-					}, 
+					},
 					// ? Again, the question about the 'comparison'; it probably alludes to all the methods that use it...
 					repeat(times, generator) {
-						// * Sketch [not the actual code]: 
+						// * Sketch [not the actual code]:
 						// * 1. let newarr = GeneralArray(...)()
 						// * 2. let curr = generator()
-						// * 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times)); 
+						// * 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
 						// * 4. return newarr
 					}
 					// TODO: pray add more new algorithms here...
@@ -365,7 +362,7 @@ const infinite = {
 			function (array) {
 				return {
 					class: this,
-					currindex: initindex,
+					currindex: this.initindex,
 					currelem: this.forelem(array, initindex),
 					array: array,
 					next() {
@@ -379,7 +376,16 @@ const infinite = {
 						return [this.currindex, this.currelem]
 					},
 					setcurr(newval) {
-						return this.class.setmethod(array, this.currindex, newval)
+						// ! PROBLEM: the thing in question COULD work by means of putting in the "setting" method's definition right in there...
+						// * But! JS don't have pointers; In a language where they are (exampli gratia C/C++), one could just do `*this.class.currelem = newval`, for instance;
+						// * Unfortunately, with JS, this is not the case; it WOULD work on the object-elements, but not the number elements;
+						// * So, yes; unless one is writing a wrapper around the JS values for the sake of adding pointers, this kind of thing is not very possible within it generallyv...
+						// ^ IDEA: do just that; write a Pointer class for managing pointers within JS.
+						return this.class.setmethod(
+							this.array,
+							this.currindex,
+							newval
+						)
 					},
 					prev() {
 						this.currindex = this.class.backindexgenerator(
@@ -4043,11 +4049,11 @@ function objArr(obj) {
 }
 
 function objSwap(obj1, obj2) {
-	;((obj1Copy, obj2Copy) => {
+	;((obj1Copy, obj2Copy) => {	
+		objClear(obj1, obj1Copy)	
+		objClear(obj2, obj2Copy)
 		objInherit(obj1, obj2Copy)
 		objInherit(obj2, obj1Copy)
-		objClear(obj1, obj1Copy)
-		objClear(obj2, obj2Copy)
 	})(...arguments.map(flatCopy))
 }
 
@@ -4063,6 +4069,17 @@ function propSwap(obj, prop1, prop2) {
 	const temp = obj[prop1]
 	obj[prop1] = obj[prop2]
 	obj[prop2] = temp
+}
+
+// * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
+// ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
+// ? document; like everything else...
+// TODO: make a template out of that thing...
+function Pointer(value, recognizedl, recognizedv) {
+	return {
+		value: value,
+		[recognizedl]: recognizedv
+	}
 }
 
 // TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
@@ -4193,5 +4210,6 @@ export {
 	objSwap,
 	objClear,
 	objInherit,
-	propSwap
+	propSwap, 
+	Pointer
 }
