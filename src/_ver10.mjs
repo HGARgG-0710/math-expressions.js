@@ -149,10 +149,8 @@ const infinite = {
 	GeneralArray(
 		forindexgenerator,
 		backindexgenerator,
-		forelem,
-		backelem,
+		elem,
 		initindex,
-		setmethod,
 		comparison,
 		isUndefined = (x) => x === undefined,
 		isEnd = isUndefined
@@ -164,10 +162,8 @@ const infinite = {
 			{
 				forindexgenerator,
 				backindexgenerator,
-				forelem,
-				backelem,
+				elem,
 				initindex,
-				setmethod,
 				isUndefined,
 				isEnd
 			},
@@ -177,10 +173,8 @@ const infinite = {
 						.IterArray(
 							forindexgenerator,
 							backindexgenerator,
-							forelem,
-							backelem,
+							elem,
 							initindex,
-							setmethod
 						)
 						.class(array),
 					class: this,
@@ -347,39 +341,39 @@ const infinite = {
 	IterArray(
 		forindexgenerator,
 		backindexgenerator,
-		forelem,
-		backelem,
+		elem,
 		initindex,
-		setmethod
 	) {
 		return classTemplate(
 			{
 				initindex,
 				forindexgenerator,
 				backindexgenerator,
-				forelem,
-				backelem,
-				setmethod
+				elem,
 			},
-			function (array) {
+			// TODO: refactor the 'label' properly; JS 'setters/getters' cannot be 'templated' the same way...
+			// * Though a thing like (a.x = b)(newvalue) can be done:
+			// * const a = {set x (template) {return (newvalue) => {...[that's where the code affected by 'template' and 'newvalue' goes]}}}
+			function (array, label) {
 				return {
 					class: this,
 					currindex: this.initindex,
-					currelem: this.forelem(array, initindex),
-					array: array,
+					array: PointerArray(array, label),
+					// TODO: this thing now returns only the index, change the things in accordance with it...
+					// ? what to do next? (Suggestion: finish the GeneralArray?)
 					next() {
-						this.currindex = this.class.forindexgenerator(
+						return (this.currindex = this.class.forindexgenerator(
 							this.currindex
-						)
-						this.currelem = this.class.forelem(
-							this.array,
-							this.currindex
-						)
-						return [this.currindex, this.currelem]
+						))
+					},
+					get currelem() {
+						return this.class.elem(this.array, this.currindex)[
+							label
+						]
 					},
 					// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
-					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep; 
-					setcurr(label, newval) {
+					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
+					set currelem(newval) {
 						// ! PROBLEM: the thing in question COULD work by means of putting in the "setting" method's definition right in there...
 						// * But! JS don't have pointers; In a language where they are (exampli gratia C/C++), one could just do `*this.class.currelem = newval`, for instance;
 						// * Unfortunately, with JS, this is not the case; it WOULD work on the object-elements, but not the number elements;
@@ -393,20 +387,15 @@ const infinite = {
 
 						// * Well, here it is. The rough sketch;
 						// TODO: create a function for getting the .currelem() [for instance, '.getcurr()']; either delete the .currelem property or make a note for it that it is read-only...
-						this.prev()
-						return (this.class.forelem(array, this.currindex)[
-							label
-						] = newval)
+						// ! alternative solution -- rewrite the 'setcurr' as the 'setter/getter' pair, get rid of the property in question completely...
+						// ^ yes, do that...
+						return (this.class.elem(array, this.currindex)[label] =
+							newval)
 					},
 					prev() {
-						this.currindex = this.class.backindexgenerator(
+						return (this.currindex = this.class.backindexgenerator(
 							this.currindex
-						)
-						this.currelem = this.class.backelem(
-							this.array,
-							this.currindex
-						)
-						return [this.currindex, this.currelem]
+						))
 					},
 					// TODO: generalize; generally, about these things here... all very-very rough a sketch...
 					// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
