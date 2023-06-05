@@ -189,3 +189,20 @@ a 'comparison' by which to '.get()' them, and an UnlimitedArray of the symbols f
 Then, one has the 'read' and 'write' procedures + all the stuff from the UnlimitedArray, which would work just the same except for 1 difference - the input and output are converted using the 
 string's unlimited map in question. 
 TODO: wonderful! pray implement...
+
+
+IDEA: the InfiniteNumber: as a math-expression.js-type generator-function defining an infinite sequence of objects with a defined order on them in terms of the index of the position, 
+wrapped into a templated object, which itself is a result of an InfiniteNumber() function call;  
+So, for instance, one would have something like: 
+
+0011235423624678679235956791... 
+10089704590434750296493034024059...
+
+The last one being greater. 
+One could add signs for this sort of stuff, as well as dot-positions; 
+The thing itself would be defined as an infinite (that being, unlimited) GeneralArray instance, with addition, multiplication, inverses [both additive and multiplicative] implemented on it; 
+Indexes used would [could, that being] also be unlimited; 
+
+// ! The only Problem with this is such: the defined sequences always have the maximum being one defined by the function (i) => (n-1), where 'n' is the number of symbols used for the representation of the sequences...
+
+[for example, for decimal with symbols 0123456789, it'd be: 999999999999....]

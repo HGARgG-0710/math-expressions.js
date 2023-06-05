@@ -153,7 +153,7 @@ const infinite = {
 		initindex,
 		comparison,
 		// ? Does one really want the 'isUndefined' here??? Pray think on it...
-		// * CONCLUSION: YES, ONE DOES! 
+		// * CONCLUSION: YES, ONE DOES!
 		// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
 		isUndefined = (x) => x === undefined,
 		isEnd = isUndefined
@@ -342,13 +342,21 @@ const infinite = {
 		)
 	},
 
+	// * Wanting new method-parameters:
+	// * 1. isUndefined(array, index) - returns boolean, whether the value corresponding to the index within the given array is undefined...
+	// * 2. newvalue(array, index, value) - adds a new value to the array in question at a given index [only used for those indexes which are considered undefined];
+	// % The difference in use of the last one between the pointer and non-pointer case is, that the pointer case does 'newvalue(array, index, Pointer(label)(x))', instead of plain 'newvalue(array, index, x)';
+	// todo: Pray add the stuff to there...
 	IterArray(
 		forindexgenerator,
 		backindexgenerator,
 		elem,
 		initindex,
 		comparison,
-		isEnd
+		isEnd,
+		newvalue,
+		isUndefined = (x) => x === undefined,
+		undefinedReturn = undefined
 	) {
 		return classTemplate(
 			{
@@ -357,7 +365,9 @@ const infinite = {
 				forindexgenerator,
 				backindexgenerator,
 				elem,
-				isEnd
+				isEnd,
+				isUndefined,
+				newvalue
 			},
 			// TODO: refactor the 'isLabel' and 'label' properly; JS 'setters/getters' cannot be 'templated' the same way...
 			// * Though a thing like (a.x = b)(newvalue) can be done:
@@ -375,10 +385,15 @@ const infinite = {
 						))
 					},
 					get currelem() {
-						return (isLabel ? (x) => x[label] : id)(
-							this.class.elem(this.array, this.currindex)
-						)
+						// ? Should one give more access to the object in question to the 'undefinedReturn' function??? One may want it...
+						// TODO: pray think on many such small things about extensibility of the code -- pray extend as far as want to...
+						return isUndefined(this.array, this.currinex)
+							? undefinedReturn(this.array, this.currindex)
+							: (isLabel ? (x) => x[label] : id)(
+									this.class.elem(this.array, this.currindex)
+							  )
 					},
+					// TODO: add 'comparison' to all such places of appropriety. Similarly, pray add the greater degree of configurability to the stuff in question...
 					length(comparison = this.class.comparison) {
 						let curr = this.begin(comparison)
 						while (
@@ -386,27 +401,32 @@ const infinite = {
 						) {}
 						return curr
 					},
-					// todo: Implement
-					loop() {},
+					// todo: Implement properly; supposed to 'yield' the current index, whilst also increasing it, until the
+					loop: function* (comparison = this.class.comparison) {
+						let currind = this.begin(comparison)
+						while (!this.class.isEnd(this.array, currind)) {
+							currind = this.next()
+							yield false
+						}
+						return true
+					},
 					// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
 					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
 					set currelem(newval) {
-						// ! PROBLEM: the thing in question COULD work by means of putting in the "setting" method's definition right in there...
-						// * But! JS don't have pointers; In a language where they are (exampli gratia C/C++), one could just do `*this.class.currelem = newval`, for instance;
-						// * Unfortunately, with JS, this is not the case; it WOULD work on the object-elements, but not the number elements;
-						// * So, yes; unless one is writing a wrapper around the JS values for the sake of adding pointers, this kind of thing is not very possible within it generallyv...
-						// ^ IDEA: do just that; write a Pointer class for managing pointers within JS.
-						// return this.class.setmethod(
-						// 	this.array,
-						// 	this.currindex,
-						// 	newval
-						// )
-
-						// ! PROBLEM: this thing over-assumes: 
-						// * 1. That the array in question has 'isLabel=true'; 
-						// * 2. That the index in question had already been created [id est, it's useless for creation of new indexes...]
-						return (this.class.elem(array, this.currindex)[label] =
-							newval)
+						// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
+						if (
+							!isLabel ||
+							isUndefined(this.array, this.currindex)
+						) 
+							return this.class.newvalue(
+								this.array,
+								this.currindex,
+								(isLabel ? Pointer(label) : id)(newval)
+							)
+						
+						return (this.class.elem(this.array, this.currindex)[
+							label
+						] = newval)
 					},
 					prev() {
 						return (this.currindex = this.class.backindexgenerator(
@@ -485,13 +505,10 @@ const infinite = {
 	// TODO: pray rewrite correspondently...
 	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
 
-	// ! Problem: the 'pointer array' don't actually work here... Two issues, namely: 
-	// * 1. the creation of new elements : doesn't work properly. The 'set currelem' depends entirely upon that the 'this.class.elem' will return a[n already existing!] Pointer, to which a value can be given; When it is 'null/undefined/something else' there instead, it won't work properly...
-	// * 2. the necessity of pre-creation of the elements of the IterArray in question... -- they cannot be written/created anew, so it must be done via passing the array into the function originally; Problem is -- how does one construct it before then???
 	PointerArray(label, iterarr) {
 		let newiterarr = iterarr.class.class()
 		// TODO: redo the 'isLabel'...
-		// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them; 
+		// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them;
 		newiterarr.class.isLabel = true
 		newiterarr.class.label = label
 		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
