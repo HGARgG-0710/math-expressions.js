@@ -152,6 +152,9 @@ const infinite = {
 		elem,
 		initindex,
 		comparison,
+		// ? Does one really want the 'isUndefined' here??? Pray think on it...
+		// * CONCLUSION: YES, ONE DOES! 
+		// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
 		isUndefined = (x) => x === undefined,
 		isEnd = isUndefined
 	) {
@@ -164,6 +167,7 @@ const infinite = {
 				backindexgenerator,
 				elem,
 				initindex,
+				comparison,
 				isUndefined,
 				isEnd
 			},
@@ -175,10 +179,12 @@ const infinite = {
 							backindexgenerator,
 							elem,
 							initindex,
+							comparison,
+							isEnd
 						)
 						.class(array),
 					class: this,
-					begin(comparison) {
+					begin(comparison = this.class.comparison) {
 						return this.array.begin(comparison)
 					},
 					moveforward(index, begin = false) {
@@ -212,9 +218,7 @@ const infinite = {
 					// ? Question: should one not make this a changed variable???
 					// * Then, one'd just add a setter and a getter and that's it, no?;
 					length() {
-						let curr = this.array.begin(comparison)
-						while (!isEnd((curr = this.array.next())[1])) {}
-						return curr[0]
+						return this.iterarray.length()
 					},
 					pushback(value) {
 						// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
@@ -343,22 +347,26 @@ const infinite = {
 		backindexgenerator,
 		elem,
 		initindex,
+		comparison,
+		isEnd
 	) {
 		return classTemplate(
 			{
+				comparison,
 				initindex,
 				forindexgenerator,
 				backindexgenerator,
 				elem,
+				isEnd
 			},
-			// TODO: refactor the 'label' properly; JS 'setters/getters' cannot be 'templated' the same way...
+			// TODO: refactor the 'isLabel' and 'label' properly; JS 'setters/getters' cannot be 'templated' the same way...
 			// * Though a thing like (a.x = b)(newvalue) can be done:
 			// * const a = {set x (template) {return (newvalue) => {...[that's where the code affected by 'template' and 'newvalue' goes]}}}
-			function (array, label) {
+			function (array, isLabel = false, label) {
 				return {
 					class: this,
 					currindex: this.initindex,
-					array: PointerArray(array, label),
+					array: array,
 					// TODO: this thing now returns only the index, change the things in accordance with it...
 					// ? what to do next? (Suggestion: finish the GeneralArray?)
 					next() {
@@ -367,10 +375,19 @@ const infinite = {
 						))
 					},
 					get currelem() {
-						return this.class.elem(this.array, this.currindex)[
-							label
-						]
+						return (isLabel ? (x) => x[label] : id)(
+							this.class.elem(this.array, this.currindex)
+						)
 					},
+					length(comparison = this.class.comparison) {
+						let curr = this.begin(comparison)
+						while (
+							!isEnd(this.array, (curr = this.array.next()))
+						) {}
+						return curr
+					},
+					// todo: Implement
+					loop() {},
 					// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
 					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
 					set currelem(newval) {
@@ -385,10 +402,9 @@ const infinite = {
 						// 	newval
 						// )
 
-						// * Well, here it is. The rough sketch;
-						// TODO: create a function for getting the .currelem() [for instance, '.getcurr()']; either delete the .currelem property or make a note for it that it is read-only...
-						// ! alternative solution -- rewrite the 'setcurr' as the 'setter/getter' pair, get rid of the property in question completely...
-						// ^ yes, do that...
+						// ! PROBLEM: this thing over-assumes: 
+						// * 1. That the array in question has 'isLabel=true'; 
+						// * 2. That the index in question had already been created [id est, it's useless for creation of new indexes...]
 						return (this.class.elem(array, this.currindex)[label] =
 							newval)
 					},
@@ -399,23 +415,28 @@ const infinite = {
 					},
 					// TODO: generalize; generally, about these things here... all very-very rough a sketch...
 					// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
-					begin(comparison) {
+					begin(comparison = this.class.comparison) {
 						let curr
 						while (
-							!comparison(
-								this.class.currindex,
-								this.class.initindex
-							)
+							!comparison(this.currindex, this.class.initindex)
 						)
 							curr = this.prev()
 						return curr
 					},
+					end(comparison = this.class.comparison) {
+						const l = this.length()
+						let curr
+						while (!comparison(this.currindex, l))
+							curr = this.prev()
+						return curr
+					},
+					// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
+					// * If one would, then it ought to be generalized...
+					// TODO: pray generalize into a static method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
 					moveforward(comparison, index, begin = false) {
-						let currelem = null
-						if (begin) currelem = this.begin(comparison)
-						while (!comparison(index, this.currindex))
-							currelem = this.next()
-						return currelem
+						if (begin) this.begin(comparison)
+						while (!comparison(index, this.currindex)) this.next()
+						return this.currelem
 					},
 					// ? Question: should these things become the part of the IterArray instead???
 					// * Currently decided: yes, let it be so...They would fit noticeably better there. Add wrappers for them into the thing in question...
@@ -439,22 +460,22 @@ const infinite = {
 		)
 	},
 
-	// * Sketchy... tiny details to be fixed, decided for the library... general ought to be... most general...
-	// TODO: templates; second-level functions...
-	// ? That thing is... good??? But... sort of... also... useless;
-	// TODO: redo for the IterArray(s), then perhaps delete the GeneralArray version...
-	_PointerArray(label, genarray) {
-		genarray.begin()
-		// ? Again, the defaults for the empty array??? A lot of these tiny things to decide through the library...
-		const newgenarr = genarray.class.class()
-		for (
-			let i = genarray.array.initindex;
-			!genarray.class.comparison(i, genarray.class.length());
-			i = genarray.array.forindexgenerator(i)
-		)
-			newgenarr.push(Pointer(label)(genarray.read(i)))
-		return newgenarr
-	},
+	// i * Sketchy... tiny details to be fixed, decided for the library... general ought to be... most general...
+	// i TODO: templates; second-level functions...
+	// i ? That thing is... good??? But... sort of... also... useless;
+	// i TODO: redo for the IterArray(s), then perhaps delete the GeneralArray version...
+	// _PointerArray(label, genarray) {
+	// 	genarray.begin()
+	// 	// ? Again, the defaults for the empty array??? A lot of these tiny things to decide through the library...
+	// 	const newgenarr = genarray.class.class()
+	// 	for (
+	// 		let i = genarray.array.initindex;
+	// 		!genarray.class.comparison(i, genarray.class.length());
+	// 		i = genarray.array.forindexgenerator(i)
+	// 	)
+	// 		newgenarr.push(Pointer(label)(genarray.read(i)))
+	// 	return newgenarr
+	// },
 
 	// ! Problem: the thing with IterArr too wouldn't work for the same reason -- 'tis rather useles...
 	// * So, the IterArr should [on input] expect the PointerArr...
@@ -463,11 +484,21 @@ const infinite = {
 	// * So, conclusion: one would love to have the corresponding flag with the IterArray -- (name 'isWrite', for instance)
 	// TODO: pray rewrite correspondently...
 	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
+
+	// ! Problem: the 'pointer array' don't actually work here... Two issues, namely: 
+	// * 1. the creation of new elements : doesn't work properly. The 'set currelem' depends entirely upon that the 'this.class.elem' will return a[n already existing!] Pointer, to which a value can be given; When it is 'null/undefined/something else' there instead, it won't work properly...
+	// * 2. the necessity of pre-creation of the elements of the IterArray in question... -- they cannot be written/created anew, so it must be done via passing the array into the function originally; Problem is -- how does one construct it before then???
 	PointerArray(label, iterarr) {
 		let newiterarr = iterarr.class.class()
+		// TODO: redo the 'isLabel'...
+		// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them; 
+		newiterarr.class.isLabel = true
+		newiterarr.class.label = label
 		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
-		while (!iterarr.class.isEnd())
-			newiterarr.setcurr(Pointer(label)(iterarr.currelem))
+		while (!iterarr.loop()) {
+			newiterarr.currelem = Pointer(label)(iterarr.currelem)
+			newiterarr.next()
+		}
 		return newiterarr
 	},
 
