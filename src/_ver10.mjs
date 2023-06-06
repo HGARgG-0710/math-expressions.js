@@ -144,8 +144,7 @@ const defaultAlphabet = [
 const infinite = {
 	// TODO: pray order the definitions within the 'infinite' object;
 
-	// TODO: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general...
-	// ? is the 'isUndefined' really wanted???
+	// TODO: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
 	GeneralArray(
 		forindexgenerator,
 		backindexgenerator,
@@ -156,7 +155,9 @@ const infinite = {
 		// * CONCLUSION: YES, ONE DOES!
 		// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
 		isUndefined = (x) => x === undefined,
-		isEnd = isUndefined
+		newvalue,
+		isEnd = isUndefined,
+		undefinedReturn
 	) {
 		// ? Wonder: should one not 'separate' the part of the template object that is being passed to the 'template' function???
 		// * Current decision: yes, do that! Would be very nice and convinient. Allows for more comfortable 'general' access to all that stuff...
@@ -180,7 +181,10 @@ const infinite = {
 							elem,
 							initindex,
 							comparison,
-							isEnd
+							isEnd,
+							newvalue,
+							isUndefined,
+							undefinedReturn
 						)
 						.class(array),
 					class: this,
@@ -369,117 +373,139 @@ const infinite = {
 				isUndefined,
 				newvalue
 			},
-			// TODO: refactor the 'isLabel' and 'label' properly; JS 'setters/getters' cannot be 'templated' the same way...
-			// * Though a thing like (a.x = b)(newvalue) can be done:
-			// * const a = {set x (template) {return (newvalue) => {...[that's where the code affected by 'template' and 'newvalue' goes]}}}
-			function (array, isLabel = false, label) {
-				return {
-					class: this,
-					currindex: this.initindex,
-					array: array,
-					// TODO: this thing now returns only the index, change the things in accordance with it...
-					// ? what to do next? (Suggestion: finish the GeneralArray?)
-					next() {
-						return (this.currindex = this.class.forindexgenerator(
-							this.currindex
-						))
-					},
-					get currelem() {
-						// ? Should one give more access to the object in question to the 'undefinedReturn' function??? One may want it...
-						// TODO: pray think on many such small things about extensibility of the code -- pray extend as far as want to...
-						return isUndefined(this.array, this.currinex)
-							? undefinedReturn(this.array, this.currindex)
-							: (isLabel ? (x) => x[label] : id)(
-									this.class.elem(this.array, this.currindex)
-							  )
-					},
-					// TODO: add 'comparison' to all such places of appropriety. Similarly, pray add the greater degree of configurability to the stuff in question...
-					length(comparison = this.class.comparison) {
-						let curr = this.begin(comparison)
-						while (
-							!isEnd(this.array, (curr = this.array.next()))
-						) {}
-						return curr
-					},
-					// todo: Implement properly; supposed to 'yield' the current index, whilst also increasing it, until the
-					loop: function* (comparison = this.class.comparison) {
-						let currind = this.begin(comparison)
-						while (!this.class.isEnd(this.array, currind)) {
-							currind = this.next()
-							yield false
+			function (isLabel = false, label) {
+				return template(
+					{ isLabel, label, template: this },
+					function (array) {
+						return {
+							class: this,
+							currindex: this.initindex,
+							array: array,
+							// TODO: this thing now returns only the index, change the things in accordance with it...
+							// ? what to do next? (Suggestion: finish the GeneralArray?)
+							next() {
+								return (this.currindex =
+									this.class.forindexgenerator(
+										this.currindex
+									))
+							},
+							get currelem() {
+								// ? Should one give more access to the object in question to the 'undefinedReturn' function??? One may want it... (for instance, undefinedReturn(this))
+								// TODO: pray think on many such small things about extensibility of the code -- pray extend as far as want to...
+								return isUndefined(this.array, this.currinex)
+									? undefinedReturn(
+											this.array,
+											this.currindex
+									  )
+									: (isLabel ? (x) => x[label] : id)(
+											this.class.elem(
+												this.array,
+												this.currindex
+											)
+									  )
+							},
+							// TODO: add 'comparison' to all such places of appropriety. Similarly, pray add the greater degree of configurability to the stuff in question...
+							length(comparison = this.class.comparison) {
+								let curr = this.begin(comparison)
+								while (
+									!isEnd(
+										this.array,
+										(curr = this.array.next())
+									)
+								) {}
+								return curr
+							},
+							loop: function* (
+								comparison = this.class.comparison
+							) {
+								let currind = this.begin(comparison)
+								while (!this.class.isEnd(this.array, currind)) {
+									currind = this.next()
+									yield false
+								}
+								return true
+							},
+							// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
+							// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
+							set currelem(newval) {
+								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
+								if (
+									!isLabel ||
+									isUndefined(this.array, this.currindex)
+								)
+									return this.class.newvalue(
+										this.array,
+										this.currindex,
+										(isLabel ? Pointer(label) : id)(newval)
+									)
+
+								return (this.class.elem(
+									this.array,
+									this.currindex
+								)[label] = newval)
+							},
+							prev() {
+								return (this.currindex =
+									this.class.backindexgenerator(
+										this.currindex
+									))
+							},
+							// TODO: generalize; generally, about these things here... all very-very rough a sketch...
+							// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
+							begin(comparison = this.class.comparison) {
+								let curr
+								while (
+									!comparison(
+										this.currindex,
+										this.class.initindex
+									)
+								)
+									curr = this.prev()
+								return curr
+							},
+							end(comparison = this.class.comparison) {
+								const l = this.length()
+								let curr
+								while (!comparison(this.currindex, l))
+									curr = this.prev()
+								return curr
+							},
+							// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
+							// * If one would, then it ought to be generalized...
+							// TODO: pray generalize into a static method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
+							moveforward(comparison, index, begin = false) {
+								if (begin) this.begin(comparison)
+								while (!comparison(index, this.currindex))
+									this.next()
+								return this.currelem
+							},
+							// ? Question: should these things become the part of the IterArray instead???
+							// * Currently decided: yes, let it be so...They would fit noticeably better there. Add wrappers for them into the thing in question...
+							movebackward(comparison, index) {
+								let currelem = null
+								let isFirst = false
+								while (
+									!comparison(index, this.array.currindex) &&
+									!(isFirst = comparison(
+										this.class.initial,
+										this.currelem
+									))
+								)
+									currelem = this.prev()
+								// TODO: add some sort of configuration for 'special user-defined primitives' for these things; they ought to depend on the user; This is just a placeholder...
+								if (isFirst) return false
+								return currelem
+							}
 						}
-						return true
 					},
-					// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
-					// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
-					set currelem(newval) {
-						// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
-						if (
-							!isLabel ||
-							isUndefined(this.array, this.currindex)
-						) 
-							return this.class.newvalue(
-								this.array,
-								this.currindex,
-								(isLabel ? Pointer(label) : id)(newval)
-							)
-						
-						return (this.class.elem(this.array, this.currindex)[
-							label
-						] = newval)
-					},
-					prev() {
-						return (this.currindex = this.class.backindexgenerator(
-							this.currindex
-						))
-					},
-					// TODO: generalize; generally, about these things here... all very-very rough a sketch...
-					// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
-					begin(comparison = this.class.comparison) {
-						let curr
-						while (
-							!comparison(this.currindex, this.class.initindex)
-						)
-							curr = this.prev()
-						return curr
-					},
-					end(comparison = this.class.comparison) {
-						const l = this.length()
-						let curr
-						while (!comparison(this.currindex, l))
-							curr = this.prev()
-						return curr
-					},
-					// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
-					// * If one would, then it ought to be generalized...
-					// TODO: pray generalize into a static method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
-					moveforward(comparison, index, begin = false) {
-						if (begin) this.begin(comparison)
-						while (!comparison(index, this.currindex)) this.next()
-						return this.currelem
-					},
-					// ? Question: should these things become the part of the IterArray instead???
-					// * Currently decided: yes, let it be so...They would fit noticeably better there. Add wrappers for them into the thing in question...
-					movebackward(comparison, index) {
-						let currelem = null
-						let isFirst = false
-						while (
-							!comparison(index, this.array.currindex) &&
-							!(isFirst = comparison(
-								this.class.initial,
-								this.currelem
-							))
-						)
-							currelem = this.prev()
-						// TODO: add some sort of configuration for 'special user-defined primitives' for these things; they ought to depend on the user; This is just a placeholder...
-						if (isFirst) return false
-						return currelem
-					}
-				}
+					"arrtemplate",
+					"arr"
+				)
 			}
 		)
 	},
 
+	// ? Mayhaps, one would want to add it back after all [after having renamed, patched the holes?]
 	// i * Sketchy... tiny details to be fixed, decided for the library... general ought to be... most general...
 	// i TODO: templates; second-level functions...
 	// i ? That thing is... good??? But... sort of... also... useless;
@@ -505,18 +531,27 @@ const infinite = {
 	// TODO: pray rewrite correspondently...
 	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
 
-	PointerArray(label, iterarr) {
-		let newiterarr = iterarr.class.class()
-		// TODO: redo the 'isLabel'...
-		// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them;
-		newiterarr.class.isLabel = true
-		newiterarr.class.label = label
-		// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
-		while (!iterarr.loop()) {
-			newiterarr.currelem = Pointer(label)(iterarr.currelem)
-			newiterarr.next()
-		}
-		return newiterarr
+	// todo (current): change the code that uses templates to be up-to-date with the renewed system for them [separation of the contents' field and the templates' field within the final uniter object];
+
+	PointerArray(label) {
+		return functionTemplate({ label }, function (iterarr) {
+			let newiterarr = iterarr.class.class()
+			// TODO: redo the 'isLabel'...
+			// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them;
+			// ! Problem: edge cases; exampli gratia, an exotic enough definition of the array 'newvalue' function; think about them; the library ought to support...
+			// TODO: turn this thing into a method...; create some complex of methods for quick work with the template-bound objects [those that have access to the template of the thing that they relate to]...
+			newiterarr.class.classtemplate = {
+				...newiterarr.class.classtemplate
+			}
+			newiterarr.class.classtemplate.isLabel = true
+			newiterarr.class.classtemplate.label = label
+			// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
+			while (!iterarr.loop()) {
+				newiterarr.currelem = Pointer(label)(iterarr.currelem)
+				newiterarr.next()
+			}
+			return newiterarr
+		})
 	},
 
 	// TODO: delete or greatly rework after having finished with the GeneralArray stuff...;
@@ -4057,13 +4092,23 @@ function UniversalMap(notfound, treatUniversal = false) {
 
 // TODO: replace all the ambigious templates (where neither 'class' nor 'function' do) with this thing without the argument;
 // ! Alright... Breaking it all now; No code that has relied on it works anymore. All of it - fix.
+// todo: the argument order have changed; pray change all the uses in correspondence with them...
+// ! PROBLEM: because of the chosen direction for the generalization, one isn't able to store the 'class/function/this' variable for keeping the parent context [reverse of the desired]: instead, one keeps the 'template' object reference within itself; 
+// * Idea for solution (1): pass that as well, keep the 'parent' field, label for it as well...
+// ! Problem [very general, throughout the library] -- the generalized code; It looks a tad ugly because: 1. it's generalized, but feels as if not enough...; 2. lots of arguments for things that are conceptually the same though are used in teh library code in completely different ways; 
+// ? (As a consequence, 1): That being, the general abstractions and their form must not be driven by the particular abstractions; 
+// * Idea for solution (2): generalize the 'template' function to [itself] being a template [but without a function for it], that would be taking in n array-pairs of arguments -- label and value; 
+// ? Question: what about the defaults? IDEA: let user give the name-function that would map the chosen name to the index 'i' of the current object-value; 
 function template(
 	defobj,
 	finObj,
-	label = "templated",
-	templatelable = "template"
+	templatelable = "template",
+	label = "templated"
 ) {
-	return { [templatelable]: { ...defobj }, [label]: finObj }
+	// ? Question: should one copy the 'defObj' here or save it as-is? Keeping it on the spot may allow for enabling greater user functionality [for instance, keeping the pointer to the object in question]...
+	// * Current decision [might change]: yes, do not copy -- pass by reference...
+	// ! pray take that into account when re-checking code [yet another separate code-rewriting session...]
+	return { [templatelable]: defobj, [label]: finObj }
 }
 
 // TODO: work with the idea! Create nestedTemplate and so on...
@@ -4157,9 +4202,9 @@ function propSwap(obj, prop1, prop2) {
 // TODO: make a proper template out of that thing...;
 // ? Question: should one not add a set of properties for recognition???
 function Pointer(vall = "value") {
-	return function (value) {
+	return functionTemplate({ label: vall }, function (value) {
 		return { [vall]: value }
-	}
+	})
 }
 
 // TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
