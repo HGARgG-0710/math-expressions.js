@@ -3957,6 +3957,7 @@ function repeatedApplication(a, n, initial = undefined) {
 	return a(repeatedApplication(a, n - 1))
 }
 
+// ? (Reminder) -- the imperative versions of functional code [for the sake of the stack]; Write and separate within the library, similar to the way finite and infinite versions get separated...
 function repeatedApplicationIndex(
 	a,
 	n,
@@ -4090,26 +4091,46 @@ function UniversalMap(notfound, treatUniversal = false) {
 	)
 }
 
-// TODO: replace all the ambigious templates (where neither 'class' nor 'function' do) with this thing without the argument;
-// ! Alright... Breaking it all now; No code that has relied on it works anymore. All of it - fix.
-// todo: the argument order have changed; pray change all the uses in correspondence with them...
-// ! PROBLEM: because of the chosen direction for the generalization, one isn't able to store the 'class/function/this' variable for keeping the parent context [reverse of the desired]: instead, one keeps the 'template' object reference within itself; 
-// * Idea for solution (1): pass that as well, keep the 'parent' field, label for it as well...
-// ! Problem [very general, throughout the library] -- the generalized code; It looks a tad ugly because: 1. it's generalized, but feels as if not enough...; 2. lots of arguments for things that are conceptually the same though are used in teh library code in completely different ways; 
-// ? (As a consequence, 1): That being, the general abstractions and their form must not be driven by the particular abstractions; 
-// * Idea for solution (2): generalize the 'template' function to [itself] being a template [but without a function for it], that would be taking in n array-pairs of arguments -- label and value; 
-// ? Question: what about the defaults? IDEA: let user give the name-function that would map the chosen name to the index 'i' of the current object-value; 
-function template(
-	defobj,
-	finObj,
-	templatelable = "template",
-	label = "templated"
-) {
-	// ? Question: should one copy the 'defObj' here or save it as-is? Keeping it on the spot may allow for enabling greater user functionality [for instance, keeping the pointer to the object in question]...
-	// * Current decision [might change]: yes, do not copy -- pass by reference...
-	// ! pray take that into account when re-checking code [yet another separate code-rewriting session...]
-	return { [templatelable]: defobj, [label]: finObj }
-}
+// * Here it is...; the fixed 'template';
+// TODO: change the old template code to the appropriate use of this new thing...
+// ! Bugger all that; either 1. just use the plain JS objects instead...;  2. Create the 'template' function: const template = (template, templated, parent) => {parent, template, templated}
+// % Double bugger that; the previous 'problem' isn't actual; the thing would work, as the 'this' variable would be interpreted at the time of the function's call actually running; Hence, one could go back to the previuos scheme...
+// * But! One don't [actually] like the 'class'/'function'/'this'-property very much. Namely, the fact that it is on the exactly same level as all the rest of the template-properties.
+// * DECISION [current, still may change...]: implement the second version in question -- separate the 'parent' parameter from the 'template' and the 'templated', which altogether constitutes the object in question; Also, either a. get the static names for them; b. write [after all] the generalized version, which would return a corresponding 'kind' of a 'template-function' (for instance: const TEMPLATE = (a,b,c) => ((d,e,f) => ({[a]:d, [b]: e, [c]: f}))) + the contents of 'a.' [currently chosen]
+// ? here it is???
+const _template =
+	(_object, ___template, _parent) => (object, __template, parent) => ({
+		[_object]: object,
+		[___template]: __template,
+		[_parent]: parent
+	})
+const template = _template("object", "template", "parent")
+// function template(defnames) {
+// 	let newobj = {}
+// 	arguments.forEach((arg, i) => (newobj[arg[0]] = arg[1] || defnames(i)))
+// 	return newobj
+// }
+
+// ... TODO: replace all the ambigious templates (where neither 'class' nor 'function' do) with this thing without the argument;
+// ... ! Alright... Breaking it all now; No code that has relied on it works anymore. All of it - fix.
+// ... todo: the argument order have changed; pray change all the uses in correspondence with them...
+// ... ! PROBLEM: because of the chosen direction for the generalization, one isn't able to store the 'class/function/this' variable for keeping the parent context [reverse of the desired]: instead, one keeps the 'template' object reference within itself;
+// ... * Idea for solution (1): pass that as well, keep the 'parent' field, label for it as well...
+// ... ! Problem [very general, throughout the library] -- the generalized code; It looks a tad ugly because: 1. it's generalized, but feels as if not enough...; 2. lots of arguments for things that are conceptually the same though are used in teh library code in completely different ways;
+// ... ? (As a consequence, 1): That being, the general abstractions and their form must not be driven by the particular abstractions;
+// ... * Idea for solution (2): generalize the 'template' function to [itself] being a template [but without a function for it], that would be taking in n array-pairs of arguments -- label and value;
+// ... ? Question: what about the defaults? IDEA: let user give the name-function that would map the chosen name to the index 'i' of the current object-value;
+// function template(
+// 	defobj,
+// 	finObj,
+// 	templatelable = "template",
+// 	label = "templated"
+// ) {
+// 	// ? Question: should one copy the 'defObj' here or save it as-is? Keeping it on the spot may allow for enabling greater user functionality [for instance, keeping the pointer to the object in question]...
+// 	// * Current decision [might change]: yes, do not copy -- pass by reference...
+// 	// ! pray take that into account when re-checking code [yet another separate code-rewriting session...]
+// 	return { [templatelable]: defobj, [label]: finObj }
+// }
 
 // TODO: work with the idea! Create nestedTemplate and so on...
 // * Create the Universal and infinite versions for this...
