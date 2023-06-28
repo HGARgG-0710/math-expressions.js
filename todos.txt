@@ -48,6 +48,18 @@ It gets changed actively.
 
 4. Finish the package.json (particular: fix the keywords); 
 
+	Add more keywords related to what kind of stuff does the library actually have: 
+
+		1. primes; 
+		2. infinite; 
+		3. [after the 1.1 version] 'returnless' and also 'continuation[-style]'; 
+		4. numbers; 
+		5. vectors; 
+		6. graphics; 
+		[and so on...]
+
+	Maybe pick some better words, dunno...
+
 5. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
 
     Make it a part of a library...
