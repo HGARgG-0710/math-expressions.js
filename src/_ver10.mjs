@@ -1,9 +1,25 @@
-// % [Part of the Grand Cleanup]: (get rid of)/refactor the repeating notes; 
+// [Parts of the Grand Cleanup]:
+// % 1. (get rid of)/refactor the repeating notes;
+// % 2. Decide what to do about the templates, generally - what manner of such an object model [if any] should things like IterArray, GeneralArray and others, use to imitate the templates?
+// * Current decision: get rid of the template(), but keep the templates themselves; make them manual, one-variable things; Example:
+// 		function X(template) {
+//			(const/let/var) {prop1, prop2, ...} = template
+// 			return {tempalatelabelname: template, thereturnedlabelname: ...(makes use of the prop1, prop2, ... directly)}
+// 		}
+// * That'd be the general structure of any templated method within the library...
+// % 3. Notation/Conventions; [Currently - nigh the second biggest problem after not working code, one yet without a solution] Decide on notation and conventions - what should library use, where in particular;
 
+// TODO: during the generalization procedures a lot of stuff have become terminally broken. Make another such "round" through the code, fixing anything that's broken due to generalizaiton [as always, probably won't fix all the cases, but some/most]; 
+
+// TODO [general]: where appropriate, replace the native API usage with the library API usage...
+
+// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
 // TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
+
 // TODO: work on the names a lot; make it sound plausible to oneself...
+
 // TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
-// TODO: add more default parameter values, make code tidy and to one's complete liking...
+// TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
 
 // TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
 // * Get rid of unwanted explicit type conversions...
@@ -12,7 +28,7 @@
 // * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
 // * Generalize the code [along with making it more compact], simplify constructs...
 
-// TODO: Keep these two as exported constants for the library + use as default arguments [where considered appropriate];
+// TODO: use these as default arguments [where considered appropriate, that is];
 // TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
 // TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
@@ -20,12 +36,13 @@ const MAX_INT = 2 ** 53 - 1
 
 // TODO: finish this note [later...];
 /**
- * * This is the Old API source code, version pre-1.0 (in work).
+ * * API source code, version 1.0 alpha (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
 // todo: new things to add:
 // * 1. more number-theoretic functions...;
+
 // TODO: things to do (generally):
 // * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
 // *    or, just add the old alias (like in the case of sameOperator...)
@@ -2935,11 +2952,15 @@ class IterableSet {
 	curr() {
 		return Array.from(this.elements.values())[this.currindex]
 	}
+	updateIndex(change = 1) {
+		this.currindex = (this.currindex + change) % this.elements.size
+	}
+	prev() {
+		this.updateIndex(-1)
+		return this.curr()
+	}
 	next() {
-		// ? should self be creating a new method "updateIndex()"? This could be more useful than this... Saves time, one don't always have to have the output...
-		// * Current decision: yes, let it be.
-		// TODO: pray do that...
-		this.currindex = (this.currindex + 1) % this.elements.size
+		this.updateIndex()
 		return this.curr()
 	}
 	add(x) {
@@ -3017,7 +3038,6 @@ function nestedVector(
 	})
 }
 
-// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
 // * Counts all non-array elements within a multidimensional array passed...
 function nonArrElems(array) {
 	return array instanceof Array
@@ -3701,13 +3721,14 @@ function realAddition(float1, float2) {
 
 /**
  * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
- * @param {number} newPrecision The new value of fixedSize.
+ * @param {number} precision The new value of fixedSize.
  */
-function setPrecision(newPrecision = 0) {
-	return (globalPrecision = newPrecision | 0) // in case someone malisciously decides to put floats in there, hehe :D
+function setPrecision(precision = 0) {
+	return (globalPrecision = precision | 0)
 }
 
 // TODO : separate onto reference-equality (current) and value-equality (for this, one could employ newapi.utils.valueComparison)
+// ! Better - transform into a generalized version for the 'infinite', with a 'comparison' value; make this a special case;
 /**
  * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
  * (I.e. returns the boolean value, representing whether they're equal or not).
@@ -3738,15 +3759,15 @@ function arrayEquality(...arrays) {
 // * Alternative implementation (second one):
 function dim(array) {
 	if (array instanceof Array)
-		return 1 + (array.length === 0 ? 0 : max(array.map((a) => dim(a))))
+		return 1 + (array.length === 0 ? 0 : max(array.map(dim)))
 	return 0
 }
 
-// function dim(array: any): number {
-// 	const d = (elem: any) => (elem instanceof Array ? t(elem) : 0)
-// 	const t = (arr: any[]) =>
-// 		1 + (arr.length === 0 ? 0 : max(arr.map((el) => d(el))))
-// 	return array instanceof Array ? t(array) : 0
+// function dim(array: any) {
+// 	const d = (elem) => (elem instanceof Array ? t(elem) : 0)
+// 	const t = (arr) =>
+// 		1 + (arr.length === 0 ? 0 : max(arr.map(d))
+// 	return d(array)
 // }
 // ? They're both so good... Which one should be?
 // * first is 4 function calls per level;
@@ -3760,10 +3781,17 @@ function dim(array) {
  * @param {number} k Second number (integer).
  */
 function binomial(n, k) {
-	if (typeof n !== "number" || typeof k !== "number")
-		throw new Error("Requiring a number to calculate the choose function. ")
+	if (
+		(typeof n !== "number" || typeof k !== "number") &&
+		(isNaN(Number(n)) || isNaN(Number(k)))
+	)
+		throw new Error(
+			"Input given to the choose function could not be converted to a number. "
+		)
+
 	// Rounding down just in case.
-	k = k | 0
+	n = Number(n)
+	k = Number(k) | 0
 	return floor(
 		repeatedArithmetic(
 			generate(0, k - 1, 1).map((num) => String(n - num)),
@@ -3774,20 +3802,29 @@ function binomial(n, k) {
 
 // TODO: Implement the compareUniversal(...arrays), which uses dim;
 
-// * Replaces a value within a string...
-// TODO: this replaces All -- write replaceFirst(n: number) function, which would only replace first appearing...
-function replaceStr(string, x, y) {
-	return string.split(x).join(y)
-}
+// ! PROBLEM: littered here with ten thousand of the same methods....
+// todo Create one single general one, keep the rest as [?aliases-]specialcases;
+// * Solution: there must be 2 kinds of methods:
+// * 	1. For index-kind replacement (replace at index);
+// * 	2. For value-kind replacement (replace at value);
+// ! PROBLEM: the methods are actually all different... They all do different things; 
+// * Solution: do not throw them out, just work on the names more....
 
-function replaceStrInd(string, ind, value) {
-	return `${string.slice(0, ind)}${value}${string.slice(ind)}`
-}
+// ! Now, then comes another problem:
+// ? Does one want to be unifying those with the arrays methods for doing so?
+// TODO [thing mr. flesh has forgotten]: implement the replacement methods for arrays...
+// ? Are there any manner of performance advantages in general separation of algorithms for native JS strings [don't seem to find anything on it... pray make one's own mini-research]?
 
-function replaceStrIndMany(string, inds, values) {
-	// TODO: use the min() instead of Math.min here...
+// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
+
+// * 1. 
+// * Replaces at 1 index;
+function stringReplaceIndex(string, ind, value) {
+	return `${string.slice(0, ind)}${value}${string.slice(ind + 1)}`
+}
+function stringReplaceIndexesDiff(string, inds, values) {
 	return repeatedApplicationIndex(
-		(val, i) => replaceStrInd(val, inds[i], values[i]),
+		(val, i) => stringReplaceIndex(val, inds[i], values[i]),
 		Math.min(inds.length, values.length),
 		string
 	)
@@ -3798,8 +3835,30 @@ function replaceStrIndMany(string, inds, values) {
 	// return copy
 }
 
+// * 2. 
+// * Replace the first occurence of a given value within a string...
+function stringReplaceFirst(string, x, y) {
+	// ? Question: which definition to keep? The original: [below]
+	// const split = string.split(x)
+	// return split[0] + y + split.slice(1).join(x)
+	// ? or the current one:
+	return stringReplaceIndexes(string, x, y)
+}
+// * replaces occurences of a value within a string at the given posiitons...
+// TODO: write a generalization for multiple values and index-positions...
+function stringReplaceIndexes(string, x, y, indexes = [0]) {
+	return string
+		.split(x)
+		.map((a, i) => [a, indexes.includes(i) ? y : x])
+		.flat()
+		.join("")
+}
+// * Replaces all occurences of 'x' with 'y'; 
+function stringReplace(string, x, y) {
+	return string.split(x).join(y)
+}
+// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a'; 
 function replaceStrMany(string, x, y) {
-	// TODO: use min() instead of Math.min() here...
 	return repeatedApplicationIndex(
 		(v, i) => replaceStr(v, x[i], y[i]),
 		Math.min(x.length, y.length),
@@ -3926,6 +3985,7 @@ function arrEncircle(a, from = 0, to = a.length) {
 // todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
 // * copies array's structure deeply without copying the elements
 // ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
+// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
 function arrStructureCopy(thing) {
 	if (thing instanceof Array) return thing.map(arrStructureCopy)
 	return thing
@@ -3940,10 +4000,12 @@ function arrStructureCopy(thing) {
 // TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
 // TODO: add more methods to UniversalMap and InfiniteMap;
 // * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
+
 // ! There is something I do not like about the 'comparison' parameter...
 // * It is only of 2 variables...
 // TODO: think about generalizing to arbitrary number of variables...
-// * IDEA: a recursive function-building type: RecursiveFunctionType<ArgType, Type> = (a: ArgType) => RecursiveFunctionType<Type> | Type
+// * IDEA: a recursive function-building type!
+
 // ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
 function arrIntersections(arrs, comparison = (a, b) => a === b) {
 	if (arrs.length === 0) return []
@@ -3992,6 +4054,9 @@ function repeatedApplicationIndex(
 
 // * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
 function repeatedApplicationWhilst(function_, property, initial = undefined) {
+	// ? Allow for input of (function_, property)? this'd allow for greater diversity of uses...
+	// ? GENERAL QUESTION: about diversity of uses: does one want it truly?
+	// * Current decision: YEEEEEASS! (Do it...)
 	return property()
 		? repeatedApplicationWhilst(function_, property, function_(initial))
 		: initial
@@ -4014,7 +4079,6 @@ function multmap(a, fs) {
 // TODO: match the order of the definitions with the order of exports... Do the same for all the files...
 // * Also, match with the original "math-expressions.js" file...
 
-// TODO: ORDER THE stuff further -- separate the "classTemplate" functions from other ones (those that are made as object generators, that is...)
 function UniversalMap(notfound, treatUniversal = false) {
 	return classTemplate(
 		{ notfound, treatUniversal },
@@ -4096,12 +4160,14 @@ function UniversalMap(notfound, treatUniversal = false) {
 
 				// ! This thing assumes that the conversion in question is, in fact, a valid one
 				// * Example: [if there are objects for keys -- it will convert them to the JSON string of the object in question]...
+				// ? Shouldn't one instead of giving some basic default safe-behaviour, give user the ability to choose/decide it? Also, one could create an .isValidObject() method for the class...
+				// * Current decision: yes, do that...
 				// TODO: provide the InfiniteMap with this thing too -- there will [too] be a thing -- it will only alow first 2 **
 				toObject() {
 					const a = {}
 					for (let i = 0; i < this.keys.length; i++)
 						a[
-							(!["symbol", "number"].includes(this.keys[i])
+							(!["symbol", "number"].includes(typeof this.keys[i])
 								? JSON.stringify
 								: id)(this.keys[i])
 						] = this.values[i]
@@ -4110,29 +4176,6 @@ function UniversalMap(notfound, treatUniversal = false) {
 			}
 		}
 	)
-}
-
-// TODO: change the old template code to the appropriate use of this new thing...
-// TODO: make an alias;
-// TODO: rename the '_template' into something else; + fix those varnames...
-const _template =
-	(_object, ___template, _parent) => (object, __template, parent) => ({
-		[_object]: object,
-		[___template]: __template,
-		[_parent]: parent
-	})
-const template = _template("object", "template", "parent")
-
-// TODO: work with the idea! Create nestedTemplate and so on...
-// * Create the Universal and infinite versions for this...
-// * Same todo stands for the infinite and universal versions...
-// todo: use the objects here... give args proper names;
-function classTemplate(defaultobject, classObj) {
-	return template(defaultobject, classObj, "classtemplate", "class")
-}
-
-function functionTemplate(defObj, functionObj) {
-	return template(defObj, functionObj, "functiontemplate", "function")
 }
 
 // TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
@@ -4211,9 +4254,7 @@ function propSwap(obj, prop1, prop2) {
 
 // * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
 // ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
-// ? document it; like everything else...
-// TODO: make a proper template out of that thing...;
-// ? Question: should one not add a set of properties for recognition???
+// ? Question: does one really want this thing even???
 function Pointer(vall = "value") {
 	return functionTemplate({ label: vall }, function (value) {
 		return { [vall]: value }
@@ -4229,6 +4270,8 @@ function Pointer(vall = "value") {
 
 // ? decide formatting?
 export { globalPrecision }
+
+export { MAX_ARRAY_LENGTH, MAX_INT }
 
 export { defaultTable, defaultAlphabet, infinite }
 
@@ -4330,9 +4373,11 @@ export {
 	arrayEquality,
 	dim,
 	binomial,
-	replaceStr,
-	replaceStrInd,
-	replaceStrIndMany,
+	stringReplaceFirst,
+	stringReplaceIndexes,
+	stringReplace,
+	stringReplaceIndex,
+	stringReplaceIndexesDiff,
 	replaceStrMany,
 	replaceArr,
 	arrThisApply,
@@ -4353,9 +4398,6 @@ export {
 	_multmap,
 	multmap,
 	UniversalMap,
-	template,
-	classTemplate,
-	functionTemplate,
 	recursiveIndexation,
 	recursiveSetting,
 	objInverse,
