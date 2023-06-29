@@ -1,7 +1,16 @@
+// * CURRENT AGENDA:
+// [it'll be written here, at the top of the file, for the moment...]:
+// ? What is the agenda? As in, what does one want to do first? Many things to choose from...
+// * 1 [code re-styling, efficiency, minor bugfix, minor feature introduction]. Do the 'replace functional with imperative' todo, along the way fixing the stack and other problems [partially or fully...];
+// * 2 [cleaning] (in work). Continue with the 'templates' - that being, make it all nice and tidy, 1-variable object, that is then destructurized [like in the example below...];
+// * 	2.5. PLUS: go through all the 'make a template' kinds of todos, generalize completely...;
+// * 3 [code update, minor bugfix, tuning]. Look through old code of things that had been 'template()s' before, fix them references; Along the way maybe fix some of those property names as well... In particular, look at the 'Pointer' code + IterArray [make them work well finally...];
+// * 4. Particular attention for the IterArray; Working on it further...
+// * 5. Particular attention for the GeneralArray; Working on it further still... Finishing the sketched out methods implementations...;
+
 // [Parts of the Grand Cleanup]:
 // % 1. (get rid of)/refactor the repeating notes;
-// % 2. Decide what to do about the templates, generally - what manner of such an object model [if any] should things like IterArray, GeneralArray and others, use to imitate the templates?
-// * Current decision: get rid of the template(), but keep the templates themselves; make them manual, one-variable things; Example:
+// % 2. Form for the templates; All functions of the library have the same templates form; Example:
 // 		function X(template) {
 //			(const/let/var) {prop1, prop2, ...} = template
 // 			return {tempalatelabelname: template, thereturnedlabelname: ...(makes use of the prop1, prop2, ... directly)}
@@ -31,6 +40,8 @@
 // * Get rid of 'let's that can become 'const's [and one wants them to]
 // * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
 // * Generalize the code [along with making it more compact], simplify constructs...
+
+// * Make good use of stack; [Id est, try to save it; use elementary tools not relying upon it; This will allow to make better use of the methods, whose 'power/usefulness' relies upon the stack...]
 
 // TODO: use these as default arguments [where considered appropriate, that is];
 // TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
@@ -168,30 +179,24 @@ const infinite = {
 	// * Another thing that feels so truly wrong about the API is the ORDER OF ARGUMENTS;
 	// TODO: get rid of it; replace it all with one single destructurized object (check); repeat over all the pieces of API, which have more than 3 arguments;
 	// * Another thing - the number of arguments; in too many places it's feels like too large; seek means to lessen their numbers, optimize...
-	GeneralArray({
-		forindexgenerator,
-		backindexgenerator,
-		elem,
-		initindex,
-		comparison,
-		// ? Does one really want the 'isUndefined' here??? Pray think on it...
-		// * CONCLUSION: YES, ONE DOES!
-		// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
-		isUndefined = (x) => x === undefined,
-		newvalue,
-		isEnd = isUndefined,
-		undefinedReturn
-	}) {
+	GeneralArray(template) {
+		const {
+			forindexgenerator,
+			backindexgenerator,
+			elem,
+			initindex,
+			comparison,
+			// ? Does one really want the 'isUndefined' here??? Pray think on it...
+			// * CONCLUSION: YES, ONE DOES!
+			// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
+			isUndefined = (x) => x === undefined,
+			newvalue,
+			isEnd = isUndefined,
+			undefinedReturn
+		} = template
+
 		return {
-			template: {
-				forindexgenerator,
-				backindexgenerator,
-				elem,
-				initindex,
-				comparison,
-				isUndefined,
-				isEnd
-			},
+			template: template,
 			value: function (array) {
 				return {
 					array: infinite
@@ -371,28 +376,20 @@ const infinite = {
 	// * 2. newvalue(array, index, value) - adds a new value to the array in question at a given index [only used for those indexes which are considered undefined];
 	// % The difference in use of the last one between the pointer and non-pointer case is, that the pointer case does 'newvalue(array, index, Pointer(label)(x))', instead of plain 'newvalue(array, index, x)';
 	// todo: Pray add the stuff to there...
-	IterArray({
-		forindexgenerator,
-		backindexgenerator,
-		elem,
-		initindex,
-		comparison,
-		isEnd,
-		newvalue,
-		isUndefined = (x) => x === undefined,
-		undefinedReturn = undefined
-	}) {
+	IterArray(template) {
+		const {
+			forindexgenerator,
+			backindexgenerator,
+			elem,
+			initindex,
+			comparison,
+			isEnd,
+			newvalue,
+			isUndefined = (x) => x === undefined,
+			undefinedReturn = undefined
+		} = template
 		return {
-			template: {
-				comparison,
-				initindex,
-				forindexgenerator,
-				backindexgenerator,
-				elem,
-				isEnd,
-				isUndefined,
-				newvalue
-			},
+			template: template,
 			value: function (isLabel = false, label) {
 				return {
 					template: { isLabel, label, template: this },
@@ -901,6 +898,8 @@ const infinite = {
 
 	// TODO: create a very general class of infinite arrays called DeepArray [most modifiable, works based on recursion];
 	// ! [as a followup to the note about GeneralArray]; Then, the InfiniteArray would simply be the 'combiner class' [which contains all the algorithms, generalized, without reference to the actual inside-definitions...];
+
+	// * Copies an object/array deeply...
 	deepCopy(a) {
 		if (a instanceof Array) return a.map((el) => infinite.deepCopy(el))
 		if (typeof a === "object") {
@@ -960,7 +959,13 @@ const infinite = {
 	// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 	// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 	// TODO: create an inverse for this thing...;
-	numberCounter(MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1) {
+	numberCounter(template) {
+		// ! Note!
+		// * that's the way to deal with the defaults with the newly chosen for the library templated function forms...
+		const { MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1 } = {
+			MAX_INT: template.maxint,
+			MAX_ARRAY_LENGTH: template.maxarrlen
+		}
 		return {
 			template: {
 				maxint: MAX_INT,
@@ -1290,6 +1295,16 @@ const infinite = {
 
 	// TODO: for this thing, pray first introduce max() for an array of InfiniteCounters(generator) [that is a static method, so depend only upon chosen 'generator', not 'this.generator']...
 	// ! Make this array-type-independent; a general algorithm for arbitrary arrays, working with the use of InfiniteCounter(s);
+	// * Sketch (takes in an 'icclass', to allow for working with generator and uniformity of output...; 'prev', to allow for getting the previously calculated value for counter...): 
+		// ! not complete yet... problems met; 
+		// 		ic = (array instanceof Array ? (x) => x.jump(ic.template.generator().jump()) : id)(prev)
+	// ? Note: this thing [probably] wouldn't actually be able to work well anyway due to JS stack limitations... 
+	// * The 'returnless' (v1.1) version, though, would work like intended; 
+	// ! PROBLEM: with the InfiniteCounter... and the 'jump' method; What is the convention one chooses - does .generator() (also, known as 'initial') count as a 1-jump (same as 'next'?); 
+	// * The problem is with the symbolic '0'-jump; how does one designate it???
+	// * One could choose a different convention - taking the jump FROM the 'initial', then jumping up to BUT NOT INCLUDING the given 'jump-destination'; Then, 'a.jump(a.template.generator()) = a'
+	// TODO: yes, do that; it solves the problem well...
+	// ? These kinds of small 'convention cases' are all over the spot within the library currently (especially regarding counters, arrays and generators...); they all ought to be fixed; 
 	dim(recarr) {},
 
 	// TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := lastIndexArray([1,2,3,4,5])
@@ -1401,10 +1416,9 @@ const infinite = {
 	// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 	// TODO: finish this thing (add orders, other things from the previous file)...
 	// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
-	// ! make the {'generator', 'inversegenerator'} a separate named entitity within the library [to make its use simpler and more documented...]
-	InfiniteCounter({ generator, inversegenerator }) {
+	InfiniteCounter(template) {
 		return {
-			template: { generator: generator, inverse: inversegenerator },
+			template: template,
 			value: function (previous) {
 				return {
 					class: this,
@@ -1508,261 +1522,264 @@ const infinite = {
 		}
 	},
 
-	// ! PROBLEM: this thing don't actually use the 'notfound' in definitions...
-	// TOdo : let the particulars [implementations] use it instead [after having written some that do, pray delete the todo];
-	InfiniteArray(comparison, indexgenerator, notfound) {
-		return {
-			template: { comparison, indexgenerator, notfound },
-			value: function (
-				pushback,
-				pushfront,
-				index,
-				_delete,
-				// ? names: forof, forin
-				forof,
-				forin,
-				reverse,
-				map,
-				sort,
-				length,
-				concat,
-				copyWithin,
-				every,
-				any,
-				reduce,
-				slice,
-				property,
-				indexesOf,
-				entries,
-				each,
-				fillfrom,
-				has
-			) {
-				return {
-					template: {
-						pushback,
-						pushfront,
-						index,
-						delete: _delete,
-						forof,
-						forin,
-						reverse,
-						map,
-						sort,
-						length,
-						concat,
-						copyWithin,
-						every,
-						any,
-						reduce,
-						slice,
-						property,
-						indexesOf,
-						entries,
-						each,
-						fillfrom,
-						has,
-						template: this
-					},
-					value: function (array) {
-						return {
-							array,
-							class: this,
-							pushback: this.pushback,
-							pushfront: this.pushfront,
-							// TODO: another [general] problem -- the classes are generally supposed to hide things like: push(arr, elem) -> arr.push(elem) [the methods should have the first 'this' argument replaced by the 'this.array'];
-							// * There's a couple of other problems concerning the function definitions within the InfiniteArray, InfiniteMap and InfiniteCounter; pray check them, and change throughout the entire code...;
-							// TODO: 'initial' should be given for generators everywhere as a conditional parameter [by default undefined -- calls generator(), like the way it is now...]
-							index(
-								indexgenerator = this.class.template
-									.indexgenerator,
-								comparison = this.class.template.comparison
-							) {
-								// todo: here, the 'this' feature with changing templates mid-stream don't really work [because the functionTemplate 'this' is not really used...]
-								// * Pray scan all the code that uses the in-library templates on the matter of having it working...
-								// ? Question: should the function templates within the methods in question also have the 'class' thing, or not???; Would seem appropriate...
-								// * Answer: yes; add that to all the things of the sort as well...
-								// ! Pray tidy up this todo/note from redundacies later...
-								return {
-									template: {
-										indexgenerator,
-										comparison,
-										object: this
-									},
-									value: function (_index) {
-										return this.object.class.index(
-											this.indexgenerator,
-											comparison
-										)(this.object.array, _index)
-									}
-								}
-							},
-							delete(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function (_index) {
-										return this.object.class.delete(
-											this.indexgenerator
-										)(this.object.array, _index)
-									}
-								}
-							},
-							[Symbol.iterator]: this.forof,
-							forin: this.forin,
-							reverse: this.reverse,
-							map: this.map,
-							sort: this.sort,
-							length: this.length,
-							concat: this.concat,
-							copyWithin(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function (
-										beginind,
-										endind,
-										targetind
-									) {
-										return this.object.class.copyWithin(
-											this.indexgenerator
-										)(
-											this.object.array,
-											beginind,
-											endind,
-											targetind
-										)
-									}
-								}
-							},
-							every: this.every,
-							any: this.any,
-							reduce(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function (
-										initial,
-										direction,
-										callback
-									) {
-										return this.object.class.reduce(
-											this.indexgenerator
-										)(
-											this.object.array,
-											initial,
-											direction,
-											callback
-										)
-									}
-								}
-							},
-							slice(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function (start, end) {
-										return this.object.class.slice(
-											this.indexgenerator
-										)(this.object.array, start, end)
-									}
-								}
-							},
-							property: this.property,
-							indexesOf(
-								comparison = this.class.template.comparison,
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: {
-										indexgenerator,
-										comparison,
-										object: this
-									},
-									value: function (ele) {
-										return this.object.class.indexesOf(
-											this.indexgenerator
-										)(this.object.array, ele)
-									}
-								}
-							},
-							entries(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function () {
-										return this.object.class.entries(
-											this.indexgenerator
-										)(this.object.array)
-									}
-								}
-							},
-							each(
-								indexgenerator = this.class.template
-									.indexgenerator
-							) {
-								return {
-									template: { indexgenerator, object: this },
-									value: function (callback) {
-										return this.object.class.each(
-											this.indexgenerator
-										)(this.object.array, callback)
-									}
-								}
-							},
-							fillfrom(
-								indexgenerator = this.class.template
-									.indexgenerator,
-								comparison = this.class.template.comparison
-							) {
-								return {
-									template: {
-										indexgenerator,
-										comparison,
-										object: this
-									},
-									value: function (index, value) {
-										return this.class.fillfrom(
-											this.indexgenerator,
-											this.comparison
-										)(this.object.array, index, value)
-									}
-								}
-							},
-							has(comparison = this.class.template.comparison) {
-								return {
-									template: { comparison, object: this },
-									value: function (elem) {
-										return this.class.has(this.comparison)(
-											this.object.array,
-											elem
-										)
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	},
+	// _! PROBLEM: this thing don't actually use the 'notfound' in definitions...
+	// _TOdo : let the particulars [implementations] use it instead [after having written some that do, pray delete the todo];
+	// ! Problem: this thing don't appear to be used anymore... 
+	// * After GeneralArray came in to be, it became obsolete... The stuff that it's doing is now generalized by it [and again, it's really the UnlimitedArray, not InfiniteArray]; 
+	// TODO: commented out for now, later - pray rewrite to be actual InfiniteArray [not UnlimitedArray]; Also, don't throw out right away - make it so that the stuff from it makes its way into the GeneralArray too [stuff that didn't already, that be...]
+	// InfiniteArray(comparison, indexgenerator, notfound) {
+	// 	return {
+	// 		template: { comparison, indexgenerator, notfound },
+	// 		value: function (
+	// 			pushback,
+	// 			pushfront,
+	// 			index,
+	// 			_delete,
+	// 			// ? names: forof, forin
+	// 			forof,
+	// 			forin,
+	// 			reverse,
+	// 			map,
+	// 			sort,
+	// 			length,
+	// 			concat,
+	// 			copyWithin,
+	// 			every,
+	// 			any,
+	// 			reduce,
+	// 			slice,
+	// 			property,
+	// 			indexesOf,
+	// 			entries,
+	// 			each,
+	// 			fillfrom,
+	// 			has
+	// 		) {
+	// 			return {
+	// 				template: {
+	// 					pushback,
+	// 					pushfront,
+	// 					index,
+	// 					delete: _delete,
+	// 					forof,
+	// 					forin,
+	// 					reverse,
+	// 					map,
+	// 					sort,
+	// 					length,
+	// 					concat,
+	// 					copyWithin,
+	// 					every,
+	// 					any,
+	// 					reduce,
+	// 					slice,
+	// 					property,
+	// 					indexesOf,
+	// 					entries,
+	// 					each,
+	// 					fillfrom,
+	// 					has,
+	// 					template: this
+	// 				},
+	// 				value: function (array) {
+	// 					return {
+	// 						array,
+	// 						class: this,
+	// 						pushback: this.pushback,
+	// 						pushfront: this.pushfront,
+	// 						// TODO: another [general] problem -- the classes are generally supposed to hide things like: push(arr, elem) -> arr.push(elem) [the methods should have the first 'this' argument replaced by the 'this.array'];
+	// 						// * There's a couple of other problems concerning the function definitions within the InfiniteArray, InfiniteMap and InfiniteCounter; pray check them, and change throughout the entire code...;
+	// 						// TODO: 'initial' should be given for generators everywhere as a conditional parameter [by default undefined -- calls generator(), like the way it is now...]
+	// 						index(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator,
+	// 							comparison = this.class.template.comparison
+	// 						) {
+	// 							// todo: here, the 'this' feature with changing templates mid-stream don't really work [because the functionTemplate 'this' is not really used...]
+	// 							// * Pray scan all the code that uses the in-library templates on the matter of having it working...
+	// 							// ? Question: should the function templates within the methods in question also have the 'class' thing, or not???; Would seem appropriate...
+	// 							// * Answer: yes; add that to all the things of the sort as well...
+	// 							// ! Pray tidy up this todo/note from redundacies later...
+	// 							return {
+	// 								template: {
+	// 									indexgenerator,
+	// 									comparison,
+	// 									object: this
+	// 								},
+	// 								value: function (_index) {
+	// 									return this.object.class.index(
+	// 										this.indexgenerator,
+	// 										comparison
+	// 									)(this.object.array, _index)
+	// 								}
+	// 							}
+	// 						},
+	// 						delete(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function (_index) {
+	// 									return this.object.class.delete(
+	// 										this.indexgenerator
+	// 									)(this.object.array, _index)
+	// 								}
+	// 							}
+	// 						},
+	// 						[Symbol.iterator]: this.forof,
+	// 						forin: this.forin,
+	// 						reverse: this.reverse,
+	// 						map: this.map,
+	// 						sort: this.sort,
+	// 						length: this.length,
+	// 						concat: this.concat,
+	// 						copyWithin(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function (
+	// 									beginind,
+	// 									endind,
+	// 									targetind
+	// 								) {
+	// 									return this.object.class.copyWithin(
+	// 										this.indexgenerator
+	// 									)(
+	// 										this.object.array,
+	// 										beginind,
+	// 										endind,
+	// 										targetind
+	// 									)
+	// 								}
+	// 							}
+	// 						},
+	// 						every: this.every,
+	// 						any: this.any,
+	// 						reduce(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function (
+	// 									initial,
+	// 									direction,
+	// 									callback
+	// 								) {
+	// 									return this.object.class.reduce(
+	// 										this.indexgenerator
+	// 									)(
+	// 										this.object.array,
+	// 										initial,
+	// 										direction,
+	// 										callback
+	// 									)
+	// 								}
+	// 							}
+	// 						},
+	// 						slice(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function (start, end) {
+	// 									return this.object.class.slice(
+	// 										this.indexgenerator
+	// 									)(this.object.array, start, end)
+	// 								}
+	// 							}
+	// 						},
+	// 						property: this.property,
+	// 						indexesOf(
+	// 							comparison = this.class.template.comparison,
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: {
+	// 									indexgenerator,
+	// 									comparison,
+	// 									object: this
+	// 								},
+	// 								value: function (ele) {
+	// 									return this.object.class.indexesOf(
+	// 										this.indexgenerator
+	// 									)(this.object.array, ele)
+	// 								}
+	// 							}
+	// 						},
+	// 						entries(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function () {
+	// 									return this.object.class.entries(
+	// 										this.indexgenerator
+	// 									)(this.object.array)
+	// 								}
+	// 							}
+	// 						},
+	// 						each(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator
+	// 						) {
+	// 							return {
+	// 								template: { indexgenerator, object: this },
+	// 								value: function (callback) {
+	// 									return this.object.class.each(
+	// 										this.indexgenerator
+	// 									)(this.object.array, callback)
+	// 								}
+	// 							}
+	// 						},
+	// 						fillfrom(
+	// 							indexgenerator = this.class.template
+	// 								.indexgenerator,
+	// 							comparison = this.class.template.comparison
+	// 						) {
+	// 							return {
+	// 								template: {
+	// 									indexgenerator,
+	// 									comparison,
+	// 									object: this
+	// 								},
+	// 								value: function (index, value) {
+	// 									return this.class.fillfrom(
+	// 										this.indexgenerator,
+	// 										this.comparison
+	// 									)(this.object.array, index, value)
+	// 								}
+	// 							}
+	// 						},
+	// 						has(comparison = this.class.template.comparison) {
+	// 							return {
+	// 								template: { comparison, object: this },
+	// 								value: function (elem) {
+	// 									return this.class.has(this.comparison)(
+	// 										this.object.array,
+	// 										elem
+	// 									)
+	// 								}
+	// 							}
+	// 						}
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// },
 
-	// TODO: write the implementation for these two...
+
+	// TODO: redo completely as GeneralArray(s)... instead; 
 	LastIndexArray(comparison, indexgenerator, notfound) {
 		return infinite.InfiniteArray(...arguments)()
 	},
-
 	DeepArray(comparison, indexgenerator, notfound) {
 		return infinite.InfiniteArray(...arguments)()
 	},
@@ -1778,6 +1795,7 @@ const infinite = {
 	// _? Question: store the pointer to the 'infinite' structure within the thing in question.
 	// * Return a bit later...
 	// ! Re-assess the old notes...
+	// ? What is it even (the 'keyorder')? Pray re-assess carefully later...
 	InfiniteMap(keyorder) {
 		return {
 			template: { keyorder },
