@@ -69,10 +69,12 @@ It gets changed actively.
     Write it using one's (for now unpublished) library for parsing things...
 
 
-6. (reminder) Before the 1.0 release, pray clear all the TODOs, ?s, *s and !s; 
+6. (reminder) Before the 1.0 release, pray clear all the TODOs, ?sand !s; 
 
     All the privatenotes, as well as this very list...
 	Also, the "^ IDEA" notes [once they've been implemented and all saved within some particular commit...]; 
+
+	ALSO: the *s - check them all out, take out all the unwanted ones, perhaps make others into something else? 
 
 7. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 
