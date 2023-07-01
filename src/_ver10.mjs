@@ -176,11 +176,14 @@ const defaultAlphabet = [
 const infinite = {
 	// TODO: pray order the definitions within the 'infinite' object;
 
-	// TODO: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
-	// ! CURRENT AGENDA:
-	// * Another thing that feels so truly wrong about the API is the ORDER OF ARGUMENTS;
-	// TODO: get rid of it; replace it all with one single destructurized object (check); repeat over all the pieces of API, which have more than 3 arguments;
-	// * Another thing - the number of arguments; in too many places it's feels like too large; seek means to lessen their numbers, optimize...
+	// TODO [about GeneralArray; come back a tad later]: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
+
+	// ! PROBLEM : with the index generators!
+	// * Their functionalities are interchangeable yet not their definitions; 
+	// * This creates an unpleasant effect of having to write a separate element-access method for each and every format of an array [and thus having differences with abstractions]; 
+	// * One don't like that; 
+	// ? How would one accomplish universality of element-access methods across different implementations of the same general-array class template instance?
+	// ^ IDEA [for a solution]: it can be achieved by means of giving the methods in question the access to the index generator in question; 
 	GeneralArray(template) {
 		const {
 			forindexgenerator,
@@ -373,25 +376,28 @@ const infinite = {
 		}
 	},
 
-	// * Wanting new method-parameters:
-	// * 1. isUndefined(array, index) - returns boolean, whether the value corresponding to the index within the given array is undefined...
-	// * 2. newvalue(array, index, value) - adds a new value to the array in question at a given index [only used for those indexes which are considered undefined];
-	// % The difference in use of the last one between the pointer and non-pointer case is, that the pointer case does 'newvalue(array, index, Pointer(label)(x))', instead of plain 'newvalue(array, index, x)';
-	// todo: Pray add the stuff to there...
+	// ! PROBLEM: this thing don't do anything...
+	// * Without the 'comparison' and the compatibility with PointerArray(s) (and ability to do some pretty stuff in cases that have .isLabel = true, but also don't actually work with the PointerArrays), 
+	// * this method DON'T DO NOTHING!!! it's just another layer of abstraction not doing anything and calling whatever's given to it...
+	// * It does allow to customize certain few aspects of behaviour of an array and also provide a very nice layer of abstraction [obstructing some little repetition...], but apart from that... 
+	// ! NOTHING.... 
+	// TODO: decide what to do... 
+		// Either 1. get rid of it and manage everything with the GeneralArray [and then 1.1. it's going to have these multiple "."s; 1.2. the code there will be noticeably more repetitious; ]
+		// Or 2. fix the 'comparison' and make that stuff work... whilst keeping the IterArray...
+		// Or 3. Do the stuff from 1 + fix the comparison and get all the stuff from IterArray to GeneralArray (that includes the '.currindex' and '.next()' and '.prev()')... [unite them] + rewrite the PointerArray to work with GeneralArray...
+		// ^ CONSLUSION: one's going to do 3. or some such its variation...
 	IterArray(template) {
 		ensureProperty(template, "comparison", infinite.valueCompare)
 		return {
 			template: template,
-			class: function (isLabel = false, label) {
+			class: function (isLabel = false, label, empty = []) {
 				return {
-					template: { isLabel, label, class: this },
-					class: function (array) {
+					template: { isLabel, label, class: this, empty },
+					class: function (array = this.template.empty) {
 						return {
 							class: this,
 							currindex: this.template.class.template.forindgen(),
 							array: array,
-							// TODO: this thing now returns only the index, change the things in accordance with it...
-							// ? what to do next? (Suggestion: finish the GeneralArray?)
 							next() {
 								return (this.currindex =
 									this.class.template.class.template.forindgen(
@@ -404,11 +410,8 @@ const infinite = {
 								))
 							},
 							get currelem() {
-								// ? Should one give more access to the object in question to the user-defined functions??? One may want it... (for instance, elem(this), instead of elem(array, index, isUndefined))
-								// TODO: pray think on many such small things about extensibility of the code -- pray extend as far as want to...
-								// ! On one hand, for the implementation of an array-like structure with possibility for infinite indexation, index and array would be suffificient;
-								// * On the other, allowing for 'this' would give user a far greater degree of freedom when working with the thing in question...
 								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
+								// todo [general] : pray do just that...
 								return (
 									this.class.template.isLabel
 										? (x) => x[this.class.template.label]
@@ -422,7 +425,30 @@ const infinite = {
 									)
 								)
 							},
-							// TODO: add 'comparison' to all such places of appropriety. Similarly, pray add the greater degree of configurability to the stuff in question...
+							// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
+							// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
+							set currelem(newval) {
+								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
+								if (
+									!this.class.template.isLabel ||
+									this.class.template.class.template.isUndefined(
+										this
+									)
+								)
+									return this.class.template.class.template.newvalue(
+										this,
+										(this.class.template.isLabel
+											? Pointer({
+													label: this.class.template
+														.label
+											  })
+											: id)(newval)
+									)
+
+								return (this.class.template.class.template.elem(
+									this
+								)[this.class.template.label] = newval)
+							},
 							length() {
 								const index = this.currindex
 								this.begin()
@@ -457,31 +483,15 @@ const infinite = {
 								this.currindex = index
 								return true
 							},
-							// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
-							// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
-							set currelem(newval) {
-								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
-								if (
-									!this.class.template.isLabel ||
-									this.class.template.class.template.isUndefined(
-										this
-									)
-								)
-									return this.class.template.class.template.newvalue(
-										this,
-										(this.class.template.isLabel
-											? Pointer({
-													label: this.class.template
-														.label
-											  })
-											: id)(newval)
-									)
-
-								return (this.class.template.class.template.elem(
-									this
-								)[this.class.template.label] = newval)
-							},
 							// ! shorten the code with this...
+							// ? Or, perhaps, one wants to get the lengthier version back???
+							// * One wants to either: 
+							// 1. shorten .end() to 'this.currindex = this.length()'; 
+							// or 2. make .begin() very general again; 
+							// * one one hand, making it general allows one to have it the way one wants [and naturally provides functionality that the native JS Arrays as-is lack]... 
+							// ! one the other hand... It does make it overdo things a lot when it comes to something as simple as the current contents of the '.begin()'... 
+							// * also, if one does make it general, one'd make them all general... For instance, one'd also add 'comparison' to 'loop', apart from the 'iteration' (or however one's going to name it...)
+							// TODO: pray think deeply and carefully on it and decide how to have it... One'd like some symmerty here...
 							begin() {
 								this.currindex =
 									this.class.template.class.template.forindgen()
@@ -529,37 +539,34 @@ const infinite = {
 		}
 	},
 
-	// ! Problem: the thing with IterArr too wouldn't work for the same reason -- 'tis rather useles...
-	// * So, the IterArr should [on input] expect the PointerArr...
-	// * But, one wants to have it general [so as not to write the PointerArr anew for each and every array type]...
-	// ^ IDEA: one would use only the reading methods of the IterArray; this way, it'd work -- one would have the IterArray being written for use with these ones, but the reading methods would work not only with them;
-	// * So, conclusion: one would love to have the corresponding flag with the IterArray -- (name 'isWrite', for instance)
-	// TODO: pray rewrite correspondently...
-	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
-
+	// Now, one have fixed the PointerArray...
+	// ? What did one want it for, again???
+	// * All it's become now is a convinient structure for working with things...
+	// * But if one would just define the corresponding method for the IterArray...
+	// * There'd be no need to even have that bloody PointerArray!
+	// ? Though, maybe it's a bit faster in certain cases???
+	// ! nope; it's nigh exactly [if not EXACTLY] the same amount of time as is required for 'finding the writing spot' and 'writing';
+	// ? CONCLUSION... Does one want it as a part of the library?
+	// * This stuff does permit to easily create pointers for things [thus potentially saving stack frame space, for instance? objects are allocated separate]
+	// TODO: pray consider whether one really wants it within the library now that it's finally here... [How amusing, eh...]
 	PointerArray(template) {
 		return {
 			template: template,
-			value: function (iterarr) {
-				let newiterarr = iterarr.class.class()
-				// TODO: redo the 'isLabel'...
-				// ? Problem: if this thing is 'labeled', then setting new things for it relies upon [supposedly already] created indexes with Pointers at them;
-				// ! Problem: edge cases; exampli gratia, an exotic enough definition of the array 'newvalue' function; think about them; the library ought to support...
-				// TODO: turn this thing into a method...; create some complex of methods for quick work with the template-bound objects [those that have access to the template of the thing that they relate to]...
-				newiterarr.class.classtemplate = {
-					...newiterarr.class.classtemplate
-				}
-				newiterarr.class.classtemplate.isLabel = true
-				newiterarr.class.classtemplate.label = label
-				// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
+			function: function (iterarr) {
+				let newiterarr = iterarr.class.template.class.class()
 				while (!iterarr.loop()) {
 					// ! Pointer and PointerArray have the same template [again!]
 					// * Pray, when working on the templates of all the templated functions/classes, create the corresponding template connections; Simplify small things such as this here...
-					newiterarr.currelem = Pointer({ label: template.label })(
-						iterarr.currelem
-					)
+					newiterarr.currelem = Pointer({
+						label: this.template.label
+					})(iterarr.currelem)
 					newiterarr.next()
 				}
+				newiterarr.class.template = {
+					...newiterarr.class.template
+				}
+				newiterarr.class.template.isLabel = true
+				newiterarr.class.template.label = label
 				return newiterarr
 			}
 		}
