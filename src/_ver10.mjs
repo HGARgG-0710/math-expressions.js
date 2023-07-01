@@ -379,69 +379,82 @@ const infinite = {
 	// % The difference in use of the last one between the pointer and non-pointer case is, that the pointer case does 'newvalue(array, index, Pointer(label)(x))', instead of plain 'newvalue(array, index, x)';
 	// todo: Pray add the stuff to there...
 	IterArray(template) {
-		const {
-			forindexgenerator,
-			backindexgenerator,
-			elem,
-			initindex,
-			comparison,
-			isEnd,
-			newvalue,
-			isUndefined = (x) => x === undefined,
-			undefinedReturn = undefined
-		} = template
+		ensureProperty(template, "comparison", infinite.valueCompare)
 		return {
 			template: template,
-			value: function (isLabel = false, label) {
+			class: function (isLabel = false, label) {
 				return {
-					template: { isLabel, label, template: this },
-					value: function (array) {
+					template: { isLabel, label, class: this },
+					class: function (array) {
 						return {
 							class: this,
-							currindex: this.initindex,
+							currindex: this.template.class.template.forindgen(),
 							array: array,
 							// TODO: this thing now returns only the index, change the things in accordance with it...
 							// ? what to do next? (Suggestion: finish the GeneralArray?)
 							next() {
 								return (this.currindex =
-									this.class.forindexgenerator(
+									this.class.template.class.template.forindgen(
 										this.currindex
 									))
 							},
+							prev() {
+								return (this.currindex = this.class.backindgen(
+									this.currindex
+								))
+							},
 							get currelem() {
-								// ? Should one give more access to the object in question to the 'undefinedReturn' function??? One may want it... (for instance, undefinedReturn(this))
+								// ? Should one give more access to the object in question to the user-defined functions??? One may want it... (for instance, elem(this), instead of elem(array, index, isUndefined))
 								// TODO: pray think on many such small things about extensibility of the code -- pray extend as far as want to...
-								return isUndefined(this.array, this.currinex)
-									? undefinedReturn(
-											this.array,
-											this.currindex
-									  )
-									: (isLabel ? (x) => x[label] : id)(
-											this.class.elem(
-												this.array,
-												this.currindex
-											)
-									  )
+								// ! On one hand, for the implementation of an array-like structure with possibility for infinite indexation, index and array would be suffificient;
+								// * On the other, allowing for 'this' would give user a far greater degree of freedom when working with the thing in question...
+								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
+								return (
+									this.class.template.isLabel
+										? (x) => x[this.class.template.label]
+										: id
+								)(
+									this.class.template.class.template.elem(
+										this,
+										this.class.template.class.template.isUndefined(
+											this
+										)
+									)
+								)
 							},
 							// TODO: add 'comparison' to all such places of appropriety. Similarly, pray add the greater degree of configurability to the stuff in question...
-							length(comparison = this.class.comparison) {
-								let curr = this.begin(comparison)
+							length() {
+								const index = this.currindex
+								this.begin()
 								while (
-									!isEnd(
-										this.array,
-										(curr = this.array.next())
+									!this.class.template.class.template.isEnd(
+										this
 									)
-								) {}
-								return curr
+								)
+									this.next()
+								const returned = this.currindex
+								this.currindex = index
+								return returned
 							},
-							loop: function* (
-								comparison = this.class.comparison
-							) {
-								let currind = this.begin(comparison)
-								while (!this.class.isEnd(this.array, currind)) {
-									currind = this.next()
+							// * For loops; Allows to loop over an array, with a changing index; Usage example:
+							// while (iterarr.loop()) {
+							// 		... (whatever)
+							// }
+							// * pray notice, that the '.currindex' is affected throughout the loop...
+							// ? idea : generalize this; allow user to put in their own 'index-changing' function to be run (to which 'this' is passed), keeping the '(x) => x.next()' as a default...;
+							// todo: yup, pray do!
+							loop: function* () {
+								const index = this.currindex
+								this.begin()
+								while (
+									!this.class.template.class.template.isEnd(
+										this
+									)
+								) {
+									this.next()
 									yield false
 								}
+								this.currindex = index
 								return true
 							},
 							// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
@@ -449,40 +462,34 @@ const infinite = {
 							set currelem(newval) {
 								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
 								if (
-									!isLabel ||
-									isUndefined(this.array, this.currindex)
+									!this.class.template.isLabel ||
+									this.class.template.class.template.isUndefined(
+										this
+									)
 								)
-									return this.class.newvalue(
-										this.array,
-										this.currindex,
-										(isLabel ? Pointer(label) : id)(newval)
+									return this.class.template.class.template.newvalue(
+										this,
+										(this.class.template.isLabel
+											? Pointer({
+													label: this.class.template
+														.label
+											  })
+											: id)(newval)
 									)
 
-								return (this.class.elem(
-									this.array,
-									this.currindex
-								)[label] = newval)
+								return (this.class.template.class.template.elem(
+									this
+								)[this.class.template.label] = newval)
 							},
-							prev() {
-								return (this.currindex =
-									this.class.backindexgenerator(
-										this.currindex
-									))
+							// ! shorten the code with this...
+							begin() {
+								this.currindex =
+									this.class.template.class.template.forindgen()
 							},
-							// TODO: generalize; generally, about these things here... all very-very rough a sketch...
-							// * Bring the rest of the code in proper order... Ger rid of old unrelated stuff, comment out the stuff that is for reworking and tag it correspondently...
-							begin(comparison = this.class.comparison) {
-								let curr
-								while (
-									!comparison(
-										this.currindex,
-										this.class.initindex
-									)
-								)
-									curr = this.prev()
-								return curr
-							},
-							end(comparison = this.class.comparison) {
+							end(
+								comparison = this.class.template.class.template
+									.comparison
+							) {
 								const l = this.length()
 								let curr
 								while (!comparison(this.currindex, l))
@@ -491,7 +498,7 @@ const infinite = {
 							},
 							// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
 							// * If one would, then it ought to be generalized...
-							// TODO: pray generalize into a static method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
+							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
 							moveforward(comparison, index, begin = false) {
 								if (begin) this.begin(comparison)
 								while (!comparison(index, this.currindex))
@@ -530,9 +537,9 @@ const infinite = {
 	// TODO: pray rewrite correspondently...
 	// ? Again, this is also very-very sketchy... tiny pieces don't fit...
 
-	PointerArray(label) {
+	PointerArray(template) {
 		return {
-			template: { label },
+			template: template,
 			value: function (iterarr) {
 				let newiterarr = iterarr.class.class()
 				// TODO: redo the 'isLabel'...
@@ -546,7 +553,11 @@ const infinite = {
 				newiterarr.class.classtemplate.label = label
 				// TODO: add this thing to the IterArr... [as a shortcut for (i = ...initindex; !iterarr.isEnd(i); i = ...forindexgenerator(i)]; with iterarr.isEnd(a) := isEnd(iterarr, a); for some other outer 'isEnd';
 				while (!iterarr.loop()) {
-					newiterarr.currelem = Pointer(label)(iterarr.currelem)
+					// ! Pointer and PointerArray have the same template [again!]
+					// * Pray, when working on the templates of all the templated functions/classes, create the corresponding template connections; Simplify small things such as this here...
+					newiterarr.currelem = Pointer({ label: template.label })(
+						iterarr.currelem
+					)
 					newiterarr.next()
 				}
 				return newiterarr
@@ -602,7 +613,7 @@ const infinite = {
 	},
 
 	// * Generalization of the thing above...
-	// ? Make a template. 
+	// ? Make a template.
 	objCounter(fieldname) {
 		return (a) => ({ [fieldname]: a })
 	},
@@ -634,16 +645,23 @@ const infinite = {
 				if (!a) return [0]
 				// ? put these two out of the function's context?
 				// TODO : generalize these greately, use here as special cases;
+				// ! PROBLEM [1]: the 'prevArr' - this stuff uses ordinary arrays; It can't be reliably used for an unlimited counter model;
+				// * Solution [1]: replace with some special case of GeneralArrays...
+				// ! Problem [1.1]: these things have to rely on some infinite counter too...
+				// * Solution [1.1]: use the arrayCounter;
+				// ! Problem [1.1.1]: this'd limit the Array implementations in question... and make it virtually useless [with lesser capability for storage than native JS arrays];
+				// * Solution [1.1.1]: make the thing a template over the used generator, then use this particular version [arrayCounter] here - in the numberCounter;
+				// * This'd permit it to equally efficient as the originally intended version [maybe even more]...
+				// ^ CONCLUSION: the 'numberCounter' gets touched after having finished the work on the GeneralArray and IterArray;
 				function findDeepUnfilledNum(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-						const indexed = a[i[i.length - 1]]
-						if (indexed instanceof Array) {
+						if (a[i[i.length - 1]] instanceof Array) {
 							const temp = findDeepUnfilledNum(a, i)
 							if (temp) return temp
 							continue
 						}
-						if (indexed < MAX_INT) return i
+						if (a[i[i.length - 1]] < MAX_INT) return i
 					}
 					return false
 				}
@@ -751,7 +769,7 @@ const infinite = {
 		return {
 			template: template,
 			value: function (n) {
-				// ? make this an alias ('(x) => Number(x) || Number(!isNaN(x))'); this'd return 0 in case when argument is 'NaN'; in other cases, it'd perform a Number-conversion; 
+				// ? make this an alias ('(x) => Number(x) || Number(!isNaN(x))'); this'd return 0 in case when argument is 'NaN'; in other cases, it'd perform a Number-conversion;
 				n = Number(n) || Number(!isNaN(Number(n)))
 				if (n < 0)
 					return fromNumber({ generator: this.template.inverse })(-n)
@@ -4315,11 +4333,11 @@ function propSwap(obj, prop1, prop2) {
 // * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
 // ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
 // ? Question: does one really want this thing even???
-function Pointer(vall = "value") {
+function Pointer(template) {
 	return {
-		template: { label: vall },
+		template: template,
 		value: function (value) {
-			return { [vall]: value }
+			return { [template.label]: value }
 		}
 	}
 }
