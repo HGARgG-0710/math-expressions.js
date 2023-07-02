@@ -274,7 +274,7 @@ const infinite = {
 							// * pray notice, that the '.currindex' is affected throughout the loop...
 							// ? idea : generalize this; allow user to put in their own 'index-changing' function to be run (to which 'this' is passed), keeping the '(x) => x.next()' as a default...;
 							// todo: yup, pray do!
-							loop: function* () {
+							loop: function* (indexiter = (x) => x.next()) {
 								const index = this.currindex
 								this.begin()
 								while (
@@ -282,7 +282,7 @@ const infinite = {
 										this
 									)
 								) {
-									this.next()
+									indexiter(this)
 									yield false
 								}
 								this.currindex = index
@@ -292,7 +292,7 @@ const infinite = {
 							// % Concluded: one's decided to have it general again;
 							// ! Another problem now: generalization???
 							// * Seems pretty repetitious; Similarly to the InfiniteCounter.jump(), or GeneralArray.movebackward()/moveforward();
-							// TODO: GENERALIZE the two 
+							// TODO: GENERALIZE the two
 							begin(
 								comparison = this.class.template.class.template
 									.comparison
@@ -318,40 +318,78 @@ const infinite = {
 								this.currindex = currind
 								return curr
 							},
-							// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
-							// * If one would, then it ought to be generalized...
-							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
-							moveforward(
+							// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
+							// * pray think about them...
+							move(
+								index,
+								preface,
 								comparison = this.class.template.class.template
 									.comparison,
-								index,
-								begin = false
+								each = (x) => x.next(),
+								stop = (x) => comparison(x.length, x.currindex)
 							) {
-								if (begin) this.begin(comparison)
-								while (!comparison(index, this.currindex))
-									this.next()
-								return this.currelem
-							},
-							movebackward(
-								comparison = this.class.template.class.template
-									.comparison,
-								index,
-								end = false
-							) {
-								if (end) this.end(comparison)
-								let currelem = null
-								let isFirst = false
+								preface(arguments, this)
 								while (
-									!comparison(index, this.array.currindex) &&
-									!(isFirst = comparison(
-										this.class.initial,
-										this.currelem
-									))
+									!comparison(this.currindex, index) &&
+									!stop(this)
 								)
-									currelem = this.prev()
-								// TODO: add some sort of configuration for 'special user-defined primitives' for these things; they ought to depend on the user; This is just a placeholder...
-								if (isFirst) return false
-								return currelem
+									each(this)
+								return this.currindex
+							},
+							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
+							// ! PROBLEM: one will generalize this, however, there is a different thing to be thought of first.
+							// * The out-of-range indicies...
+							// * How does one know that something is indeed beyond the scope in question???
+							// ^ Solution [for moveforward]: use the '.length'!
+							// ^ Solution [for movebackward]: use the 'this.class.template.class.template.forindgen()'
+							// ^ Solution [general]: add a separate manner of parameter for this sort of thing; for these 2 particular cases, just substitute the appropriate functions...
+							moveforward(
+								index,
+								begin = false,
+								comparison = this.class.template.class.template
+									.comparison
+							) {
+								return this.move(
+									index,
+									(args, x) => {
+										if (begin) x.begin(comparison)
+									},
+									comparison
+								)
+								// * Old
+								// if (begin) this.begin(comparison)
+								// while (!comparison(index, this.currindex))
+								// 	this.next()
+								// return this.currelem
+							},
+							// TODO: work on the order of arguments... Update things in correspondence with them.
+							movebackward(
+								index,
+								end = false,
+								comparison = this.class.template.class.template
+									.comparison
+							) {
+								return this.move(
+									index,
+									(args, x) => {
+										if (end) x.end(comparison)
+									},
+									comparison,
+									(x) => x.prev(),
+									// ? Question: does one want to compute it each and every time like that???
+									// * Again, a question of exotic generality. Does one want to have it?
+									// * Current decision: yes, sure;
+									(x) =>
+										comparison(
+											x.currindex,
+											x.class.template.class.template.forindgen()
+										)
+								)
+								// * Old
+								// if (end) this.end(comparison)
+								// while (!comparison(index, this.currindex))
+								// 	this.prev()
+								// return this.currelem
 							},
 							read(
 								index,
@@ -384,12 +422,18 @@ const infinite = {
 							},
 							// TODO: implement the algorithms listed here...
 							// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-							// ? Question: should one not make this a changed variable???
-							// * Then, one'd just add a setter and a getter and that's it, no?;
-							// ! This was just '.length()' previously...
+							// ! This was just '.length()' previously... See if want to have it the get/set way...
 							get length() {
 								const index = this.currindex
+								// TODO: PROBLEM: with the 'comparison': due to the fact that a 'get' thing cannot have parameters, one [again] cannot have the 'comparison' as a paramter;
+								// * Because of this one [again] have to rely on the 'template' variables...
+								// ^ IDEA [1; for a solution]: make the 'comparison' an object property, BUT have the default still being the 'template' value?
+								// * Pretty idea; Don't think that like it much though; It don't solve the essential problem of enabling the configurability of call arguments for a setter;
+								// ^ IDEA [2; for a solution]: create one's own set-get object interface that'd work through a length() function...
+								// * Might work something like so: {get: ..., set: ...}; with '.get' being just some property with a single value, and 'set' - a method that affects '.get' and 'this' of the array object in question...
+								// ! Then, one might avoid doing all those unwanted things to the 'array' object.
 								this.begin()
+								// ? Does one really want to get the
 								while (
 									!this.class.template.class.template.isEnd(
 										this
