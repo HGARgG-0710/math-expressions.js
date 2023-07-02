@@ -179,225 +179,40 @@ const infinite = {
 	// TODO [about GeneralArray; come back a tad later]: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
 
 	// ! PROBLEM : with the index generators!
-	// * Their functionalities are interchangeable yet not their definitions; 
-	// * This creates an unpleasant effect of having to write a separate element-access method for each and every format of an array [and thus having differences with abstractions]; 
-	// * One don't like that; 
+	// * Their functionalities are interchangeable yet not their definitions;
+	// * This creates an unpleasant effect of having to write a separate element-access method for each and every format of an array [and thus having differences with abstractions];
+	// * One don't like that;
 	// ? How would one accomplish universality of element-access methods across different implementations of the same general-array class template instance?
-	// ^ IDEA [for a solution]: it can be achieved by means of giving the methods in question the access to the index generator in question; 
+	// ^ IDEA [for a solution]: it can be achieved by means of giving the methods in question the access to the index generator in question;
 	GeneralArray(template) {
-		const {
-			forindexgenerator,
-			backindexgenerator,
-			elem,
-			initindex,
-			comparison,
-			// ? Does one really want the 'isUndefined' here??? Pray think on it...
-			// * CONCLUSION: YES, ONE DOES!
-			// TODO: pray place it under the IterArray, so that has it that the 'undefined' elements can be separated properly...
-			isUndefined = (x) => x === undefined,
-			newvalue,
-			isEnd = isUndefined,
-			undefinedReturn
-		} = template
-
-		return {
-			template: template,
-			value: function (array) {
-				return {
-					array: infinite
-						.IterArray(
-							forindexgenerator,
-							backindexgenerator,
-							elem,
-							initindex,
-							comparison,
-							isEnd,
-							newvalue,
-							isUndefined,
-							undefinedReturn
-						)
-						.class(array),
-					class: this,
-					begin(comparison = this.class.comparison) {
-						return this.array.begin(comparison)
-					},
-					moveforward(index, begin = false) {
-						return this.array.moveforward(
-							this.class.comparison,
-							index,
-							begin
-						)
-					},
-					movebackward(index, begin = false) {
-						return this.array.movebackward(
-							this.class.comparison,
-							index,
-							begin
-						)
-					},
-					read(index) {
-						const returned = this.moveforward(index, true)
-						this.array.begin(comparison)
-						return returned
-					},
-					write(index, value) {
-						this.moveforward(index, true)
-						const returned = this.array.setcurr(value)
-						this.begin(comparison)
-						return returned
-					},
-					// TODO: implement the algorithms listed here...
-					// ? Make this an IterArray method? Think about it...
-					// TODO: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-					// ? Question: should one not make this a changed variable???
-					// * Then, one'd just add a setter and a getter and that's it, no?;
-					length() {
-						return this.iterarray.length()
-					},
-					pushback(value) {
-						// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
-						// * 1. get the .length();
-						// * 2. write() 'value' at .length();
-					},
-					pushfront(value) {
-						// * Sketch [not actual code]:
-						// * 1. this.array = .concat([value], this.array)
-					},
-					concat(array) {
-						// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']:
-						// * 1. define a new array [copy of 'array'; 'concatenated'];
-						// * 2. run through 'this', pushing all the elements of it into the array in question; ['concatenated.push(this.array.currelem)']
-						// * 3. return concatenated;
-					},
-					copy(f = (x) => x) {
-						// * Sketch:
-						// * 1. create a new empty array of the same template-array-type as 'this' ['newarray'];
-						// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
-						// * 3. return newarray
-					},
-					// TODO: 'end' should default to 'end=this.length()'
-					slice(begin, end) {
-						// * Sketch:
-						// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
-						// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
-						// * 3. return the finally obtained array;
-						// ? Question: should it be inclusive to 'end'?
-						// * Current decision: yes.
-					},
-					fillfrom(index, value) {
-						// * Sketch:
-						// * 1. move to 'index';
-						// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)';
-					},
-					convert(template) {
-						// TODO: re-organize the templates API [this one and the other 'tiny details' shall probably occupy the next element of the agenda;]...
-						// * Sketch:
-						// * 1. Create a new GeneralArray with the given template;
-						// * 2. walk the current array and '.push()' every element in the new one;
-						// * 3. return the new array;
-					},
-					delete(index) {
-						// * Sketch [not the actual code]:
-						// * 1. this = this.slice(index, indexgenerator(index))
-						// ? Note: one could do it otherwise, as well -- deleting the index not the value;
-						// * IDEA: create a method for this too!
-						// TODO: yes. pray do;
-					},
-					deleteMult(startindex, endindex) {
-						// * sketch:
-						// * 1. this = this.slice(startindex, endindex)
-						// ? Question(idea): rewrite the '.delete' through 'deleteMult'?
-					},
-					project(array, index) {
-						// * sketch:
-						// * 1. move to the index 'index';
-						// * 2. walk the passed general array [array], until reaching either its or the "this"'s .length(), 'this.write(array.array.currelem)'
-					},
-					insert(index, value) {
-						// * sketch [not the actual code]:
-						// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
-					},
-					// TODO: later, rewrite in terms of the 'indexesOf' function...
-					has(x) {
-						// ? generalize this double-array construction
-						// * Old;
-						// let c = [this.array.currindex, this.array.currelem]
-						// let u
-						// while (!comparison(c[1], x) && (u = !isEnd(c[1])))
-						// 	c = this.array.next()
-						// return u
-						// * Sketch [not the actual code]:
-						// * return this.firstIndex(x) == someUnFoundConstantPrayChooseItAlready;
-					},
-					// * Just an alias...
-					index(i) {
-						return this.read(i)
-					},
-					// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
-					indexesOf(x) {
-						// * Sketch [perephrase of what's above...; not actual code]:
-						// TODO: problem: decide how to [generally] define an empty array...
-						// * 1. let newarr = GeneralArray(...)([]);
-						// * 2. let curr
-						// * 3. while ((curr = this.firstIndex(x)) != someUnfoundConstantToBeChosen)
-						// * 4. 	newarr.push(curr)
-						// * 5. return newarr
-					},
-					// ? Question[1]: should one template all the methods of this class?
-					// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
-					// * Something like 'comparison = this.comparison || this.class.comparison'?
-					firstIndex(x) {
-						// * Sketch:
-						// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison';
-						// * 2. On find [from within the loop], return the 'currindex';
-						// * 3. On failure [outside the loop], return the 'unfoundConstant';
-					},
-					shiftForward(times, generator, baseelem) {
-						// * Sketch [change the '[]' for GeneralArray constructor]:
-						// * 1. return this.concat([baseelem].repeat(times, generator));
-					},
-					shiftBackward(times, generator) {
-						// * Sketch:
-						// * 0. let curr;
-						// * 1. while (!comparison(curr = generator(curr), times))
-						// * 2. 	this = this.slice(indexgenerator(this.array.initindex))
-					},
-					// ? Again, the question about the 'comparison'; it probably alludes to all the methods that use it...
-					repeat(times, generator) {
-						// * Sketch [not the actual code]:
-						// * 1. let newarr = GeneralArray(...)()
-						// * 2. let curr = generator()
-						// * 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
-						// * 4. return newarr
-					}
-					// TODO: pray add more new algorithms here...
-				}
-			}
-		}
-	},
-
-	// ! PROBLEM: this thing don't do anything...
-	// * Without the 'comparison' and the compatibility with PointerArray(s) (and ability to do some pretty stuff in cases that have .isLabel = true, but also don't actually work with the PointerArrays), 
-	// * this method DON'T DO NOTHING!!! it's just another layer of abstraction not doing anything and calling whatever's given to it...
-	// * It does allow to customize certain few aspects of behaviour of an array and also provide a very nice layer of abstraction [obstructing some little repetition...], but apart from that... 
-	// ! NOTHING.... 
-	// TODO: decide what to do... 
+		// ! PROBLEM: this thing don't do anything...
+		// * Without the 'comparison' and the compatibility with PointerArray(s) (and ability to do some pretty stuff in cases that have .isLabel = true, but also don't actually work with the PointerArrays),
+		// * this method DON'T DO NOTHING!!! it's just another layer of abstraction not doing anything and calling whatever's given to it...
+		// * It does allow to customize certain few aspects of behaviour of an array and also provide a very nice layer of abstraction [obstructing some little repetition...], but apart from that...
+		// ! NOTHING....
+		// TODO: decide what to do...
 		// Either 1. get rid of it and manage everything with the GeneralArray [and then 1.1. it's going to have these multiple "."s; 1.2. the code there will be noticeably more repetitious; ]
 		// Or 2. fix the 'comparison' and make that stuff work... whilst keeping the IterArray...
 		// Or 3. Do the stuff from 1 + fix the comparison and get all the stuff from IterArray to GeneralArray (that includes the '.currindex' and '.next()' and '.prev()')... [unite them] + rewrite the PointerArray to work with GeneralArray...
 		// ^ CONSLUSION: one's going to do 3. or some such its variation...
-	IterArray(template) {
+		function IterArray(template) {
+			return
+		}
+
 		ensureProperty(template, "comparison", infinite.valueCompare)
+
+		// TODO[Current agenda!]: pray reorder and make sure everything 'fits' (fix mismatches; leftovers of the old code...)
 		return {
 			template: template,
-			class: function (isLabel = false, label, empty = []) {
+			class: function (template) {
+				// ? QUESTION [general]: should the templates be of static nature [as in: 'const {varname1, ...} = template; {template: {varname1, ...}, ...}'], or dynamic [template: {...template}]?
+				// TODO: pray think, decide and choose [perhaps, one would do it depending on the circumstances of the choice in question...];
+				// * Current Level Template variables [about the above todo...]: isLabel = false, label, empty = [];
 				return {
-					template: { isLabel, label, class: this, empty },
+					template: { ...template, class: this },
 					class: function (array = this.template.empty) {
 						return {
-							class: this,
 							currindex: this.template.class.template.forindgen(),
-							array: array,
 							next() {
 								return (this.currindex =
 									this.class.template.class.template.forindgen(
@@ -449,19 +264,6 @@ const infinite = {
 									this
 								)[this.class.template.label] = newval)
 							},
-							length() {
-								const index = this.currindex
-								this.begin()
-								while (
-									!this.class.template.class.template.isEnd(
-										this
-									)
-								)
-									this.next()
-								const returned = this.currindex
-								this.currindex = index
-								return returned
-							},
 							// * For loops; Allows to loop over an array, with a changing index; Usage example:
 							// while (iterarr.loop()) {
 							// 		... (whatever)
@@ -485,11 +287,11 @@ const infinite = {
 							},
 							// ! shorten the code with this...
 							// ? Or, perhaps, one wants to get the lengthier version back???
-							// * One wants to either: 
-							// 1. shorten .end() to 'this.currindex = this.length()'; 
-							// or 2. make .begin() very general again; 
-							// * one one hand, making it general allows one to have it the way one wants [and naturally provides functionality that the native JS Arrays as-is lack]... 
-							// ! one the other hand... It does make it overdo things a lot when it comes to something as simple as the current contents of the '.begin()'... 
+							// * One wants to either:
+							// 1. shorten .end() to 'this.currindex = this.length()';
+							// or 2. make .begin() very general again;
+							// * one one hand, making it general allows one to have it the way one wants [and naturally provides functionality that the native JS Arrays as-is lack]...
+							// ! one the other hand... It does make it overdo things a lot when it comes to something as simple as the current contents of the '.begin()'...
 							// * also, if one does make it general, one'd make them all general... For instance, one'd also add 'comparison' to 'loop', apart from the 'iteration' (or however one's going to name it...)
 							// TODO: pray think deeply and carefully on it and decide how to have it... One'd like some symmerty here...
 							begin() {
@@ -506,6 +308,8 @@ const infinite = {
 									curr = this.prev()
 								return curr
 							},
+							array: array,
+							class: this,
 							// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
 							// * If one would, then it ought to be generalized...
 							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
@@ -531,7 +335,194 @@ const infinite = {
 								// TODO: add some sort of configuration for 'special user-defined primitives' for these things; they ought to depend on the user; This is just a placeholder...
 								if (isFirst) return false
 								return currelem
+							},
+							// begin(comparison = this.class.comparison) {
+							// 	return this.array.begin(comparison)
+							// },
+							// *
+							// moveforward(index, begin = false) {
+							// 	return this.array.moveforward(
+							// 		this.class.comparison,
+							// 		index,
+							// 		begin
+							// 	)
+							// },
+							// *
+							// movebackward(index, begin = false) {
+							// 	return this.array.movebackward(
+							// 		this.class.comparison,
+							// 		index,
+							// 		begin
+							// 	)
+							// },
+							read(index) {
+								const returned = this.moveforward(index, true)
+								this.array.begin(comparison)
+								return returned
+							},
+							write(index, value) {
+								this.moveforward(index, true)
+								const returned = this.array.setcurr(value)
+								this.begin(comparison)
+								return returned
+							},
+							// TODO: implement the algorithms listed here...
+							// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
+							// ? Question: should one not make this a changed variable???
+							// * Then, one'd just add a setter and a getter and that's it, no?;
+							// ! This was just '.length()' previously...
+							get length() {
+								const index = this.currindex
+								this.begin()
+								while (
+									!this.class.template.class.template.isEnd(
+										this
+									)
+								)
+									this.next()
+								const returned = this.currindex
+								this.currindex = index
+								return returned
+							},
+							set length(value) {
+								// TODO: define the operation of changing the 'length';
+								// ! PROBLEM [1]:
+								// * There's a nuacance with doing this the native JS Array way - there is no singular order to 'update' the array indexation by...
+								// * For instance, if one decided to set an index which is not an element of the order in question, what'd one do?
+								// ? Suggestion 1: throw a RangeError, like the JS native Array does???
+								// ! A Problem still [1.1.]:
+								// * How does one KNOW that something is, in fact, or isn't an element of the order in question?
+								// * One would be required to check for it;
+								// * But, as the sequences of indexes might be arbitrarily long, there's a change that such the waiting for finding the index will be...
+								// ^ One could do the same thing one did before there - let the user decide when is the search over...
+								// ? But how does one want to organize it...
+								// Rough outline of the list of decided properties of the organization method to be chosen...:
+								// 		1. It must be further configurable after having created the project;
+								// 		2. It must be accessible;
+								// 		3. It must be configurable as a part of a template [not just a property of an object...];
+								// 		4. It must also be configurable as a part of an object locally...
+								// ! Due to problems with JS 'set' methods (namely, that they only accept 1 argument), one has a problem with all this...
+								// * It would perfectly accomplishable with the already used approach of 'template+default parameter', but there is no defualt parameter to put this onto...
+								// * So, one might make it a final GeneralArray instance's object's property;
+								// ^ CONCLUSION : yup, so be it then...
+							},
+							pushback(value) {
+								// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
+								// * 1. get the .length();
+								// * 2. write() 'value' at .length();
+							},
+							pushfront(value) {
+								// * Sketch [not actual code]:
+								// * 1. this.array = .concat([value], this.array)
+							},
+							concat(array) {
+								// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']:
+								// * 1. define a new array [copy of 'array'; 'concatenated'];
+								// * 2. run through 'this', pushing all the elements of it into the array in question; ['concatenated.push(this.array.currelem)']
+								// * 3. return concatenated;
+							},
+							copy(f = (x) => x) {
+								// * Sketch:
+								// * 1. create a new empty array of the same template-array-type as 'this' ['newarray'];
+								// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
+								// * 3. return newarray
+							},
+							// TODO: 'end' should default to 'end=this.length()'
+							slice(begin, end) {
+								// * Sketch:
+								// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
+								// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
+								// * 3. return the finally obtained array;
+								// ? Question: should it be inclusive to 'end'?
+								// * Current decision: yes.
+							},
+							fillfrom(index, value) {
+								// * Sketch:
+								// * 1. move to 'index';
+								// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)';
+							},
+							convert(template) {
+								// TODO: re-organize the templates API [this one and the other 'tiny details' shall probably occupy the next element of the agenda;]...
+								// * Sketch:
+								// * 1. Create a new GeneralArray with the given template;
+								// * 2. walk the current array and '.push()' every element in the new one;
+								// * 3. return the new array;
+							},
+							delete(index) {
+								// * Sketch [not the actual code]:
+								// * 1. this = this.slice(index, indexgenerator(index))
+								// ? Note: one could do it otherwise, as well -- deleting the index not the value;
+								// * IDEA: create a method for this too!
+								// TODO: yes. pray do;
+							},
+							deleteMult(startindex, endindex) {
+								// * sketch:
+								// * 1. this = this.slice(startindex, endindex)
+								// ? Question(idea): rewrite the '.delete' through 'deleteMult'?
+							},
+							project(array, index) {
+								// * sketch:
+								// * 1. move to the index 'index';
+								// * 2. walk the passed general array [array], until reaching either its or the "this"'s .length(), 'this.write(array.array.currelem)'
+							},
+							insert(index, value) {
+								// * sketch [not the actual code]:
+								// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
+							},
+							// TODO: later, rewrite in terms of the 'indexesOf' function...
+							has(x) {
+								// ? generalize this double-array construction
+								// * Old;
+								// let c = [this.array.currindex, this.array.currelem]
+								// let u
+								// while (!comparison(c[1], x) && (u = !isEnd(c[1])))
+								// 	c = this.array.next()
+								// return u
+								// * Sketch [not the actual code]:
+								// * return this.firstIndex(x) == someUnFoundConstantPrayChooseItAlready;
+							},
+							// * Just an alias...
+							index(i) {
+								return this.read(i)
+							},
+							// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
+							indexesOf(x) {
+								// * Sketch [perephrase of what's above...; not actual code]:
+								// TODO: problem: decide how to [generally] define an empty array...
+								// * 1. let newarr = GeneralArray(...)([]);
+								// * 2. let curr
+								// * 3. while ((curr = this.firstIndex(x)) != someUnfoundConstantToBeChosen)
+								// * 4. 	newarr.push(curr)
+								// * 5. return newarr
+							},
+							// ? Question[1]: should one template all the methods of this class?
+							// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
+							// * Something like 'comparison = this.comparison || this.class.comparison'?
+							firstIndex(x) {
+								// * Sketch:
+								// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison';
+								// * 2. On find [from within the loop], return the 'currindex';
+								// * 3. On failure [outside the loop], return the 'unfoundConstant';
+							},
+							shiftForward(times, generator, baseelem) {
+								// * Sketch [change the '[]' for GeneralArray constructor]:
+								// * 1. return this.concat([baseelem].repeat(times, generator));
+							},
+							shiftBackward(times, generator) {
+								// * Sketch:
+								// * 0. let curr;
+								// * 1. while (!comparison(curr = generator(curr), times))
+								// * 2. 	this = this.slice(indexgenerator(this.array.initindex))
+							},
+							// ? Again, the question about the 'comparison'; it probably alludes to all the methods that use it...
+							repeat(times, generator) {
+								// * Sketch [not the actual code]:
+								// * 1. let newarr = GeneralArray(...)()
+								// * 2. let curr = generator()
+								// * 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
+								// * 4. return newarr
 							}
+							// TODO: pray add more new algorithms here...
 						}
 					}
 				}
