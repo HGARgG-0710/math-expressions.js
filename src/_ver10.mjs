@@ -27,6 +27,7 @@
 // TODO: during the generalization procedures a lot of stuff have become terminally broken. Make another such "round" through the code, fixing anything that's broken due to generalizaiton [as always, probably won't fix all the cases, but some/most];
 
 // TODO [general]: where appropriate, replace the native API usage with the library API usage...
+// TODO [general]: use the introduced notation/aliases/shorthand-methods everywhere where want to...
 
 // TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
 // TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
@@ -183,27 +184,33 @@ const infinite = {
 
 	// ^ IDEA [for a solution; about the 'elem' method for assigning an array element to an index]: give the methods in question [special cases of GeneralArray] the access to the index generator in question [the template ones];
 	GeneralArray(template) {
-		ensureProperty(template, "comparison", infinite.valueCompare)
+		ensureProperties(template, {
+			comparison: infinite.valueCompare,
+			empty: []
+		})
 
-		// TODO[Current agenda!]: pray reorder and make sure everything 'fits' (fix mismatches; leftovers of the old code...); Also, complete the GeneralArray algorithms already!
+		// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
+		// 	% 1 [later]. complete the GeneralArray algorithms!
+		//	% 2. introduce the InfiniteCoutner(s) for the keeping of the indexing system [they make certain things simpler; reduce repetition]
 		return {
 			template: template,
 			class: function (template) {
 				ensureProperties(template, {
 					isLabel: false,
-					empty: [],
 					label: ""
 				})
 				// ? QUESTION [general]: should the templates be of static nature [as in: 'const {varname1, ...} = template; {template: {varname1, ...}, ...}'], or dynamic [template: {...template}]?
-				// TODO: pray think, decide and choose [perhaps, one would do it depending on the circumstances of the choice in question...];
-				// * Current Level Template variables [about the above todo...]: isLabel = false, label, empty = [];
+				// * Current Level Template variables [about the above todo...]: isLabel = false, label;
+				// ^ DECIDED: the arbitrary {...template} variant!
+				// todo: ensure that all the templates have this 'laid back' form and not some other one...
 				return {
 					template: { ...template, class: this },
-					class: function (array = this.template.empty) {
+					class: function (
+						array = this.template.class.template.empty
+					) {
 						return {
 							array: array,
 							class: this,
-							// ! Create some sort of a shortcut for this stuff (this.template.class.template.forindgen() := this.init(), for instance...)
 							currindex: this.template.class.template.forindgen(),
 							next() {
 								return (this.currindex =
@@ -268,8 +275,10 @@ const infinite = {
 										this
 									)
 								) {
-									indexiter(this)
+									// * note: one yields before having iterated the index not to skip the first one...
+									// works just like a 'for' loop;
 									yield false
+									indexiter(this)
 								}
 								this.currindex = index
 								return true
@@ -358,13 +367,6 @@ const infinite = {
 									.comparison
 							) {
 								const ind = this.currindex
-								// ! PROBLEM: with indexation methods choice...
-								// * What DOES one want to use: the '.moveforward/movebackward...',
-								// * or the simple '.currindex = [something]'?
-								// If using the first one, one allows for more generality and flexibility in what the thing might want to be doing...
-								// Yet for the simpler purposes, that decision will make it significantly slower...
-								// ? Which one does one want??? Pray think on it; decide;
-								// * DECISION: one will take the more general path...
 								this.moveforward(index, true, comparison)
 								const returned = (this.currelem = value)
 								this.currindex = ind
@@ -390,27 +392,27 @@ const infinite = {
 										_this.currindex = index
 										return returned
 									},
-									set: function (value) {
+									// TODO: make the 'range' a template method...
+									set: function (
+										value,
+										range = _this.class.template.class
+											.template.range
+									) {
+										// ^ IDEA: solution to the problem of 'going for infinity';
+										// * A truly infinite loop [for a finite structure, that is,] can happen only in the case when the given index is outside the bounds of the index range;
+										// * So, one just gives the user the ability to set their own ranging functions!
+										if (!range(value))
+											throw new RangeError(
+												"Index range error for array length setting"
+											)
+
+										// ^ IDEA: use the InfiniteCounters for this stuff;
+										// * Their '.compare()' method would come in very handy... Depending on it, one would be going a certain direction and either:
+										// * 1. adding some 'default' element [may be given by a function...]; the 'newlength'>'oldlength' case;
+										// * 2. deleting the indexes exceeding the decided length;
+										// * 3. nothing [if this is the same length as before...]
+
 										// TODO: define the operation of changing the 'length';
-										// ! PROBLEM [1]:
-										// * There's a nuacance with doing this the native JS Array way - there is no singular order to 'update' the array indexation by...
-										// * For instance, if one decided to set an index which is not an element of the order in question, what'd one do?
-										// ? Suggestion 1: throw a RangeError, like the JS native Array does???
-										// ! A Problem still [1.1.]:
-										// * How does one KNOW that something is, in fact, or isn't an element of the order in question?
-										// * One would be required to check for it;
-										// * But, as the sequences of indexes might be arbitrarily long, there's a change that such the waiting for finding the index will be...
-										// ^ One could do the same thing one did before there - let the user decide when is the search over...
-										// ? But how does one want to organize it...
-										// Rough outline of the list of decided properties of the organization method to be chosen...:
-										// 		1. It must be further configurable after having created the project;
-										// 		2. It must be accessible;
-										// 		3. It must be configurable as a part of a template [not just a property of an object...];
-										// 		4. It must also be configurable as a part of an object locally...
-										// ! Due to problems with JS 'set' methods (namely, that they only accept 1 argument), one has a problem with all this...
-										// * It would perfectly accomplishable with the already used approach of 'template+default parameter', but there is no defualt parameter to put this onto...
-										// * So, one might make it a final GeneralArray instance's object's property;
-										// ^ CONCLUSION : yup, so be it then...
 									}
 								}
 							},
@@ -437,7 +439,10 @@ const infinite = {
 								// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
 								// * 3. return newarray
 							},
-							slice(begin, end = this.length) {
+							slice(
+								begin = this.init(),
+								end = this.length().get()
+							) {
 								// * Sketch:
 								// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
 								// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
@@ -539,17 +544,9 @@ const infinite = {
 		}
 	},
 
-	// Now, one have fixed the PointerArray...
-	// ? What did one want it for, again???
-	// * All it's become now is a convinient structure for working with things...
-	// * But if one would just define the corresponding method for the IterArray...
-	// * There'd be no need to even have that bloody PointerArray!
-	// ? Though, maybe it's a bit faster in certain cases???
-	// ! nope; it's nigh exactly [if not EXACTLY] the same amount of time as is required for 'finding the writing spot' and 'writing';
-	// ? CONCLUSION... Does one want it as a part of the library?
-	// * This stuff does permit to easily create pointers for things [thus potentially saving stack frame space, for instance? objects are allocated separate]
-	// TODO: pray consider whether one really wants it within the library now that it's finally here... [How amusing, eh...]
+	// ^ DECIDED: bah; let it be; it's nice... sort of; + it allows to have a general pointer array from a general array;
 	PointerArray(template) {
+		ensureProperty(template, "label", "")
 		return {
 			template: template,
 			function: function (iterarr) {
@@ -560,13 +557,15 @@ const infinite = {
 					newiterarr.currelem = Pointer({
 						label: this.template.label
 					})(iterarr.currelem)
-					newiterarr.next()
 				}
-				newiterarr.class.template = {
-					...newiterarr.class.template
-				}
+
+				// ? Is that [the copying of the .class] required for it to work properly??? Pray check... Oughta be
+				newiterarr.class = flatCopy(newiterarr.class)
+				newiterarr.class.template = flatCopy(newiterarr.class.template)
+
 				newiterarr.class.template.isLabel = true
-				newiterarr.class.template.label = label
+				newiterarr.class.template.label = this.template.label
+
 				return newiterarr
 			}
 		}
@@ -650,18 +649,11 @@ const infinite = {
 				maxint: MAX_INT,
 				maxarrlen: MAX_ARRAY_LENGTH
 			},
-			value: function (a) {
+			function: function (a) {
 				if (!a) return [0]
 				// ? put these two out of the function's context?
 				// TODO : generalize these greately, use here as special cases;
-				// ! PROBLEM [1]: the 'prevArr' - this stuff uses ordinary arrays; It can't be reliably used for an unlimited counter model;
-				// * Solution [1]: replace with some special case of GeneralArrays...
-				// ! Problem [1.1]: these things have to rely on some infinite counter too...
-				// * Solution [1.1]: use the arrayCounter;
-				// ! Problem [1.1.1]: this'd limit the Array implementations in question... and make it virtually useless [with lesser capability for storage than native JS arrays];
-				// * Solution [1.1.1]: make the thing a template over the used generator, then use this particular version [arrayCounter] here - in the numberCounter;
-				// * This'd permit it to equally efficient as the originally intended version [maybe even more]...
-				// ^ CONCLUSION: the 'numberCounter' gets touched after having finished the work on the GeneralArray and IterArray;
+				// * False alarm; It's far better be left off WITHOUT the counters; without them it can go up to (2**53-1)*(2**32-1)^stacksize, instead of (2**53-1)*stacksize^stacksize; with stacksize some 13000smthng;
 				function findDeepUnfilledNum(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
@@ -844,10 +836,11 @@ const infinite = {
 	dim(recarr) {},
 
 	// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
-	// TODO: finish this thing (add orders, other things from the previous file)...
+	// TODO [general; old; vague; needs further looking into; do a tad later...]: finish this thing (add orders, other things from the previous file)...
 	// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
 	// ^ idea [for an implementation...]: add a pair of static method: TrueInteger<...>.fromCounter(...), TrueInteger<...>.toCounter(); One could also add the corresponding structures to the InfiniteCounter [as a sugar, for instance?]
 	InfiniteCounter(template) {
+		ensureProperty(template, "comparison", infinite.valueCompare)
 		return {
 			template: template,
 			class: function (previous) {
@@ -872,37 +865,51 @@ const infinite = {
 					// it's a bit like a 'greater than' relation...
 					compare(
 						ic,
-						isendcheckfro = () => false,
-						isendcheckto = () => false,
-						comparison = infinite.valueCompare
+						comparison = this.class.template.comparison,
+						range = this.class.template.range
 					) {
-						// ! PROBLEM: infinite types! Without any 'first' or 'last', one won't know until when to check!
-						// * Currently solved this with a 'hack' -- user gives their own way of telling this [isendto, isendfro];
-						// TODO: pray think on it and if do create something that is more wanted, pray implement it so...
-						// ? Thinking... Maybe that's not so much of a hack after all??? Perhaps one would even keep it...
+						if (!range(ic)) return null
 
-						let pointer = ic
-						let isIt = false
+						let pointerfor = ic
+						let pointerback = ic
+
+						while (
+							!comparison(pointerfor, this) &&
+							!comparison(pointerback, this)
+						) {
+							pointerfor = pointerfor.next()
+							pointerback = pointerback.previous()
+						}
+
+						return comparison(pointerfor, this)
+
+						// ! Old code;
+
+						// Note:
+						// There had also been a line:
+						// 		let isIt = false
+						// Used to be the return result. It got deleted...
+
+						// TODO: pray work on it properly a bit later; something there was left unfinished...
 
 						// ? Generalize this thing somehow? One ends up repeating the same code twice for two different values and methods...
 						// * Something like 'searchUntil', for instance?
 						// ? Same for the arguments... Does one really want to have 2 different values?
-						while (
-							!isendcheckfro(pointer) &&
-							!(isIt = comparison(pointer.value, this.value))
-						)
-							pointer = pointer.previous()
-						if (isIt) return true
+						// %
+						// while (!(isIt = comparison(pointer.value, this.value)))
+						// 	pointer = pointer.previous()
+						// if (isIt) return true
 
-						pointer = ic
-						while (
-							!isendcheckto(pointer) &&
-							!(isIt = comparison(pointer.value, this.value))
-						)
-							pointer = pointer.next()
-						if (isIt) return false
-
-						return null
+						// ! PROBLEM: these 2 ought to be generalized somehow, BUT...
+						// * They don't work; not really; for instance, if one has that a certain counter is in certain 'moving direction' from another one, then checking the wrong one
+						// * still causes an infinite loop!
+						// ^ Solution: one just checks for each one at a time!
+						// * So, for example, they have loop with 2 infinite counters for each direction advancing at the same time; Then, they're both checked and the first one to be gotten to be the one sought gets to be compared with!
+						// %
+						// pointer = ic
+						// while (!(isIt = comparison(pointer.value, this.value)))
+						// 	pointer = pointer.next()
+						// if (isIt) return false
 					},
 					// ? Question: 'comparison'; Should it become a part of the IC-Classes?
 					// * Current decision: yes, pray do that.... One makes 'infinite.valueCompare' to be the default of the template-varible of 'comparison', with it also being a variable for the methods, which have the template variable value as a default...
@@ -911,9 +918,8 @@ const infinite = {
 					jump(
 						x,
 						jumping = (k) => k.next(),
-						comparison = infinite.valueCompare,
-						isendto = () => false,
-						isendfro = () => false
+						comparison = this.class.template.comparison,
+						range = this.class.template.range
 					) {
 						return ((x) => {
 							if (x === undefined) return this
@@ -923,13 +929,7 @@ const infinite = {
 										i = i.next()
 										return jumping(r)
 									},
-									() =>
-										x.compare(
-											i,
-											isendfro,
-											isendto,
-											comparison
-										),
+									() => x.compare(i, comparison, range),
 									{
 										...infinite.deepCopy(this),
 										class: this.class
@@ -941,6 +941,10 @@ const infinite = {
 								})()
 							)
 						})(
+							// ! PROBLEM:
+							// * with the generators that use primitive numbers!
+							// ? How does one want the library to be treating native JS numbers??? Is this kind of behaviour truly wanted???
+							// todo: pray think on it; decide what to do; do it;
 							typeof x === "number"
 								? infinite.fromNumber(infinite.numberCounter)(x)
 								: x
@@ -952,7 +956,7 @@ const infinite = {
 					jumpBackward(x) {
 						return this.jump(x, (k) => k.previous())
 					},
-					map(icClass, comparison = infinite.valueCompare) {
+					map(icClass, comparison = this.class.template.comparison) {
 						let current = this.class.class()
 						let alterCurrent = icClass.class()
 						while (!comparison(current, this))
