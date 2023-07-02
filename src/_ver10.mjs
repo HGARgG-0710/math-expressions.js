@@ -45,6 +45,9 @@
 
 // * Make good use of stack; [Id est, try to save it; use elementary tools not relying upon it; This will allow to make better use of the methods, whose 'power/usefulness' relies upon the stack...]
 
+// * Some general independant ideas to add to the project...
+// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
+
 // TODO: use these as default arguments [where considered appropriate, that is];
 // TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
 // TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
@@ -178,33 +181,19 @@ const infinite = {
 
 	// TODO [about GeneralArray; come back a tad later]: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
 
-	// ! PROBLEM : with the index generators!
-	// * Their functionalities are interchangeable yet not their definitions;
-	// * This creates an unpleasant effect of having to write a separate element-access method for each and every format of an array [and thus having differences with abstractions];
-	// * One don't like that;
-	// ? How would one accomplish universality of element-access methods across different implementations of the same general-array class template instance?
-	// ^ IDEA [for a solution]: it can be achieved by means of giving the methods in question the access to the index generator in question;
+	// ^ IDEA [for a solution; about the 'elem' method for assigning an array element to an index]: give the methods in question [special cases of GeneralArray] the access to the index generator in question [the template ones];
 	GeneralArray(template) {
-		// ! PROBLEM: this thing don't do anything...
-		// * Without the 'comparison' and the compatibility with PointerArray(s) (and ability to do some pretty stuff in cases that have .isLabel = true, but also don't actually work with the PointerArrays),
-		// * this method DON'T DO NOTHING!!! it's just another layer of abstraction not doing anything and calling whatever's given to it...
-		// * It does allow to customize certain few aspects of behaviour of an array and also provide a very nice layer of abstraction [obstructing some little repetition...], but apart from that...
-		// ! NOTHING....
-		// TODO: decide what to do...
-		// Either 1. get rid of it and manage everything with the GeneralArray [and then 1.1. it's going to have these multiple "."s; 1.2. the code there will be noticeably more repetitious; ]
-		// Or 2. fix the 'comparison' and make that stuff work... whilst keeping the IterArray...
-		// Or 3. Do the stuff from 1 + fix the comparison and get all the stuff from IterArray to GeneralArray (that includes the '.currindex' and '.next()' and '.prev()')... [unite them] + rewrite the PointerArray to work with GeneralArray...
-		// ^ CONSLUSION: one's going to do 3. or some such its variation...
-		function IterArray(template) {
-			return
-		}
-
 		ensureProperty(template, "comparison", infinite.valueCompare)
 
-		// TODO[Current agenda!]: pray reorder and make sure everything 'fits' (fix mismatches; leftovers of the old code...)
+		// TODO[Current agenda!]: pray reorder and make sure everything 'fits' (fix mismatches; leftovers of the old code...); Also, complete the GeneralArray algorithms already!
 		return {
 			template: template,
 			class: function (template) {
+				ensureProperties(template, {
+					isLabel: false,
+					empty: [],
+					label: ""
+				})
 				// ? QUESTION [general]: should the templates be of static nature [as in: 'const {varname1, ...} = template; {template: {varname1, ...}, ...}'], or dynamic [template: {...template}]?
 				// TODO: pray think, decide and choose [perhaps, one would do it depending on the circumstances of the choice in question...];
 				// * Current Level Template variables [about the above todo...]: isLabel = false, label, empty = [];
@@ -214,6 +203,7 @@ const infinite = {
 						return {
 							array: array,
 							class: this,
+							// ! Create some sort of a shortcut for this stuff (this.template.class.template.forindgen() := this.init(), for instance...)
 							currindex: this.template.class.template.forindgen(),
 							next() {
 								return (this.currindex =
@@ -243,8 +233,6 @@ const infinite = {
 									)
 								)
 							},
-							// ? make into a template; do the thing with the 'conditional presence' of the method, when one don't want it...
-							// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
 							set currelem(newval) {
 								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
 								if (
@@ -271,9 +259,7 @@ const infinite = {
 							// while (iterarr.loop()) {
 							// 		... (whatever)
 							// }
-							// * pray notice, that the '.currindex' is affected throughout the loop...
-							// ? idea : generalize this; allow user to put in their own 'index-changing' function to be run (to which 'this' is passed), keeping the '(x) => x.next()' as a default...;
-							// todo: yup, pray do!
+							// * pray notice, that the '.currindex' is affected throughout the loop [default]...
 							loop: function* (indexiter = (x) => x.next()) {
 								const index = this.currindex
 								this.begin()
@@ -288,35 +274,15 @@ const infinite = {
 								this.currindex = index
 								return true
 							},
-							// ! shorten the code with this...
-							// % Concluded: one's decided to have it general again;
-							// ! Another problem now: generalization???
-							// * Seems pretty repetitious; Similarly to the InfiniteCounter.jump(), or GeneralArray.movebackward()/moveforward();
-							// TODO: GENERALIZE the two
-							begin(
-								comparison = this.class.template.class.template
-									.comparison
-							) {
-								const lastind = this.currindex
-								this.currindex =
-									this.class.template.class.template.forindgen()
-								while (!comparison(this.currindex, l))
-									curr = this.next()
-								this.currindex = lastind
-								return curr
+							// ! shorten the code with these 3...
+							begin() {
+								return (this.currindex = this.init())
 							},
-							end(
-								comparison = this.class.template.class.template
-									.comparison
-							) {
-								const l = this.length
-								const currind = this.currindex
-								this.currindex = l
-								let curr
-								while (!comparison(this.currindex, l))
-									curr = this.prev()
-								this.currindex = currind
-								return curr
+							end() {
+								return (this.currindex = this.length().get())
+							},
+							init() {
+								return this.class.template.class.template.forindgen()
 							},
 							// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
 							// * pray think about them...
@@ -336,13 +302,6 @@ const infinite = {
 									each(this)
 								return this.currindex
 							},
-							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
-							// ! PROBLEM: one will generalize this, however, there is a different thing to be thought of first.
-							// * The out-of-range indicies...
-							// * How does one know that something is indeed beyond the scope in question???
-							// ^ Solution [for moveforward]: use the '.length'!
-							// ^ Solution [for movebackward]: use the 'this.class.template.class.template.forindgen()'
-							// ^ Solution [general]: add a separate manner of parameter for this sort of thing; for these 2 particular cases, just substitute the appropriate functions...
 							moveforward(
 								index,
 								begin = false,
@@ -352,17 +311,12 @@ const infinite = {
 								return this.move(
 									index,
 									(args, x) => {
-										if (begin) x.begin(comparison)
+										if (begin) x.currindex = this.init()
 									},
 									comparison
 								)
-								// * Old
-								// if (begin) this.begin(comparison)
-								// while (!comparison(index, this.currindex))
-								// 	this.next()
-								// return this.currelem
 							},
-							// TODO: work on the order of arguments... Update things in correspondence with them.
+							// TODO [GENERAL]: work on the order of arguments of various methods and functions... Update things in correspondence with them.
 							movebackward(
 								index,
 								end = false,
@@ -372,7 +326,7 @@ const infinite = {
 								return this.move(
 									index,
 									(args, x) => {
-										if (end) x.end(comparison)
+										if (end) x.currindex = x.length().get()
 									},
 									comparison,
 									(x) => x.prev(),
@@ -385,11 +339,6 @@ const infinite = {
 											x.class.template.class.template.forindgen()
 										)
 								)
-								// * Old
-								// if (end) this.end(comparison)
-								// while (!comparison(index, this.currindex))
-								// 	this.prev()
-								// return this.currelem
 							},
 							read(
 								index,
@@ -397,7 +346,7 @@ const infinite = {
 									.comparison
 							) {
 								const ind = this.currindex
-								this.moveforward(comparison, index, true)
+								this.moveforward(index, true, comparison)
 								const c = this.currelem
 								this.currindex = ind
 								return c
@@ -413,59 +362,60 @@ const infinite = {
 								// * What DOES one want to use: the '.moveforward/movebackward...',
 								// * or the simple '.currindex = [something]'?
 								// If using the first one, one allows for more generality and flexibility in what the thing might want to be doing...
-								// Yet for the simpler purposes, it will make it significantly slower...
+								// Yet for the simpler purposes, that decision will make it significantly slower...
 								// ? Which one does one want??? Pray think on it; decide;
-								this.moveforward(comparison, index, true)
+								// * DECISION: one will take the more general path...
+								this.moveforward(index, true, comparison)
 								const returned = (this.currelem = value)
 								this.currindex = ind
 								return returned
 							},
-							// TODO: implement the algorithms listed here...
+							length() {
+								// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
+								// * pray think on it...
+								// ? QUESTION: now that one has gotten rid of all the ridiculous stuff regarding the .begin, .end, 'comparisons' and yada yada yada, won't one come back to the previous .length model???
+								const _this = this
+								return {
+									object: _this,
+									get: function () {
+										const index = _this.currindex
+										_this.begin()
+										while (
+											!_this.class.template.class.template.isEnd(
+												_this
+											)
+										)
+											_this.next()
+										const returned = _this.currindex
+										_this.currindex = index
+										return returned
+									},
+									set: function (value) {
+										// TODO: define the operation of changing the 'length';
+										// ! PROBLEM [1]:
+										// * There's a nuacance with doing this the native JS Array way - there is no singular order to 'update' the array indexation by...
+										// * For instance, if one decided to set an index which is not an element of the order in question, what'd one do?
+										// ? Suggestion 1: throw a RangeError, like the JS native Array does???
+										// ! A Problem still [1.1.]:
+										// * How does one KNOW that something is, in fact, or isn't an element of the order in question?
+										// * One would be required to check for it;
+										// * But, as the sequences of indexes might be arbitrarily long, there's a change that such the waiting for finding the index will be...
+										// ^ One could do the same thing one did before there - let the user decide when is the search over...
+										// ? But how does one want to organize it...
+										// Rough outline of the list of decided properties of the organization method to be chosen...:
+										// 		1. It must be further configurable after having created the project;
+										// 		2. It must be accessible;
+										// 		3. It must be configurable as a part of a template [not just a property of an object...];
+										// 		4. It must also be configurable as a part of an object locally...
+										// ! Due to problems with JS 'set' methods (namely, that they only accept 1 argument), one has a problem with all this...
+										// * It would perfectly accomplishable with the already used approach of 'template+default parameter', but there is no defualt parameter to put this onto...
+										// * So, one might make it a final GeneralArray instance's object's property;
+										// ^ CONCLUSION : yup, so be it then...
+									}
+								}
+							},
+							// TODO: implement the sketches of the algorithms listed here...
 							// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-							// ! This was just '.length()' previously... See if want to have it the get/set way...
-							get length() {
-								const index = this.currindex
-								// TODO: PROBLEM: with the 'comparison': due to the fact that a 'get' thing cannot have parameters, one [again] cannot have the 'comparison' as a paramter;
-								// * Because of this one [again] have to rely on the 'template' variables...
-								// ^ IDEA [1; for a solution]: make the 'comparison' an object property, BUT have the default still being the 'template' value?
-								// * Pretty idea; Don't think that like it much though; It don't solve the essential problem of enabling the configurability of call arguments for a setter;
-								// ^ IDEA [2; for a solution]: create one's own set-get object interface that'd work through a length() function...
-								// * Might work something like so: {get: ..., set: ...}; with '.get' being just some property with a single value, and 'set' - a method that affects '.get' and 'this' of the array object in question...
-								// ! Then, one might avoid doing all those unwanted things to the 'array' object.
-								this.begin()
-								// ? Does one really want to get the
-								while (
-									!this.class.template.class.template.isEnd(
-										this
-									)
-								)
-									this.next()
-								const returned = this.currindex
-								this.currindex = index
-								return returned
-							},
-							set length(value) {
-								// TODO: define the operation of changing the 'length';
-								// ! PROBLEM [1]:
-								// * There's a nuacance with doing this the native JS Array way - there is no singular order to 'update' the array indexation by...
-								// * For instance, if one decided to set an index which is not an element of the order in question, what'd one do?
-								// ? Suggestion 1: throw a RangeError, like the JS native Array does???
-								// ! A Problem still [1.1.]:
-								// * How does one KNOW that something is, in fact, or isn't an element of the order in question?
-								// * One would be required to check for it;
-								// * But, as the sequences of indexes might be arbitrarily long, there's a change that such the waiting for finding the index will be...
-								// ^ One could do the same thing one did before there - let the user decide when is the search over...
-								// ? But how does one want to organize it...
-								// Rough outline of the list of decided properties of the organization method to be chosen...:
-								// 		1. It must be further configurable after having created the project;
-								// 		2. It must be accessible;
-								// 		3. It must be configurable as a part of a template [not just a property of an object...];
-								// 		4. It must also be configurable as a part of an object locally...
-								// ! Due to problems with JS 'set' methods (namely, that they only accept 1 argument), one has a problem with all this...
-								// * It would perfectly accomplishable with the already used approach of 'template+default parameter', but there is no defualt parameter to put this onto...
-								// * So, one might make it a final GeneralArray instance's object's property;
-								// ^ CONCLUSION : yup, so be it then...
-							},
 							pushback(value) {
 								// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
 								// * 1. get the .length();
@@ -487,7 +437,6 @@ const infinite = {
 								// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
 								// * 3. return newarray
 							},
-							// TODO: 'end' should default to 'end=this.length()'
 							slice(begin, end = this.length) {
 								// * Sketch:
 								// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
@@ -677,8 +626,10 @@ const infinite = {
 	},
 
 	// TODO: create a generalization of string's order as an argument and on it -- this thing...
-	// * make it a special case of the GeneralArray + use strings;
+	// * make the InfiniteString a special case of the GeneralArray + use strings;
 	// ? make very modifiable? make a template? [current: yes]
+	// * Make a default version of this thing '_a' such that: stringCounter_a() = [""]; stringCounter_a("") = ["1"]; stringCounter_a("1") = "2" ..., then [when one hits the 'big numbers', one uses arrays similar to the numberCounter];
+	// * Make a special case of the numberCounter generalization...
 	stringCounter(a) {},
 
 	// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
@@ -3539,7 +3490,7 @@ function isPrime(x) {
 }
 
 function primesBefore(x) {
-	return generate(1, x).filter((a) => isPrime(a))
+	return generate(1, x).filter(isPrime)
 }
 
 // * Brings whatever is given within the given base to base 10;
