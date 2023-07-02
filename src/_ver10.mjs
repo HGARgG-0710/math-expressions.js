@@ -212,6 +212,8 @@ const infinite = {
 					template: { ...template, class: this },
 					class: function (array = this.template.empty) {
 						return {
+							array: array,
+							class: this,
 							currindex: this.template.class.template.forindgen(),
 							next() {
 								return (this.currindex =
@@ -220,9 +222,10 @@ const infinite = {
 									))
 							},
 							prev() {
-								return (this.currindex = this.class.backindgen(
-									this.currindex
-								))
+								return (this.currindex =
+									this.class.template.class.template.backindgen(
+										this.currindex
+									))
 							},
 							get currelem() {
 								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
@@ -286,42 +289,56 @@ const infinite = {
 								return true
 							},
 							// ! shorten the code with this...
-							// ? Or, perhaps, one wants to get the lengthier version back???
-							// * One wants to either:
-							// 1. shorten .end() to 'this.currindex = this.length()';
-							// or 2. make .begin() very general again;
-							// * one one hand, making it general allows one to have it the way one wants [and naturally provides functionality that the native JS Arrays as-is lack]...
-							// ! one the other hand... It does make it overdo things a lot when it comes to something as simple as the current contents of the '.begin()'...
-							// * also, if one does make it general, one'd make them all general... For instance, one'd also add 'comparison' to 'loop', apart from the 'iteration' (or however one's going to name it...)
-							// TODO: pray think deeply and carefully on it and decide how to have it... One'd like some symmerty here...
-							begin() {
+							// % Concluded: one's decided to have it general again;
+							// ! Another problem now: generalization???
+							// * Seems pretty repetitious; Similarly to the InfiniteCounter.jump(), or GeneralArray.movebackward()/moveforward();
+							// TODO: GENERALIZE the two 
+							begin(
+								comparison = this.class.template.class.template
+									.comparison
+							) {
+								const lastind = this.currindex
 								this.currindex =
 									this.class.template.class.template.forindgen()
+								while (!comparison(this.currindex, l))
+									curr = this.next()
+								this.currindex = lastind
+								return curr
 							},
 							end(
 								comparison = this.class.template.class.template
 									.comparison
 							) {
-								const l = this.length()
+								const l = this.length
+								const currind = this.currindex
+								this.currindex = l
 								let curr
 								while (!comparison(this.currindex, l))
 									curr = this.prev()
+								this.currindex = currind
 								return curr
 							},
-							array: array,
-							class: this,
 							// ? Shall one also check for the 'length()' coincidence in the 'moveforward' the way one checks for 'initial' in backward???
 							// * If one would, then it ought to be generalized...
 							// TODO: pray generalize into another [possibly static, think about that!] method, then rewrite both in terms of it [along the way, add the 'user configuration of not-found-returnvalue' thing;]...
-							moveforward(comparison, index, begin = false) {
+							moveforward(
+								comparison = this.class.template.class.template
+									.comparison,
+								index,
+								begin = false
+							) {
 								if (begin) this.begin(comparison)
 								while (!comparison(index, this.currindex))
 									this.next()
 								return this.currelem
 							},
-							// ? Question: should these things become the part of the IterArray instead???
-							// * Currently decided: yes, let it be so...They would fit noticeably better there. Add wrappers for them into the thing in question...
-							movebackward(comparison, index) {
+							movebackward(
+								comparison = this.class.template.class.template
+									.comparison,
+								index,
+								end = false
+							) {
+								if (end) this.end(comparison)
 								let currelem = null
 								let isFirst = false
 								while (
@@ -336,34 +353,33 @@ const infinite = {
 								if (isFirst) return false
 								return currelem
 							},
-							// begin(comparison = this.class.comparison) {
-							// 	return this.array.begin(comparison)
-							// },
-							// *
-							// moveforward(index, begin = false) {
-							// 	return this.array.moveforward(
-							// 		this.class.comparison,
-							// 		index,
-							// 		begin
-							// 	)
-							// },
-							// *
-							// movebackward(index, begin = false) {
-							// 	return this.array.movebackward(
-							// 		this.class.comparison,
-							// 		index,
-							// 		begin
-							// 	)
-							// },
-							read(index) {
-								const returned = this.moveforward(index, true)
-								this.array.begin(comparison)
-								return returned
+							read(
+								index,
+								comparison = this.class.template.class.template
+									.comparison
+							) {
+								const ind = this.currindex
+								this.moveforward(comparison, index, true)
+								const c = this.currelem
+								this.currindex = ind
+								return c
 							},
-							write(index, value) {
-								this.moveforward(index, true)
-								const returned = this.array.setcurr(value)
-								this.begin(comparison)
+							write(
+								index,
+								value,
+								comparison = this.class.template.class.template
+									.comparison
+							) {
+								const ind = this.currindex
+								// ! PROBLEM: with indexation methods choice...
+								// * What DOES one want to use: the '.moveforward/movebackward...',
+								// * or the simple '.currindex = [something]'?
+								// If using the first one, one allows for more generality and flexibility in what the thing might want to be doing...
+								// Yet for the simpler purposes, it will make it significantly slower...
+								// ? Which one does one want??? Pray think on it; decide;
+								this.moveforward(comparison, index, true)
+								const returned = (this.currelem = value)
+								this.currindex = ind
 								return returned
 							},
 							// TODO: implement the algorithms listed here...
@@ -428,7 +444,7 @@ const infinite = {
 								// * 3. return newarray
 							},
 							// TODO: 'end' should default to 'end=this.length()'
-							slice(begin, end) {
+							slice(begin, end = this.length) {
 								// * Sketch:
 								// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
 								// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
