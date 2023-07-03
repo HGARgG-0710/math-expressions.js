@@ -33,6 +33,7 @@
 // TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
 
 // TODO: work on the names a lot; make it sound plausible to oneself...
+// TODO: work on the error messages...
 
 // TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
 // TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
@@ -189,9 +190,31 @@ const infinite = {
 			empty: []
 		})
 
+		// ^ IDEA [pray implement within the library!]: the generator-obstructors;
+		// * It's a simple thing - gets to convert some manner of abstract format into a value of a generator;
+		// * Works exatly the same way as 'infinite.fromNumber', but is far more general and works on a particular manner of a format;
+		// * For an obstructor, what one requires is:
+		// 		1. Termination point [abstract format] - some manner of a value within the abstract format provided that causes the process of applying the generator on itself to stop...
+		// 		2. Generator [templated argument]- one that'd do the generation;
+		// 		3. Abstract inverse generator [abstract format] - the generator that'd be the reverse of the format itself - it leads from all the points within the format to the termination point;
+		// * By going through the values of the 'abstract inverse generator' until the 'termination point' and using the 'generator' along, one obtains the conversion of formats desired!!!
+		// ? Question: there is the InfiniteCounter.map() for this sort of stuff...
+		// ! On the other hand, the '.map' is only good when one has a generator;
+
 		// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
 		// 	% 1 [later]. complete the GeneralArray algorithms!
 		//	% 2. introduce the InfiniteCoutner(s) for the keeping of the indexing system [they make certain things simpler; reduce repetition]
+		// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+InfiniteCounter.comparison'; Using the comparison, one can determine which way to go;
+		// ! PROBLEM: with the 'moveforward' and 'movebackward';
+		// * Suppose getting called with 'false' for 'begin/end' (id est, starting from the present position within the array...);
+		// * Suppose then, that the '!this.currindex.compare(index)' (where 'index' is passed) for 'moveforward' or the reverse for 'movebackward';
+		// * The problem itself: the function won't reach the things in question; Only the beginning/end;
+		// * They're fairly useful when passing with 'begin/end=true', or knowing that this sort of thing won't happen [obstruction of the inner structure of the generator, for example...];
+		// ? What should one do in cases like these???
+		// * On the other hand.... There is now the '.go' method... It is direction independent; One could also do something like:
+		// 		function(x, ...) {if (this.currindex.compare(x)) return this.movebackward(x, ...); return this.moveforward(x, ...)}
+		// * And define another method for it... ['movedirection', for instance...]
+		// ^ solution: yeah; pray do that;
 		return {
 			template: template,
 			class: function (template) {
@@ -199,10 +222,9 @@ const infinite = {
 					isLabel: false,
 					label: ""
 				})
-				// ? QUESTION [general]: should the templates be of static nature [as in: 'const {varname1, ...} = template; {template: {varname1, ...}, ...}'], or dynamic [template: {...template}]?
 				// * Current Level Template variables [about the above todo...]: isLabel = false, label;
 				// ^ DECIDED: the arbitrary {...template} variant!
-				// todo: ensure that all the templates have this 'laid back' form and not some other one...
+				// todo: ensure that all the templates have this 'laid back' form of templates [{...template}-like, without explicitly setting what does and does not go into the template; the minimal requirements (expectations, even) are only dictated by the function/class used] and not some other one...
 				return {
 					template: { ...template, class: this },
 					class: function (
@@ -285,13 +307,26 @@ const infinite = {
 							},
 							// ! shorten the code with these 3...
 							begin() {
-								return (this.currindex = this.init())
+								return this.go(this.init(), () => true)
 							},
 							end() {
-								return (this.currindex = this.length().get())
+								// * skipping the check because one knows that it would be 'true' anyway...
+								return this.go(this.length().get(), () => true)
 							},
 							init() {
 								return this.class.template.class.template.forindgen()
+							},
+							// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
+							go(
+								index,
+								range = this.class.template.class.template.range
+							) {
+								if (!range(index))
+									throw new RangeError(
+										"Range error in the '.go' method 'index' argument whilst calling."
+									)
+
+								return (this.currindex = index)
 							},
 							// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
 							// * pray think about them...
@@ -764,7 +799,6 @@ const infinite = {
 		)
 	},
 
-	// ? Generalize for negatives? [one does have an inverse now...]
 	// ? Question: generalize for multiple inverses??? [Excellent; Decide how to do this better;]
 	fromNumber(template) {
 		return {
@@ -774,8 +808,6 @@ const infinite = {
 				n = Number(n) || Number(!isNaN(Number(n)))
 				if (n < 0)
 					return fromNumber({ generator: this.template.inverse })(-n)
-				// let result = InfiniteCounter(this.generator)()
-				// n = BigInt(n)
 				return repeatedApplication(
 					(r) => r.next(),
 					BigInt(n),
@@ -785,10 +817,6 @@ const infinite = {
 						inverse: this.template.inverse
 					})()
 				)
-				// ? Again; It is more complex [as in -- consisting of more parts] a construct, but takes less space...
-				// * Pray decide in each individual case what to do with this stuff...
-				// for (let i = 0n; i < n; i++) result = result.next()
-				// return result
 			}
 		}
 	},
@@ -801,6 +829,8 @@ const infinite = {
 	// * Then, the isSameStructure would just compare forms;
 	// ^ IDEA: create a 'ArrayForm', which would be the array embedded with this sturcture...
 
+	// ? QUESTION [general]: should such inter-call arguments required to pass the intermidiate execution values between the two recursive calls be available to user? Or does one want them to be obstructed instead???
+	// TODO: pray think in each individual case on this stuff, make it correspondent...
 	sameStructure(
 		array,
 		generator,
@@ -810,12 +840,18 @@ const infinite = {
 	) {
 		const copied = copy ? util.deepCopy(array) : array
 		for (let i = 0; i < copied.length; i++) {
-			const index = copied[i]
-			if (index instanceof Array) {
-				currval = sameStructure(index, generator, currval, false, true)
+			if (copied[i] instanceof Array) {
+				currval = sameStructure(
+					copied[i],
+					generator,
+					currval,
+					false,
+					true
+				)
 				continue
 			}
-			currval = currval === undefined ? generator() : generator(currval)
+			// * Found out that in JS, 'a(undefined) = a()';
+			currval = generator(currval)
 			copied[i] = currval
 		}
 		return !subcall ? currval : copied
@@ -911,44 +947,63 @@ const infinite = {
 						// 	pointer = pointer.next()
 						// if (isIt) return false
 					},
-					// ? Question: 'comparison'; Should it become a part of the IC-Classes?
-					// * Current decision: yes, pray do that.... One makes 'infinite.valueCompare' to be the default of the template-varible of 'comparison', with it also being a variable for the methods, which have the template variable value as a default...
 					// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
-					// TODO: fix the 'isendto', 'isendfro' definition defaults... With those, it'll create infinite loops;
 					jump(
 						x,
 						jumping = (k) => k.next(),
 						comparison = this.class.template.comparison,
-						range = this.class.template.range
-					) {
-						return ((x) => {
-							if (x === undefined) return this
-							return ((i) =>
-								repeatedApplicationWhilst(
-									(r) => {
-										i = i.next()
-										return jumping(r)
-									},
-									() => x.compare(i, comparison, range),
-									{
-										...infinite.deepCopy(this),
-										class: this.class
-									}
-								))(
-								infinite.InfiniteCounter({
+						range = this.class.template.range,
+						obstructor = typeof x === "number"
+							? infinite.fromNumber({
 									generator: infinite.numberCounter,
 									inverse: infinite.numberCounterInverse
-								})()
-							)
-						})(
-							// ! PROBLEM:
-							// * with the generators that use primitive numbers!
-							// ? How does one want the library to be treating native JS numbers??? Is this kind of behaviour truly wanted???
-							// todo: pray think on it; decide what to do; do it;
-							typeof x === "number"
-								? infinite.fromNumber(infinite.numberCounter)(x)
-								: x
-						)
+							  })
+							: id,
+						counterclass = {
+							generator: infinite.numberCounter,
+							inverse: infinite.numberCounterInverse,
+							// TODO: write ranges for various counters...
+							// * Construction of 'generator-inverse-range' becomes more and more omnipresent within different aspects of the library's API, so....
+							// ? not separate the definitions into 'generator-inverse-range', return the entire object???
+							range: () => {}
+						}
+					) {
+						// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
+						// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
+
+						const obstructed = obstructor(x)
+						// ? Generalize? Make this a default?
+						// * After having generalized the function that's 'like the plain "for"-loop', pray get rid of the 'const beginning = ' bit...
+						const beginning =
+							infinite.InfiniteCounter(counterclass)()
+
+						// ! Problem: when 'typeof x = "number"', this stuff don't pass!
+						// ? What to do??? The same problem with numbers as before...
+						if (!range(obstructed)) return this
+
+						// ! PROBLEM: with the generators that use native JS numbers!
+						// ? How does one want the library to be treating native JS numbers??? Is this kind of behaviour truly wanted???
+						// todo: pray think on it; decide what to do; do it;
+						// ^ IDEA [for a solution] : generalization of obstructors; [+ generalize the template used for this stuff....; might not work in some explicitly user-altered environments of 'infinite'...]
+
+						// ? How about generalizing this thing??? Looks almost like a plain 'for'-loop with an index...
+						return ((i) =>
+							repeatedApplicationWhilst(
+								(r) => {
+									i = i.next()
+									return jumping(r)
+								},
+								() =>
+									obstructed.compare(
+										i,
+										comparison,
+										() => true
+									),
+								{
+									...infinite.deepCopy(this),
+									class: this.class
+								}
+							))(beginning)
 					},
 					jumpForward(x) {
 						return this.jump(x)
@@ -956,7 +1011,10 @@ const infinite = {
 					jumpBackward(x) {
 						return this.jump(x, (k) => k.previous())
 					},
-					map(icClass, comparison = this.class.template.comparison) {
+					map(
+						icClass = this.class,
+						comparison = this.class.template.comparison
+					) {
 						let current = this.class.class()
 						let alterCurrent = icClass.class()
 						while (!comparison(current, this))
