@@ -38,6 +38,10 @@
 // TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
 // TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
 
+// TODO: do micro-optimizations; Spend some time on making the code generally more performant [without sacrificing any of the style or shortness/simlicity of it, of course];
+
+// TODO: check that all the functions/classes/methods/definitions are exported properly; order stuff within the file to match the theme better; add micro-sections; make everything nicer, prettier, tidier...
+
 // TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
 // * Get rid of unwanted explicit type conversions...
 // * Get rid of unwanted "const"'s
@@ -667,28 +671,52 @@ const infinite = {
 	stringCounter(a) {},
 
 	// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
+
 	// * That's an example of an infinite counter;
 	// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 	// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 	// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 	numberCounter(template) {
-		// ! Note!
-		// * that's the way to deal with the defaults with the newly chosen for the library templated function forms...
-		// TODO: ensure that all the template functions with default parameters are like it... Add default parameters where desired...
+		// ! Bugger that way of dealing with defaults...; instead, use the 'ensureProperty' + methods for getting to 'delete/add/rename' properties to the template object...
 		const { MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1 } = {
 			MAX_INT: template.maxint,
 			MAX_ARRAY_LENGTH: template.maxarrlen
 		}
+		// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 		return {
+			// TODO: make more flexible and 'laid-off'... (with {...template} + ensureProperty + other such methods)
 			template: {
 				maxint: MAX_INT,
 				maxarrlen: MAX_ARRAY_LENGTH
 			},
-			function: function (a) {
-				if (!a) return [0]
-				// ? put these two out of the function's context?
-				// TODO : generalize these greately, use here as special cases;
-				// * False alarm; It's far better be left off WITHOUT the counters; without them it can go up to (2**53-1)*(2**32-1)^stacksize, instead of (2**53-1)*stacksize^stacksize; with stacksize some 13000smthng;
+			generator: function (a) {
+				const _this = this
+				if (!this.range(a)) return [0]
+
+				// TODO : generalize these greately, use here as special cases; put outside the function's context...
+				// ! PROBLEM [with generalization of recursion]: how does one go about it???
+				// * This might be a solution to both the problem above [generalization] and the matter of choosing the array-index model...
+				// ^ IDEA [for a solution]: have the things generalized in the next fashion : let the second argument (prevArr=[]), be actually belonging to some 'indexing class';
+				// ^ The functions within the 'for' might be templated + be such: 
+				// * Consist of an array of [f], such that: 
+				// 		'f: (currarr, currindex, mainfunction) => [booleanval, returnval]', with 'booleanval=true <-> "return returnval" && booleanval=false <-> continue && booleanval=null <-> nextf(f)()'
+				// * where 'currarr' is the first argument ['a', the array]; 'currindex' is 'i' - the indexing thing; 'mainfunction' is the function called [to permit recursion...]; 
+				// ^ Finishing with the 'defreturn' argument - in these cases 'false' - the stuff that gets returned at any case...
+
+				// ! PROBLEM [still] : even after having solved this thing [still not resolved what is the 'indexing thing' is supposed to be yet..., the lower Problem still hangs], 
+				// * There still remains the problem of the stack; This particular manner of abstraction of things, though truly beautiful, requires an additional stack frame for each and every array layer...
+				// * This'd reduce the capacity of the final version of the counter by a half; 
+				// ^ Solution: JS fault, not the library or the style; Still going with it; 
+				// TODO: make a very big note about all this stuff inside the docs for the 1.0 version... [That the 'unlimited' stuff is merely structurally unlimited; not V8-permitted-stack-frame-memory-wise]; 
+
+				// ! PROBLEM [after all!] : difficulty with all that stuff GeneralArray/(native JS Array) after all...
+				// * It is roughly such: though the native arrays permit [within THIS PARTICULAR VERSION OF THE LIBRARY ONLY] to have a far more powerful counter...
+				// * Within any other, it would be still as limited, whereas with the counters, it would be un-limited!
+				// ? So, what ought one do for this version - prefer the matter of having the memory-level unlimitedness, even though stack-level-wise, in this particular case it is far more wise to pick a different counter?
+				// ^ Solution: use [generally] the InfiniteCounter for the indexing model...
+				// ? Although, could one not dress the native JS array into a [false] InfiniteCounter???
+				// * It'd just have: generator(x) := [...x, 0]? (Like in this thing)
+				// * Yes, pray do that! 
 				function findDeepUnfilledNum(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
@@ -697,16 +725,19 @@ const infinite = {
 							if (temp) return temp
 							continue
 						}
-						if (a[i[i.length - 1]] < MAX_INT) return i
+						if (a[i[i.length - 1]] < _this.template.maxint) return i
 					}
 					return false
 				}
 				function findDeepUnfilledArr(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-						const indexed = a[i[i.length - 1]]
-						if (indexed instanceof Array) {
-							if (indexed.length < this.maxarrlen) return i
+						if (a[i[i.length - 1]] instanceof Array) {
+							if (
+								a[i[i.length - 1]].length <
+								_this.template.maxarrlen
+							)
+								return i
 							const temp = findDeepUnfilledArr(a, i)
 							if (temp) return temp
 						}
@@ -753,37 +784,46 @@ const infinite = {
 					return _result
 				}
 
-				// ? Again! The resulting piece is longer than the original! (Try after having gotten rid of those braces, object notation...)
-				// result = recursiveIndexation({
-				// 	object: result,
-				// 	field: resultIndexes.slice(0, resultIndexes.length - 1)
-				// })
-				for (let i = 0; i < resultIndexes.length - 1; i++)
-					result = result[resultIndexes[i]]
+				result = recursiveIndexation({
+					object: result,
+					field: resultIndexes.slice(0, resultIndexes.length - 1)
+				})
 				result[resultIndexes[resultIndexes.length - 1]]++
 				return _result
+			},
+			// TODO: finish the inverse
+			// * Supposed to be something like this:
+			// 		1. numberCounterInverse(numberCounter(x)) = x; for all x: x != undefined
+			// 		2. numberCounterInverse(numberCounter()) = [-1];
+			// 		3. numberCounterInverse([x]) = [x - 1]; for all MIN_INT < x < MAX_INT;
+			// 		4. numberCounterInverse([MAX_INT]) = [MAX_INT, -1]
+			// 		...
+			// * And so on; Basically, same as the numberInverse, except the numbers are negative...
+			// ? Does one really want to rewrite all that stuff completely???
+			// ^ idea [for a plan]: first, patch up the numberCounter, fix all the problems and decide how it's going to look like,
+			// ^ then think of a way to beautifully generalize the both of them (the counter and its inverse; + maybe some additional method);
+			// * Then, create the method in question, write the two of those as a special case of it...
+			// ^ One could start with generalizing the two inner methods of the numberCounter; Then, having generalized them, brought onto the higher scope,
+			// ^ one could work exclusively on the numberCounter part...
+			// ? Mayhaps, allow for a creation of a template, that'd use some particular manner of generator for generation of elements within such a nested array, with these two being '(x) => {if (!x) return [0]; return x +- 1}' corespondently?
+			// ^ Additionally, generalize the 'range' too...
+			// * Current decision: yes, excellent; just that... pray do
+			inverse: function (a) {},
+			range: function (a) {
+				return (
+					a instanceof Array &&
+					a.length &&
+					!!min(
+						a.map(
+							(x) =>
+								typeof x === "number" ||
+								x instanceof Number ||
+								this.range(x)
+						)
+					)
+				)
 			}
 		}
-	},
-
-	// TODO: finish the inverse
-	// * Supposed to be something like this:
-	// 		1. numberCounterInverse(numberCounter(x)) = x; for all x: x != undefined
-	// 		2. numberCounterInverse(numberCounter()) = [-1];
-	// 		3. numberCounterInverse([x]) = [x - 1]; for all MIN_INT < x < MAX_INT;
-	// 		4. numberCounterInverse([MAX_INT]) = [MAX_INT, -1]
-	// 		...
-	// * And so on; Basically, same as the numberInverse, except the numbers are negative...
-	// ? Does one really want to rewrite all that stuff completely???
-	// ^ idea [for a plan]: first, patch up the numberCounter, fix all the problems and decide how it's going to look like,
-	// ^ then think of a way to beautifully generalize the both of them (+ maybe some additional method);
-	// * Then, create the method in question, write the two of those as a special case of it...
-	// ^ One could start with generalizing the two inner methods of the numberCounter; Then, having generalized them, brought onto the higher scope,
-	// ^ one could work exclusively on the numberCounter part...
-	// ? Mayhaps, allow for a creation of a template, that'd use some particular manner of generator for generation of elements within such a nested array, with these two being '(x) => {if (!x) return [0]; return x +- 1}' corespondently?
-	// * Current decision: yes, excellent; just that... pray do
-	numberCounterInverse(template) {
-		return { template: template, function: function (a) {} }
 	},
 
 	// * It checks for the same array structure... That being, if array are precisely isomorphic...
@@ -3861,6 +3901,28 @@ function factorial(number) {
 	return repeatedArithmetic(numbers.map(String), "*")
 }
 
+function sumRepresentations(n, m, minval = 1) {
+	// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
+	const itered = generate(minval, n).map((x) =>
+		generate(minval, m).map((v, i) => (i == 0 ? x : minval))
+	)
+	while (itered.length < n ** m) {
+		for (let i = 0; i < itered.length; i++) {
+			const copied = flatCopy(itered[i])
+			for (let j = 0; j < m; j++) {
+				copied[j]++
+				if (indexOfMult(itered, copied).length) {
+					copied[j]--
+					continue
+				}
+				itered.push(copied)
+			}
+		}
+	}
+
+	return itered.filter((x) => repeatedArithmetic(x, "+") == n)
+}
+
 /**
  * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
  * @param {number} float1 First number to be added.
@@ -4520,6 +4582,7 @@ export {
 	isPerfect,
 	allFactors,
 	factorial,
+	sumRepresentations,
 	realAddition,
 	setPrecision,
 	arrayEquality,
