@@ -293,6 +293,7 @@ const infinite = {
 							// 		... (whatever)
 							// }
 							// * pray notice, that the '.currindex' is affected throughout the loop [default]...
+							// TODO: make the 'indexiter' a templated property of the object's class... The default for the template would be this...
 							loop: function* (indexiter = (x) => x.next()) {
 								const index = this.currindex
 								this.begin()
@@ -697,17 +698,17 @@ const infinite = {
 				// ! PROBLEM [with generalization of recursion]: how does one go about it???
 				// * This might be a solution to both the problem above [generalization] and the matter of choosing the array-index model...
 				// ^ IDEA [for a solution]: have the things generalized in the next fashion : let the second argument (prevArr=[]), be actually belonging to some 'indexing class';
-				// ^ The functions within the 'for' might be templated + be such: 
-				// * Consist of an array of [f], such that: 
+				// ^ The functions within the 'for' might be templated + be such:
+				// * Consist of an array of [f], such that:
 				// 		'f: (currarr, currindex, mainfunction) => [booleanval, returnval]', with 'booleanval=true <-> "return returnval" && booleanval=false <-> continue && booleanval=null <-> nextf(f)()'
-				// * where 'currarr' is the first argument ['a', the array]; 'currindex' is 'i' - the indexing thing; 'mainfunction' is the function called [to permit recursion...]; 
+				// * where 'currarr' is the first argument ['a', the array]; 'currindex' is 'i' - the indexing thing; 'mainfunction' is the function called [to permit recursion...];
 				// ^ Finishing with the 'defreturn' argument - in these cases 'false' - the stuff that gets returned at any case...
 
-				// ! PROBLEM [still] : even after having solved this thing [still not resolved what is the 'indexing thing' is supposed to be yet..., the lower Problem still hangs], 
+				// ! PROBLEM [still] : even after having solved this thing [still not resolved what is the 'indexing thing' is supposed to be yet..., the lower Problem still hangs],
 				// * There still remains the problem of the stack; This particular manner of abstraction of things, though truly beautiful, requires an additional stack frame for each and every array layer...
-				// * This'd reduce the capacity of the final version of the counter by a half; 
-				// ^ Solution: JS fault, not the library or the style; Still going with it; 
-				// TODO: make a very big note about all this stuff inside the docs for the 1.0 version... [That the 'unlimited' stuff is merely structurally unlimited; not V8-permitted-stack-frame-memory-wise]; 
+				// * This'd reduce the capacity of the final version of the counter by a half;
+				// ^ Solution: JS fault, not the library or the style; Still going with it;
+				// TODO: make a very big note about all this stuff inside the docs for the 1.0 version... [That the 'unlimited' stuff is merely structurally unlimited; not V8-permitted-stack-frame-memory-wise];
 
 				// ! PROBLEM [after all!] : difficulty with all that stuff GeneralArray/(native JS Array) after all...
 				// * It is roughly such: though the native arrays permit [within THIS PARTICULAR VERSION OF THE LIBRARY ONLY] to have a far more powerful counter...
@@ -715,8 +716,10 @@ const infinite = {
 				// ? So, what ought one do for this version - prefer the matter of having the memory-level unlimitedness, even though stack-level-wise, in this particular case it is far more wise to pick a different counter?
 				// ^ Solution: use [generally] the InfiniteCounter for the indexing model...
 				// ? Although, could one not dress the native JS array into a [false] InfiniteCounter???
+				// ! As a default ONLY! That being, the user still is able to choose their own one, for instance; The function has the InfiniteCounter class as a part of its template...
+				// ! That being, choose as a part of the numberCounter template and as a part of this template, one'd have this 'false' generator as a default for the use of the 2 generalized functions...
 				// * It'd just have: generator(x) := [...x, 0]? (Like in this thing)
-				// * Yes, pray do that! 
+				// * Yes, pray do that!
 				function findDeepUnfilledNum(a, prevArr = []) {
 					const i = [...prevArr, 0]
 					for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
@@ -728,6 +731,59 @@ const infinite = {
 						if (a[i[i.length - 1]] < _this.template.maxint) return i
 					}
 					return false
+				}
+				// * Two methods generalized...
+				// ! PROBLEM [with the 'next' structure on the InfiniteCounter...]:
+				// * It is roughly such - the methods that are being generalized rely upon 2 kinds of 'next'; The counter has got multiple directions of "evolution";
+				// * The current InfiniteCounter, thus, is way too narrow for the use of itself in question...
+				// TODO: pray expand the InfiniteCounter to multiple 'next()' and 'prev()'; decide the structure, yada yada...
+				function GFIND(template) {
+					// TODO: change for the final name of the function when putting into the outer context...
+					// ! Also, create a good name for it...
+					ensureProperty(template, "self", GFIND)
+					return {
+						template: { ...template },
+						function: function (
+							a,
+							prevcounter = this.template.icclass.class()
+						) {
+							let currcounter =
+								this.template.copyfunction(prevcounter)
+							// ? Question: does one do that thing once [remember the value obtained here...] or not?
+							// * For the currently generalized example to work , remembering is sufficient; However, one might want to have a more exotic behaviour in place [in sacrifice of speed...]
+							// ! Pray consider... [Current choice is: it stays as-is]
+							for (
+								;
+								!currcounter.comparison(
+									infinite.fromNumber({
+										...this.template.icclass.template
+									})(a.length)
+								);
+								currcounter = currcounter.next()
+							) {
+								// ! PROBLEM[1]: about the precise structure of 'fs';
+								// * Does one want them to be potentially different throughout the change of the 'prevcounter' [that being, passing a function of the counter returning the current iteration?]
+								// Current decision: yes, do that;
+								// ! Pray decide too...
+
+								// ? Does one want to remember it like so? It is intended to be a GeneralArray...
+								const curriter =
+									this.template.iteration(currcounter)
+								while (curriter.loop()) {
+									const r = curriter.currelem(
+										a,
+										currcounter,
+										this.template.self
+									)
+									if (r[0] === true) return r[1]
+									if (r[0] === false) break
+									// 'anything else' would essentially mean continuation of the list of
+								}
+							}
+
+							return this.template.defaultvalue()
+						}
+					}
 				}
 				function findDeepUnfilledArr(a, prevArr = []) {
 					const i = [...prevArr, 0]
