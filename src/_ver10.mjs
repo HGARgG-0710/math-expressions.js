@@ -632,6 +632,19 @@ const infinite = {
 	// ^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
 	// ^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
 
+	// ! PROBLEM: this thing work fine with objects... But what about functions???
+	// ^ IDEA [1; for a solution]: for them, do: 'return String(a) === String(b)';
+	// * That'd "work" for some particular functions... If one excepts:
+	// 		1. Function Size [the 'String' won't work with large enough functions' code...];
+	// 		2. Notation [stuff like (a) => {return a} and (b) => {return b}; won't be considered "the same"];
+	// 		3. Formatting [stuff like (a) => {return a} and (a   ) => {   return   a;  }; won't be considered "the same"];
+	// * Though imperfect, that is the currently chosen path for it...
+	// * This will, however, work for stuff like template classes and methods of different objects that have the exactly same code;
+	// TODO [about the 1.]: after having created the InfiniteString, pray allow for a function/String to be transformed into it; The function - to get all of its code...
+	// ? About the formatting [3.] stuff [and, possbily notation, 2.], one ideally ought to parse functions, then compoare their ASTs; For that sort of stuff, one'd do 
+	// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))'; 
+	// ! All that'd be required is a JS parser...
+	// todo: having created the JSONF, for the 1.1 [or even the 1.2] release, pray add this there too...
 	valueCompare(a, b, oneway = false) {
 		if (typeof a !== typeof b) return false
 		switch (typeof a) {
@@ -640,10 +653,13 @@ const infinite = {
 					if (!infinite.valueCompare(b[a_], a[a_])) return false
 				if (!oneway) return infinite.valueCompare(b, a, true)
 				return true
+			case "function":
+				return String(a) === String(b)
 			default:
 				return a === b
 		}
 	},
+
 	// * Does a flat copy of something;
 	flatCopy(a) {
 		return a instanceof Array
@@ -1055,21 +1071,14 @@ const infinite = {
 									inverse: infinite.numberCounterInverse
 							  })
 							: id,
-						counterclass = {
-							generator: infinite.numberCounter,
-							inverse: infinite.numberCounterInverse,
-							// TODO: write ranges for various counters...
-							// * Construction of 'generator-inverse-range' becomes more and more omnipresent within different aspects of the library's API, so....
-							// ? not separate the definitions into 'generator-inverse-range', return the entire object???
-							range: () => {}
-						}
+						counterclass = infinite.numberCounter()
 					) {
 						// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
 						// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
 
 						const obstructed = obstructor(x)
 						// ? Generalize? Make this a default?
-						// * After having generalized the function that's 'like the plain "for"-loop', pray get rid of the 'const beginning = ' bit...
+						// * After having generalized the local function below that's 'like the plain "for"-loop', pray get rid of the 'const beginning = ' bit...
 						const beginning =
 							infinite.InfiniteCounter(counterclass)()
 
@@ -1117,6 +1126,55 @@ const infinite = {
 							alterCurrent = alterCurrent.next()
 						return alterCurrent
 					}
+				}
+			}
+		}
+	},
+
+	MultiInfiniteCounter(template) {
+		// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
+		// * Perhaps, one would have multiple comparisons assigned to each and every one index of the array in question? [But, that'd require using the same manner of array-templates for them...]
+		// ! Pray think and decide...
+		ensureProperty(template, "comparison", infinite.valueCompare)
+		return {
+			template: template,
+			class: function (
+				previous,
+				index,
+				generators = this.template.generators
+			) {
+				return {
+					class: this,
+					generators: generators,
+					value: previous
+						? this.generator(index)(previous.value)
+						: this.generator(index)(),
+					generator(index) {
+						return this.generators.read(index)
+					},
+					next(index) {
+						return this.generator(index)(this)
+					},
+					// TODO: pray consider the fate of all the other methods within the structure in question....
+					// * What about '.compare()'? Because of greatness of variaty of manner of things possible within the structure in question, one would [if at all, that being] not have it the same way as it is within the InfiniteCounter!
+					// One might do this by only choosing some one particular generator of the entire bunch; Or [more general], perhaps, creating some manner of way for the user to set the order by which to 'judge' the return value of the 'compare', with it serving as merely a wrapper for the essential part of the order in question???
+					// * For '.jump()', one would require the 'ranges' + also the index of the generator that is to be used for the jump...
+					// ! About the ranges: does one really want them to be an argument for this stuff??? [Perhaps, make them arguments for other things too, then???]
+					// ^ Implementation of '.jump()';
+					jump(x, index, ranges = this.class.template.ranges) {
+						if (!ranges.read(index)(x)) return this
+						// TODO: generalize the InfiniteCounter.jump(), then use the stuff here [essentially the same code]...
+					}
+					// * For '.map()'... What does one do about '.map()'???
+					// * Due to the fact that there is not one single direction to continue in [and there is an infinite number of different permutations of operators...]
+					// * There's no way to know generally how does one get from a certain thing 'x' to a 'y' using the Multi; Thus, CANNOT BE IMPLEMENTED TO BE THE SAME WAY...
+					// ! However.... If one was to somehow remember the path taken [starting from the decided position...];
+					// * One may as well do it...
+					// ! Or better, make a general method which would accept a GeneralArray of indexes, that'd correspond to indexes of the 'this.generators';
+					// * Then, one'd just iterate over the array in question, applying the '=.next(currindex)' to the chosen 'beginindex'!
+					// ? Would this not better be off as a static method, though?
+					// * CURRENT DECISION: yes!
+					// TODO: work on the static methods for the class-like structures in question...
 				}
 			}
 		}
