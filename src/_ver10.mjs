@@ -8,6 +8,12 @@
 // * 4. Particular attention for the IterArray; Working on it further...
 // * 5. Particular attention for the GeneralArray; Working on it further still... Finishing the sketched out methods implementations...;
 
+// ^ IDEA: class extensions;
+// * These are just the same plain old classes, with the ability for user to arbitrarily extend them;
+// * Everything - the defaults list, the methods list, can be changed, extended;
+// todo: pray create a general structure for them and then re-do everything appropriate in a manner allowing for this particular kind of thing;
+// ? Mayhaps, merge with the idea for inheritances-extensions of stuff like 'infinite'? [Been a todo there somewhere, pray find...]
+
 // [Parts of the Grand Cleanup]:
 // % 1. (get rid of)/refactor the repeating notes;
 // % 2. Form for the templates; All functions of the library have the same templates form; Example:
@@ -203,25 +209,16 @@ const infinite = {
 
 		// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
 		// 	% 1 [later]. complete the GeneralArray algorithms!
-		// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+InfiniteCounter.comparison'; Using the comparison, one can determine which way to go;
-		// ! PROBLEM: with the 'moveforward' and 'movebackward';
-		// * Suppose getting called with 'false' for 'begin/end' (id est, starting from the present position within the array...);
-		// * Suppose then, that the '!this.currindex.compare(index)' (where 'index' is passed) for 'moveforward' or the reverse for 'movebackward';
-		// * The problem itself: the function won't reach the things in question; Only the beginning/end;
-		// * They're fairly useful when passing with 'begin/end=true', or knowing that this sort of thing won't happen [obstruction of the inner structure of the generator, for example...];
-		// ? What should one do in cases like these???
-		// * On the other hand.... There is now the '.go' method... It is direction independent; One could also do something like:
-		// 		function(x, ...) {if (this.currindex.compare(x)) return this.movebackward(x, ...); return this.moveforward(x, ...)}
-		// * And define another method for it... ['movedirection', for instance...]
-		// ^ solution: yeah; pray do that;
+		// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+generalized InfiniteCounter.comparison(this.length().get(), ...)'; Using the comparison, one can determine which way to go;
+		// TODO: define the 'GeneralArray.movedirection()' using the 'InfiniteCounter.jumpdirection()'; because they're essentially exactly the one and same method...
+		// * Besides, this way, one'd have them as entirely different [far more effective] methods; That being, the user isn't required to know positional information concerning the index, only the relative difference between the present and future index...
+		// * More handy for more generalized approaches to and uses of changing the GeneralArray index...
 		return {
 			template: { empty: [], ...template },
 			class: function (template) {
 				// * Current Level Template variables [about the above todo...]: isLabel = false, label;
-				// ^ DECIDED: the arbitrary {...template} variant!
-				// todo: ensure that all the templates have this 'laid back' form of templates [{...template}-like, without explicitly setting what does and does not go into the template; the minimal requirements (expectations, even) are only dictated by the function/class used] and not some other one...
+				// TODO: the decided templates shape - {...defaults, ...usertemplate, ...overrides}; (Like here...) Pray ensure it...
 				return {
-					// TODO: along with the one above - that's how one may ensure 'default' properties values for a template; Ensure that all the 'template's have this partiular structure...
 					template: {
 						isLabel: false,
 						label: "",
@@ -245,6 +242,7 @@ const infinite = {
 								return (this.currindex =
 									this.currindex.previous())
 							},
+							// ? Do the same thing with the 'currelem' as with the '.length()'?
 							get currelem() {
 								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
 								// todo [general] : pray do just that...
@@ -314,7 +312,7 @@ const infinite = {
 								return this.go(this.length().get(), () => true)
 							},
 							init() {
-								return this.class.template.class.template.isclass.class()
+								return this.class.template.class.template.icclass.class()
 							},
 							// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
 							// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
@@ -639,12 +637,15 @@ const infinite = {
 
 	// * Copies an object/array deeply...
 	deepCopy(a) {
-		if (a instanceof Array) return a.map((el) => infinite.deepCopy(el))
-		if (typeof a === "object") {
-			const aCopy = {}
-			for (const b in a) aCopy[b] = infinite.deepCopy(a[b])
-			return aCopy
-		}
+		if (typeof a === "function") return infinite.flatCopy(a)
+		return infinite.dataCopy(a)
+	},
+
+	// * Keeps the functions references intact whilst copying...
+	dataCopy(a) {
+		if (a instanceof Array) return a.map(infinite.deepCopy)
+		if (typeof a === "object") return objFmap(a, infinite.deepCopy)
+		if (typeof a === "symbol") return infinite.flatCopy(a)
 		return a
 	},
 
@@ -683,10 +684,16 @@ const infinite = {
 
 	// * Does a flat copy of something;
 	flatCopy(a) {
+		// ? Question: should one not be using the more 'general' version with 'finding' "Symbol" within the string for 'symbol'-type copying? Or ought one leave it like so??
+		// * pray decide and do how one wants to...
 		return a instanceof Array
 			? [...a]
 			: typeof a === "object"
 			? { ...a }
+			: typeof a === "function"
+			? a.bind({})
+			: typeof a === "symbol"
+			? Symbol(a.toString().slice(7).slice(0, 1))
 			: a
 	},
 
@@ -1009,9 +1016,32 @@ const infinite = {
 	// TODO: add a way of transforming the given InfiniteCounter into a TrueInteger on-the-go and back again; This allows to use them equivalently to built-in numbers (their only difference currently is counter arithmetic...)
 	// ^ idea [for an implementation...]: add a pair of static method: TrueInteger<...>.fromCounter(...), TrueInteger<...>.toCounter(); One could also add the corresponding structures to the InfiniteCounter [as a sugar, for instance?]
 	InfiniteCounter(template) {
-		ensureProperty(template, "comparison", infinite.valueCompare)
-		return {
-			template: template,
+		const A = {
+			// ^ IDEA [for a solution over 'static' methods]: the class object would contain the field 'static' with the appropriate methods...
+			// TODO: pray do them...
+			static: {
+				direction(ic) {
+					return ic.compare(this.this.class())
+				},
+				// TODO: clean that one up a bit later...
+				forloop(i, comparison, jumping, obstructed) {
+					// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
+					// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
+					return repeatedApplicationWhilst(
+						(r) => {
+							i = i.next()
+							return jumping(r)
+						},
+						() => !i.compare(obstructed, comparison, () => true),
+						{
+							// TODO: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
+							...infinite.deepCopy(this),
+							class: this.class
+						}
+					)
+				}
+			},
+			template: { comparison: infinite.valueCompare, ...template },
 			class: function (previous) {
 				return {
 					class: this,
@@ -1028,15 +1058,17 @@ const infinite = {
 					previous() {
 						return this.class.template.inverse(this)
 					},
-					// * 'true' means 'this appears after ic'
-					// * 'false' means 'ic appears after this'
-					// * 'null' means 'no following';
+					// * 'true' means 'ic <= this'
+					// * 'false' means 'ic > this'
+					// * 'null' means 'no strict following in appearance under chosen pair of generators';
 					// it's a bit like a 'greater than' relation...
 					compare(
 						ic,
 						comparison = this.class.template.comparison,
 						range = this.class.template.range
 					) {
+						// ? QUESTION: should one be doing it like 'range(ic)', or 'range(ic.value)' ?
+						// TODO: the 'ic.value' way is far more universal; PRAY DO THAT EVERYWHERE WHERE 'ranges' are even used...
 						if (!range(ic)) return null
 
 						let pointerfor = ic
@@ -1080,6 +1112,17 @@ const infinite = {
 						// 	pointer = pointer.next()
 						// if (isIt) return false
 					},
+					difference(ic) {},
+					// ! PROBLEM [a bit of]: the 'jumpDirection' is not generalized [along with the 'jumpForward' and 'jumpBackward', which should be genearalized];
+					// TODO: generalize those; let only the 'jumping's not be settable for them; [Same for the jumpDirection...]
+					jumpDirection(ic) {
+						const d = this.class.static.direction(ic)
+						return d
+							? this.jumpForward(ic)
+							: d === null
+							? this
+							: this.jumpBackward(ic)
+					},
 					// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
 					jump(
 						x,
@@ -1088,48 +1131,22 @@ const infinite = {
 						range = this.class.template.range,
 						obstructor = typeof x === "number"
 							? infinite.fromNumber({
-									generator: infinite.numberCounter,
-									inverse: infinite.numberCounterInverse
+									generator: this.class.template.generator,
+									inverse: this.class.template.inverse
 							  })
 							: id,
-						counterclass = infinite.numberCounter()
+						counterclass = this.class
 					) {
 						// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
 						// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
-
 						const obstructed = obstructor(x)
-						// ? Generalize? Make this a default?
-						// * After having generalized the local function below that's 'like the plain "for"-loop', pray get rid of the 'const beginning = ' bit...
-						const beginning =
-							infinite.InfiniteCounter(counterclass)()
-
-						// ! Problem: when 'typeof x = "number"', this stuff don't pass!
-						// ? What to do??? The same problem with numbers as before...
 						if (!range(obstructed)) return this
-
-						// ! PROBLEM: with the generators that use native JS numbers!
-						// ? How does one want the library to be treating native JS numbers??? Is this kind of behaviour truly wanted???
-						// todo: pray think on it; decide what to do; do it;
-						// ^ IDEA [for a solution] : generalization of obstructors; [+ generalize the template used for this stuff....; might not work in some explicitly user-altered environments of 'infinite'...]
-
-						// ? How about generalizing this thing??? Looks almost like a plain 'for'-loop with an index...
-						return ((i) =>
-							repeatedApplicationWhilst(
-								(r) => {
-									i = i.next()
-									return jumping(r)
-								},
-								() =>
-									obstructed.compare(
-										i,
-										comparison,
-										() => true
-									),
-								{
-									...infinite.deepCopy(this),
-									class: this.class
-								}
-							))(beginning)
+						return this.class.static.forloop(
+							infinite.InfiniteCounter(counterclass)(),
+							comparison,
+							jumping,
+							obstructed
+						)
 					},
 					jumpForward(x) {
 						return this.jump(x)
@@ -1150,6 +1167,10 @@ const infinite = {
 				}
 			}
 		}
+
+		// TODO: that's how one does add a self-reference to the 'static' member of the class's object. Pray ensure that this is used and all the classes have their own 'static.this'
+		A.static.this = A
+		return A
 	},
 
 	MultiInfiniteCounter(template) {
@@ -4571,6 +4592,12 @@ function objMap(obj, keys, id = true) {
 	return newobj
 }
 
+function objFmap(obj, f) {
+	const newobj = {}
+	for (const a in obj) newobj[a] = f(obj[a])
+	return newobj
+}
+
 function objArr(obj) {
 	return [Object.keys(obj), Object.values(obj)]
 }
@@ -4753,6 +4780,7 @@ export {
 	objInverse,
 	obj,
 	objMap,
+	objFmap,
 	objArr,
 	objSwap,
 	objClear,
