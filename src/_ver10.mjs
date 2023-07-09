@@ -188,12 +188,8 @@ const infinite = {
 	// TODO [about GeneralArray; come back a tad later]: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
 
 	// ^ IDEA [for a solution; about the 'elem' method for assigning an array element to an index]: give the methods in question [special cases of GeneralArray] the access to the index generator in question [the template ones];
+	// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite number of counters [uses the MultiInfiniteCounter alternative...]
 	GeneralArray(template) {
-		ensureProperties(template, {
-			comparison: infinite.valueCompare,
-			empty: []
-		})
-
 		// ^ IDEA [pray implement within the library!]: the generator-obstructors;
 		// * It's a simple thing - gets to convert some manner of abstract format into a value of a generator;
 		// * Works exatly the same way as 'infinite.fromNumber', but is far more general and works on a particular manner of a format;
@@ -207,7 +203,6 @@ const infinite = {
 
 		// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
 		// 	% 1 [later]. complete the GeneralArray algorithms!
-		//	% 2. introduce the InfiniteCoutner(s) for the keeping of the indexing system [they make certain things simpler; reduce repetition]
 		// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+InfiniteCounter.comparison'; Using the comparison, one can determine which way to go;
 		// ! PROBLEM: with the 'moveforward' and 'movebackward';
 		// * Suppose getting called with 'false' for 'begin/end' (id est, starting from the present position within the array...);
@@ -220,35 +215,35 @@ const infinite = {
 		// * And define another method for it... ['movedirection', for instance...]
 		// ^ solution: yeah; pray do that;
 		return {
-			template: template,
+			template: { empty: [], ...template },
 			class: function (template) {
-				ensureProperties(template, {
-					isLabel: false,
-					label: ""
-				})
 				// * Current Level Template variables [about the above todo...]: isLabel = false, label;
 				// ^ DECIDED: the arbitrary {...template} variant!
 				// todo: ensure that all the templates have this 'laid back' form of templates [{...template}-like, without explicitly setting what does and does not go into the template; the minimal requirements (expectations, even) are only dictated by the function/class used] and not some other one...
 				return {
-					template: { ...template, class: this },
+					// TODO: along with the one above - that's how one may ensure 'default' properties values for a template; Ensure that all the 'template's have this partiular structure...
+					template: {
+						isLabel: false,
+						label: "",
+						...template,
+						class: this
+					},
 					class: function (
 						array = this.template.class.template.empty
 					) {
 						return {
 							array: array,
 							class: this,
-							currindex: this.template.class.template.forindgen(),
+							currindex:
+								this.template.class.template.icclass.class(),
 							next() {
-								return (this.currindex =
-									this.class.template.class.template.forindgen(
-										this.currindex
-									))
+								return (this.currindex = this.currindex.next())
 							},
+							// ! PROBLEM: shouldn't the GeneralArray.prev() and InfiniteCounter.previous() bear the same name???
+							// TODO: decide upon a name...
 							prev() {
 								return (this.currindex =
-									this.class.template.class.template.backindgen(
-										this.currindex
-									))
+									this.currindex.previous())
 							},
 							get currelem() {
 								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
@@ -319,12 +314,14 @@ const infinite = {
 								return this.go(this.length().get(), () => true)
 							},
 							init() {
-								return this.class.template.class.template.forindgen()
+								return this.class.template.class.template.isclass.class()
 							},
 							// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
+							// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
 							go(
 								index,
-								range = this.class.template.class.template.range
+								range = this.class.template.class.template
+									.icclass.template.range
 							) {
 								if (!range(index))
 									throw new RangeError(
@@ -339,7 +336,7 @@ const infinite = {
 								index,
 								preface,
 								comparison = this.class.template.class.template
-									.comparison,
+									.icclass.template.comparison,
 								each = (x) => x.next(),
 								stop = (x) => comparison(x.length, x.currindex)
 							) {
@@ -355,7 +352,7 @@ const infinite = {
 								index,
 								begin = false,
 								comparison = this.class.template.class.template
-									.comparison
+									.icclass.template.comparison
 							) {
 								return this.move(
 									index,
@@ -370,7 +367,7 @@ const infinite = {
 								index,
 								end = false,
 								comparison = this.class.template.class.template
-									.comparison
+									.icclass.template.comparison
 							) {
 								return this.move(
 									index,
@@ -382,17 +379,13 @@ const infinite = {
 									// ? Question: does one want to compute it each and every time like that???
 									// * Again, a question of exotic generality. Does one want to have it?
 									// * Current decision: yes, sure;
-									(x) =>
-										comparison(
-											x.currindex,
-											x.class.template.class.template.forindgen()
-										)
+									(x) => comparison(x.currindex, x.init())
 								)
 							},
 							read(
 								index,
 								comparison = this.class.template.class.template
-									.comparison
+									.icclass.template.comparison
 							) {
 								const ind = this.currindex
 								this.moveforward(index, true, comparison)
@@ -404,7 +397,7 @@ const infinite = {
 								index,
 								value,
 								comparison = this.class.template.class.template
-									.comparison
+									.icclass.template.comparison
 							) {
 								const ind = this.currindex
 								this.moveforward(index, true, comparison)
@@ -435,8 +428,11 @@ const infinite = {
 									// TODO: make the 'range' a template method...
 									set: function (
 										value,
+										comparison = _this.class.template.class
+											.template.icclass.template
+											.comparison,
 										range = _this.class.template.class
-											.template.range
+											.template.icclass.template.range
 									) {
 										// ^ IDEA: solution to the problem of 'going for infinity';
 										// * A truly infinite loop [for a finite structure, that is,] can happen only in the case when the given index is outside the bounds of the index range;
@@ -446,13 +442,40 @@ const infinite = {
 												"Index range error for array length setting"
 											)
 
-										// ^ IDEA: use the InfiniteCounters for this stuff;
-										// * Their '.compare()' method would come in very handy... Depending on it, one would be going a certain direction and either:
-										// * 1. adding some 'default' element [may be given by a function...]; the 'newlength'>'oldlength' case;
-										// * 2. deleting the indexes exceeding the decided length;
-										// * 3. nothing [if this is the same length as before...]
+										if (
+											comparison(
+												_this.length().get(),
+												value
+											)
+										)
+											return
 
-										// TODO: define the operation of changing the 'length';
+										if (
+											_this
+												.length()
+												.get()
+												.compare(
+													value,
+													undefined,
+													() => true
+												)
+										) {
+											// Decrease the length
+											// ? PROBLEM: how does one decide the beginindex (named 'startindex' here)?
+											// TODO: put something else there instead of 'undefined'
+											_this.deleteMult(
+												undefined,
+												this.length().get()
+											)
+										} else {
+											// Increase the length
+											// ? Problem : number of times???
+											// ^ IDEA [for a solution]: implement the InfiniteCounter.difference(ic) method; would essentially take an 'InfiniteCounter' instance, find the difference between it and the current index;
+											// * note: the returned difference would be non-absolute and by the chosen generator, that being, one would 'jump' on the appropritate number of times;
+											// TODO: for this, implement the direction-dependent 'jump', ('jumpDirection', for instance), which would jump forward or backward correspondently with the direction of the thing in question;
+											// TODO: create also the 'direction' method for the InfiniteCounter; would essentially return 'this.class.template.generator().compare(ic)' (by default; it would have the thing generalized..., of course);
+											_this.shiftForward()
+										}
 									}
 								}
 							},
@@ -560,7 +583,7 @@ const infinite = {
 							},
 							shiftForward(times, generator, baseelem) {
 								// * Sketch [change the '[]' for GeneralArray constructor]:
-								// * 1. return this.concat([baseelem].repeat(times, generator));
+								// * 1. return [baseelem].repeat(times, generator).concat(this);
 							},
 							shiftBackward(times, generator) {
 								// * Sketch:
@@ -632,17 +655,15 @@ const infinite = {
 	// ^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
 	// ^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
 
-	// ! PROBLEM: this thing work fine with objects... But what about functions???
-	// ^ IDEA [1; for a solution]: for them, do: 'return String(a) === String(b)';
-	// * That'd "work" for some particular functions... If one excepts:
+	// ! PROBLEM: with the currently chosen solution for the handling of the funciton arguments;
+	// * List of 'problems' (1. and 3. especially; the 2. is more curious);
 	// 		1. Function Size [the 'String' won't work with large enough functions' code...];
 	// 		2. Notation [stuff like (a) => {return a} and (b) => {return b}; won't be considered "the same"];
 	// 		3. Formatting [stuff like (a) => {return a} and (a   ) => {   return   a;  }; won't be considered "the same"];
-	// * Though imperfect, that is the currently chosen path for it...
-	// * This will, however, work for stuff like template classes and methods of different objects that have the exactly same code;
+	// * This does work for stuff like template classes and methods of different objects that have the exactly same code;
 	// TODO [about the 1.]: after having created the InfiniteString, pray allow for a function/String to be transformed into it; The function - to get all of its code...
-	// ? About the formatting [3.] stuff [and, possbily notation, 2.], one ideally ought to parse functions, then compoare their ASTs; For that sort of stuff, one'd do 
-	// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))'; 
+	// ? About the formatting [3.] stuff [and, possbily notation, 2.], one ideally ought to parse functions, then compoare their ASTs; For that sort of stuff, one'd do
+	// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))';
 	// ! All that'd be required is a JS parser...
 	// todo: having created the JSONF, for the 1.1 [or even the 1.2] release, pray add this there too...
 	valueCompare(a, b, oneway = false) {
