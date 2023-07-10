@@ -14,6 +14,8 @@
 // todo: pray create a general structure for them and then re-do everything appropriate in a manner allowing for this particular kind of thing;
 // ? Mayhaps, merge with the idea for inheritances-extensions of stuff like 'infinite'? [Been a todo there somewhere, pray find...]
 
+// TODO: work extensively on the general possibilities of each and every method/class within the library... make it possible to easily create most exotic manner of things with it...
+
 // [Parts of the Grand Cleanup]:
 // % 1. (get rid of)/refactor the repeating notes;
 // % 2. Form for the templates; All functions of the library have the same templates form; Example:
@@ -66,7 +68,7 @@
 const MAX_ARRAY_LENGTH = 2 ** 32 - 1
 const MAX_INT = 2 ** 53 - 1
 
-// TODO: finish this note [later...];
+// TODO: finish this introduction note [later...];
 /**
  * * API source code, version 1.0 alpha (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
@@ -210,9 +212,6 @@ const infinite = {
 		// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
 		// 	% 1 [later]. complete the GeneralArray algorithms!
 		// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+generalized InfiniteCounter.comparison(this.length().get(), ...)'; Using the comparison, one can determine which way to go;
-		// TODO: define the 'GeneralArray.movedirection()' using the 'InfiniteCounter.jumpdirection()'; because they're essentially exactly the one and same method...
-		// * Besides, this way, one'd have them as entirely different [far more effective] methods; That being, the user isn't required to know positional information concerning the index, only the relative difference between the present and future index...
-		// * More handy for more generalized approaches to and uses of changing the GeneralArray index...
 		return {
 			template: { empty: [], ...template },
 			class: function (template) {
@@ -228,33 +227,41 @@ const infinite = {
 					class: function (
 						array = this.template.class.template.empty
 					) {
-						return {
+						// TODO: ensure that all the objects within the library possess this style; Allows for changing the 'this' dynamically easily [something that plain JS 'this' don't really allow];
+						const A = { class: this }
+						// TODO: finish the re-working of all this thing; Change the 'this' to 'this.this.this'; the 'this.class', then, to 'this.this.class' [because one changed the structure there];
+						// * Note: changing works like so: 'this.this.this = expr(this.this.this).'; where the result of 'expr' too does possess this kind of structure;
+						// ? Question: should one not do 'this.this.this.this.class', then, instead of just 'this.this.class'? Because, locally, within the new [changed array], it could have been already changed [by the user, for instance...]
+						// ! YES, pray re-do as this...
+						A.this = {
 							array: array,
-							class: this,
 							currindex:
 								this.template.class.template.icclass.class(),
 							next() {
-								return (this.currindex = this.currindex.next())
+								return (this.this.this.currindex =
+									this.this.this.currindex.next())
 							},
-							// ! PROBLEM: shouldn't the GeneralArray.prev() and InfiniteCounter.previous() bear the same name???
-							// TODO: decide upon a name...
-							prev() {
-								return (this.currindex =
-									this.currindex.previous())
+							previous() {
+								return (this.this.this.currindex =
+									this.this.this.currindex.previous())
 							},
 							// ? Do the same thing with the 'currelem' as with the '.length()'?
 							get currelem() {
 								// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
 								// todo [general] : pray do just that...
 								return (
-									this.class.template.isLabel
-										? (x) => x[this.class.template.label]
+									this.this.class.template.isLabel
+										? (x) =>
+												x[
+													this.this.class.template
+														.label
+												]
 										: id
 								)(
-									this.class.template.class.template.elem(
-										this,
-										this.class.template.class.template.isUndefined(
-											this
+									this.this.class.template.class.template.elem(
+										this.this.this,
+										this.this.class.template.class.template.isUndefined(
+											this.this.this
 										)
 									)
 								)
@@ -262,24 +269,24 @@ const infinite = {
 							set currelem(newval) {
 								// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
 								if (
-									!this.class.template.isLabel ||
-									this.class.template.class.template.isUndefined(
-										this
+									!this.this.class.template.isLabel ||
+									this.this.class.template.class.template.isUndefined(
+										this.this.this
 									)
 								)
-									return this.class.template.class.template.newvalue(
-										this,
-										(this.class.template.isLabel
+									return this.this.class.template.class.template.newvalue(
+										this.this.this,
+										(this.this.class.template.isLabel
 											? Pointer({
-													label: this.class.template
-														.label
+													label: this.this.class
+														.template.label
 											  })
 											: id)(newval)
 									)
 
-								return (this.class.template.class.template.elem(
-									this
-								)[this.class.template.label] = newval)
+								return (this.this.class.template.class.template.elem(
+									this.this.this
+								)[this.this.class.template.label] = newval)
 							},
 							// * For loops; Allows to loop over an array, with a changing index; Usage example:
 							// while (iterarr.loop()) {
@@ -288,37 +295,49 @@ const infinite = {
 							// * pray notice, that the '.currindex' is affected throughout the loop [default]...
 							// TODO: make the 'indexiter' a templated property of the object's class... The default for the template would be this...
 							loop: function* (indexiter = (x) => x.next()) {
-								const index = this.currindex
-								this.begin()
+								const index = this.this.this.currindex
+								this.this.this.begin()
 								while (
-									!this.class.template.class.template.isEnd(
-										this
+									!this.this.class.template.class.template.isEnd(
+										this.this.this
 									)
 								) {
 									// * note: one yields before having iterated the index not to skip the first one...
 									// works just like a 'for' loop;
 									yield false
-									indexiter(this)
+									indexiter(this.this.this)
 								}
-								this.currindex = index
+								this.this.this.currindex = index
 								return true
 							},
 							// ! shorten the code with these 3...
 							begin() {
-								return this.go(this.init(), () => true)
+								// ^ IDEA: create aliases for const-functions;
+								// * Example:
+								// const _const = (c) => (() => c);
+								// '_const(true)' could be used here...
+								// * Done'
+								// TODO [general]: use where wanted to...
+								return this.this.this.go(
+									this.this.this.init(),
+									_const(true)
+								)
 							},
 							end() {
 								// * skipping the check because one knows that it would be 'true' anyway...
-								return this.go(this.length().get(), () => true)
+								return this.this.this.go(
+									this.this.this.length().get(),
+									_const(true)
+								)
 							},
 							init() {
-								return this.class.template.class.template.icclass.class()
+								return this.this.class.template.class.template.icclass.class()
 							},
 							// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
 							// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
 							go(
 								index,
-								range = this.class.template.class.template
+								range = this.this.class.template.class.template
 									.icclass.template.range
 							) {
 								if (!range(index))
@@ -326,33 +345,37 @@ const infinite = {
 										"Range error in the '.go' method 'index' argument whilst calling."
 									)
 
-								return (this.currindex = index)
+								return (this.this.this.currindex = index)
 							},
 							// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
 							// * pray think about them...
+							// ! [reminder]; get rid of the 'stop'; replace with counters methods + .length().get()... ALSO, update the stuff in correspondence with the changes in the structures lately...
 							move(
 								index,
 								preface,
-								comparison = this.class.template.class.template
-									.icclass.template.comparison,
+								comparison = this.this.class.template.class
+									.template.icclass.template.comparison,
 								each = (x) => x.next(),
 								stop = (x) => comparison(x.length, x.currindex)
 							) {
-								preface(arguments, this)
+								preface(arguments, this.this.this)
 								while (
-									!comparison(this.currindex, index) &&
-									!stop(this)
+									!comparison(
+										this.this.this.currindex,
+										index
+									) &&
+									!stop(this.this.this)
 								)
-									each(this)
-								return this.currindex
+									each(this.this.this)
+								return this.this.this.currindex
 							},
 							moveforward(
 								index,
 								begin = false,
-								comparison = this.class.template.class.template
-									.icclass.template.comparison
+								comparison = this.this.class.template.class
+									.template.icclass.template.comparison
 							) {
-								return this.move(
+								return this.this.this.move(
 									index,
 									(args, x) => {
 										if (begin) x.currindex = this.init()
@@ -364,74 +387,104 @@ const infinite = {
 							movebackward(
 								index,
 								end = false,
-								comparison = this.class.template.class.template
-									.icclass.template.comparison
+								comparison = this.this.class.template.class
+									.template.icclass.template.comparison
 							) {
-								return this.move(
+								return this.this.this.move(
 									index,
 									(args, x) => {
 										if (end) x.currindex = x.length().get()
 									},
 									comparison,
-									(x) => x.prev(),
+									(x) => x.previous(),
 									// ? Question: does one want to compute it each and every time like that???
 									// * Again, a question of exotic generality. Does one want to have it?
 									// * Current decision: yes, sure;
 									(x) => comparison(x.currindex, x.init())
 								)
 							},
+							// ! PROBLEM [sort of; with the '.go', '.move' and all that stuff with choosing...];
+							// * One could replace the '.move' with 'InfiniteCounter.jump', BUT...
+							// * then one'd lose the current 'move' functionality which is nice for the 'read' and 'write';
+							// ^ IDEA [for a solution]: add the 'InfiniteCounter.jumpDirection' as a 'GeneralArray.jump' + keep this one AND add a flag 'fast' to work with the '.go' instead of 'move'!
+							// * done... pray remove this note at the next commit [after having fixed the 'moveDirection' and added the "GeneralArray.jump" at this one!]...
+							/**
+							 * * Hello, Wilbur! 
+							 * ? Does that thing work even???
+							 * * might... 
+							 * TODO: pray check if these kinds of 'nested'ly stuctured objects' methods even get their in-editor JSDoc documentation properly... [Quite a jolly surprise if they do!]
+							*/
 							read(
 								index,
-								comparison = this.class.template.class.template
-									.icclass.template.comparison
+								fast = false,
+								range = this.this.class.template.class.template
+									.icclass.template.range,
+								comparison = this.this.class.template.class
+									.template.icclass.template.comparison
 							) {
-								const ind = this.currindex
-								this.moveforward(index, true, comparison)
-								const c = this.currelem
-								this.currindex = ind
+								const ind = this.this.this.currindex
+								if (fast) this.this.this.go(index, range)
+								else
+									this.this.this.moveforward(
+										index,
+										true,
+										comparison
+									)
+								this.this.this.currindex = ind
+								const c = this.this.this.currelem
 								return c
 							},
 							write(
 								index,
 								value,
-								comparison = this.class.template.class.template
-									.icclass.template.comparison
+								fast = false,
+								range = this.this.class.template.class.template
+									.icclass.template.range,
+								comparison = this.this.class.template.class
+									.template.icclass.template.comparison
 							) {
-								const ind = this.currindex
-								this.moveforward(index, true, comparison)
-								const returned = (this.currelem = value)
-								this.currindex = ind
+								const ind = this.this.this.currindex
+								if (fast) this.this.this.go(index, range)
+								else
+									this.this.this.moveforward(
+										index,
+										true,
+										comparison
+									)
+								const returned = (this.this.this.currelem =
+									value)
+								this.this.this.currindex = ind
 								return returned
 							},
 							length() {
 								// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
 								// * pray think on it...
 								// ? QUESTION: now that one has gotten rid of all the ridiculous stuff regarding the .begin, .end, 'comparisons' and yada yada yada, won't one come back to the previous .length model???
-								const _this = this
 								return {
-									object: _this,
-									get: function () {
-										const index = _this.currindex
-										_this.begin()
+									object: () => this.this.this,
+									get: () => {
+										const index = this.this.this.currindex
+										this.this.this.begin()
 										while (
-											!_this.class.template.class.template.isEnd(
-												_this
+											!this.this.class.template.class.template.isEnd(
+												this.this.this
 											)
 										)
-											_this.next()
-										const returned = _this.currindex
-										_this.currindex = index
+											this.this.this.next()
+										const returned =
+											this.this.this.currindex
+										this.this.this.currindex = index
 										return returned
 									},
 									// TODO: make the 'range' a template method...
-									set: function (
+									set: (
 										value,
-										comparison = _this.class.template.class
-											.template.icclass.template
+										comparison = this.this.class.template
+											.class.template.icclass.template
 											.comparison,
-										range = _this.class.template.class
+										range = this.this.class.template.class
 											.template.icclass.template.range
-									) {
+									) => {
 										// ^ IDEA: solution to the problem of 'going for infinity';
 										// * A truly infinite loop [for a finite structure, that is,] can happen only in the case when the given index is outside the bounds of the index range;
 										// * So, one just gives the user the ability to set their own ranging functions!
@@ -442,14 +495,14 @@ const infinite = {
 
 										if (
 											comparison(
-												_this.length().get(),
+												this.this.this.length().get(),
 												value
 											)
 										)
 											return
 
 										if (
-											_this
+											this.this.this
 												.length()
 												.get()
 												.compare(
@@ -461,9 +514,9 @@ const infinite = {
 											// Decrease the length
 											// ? PROBLEM: how does one decide the beginindex (named 'startindex' here)?
 											// TODO: put something else there instead of 'undefined'
-											_this.deleteMult(
+											this.this.this.deleteMult(
 												undefined,
-												this.length().get()
+												this.this.this.length().get()
 											)
 										} else {
 											// Increase the length
@@ -472,21 +525,43 @@ const infinite = {
 											// * note: the returned difference would be non-absolute and by the chosen generator, that being, one would 'jump' on the appropritate number of times;
 											// TODO: for this, implement the direction-dependent 'jump', ('jumpDirection', for instance), which would jump forward or backward correspondently with the direction of the thing in question;
 											// TODO: create also the 'direction' method for the InfiniteCounter; would essentially return 'this.class.template.generator().compare(ic)' (by default; it would have the thing generalized..., of course);
-											_this.shiftForward()
+											this.this.this.shiftForward()
 										}
 									}
 								}
 							},
 							// TODO: implement the sketches of the algorithms listed here...
 							// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-							pushback(value) {
+							// * the 'append' methods are the same ones as 'push', just don't act on the object in question;
+							// ! IN FACT: push[...] = (???) => {return (this = this.append(???))};
+							// * Define them like so, pray...
+							// TODO: create for each and every method out there 2 versions: 1 that works on 'this.this.this', another - that merely returns the result of the actual operation for the first...
+							appendfront() {
+								// * Sketch [not actual code]:
+								// * 1. return this.concat([value], this)
+							},
+							appendback() {
 								// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
-								// * 1. get the .length();
-								// * 2. write() 'value' at .length();
+								// * 0. define a new GeneralArray [copy of the current one];
+								// * 1. for it, get the .length();
+								// * 2. for it, write() 'value' at .length();
+							},
+							// ! PROBLEM : JS don't work well with objects' self-reference - within it, the native 'this' variable value cannot be changed;
+							// TODO: implement a general object structure that would permit this;
+							// ^ IDEA: have an object with the next [or some other, but the idea is essentially the same] structure:
+							// const A = {this: {...[the actual object]}}; A.this.reference = A.this;
+							// ^ Then, pray combine this structure with the already present classses, templates and static members;
+							// * The user would access the object by means of 'obj.this';
+							// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
+							// ? QUESTION : should one work on this stuff before or after adding the 'GeneralArray.jump()' + working on the 'GeneralArray.moveDirection'?
+							// * Current decision: before;
+							pushback(value) {
+								return (this.this.this =
+									this.this.this.appendback(value))
 							},
 							pushfront(value) {
-								// * Sketch [not actual code]:
-								// * 1. this.array = .concat([value], this.array)
+								return (this.this.this =
+									this.this.this.appendfront(value))
 							},
 							concat(array) {
 								// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']:
@@ -501,8 +576,8 @@ const infinite = {
 								// * 3. return newarray
 							},
 							slice(
-								begin = this.init(),
-								end = this.length().get()
+								begin = this.this.this.init(),
+								end = this.this.this.length().get()
 							) {
 								// * Sketch:
 								// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
@@ -558,7 +633,7 @@ const infinite = {
 							},
 							// * Just an alias...
 							index(i) {
-								return this.read(i)
+								return this.this.this.read(i)
 							},
 							// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
 							indexesOf(x) {
@@ -599,6 +674,8 @@ const infinite = {
 							}
 							// TODO: pray add more new algorithms here...
 						}
+						A.this.this = A
+						return A
 					}
 				}
 			}
@@ -649,6 +726,63 @@ const infinite = {
 		return a
 	},
 
+	// * Does a flat copy of something;
+	// ^ IDEA: generalization of copying methods....
+	// ! PROBLEM: now having created the generalization for all these copying methods, what does one do about them???
+	// * One might just define them as aliases for the special cases of this one thing...
+	// TODO: pray consider and do how one does desire...
+	flatCopy(a) {
+		return a instanceof Array
+			? [...a]
+			: typeof a === "object"
+			? { ...a }
+			: typeof a === "function"
+			? a.bind({})
+			: typeof a === "symbol"
+			? Symbol(((x) => x.slice(0, x.length - 1))(a.toString().slice(7)))
+			: a
+	},
+
+	copy() {
+		// TODO: create an alias of 'trim' from the function in the Symbol-copying operation, with the argument for number of symbols/elements from String/Array, in question (here, only 1);
+		return {
+			array: (a, method = id) => a.map(method),
+			object: (a, method = id) => objFmap(a, method),
+			function: (a) => a.bind({}),
+			symbol: (a) =>
+				Symbol(
+					((x) => x.slice(0, x.length - 1))(a.toString().slice(7))
+				),
+			primitive: id,
+			arrayFlat: (a) => [...a],
+			objectFlat: (a) => ({ ...a })
+		}
+	},
+	// TODO: generalize later with a _switch() from a different library of self's...
+	// ? Wonder if one want to put it into this one package instead???
+	// ! make a more general template...
+	copyFunction(template) {
+		// TODO: do something about that inner one; shouldn't be there...
+		function typeTransform(x, deep = false) {
+			if (x === "array" || x === "arrayFlat")
+				return (p) => p instanceof Array
+			if (x === "objectFlat") return (p) => typeof p === "object"
+			if (x === "primitive")
+				return (p) =>
+					["string", "number", "boolean", "undefined"].includes(
+						typeof p
+					)
+			return (p) => typeof p === x
+		}
+		return {
+			template: template,
+			function: function (a) {
+				for (const x of this.template.list)
+					if (typeTransform(x).function(a)) return copy[x](a)
+			}
+		}
+	},
+
 	// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
 	// ? GENERAL QUESTION [over the 'infinite' object - for each and every method referencing it, pray decide...]: should one use "this" instead of "infinite"? This'd allow for some neat object-related stuff...
 	// * [Previous] Current decision: yes, why not; works by itself + allows user to instantiate this structure partially for their own purposes conviniently... So, one'd just make it 'this' everywhere! Or not?
@@ -680,21 +814,6 @@ const infinite = {
 			default:
 				return a === b
 		}
-	},
-
-	// * Does a flat copy of something;
-	flatCopy(a) {
-		// ? Question: should one not be using the more 'general' version with 'finding' "Symbol" within the string for 'symbol'-type copying? Or ought one leave it like so??
-		// * pray decide and do how one wants to...
-		return a instanceof Array
-			? [...a]
-			: typeof a === "object"
-			? { ...a }
-			: typeof a === "function"
-			? a.bind({})
-			: typeof a === "symbol"
-			? Symbol(a.toString().slice(7).slice(0, 1))
-			: a
 	},
 
 	// * Probably the simplest infinite counter one would have in JS;
@@ -2236,6 +2355,8 @@ const flenarrs = (f, ...arrs) => {
 const minlenarrs = (...arrs) => flenarrs(minlen, ...arrs)
 const maxlenarrs = (...arrs) => flenarrs(maxlen, ...arrs)
 const propertymap = (prop) => (objs) => objs.map((a) => a[prop])
+const refCompare = (a, b) => a === b
+const _const = (c) => () => c
 
 // TODO: rewrite the docs...
 /**
@@ -4625,6 +4746,15 @@ function propSwap(obj, prop1, prop2) {
 	obj[prop2] = temp
 }
 
+// * checks whether 2 objects' keys lists are the same; Essentially same as 'infinite.valueCompare(Object.keys(a1),Object.keys(a2))';
+// ? Wonder if one should rewrite as this, or use 'boolmap' to make this this already present version tidier???
+function ismapped(a1, a2) {
+	return min(
+		min(Object.keys(a1).map((_a1) => !!a2[_a1])),
+		min(Object.keys(a2).map((_a2) => !!a1[_a2]))
+	)
+}
+
 // * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
 // ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
 // ? Question: does one really want this thing even???
@@ -4674,6 +4804,8 @@ export {
 	minlenarrs,
 	maxlenarrs,
 	propertymap,
+	refCompare,
+	_const,
 	copy,
 	id
 }
@@ -4786,5 +4918,6 @@ export {
 	objClear,
 	objInherit,
 	propSwap,
+	ismapped,
 	Pointer
 }
