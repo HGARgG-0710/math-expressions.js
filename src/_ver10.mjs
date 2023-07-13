@@ -4,10 +4,13 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
+const ID = (a) => a
+
 // TODO [most recent agenda]: WORK ON THE BASIC MODULE STRUCTURE...
 // * Works like so - exports an 'activate' function returning the object of the module, on which the given transformation has first been applied; By default the transformation is 'id';
-export function activate(transformation = (a) => a) {
+export function activate(transformation = ID) {
 	const RESULT = {}
+
 	// * PART OF THE CURRENT AGENDA:
 	// [it'll be written here, at the top of the file, for the moment...]:
 	// ? What is the agenda? As in, what does one want to do first? Many things to choose from...
@@ -37,8 +40,7 @@ export function activate(transformation = (a) => a) {
 	// % 1. (get rid of)/refactor the repeating notes;
 	// % 2. Form for the templates; All functions of the library have the same templates form; Example:
 	// 		function X(template) {
-	//			(const/let/var) {prop1, prop2, ...} = template
-	// 			return {tempalatelabelname: template, thereturnedlabelname: ...(makes use of the prop1, prop2, ... directly)}
+	// 			return {tempalatelabelname: {...defaults, ...template} , thereturnedlabelname: ...}
 	// 		}
 	// todo: work on the names for the objects in question [should this not be under the 'names' todo done before?]
 	// * That'd be the general structure of any templated method within the library...
@@ -96,8 +98,8 @@ export function activate(transformation = (a) => a) {
 	// TODO: use these as default arguments [where considered appropriate, that is];
 	// TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
 	// TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
-	const MAX_ARRAY_LENGTH = 2 ** 32 - 1
-	const MAX_INT = 2 ** 53 - 1
+	RESULT.MAX_ARRAY_LENGTH = 2 ** 32 - 1
+	RESULT.MAX_INT = 2 ** 53 - 1
 
 	// todo: new things to add:
 	// * 1. more number-theoretic functions...;
@@ -107,13 +109,11 @@ export function activate(transformation = (a) => a) {
 	// *    or, just add the old alias (like in the case of sameOperator...)
 	// *    1.1. Special cases of it:
 	// *        1.1.1. repeatedArithmetic -- rename to repeated (add a ton of new possibilities of use for this...)
-	// * 2. Rewrite the in-editor JSDoc documentation (most probably, from scratch...)...
-	// * 3. Add proper types to everywhere in the code (especially, places with dots...);
-	// * 4. Make code more permissive (get rid of all the "safety" things, get rid of some of the Error throws -- replace them with special function values, where want to);
-	// * 5. Simplify and generalize function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
-	// * 6. Add new in-editor documentation for the new definitions...
-	// * 7. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
-	// * 8. tidy up and, finally, test;
+	// * 2. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
+	// * 3. Make code more permissive (get rid of all the "safety" things, get rid of some of the Error throws -- replace them with special function values, where want to);
+	// * 4. Simplify and generalize function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
+	// * 5. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
+	// * 6. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
 
 	// Global variables
 
@@ -808,27 +808,6 @@ export function activate(transformation = (a) => a) {
 		// TODO: decide which particular definitions from the 'infinite' are to be defined post-createm for it...
 		// What one meaans is 'const infinite = {.., def: ..., ....}' -> 'const infinite = {.., ....}; infinite.def = ...';
 
-		// * Copies an object/array deeply...
-		deepCopy(a) {
-			return infinite.copyFunction({
-				list: ["array", "object", "function", "symbol", "primitive"]
-			})(a)
-		},
-
-		// * Keeps the functions references intact whilst copying...
-		dataCopy(a) {
-			return infinite.copyFunction({
-				list: ["array", "object", "symbol"]
-			})(a)
-		},
-
-		// * Does a flat copy of something;
-		flatCopy(a) {
-			return infinite.copyFunction({
-				list: ["arrayFlat", "objectFlat", "function", "symbol"]
-			})(a)
-		},
-
 		copy() {
 			// TODO: create an alias of 'trim' from the function in the Symbol-copying operation, with the argument for number of symbols/elements from String/Array, in question (here, only 1);
 			return {
@@ -899,14 +878,47 @@ export function activate(transformation = (a) => a) {
 		},
 
 		// * Probably the simplest infinite counter one would have in JS;
-		arrayCounter(a) {
-			return [a]
+		arrayCounter(template) {
+			return {
+				template: {
+					start: null,
+					...template
+				},
+				generator(a = this.template.start) {
+					if (!this.range(a)) this.template.start = a
+					return [a]
+				},
+				inverse: function (a) {
+					return a[0]
+				},
+				range: function (a) {
+					return (
+						a === this.template.start ||
+						(a instanceof Array && this.range(this.inverse(a)))
+					)
+				}
+			}
 		},
 
-		// * Generalization of the thing above...
-		// ? Make a template.
-		objCounter(fieldname) {
-			return (a) => ({ [fieldname]: a })
+		// * Generalization of the thing above (arrayCounter)...
+		objCounter(template) {
+			return {
+				template: { field: "", start: null, ...template },
+				generator: function (a = this.template.start) {
+					if (!this.range(a)) this.template.start = a
+					return { [this.template.field]: a }
+				},
+				inverse: function (a) {
+					return a[this.template.field]
+				},
+				range: function (a) {
+					return (
+						(typeof a === "object" &&
+							this.range(this.inverse(a))) ||
+						a === this.template.start
+					)
+				}
+			}
 		},
 
 		// TODO: create a generalization of string's order as an argument and on it -- this thing...
@@ -923,17 +935,13 @@ export function activate(transformation = (a) => a) {
 		// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 		// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 		numberCounter(template) {
-			// ! Bugger that way of dealing with defaults...; instead, use the 'ensureProperty' + methods for getting to 'delete/add/rename' properties to the template object...
-			const { MAX_INT = 2 ** 53 - 1, MAX_ARRAY_LENGTH = 2 ** 32 - 1 } = {
-				MAX_INT: template.maxint,
-				MAX_ARRAY_LENGTH: template.maxarrlen
-			}
 			// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 			return {
 				// TODO: make more flexible and 'laid-off'... (with {...template} + ensureProperty + other such methods)
 				template: {
-					maxint: MAX_INT,
-					maxarrlen: MAX_ARRAY_LENGTH
+					maxint: RESULT.MAX_INT,
+					maxarrlen: RESULT.MAX_ARRAY_LENGTH,
+					...template
 				},
 				generator: function (a) {
 					const _this = this
@@ -979,16 +987,18 @@ export function activate(transformation = (a) => a) {
 						return false
 					}
 					// * Two methods generalized...
-					// ! PROBLEM [with the 'next' structure on the InfiniteCounter...]:
+					// ! PROBLEM [1; with the 'next' structure on the InfiniteCounter...]:
 					// * It is roughly such - the methods that are being generalized rely upon 2 kinds of 'next'; The counter has got multiple directions of "evolution";
 					// * The current InfiniteCounter, thus, is way too narrow for the use of itself in question...
-					// TODO: pray expand the InfiniteCounter to multiple 'next()' and 'prev()'; decide the structure, yada yada...
+					// _TODO: pray expand the InfiniteCounter to multiple 'next()' and 'prev()'; decide the structure, yada yada...
+					// ^ SOLVED; [1; With the MultiInfiniteCounter; still requires finishing... But first sketch is more or less intact...];
+					// ! PROBLEM [2; ]: how does one use this thing now, pray???
+					// ? Pray think on it further...
 					function GFIND(template) {
 						// TODO: change for the final name of the function when putting into the outer context...
 						// ! Also, create a good name for it...
-						ensureProperty(template, "self", GFIND)
 						return {
-							template: { ...template },
+							template: { self: GFIND, ...template },
 							function: function (
 								a,
 								prevcounter = this.template.icclass.class()
@@ -1000,18 +1010,13 @@ export function activate(transformation = (a) => a) {
 								// ! Pray consider... [Current choice is: it stays as-is]
 								for (
 									;
-									!currcounter.comparison(
-										infinite.fromNumber({
+									infinite
+										.fromNumber({
 											...this.template.icclass.template
 										})(a.length)
-									);
+										.compare(currcounter);
 									currcounter = currcounter.next()
 								) {
-									// ! PROBLEM[1]: about the precise structure of 'fs';
-									// * Does one want them to be potentially different throughout the change of the 'prevcounter' [that being, passing a function of the counter returning the current iteration?]
-									// Current decision: yes, do that;
-									// ! Pray decide too...
-
 									// ? Does one want to remember it like so? It is intended to be a GeneralArray...
 									const curriter =
 										this.template.iteration(currcounter)
@@ -1023,7 +1028,7 @@ export function activate(transformation = (a) => a) {
 										)
 										if (r[0] === true) return r[1]
 										if (r[0] === false) break
-										// 'anything else' would essentially mean continuation of the list of
+										// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
 									}
 								}
 
@@ -2473,8 +2478,22 @@ export function activate(transformation = (a) => a) {
 		// },
 	}
 
-	// Aliases
+	// * Copies an object/array deeply...
+	RESULT.infinite.deepCopy = RESULT.infinite.copyFunction({
+		list: ["array", "object", "function", "symbol", "primitive"]
+	})
 
+	// * Keeps the functions references intact whilst copying...
+	RESULT.infinite.dataCopy = RESULT.infinite.copyFunction({
+		list: ["array", "object", "symbol"]
+	})
+
+	// * Does a flat copy of something;
+	RESULT.infinite.flatCopy = RESULT.infinite.copyFunction({
+		list: ["arrayFlat", "objectFlat", "function", "symbol"]
+	})
+
+	// Aliases
 	RESULT.exp = op
 	RESULT.repeatedArithmetic = repeatedOperation
 	RESULT.sameOperator = repeatedArithmetic
@@ -2527,7 +2546,7 @@ export function activate(transformation = (a) => a) {
 	// }
 
 	// * Identity map (just a nice piece of notation, that's all);
-	RESULT.id = (a) => a
+	RESULT.id = ID
 
 	// Classes
 
@@ -2536,7 +2555,7 @@ export function activate(transformation = (a) => a) {
 	 *
 	 * Useful when needing a lot of info about data in one place.
 	 */
-	class Statistics {
+	RESULT.Statistics = class {
 		static isNumeric(data) {
 			for (let i = 0; i < data.length; i++)
 				if (typeof data[i] !== "number") return false
@@ -2587,7 +2606,7 @@ export function activate(transformation = (a) => a) {
 	 * This class represents a geometric surface with dots, segments and lines on it.
 	 * They are represented via coordinates.
 	 */
-	class Surface {
+	RESULT.Surface = class {
 		static n = 0
 		// TODO: add capability to have the initial Surface not being empty (unlike it is at the moment...)
 		// TODO: use the Tuple type from one's library for the [number...] arrays...
@@ -2672,7 +2691,7 @@ export function activate(transformation = (a) => a) {
 	 *
 	 * It can also come in helpful when evaluating the same expression various number of times.
 	 */
-	class Expression {
+	RESULT.Expression = class {
 		/**
 		 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), repeatedArithmetic(), fullExp(), repeatExp().)
 		 * @param {string[]} objects An array, containing numbers of expression.
@@ -2707,7 +2726,7 @@ export function activate(transformation = (a) => a) {
 	 * It is a static class, i.e. it is supposed to be like this:
 	 * * Tests.testName();
 	 */
-	class Tests {
+	RESULT.Tests = class {
 		constructor() {
 			throw new TypeError("Tests is not a constructor")
 		}
@@ -2832,7 +2851,7 @@ export function activate(transformation = (a) => a) {
 	 * This class represents a length-safe array with some nice stuff added to it.
 	 * It also may behave like a mathematical vector.
 	 */
-	class Vector {
+	RESULT.Vector = class {
 		// TODO: make this thing into a separate type or something... It is very big and clumsy (though, useful...)
 		constructor(vectorargs) {
 			// TODO: let there be way for user to give their own defaults for this thing...
@@ -3027,7 +3046,7 @@ export function activate(transformation = (a) => a) {
 	// * Current idea for a list of features:
 	// * 1. All number-related methods and features;
 	// * 2. Based on number-version of the Vector
-	class NumberVector extends Vector {
+	RESULT.NumberVector = class extends RESULT.Vector {
 		vectorScalarMultiply(vector) {
 			const main =
 				Math.max(this.length, vector.length) == vector.length
@@ -3078,13 +3097,13 @@ export function activate(transformation = (a) => a) {
 	// * 2. Full of numbers;
 	// * 3. Can have user-defined operations for doing certain things with numbers;
 	// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
-	class NumberMatrix extends Vector {}
+	RESULT.NumberMatrix = class extends RESULT.Vector {}
 
 	// * Current idea for the list of features:
 	// * 1. Only numbers ;
 	// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 	// * 3. Rectangular-shaped;
-	class RectNumberMatrix extends NumberMatrix {
+	RESULT.RectNumberMatrix = class extends RESULT.NumberMatrix {
 		matrixMultiply(matrix) {
 			if (this.sidelen[0] !== matrix.sidelen[1])
 				throw new Error(
@@ -3133,7 +3152,7 @@ export function activate(transformation = (a) => a) {
 	// * 1. Only numbers ;
 	// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
 	// * 3. Square-shaped;
-	class SquareNumberMatrix extends RectNumberMatrix {
+	RESULT.SquareNumberMatrix = class extends RESULT.RectNumberMatrix {
 		/**
 		 * Finds the determinant of a square matrix it's invoked onto.
 		 */
@@ -3179,7 +3198,7 @@ export function activate(transformation = (a) => a) {
 	/**
 	 * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
 	 */
-	class Ratio {
+	RESULT.Ratio = class {
 		constructor(numerator, denomenator) {
 			this.numerator = numerator
 			this.denomenator = denomenator
@@ -3253,7 +3272,7 @@ export function activate(transformation = (a) => a) {
 	 * i.e. it's supposed to be used like this:
 	 * * Algorithms.algorithmName(arg_1, ..., arg_n);
 	 */
-	class Algorithms {
+	RESULT.Algorithms = class {
 		constructor() {
 			throw new TypeError("Algorithms is not a constructor")
 		}
@@ -3310,7 +3329,7 @@ export function activate(transformation = (a) => a) {
 	 * This class's purpose is to represent a mathematical equation of multiple variables.
 	 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
 	 */
-	class Equation {
+	RESULT.Equation = class {
 		/**
 		 * A static method for parsing an equation with various mappings applied.
 		 * @param {string} equationLine A line, containing an equation.
@@ -3571,7 +3590,7 @@ export function activate(transformation = (a) => a) {
 	 * It can be used separately or in combination with the Equation class.
 	 * (It's original purpose was the second)
 	 */
-	class VarMapping {
+	RESULT.VarMapping = class {
 		/**
 		 * Constructs a new mapping based on the data inputted.
 		 * @param {string[]} vars Variable names in a mapping.
@@ -3637,7 +3656,7 @@ export function activate(transformation = (a) => a) {
 	// * For iteration over an array; this thing is index-free; handles them for the user;
 	// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
 	// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
-	class IterableSet {
+	RESULT.IterableSet = class {
 		curr() {
 			return Array.from(this.elements.values())[this.currindex]
 		}
