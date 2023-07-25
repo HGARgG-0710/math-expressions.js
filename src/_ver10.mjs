@@ -4,10 +4,12 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
+// Space for the local constants...
 const ID = (a) => a
 
 // TODO [most recent agenda]: WORK ON THE BASIC MODULE STRUCTURE...
 // * Works like so - exports an 'activate' function returning the object of the module, on which the given transformation has first been applied; By default the transformation is 'id';
+// The module
 export function activate(transformation = ID) {
 	const RESULT = {}
 
@@ -109,7 +111,7 @@ export function activate(transformation = ID) {
 	RESULT.MAX_INT = 2 ** 53 - 1
 
 	// todo: new things to add:
-	// * 1. more number-theoretic functions...;
+	// * 1. more beautiful in their simplicity number-theoretic functions...;
 
 	// TODO: things to do (generally):
 	// * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
@@ -132,7 +134,7 @@ export function activate(transformation = ID) {
 	// ? create various numeric constants within the library (besides, some of ones functions' definitions may use it;)...
 	RESULT.globalPrecision = 16
 
-	// Objects
+	// Defaults
 
 	// ? Add more stuff here? (This table is supposed to be like a small calculator for binary things...)
 	// TODO: change the architecture of these tables -- they should contain information concerning the Arity of the stuff that is within them...
@@ -220,6 +222,9 @@ export function activate(transformation = ID) {
 		"Z"
 	]
 
+	// Submodules
+	// TODO: that's where the 'returnless' is going...
+
 	// * IDEA to the organization of the duality of library's codebase: have a finite version of something, then precisely after it, a definition of infinite.[thing's name] -- its infinite counterpart; For stuff that don't have an explicit finite/infinite counterpart it is left alone/put into the original definition of the 'infinite'
 	// ^ These ones would use templates + general version of InfintieArray/InfiniteMap
 	RESULT.infinite = {
@@ -240,12 +245,24 @@ export function activate(transformation = ID) {
 			// * By going through the values of the 'abstract inverse generator' until the 'termination point' and using the 'generator' along, one obtains the conversion of formats desired!!!
 			// ? Question: there is the InfiniteCounter.map() for this sort of stuff...
 			// ! On the other hand, the '.map' is only good when one has a generator;
+			// ^ DECIDED: nah, one's gonna keep it the way it is...
+			// * The InfiniteCounter.map() does just precisely that...
+			// Instead of seeking how to directly generalize the 'fromNumber' one should instead focus on either:
+			// 1. creating and adding to the library a proper native-JS number-based counter [non-infinite], that'd be mappable to any manner of a different one using InfiniteCounter.map();
+			// * It is: {generator: (x) => Number(x) + 1; inverse: (x) => Number(x) - 1; range: (x) => !isNaN(x)}
+			// 2. Leave it as-is, as a 'special' method...;
+			// 3. Create and choose some other one...
+			// * Current decision: [1] - simpler; Allows for precisely the same stuff as the 'fromNumber...';
 
 			// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
 			// 	% 1 [later]. complete the GeneralArray algorithms!
 			// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+generalized InfiniteCounter.comparison(this.length().get(), ...)'; Using the comparison, one can determine which way to go;
 			return {
-				template: { empty: [], ...template },
+				template: {
+					empty: [],
+					isEnd: template.isUndefined,
+					...template
+				},
 				class: function (template) {
 					// * Current Level Template variables [about the above todo...]: isLabel = false, label;
 					// TODO: the decided templates shape - {...defaults, ...usertemplate, ...overrides}; (Like here...) Pray ensure it...
@@ -352,14 +369,14 @@ export function activate(transformation = ID) {
 									// TODO [general]: use '_const' where want to...
 									return this.this.this.go(
 										this.this.this.init(),
-										_const(true)
+										RESULT._const(true)
 									)
 								},
 								end() {
 									// * skipping the check because one knows that it would be 'true' anyway...
 									return this.this.this.go(
 										this.this.this.length().get(),
-										_const(true)
+										RESULT._const(true)
 									)
 								},
 								init() {
@@ -479,10 +496,6 @@ export function activate(transformation = ID) {
 												stop
 										  )
 								},
-								// ! PROBLEM [sort of; with the '.go', '.move' and all that stuff with choosing...];
-								// * One could replace the '.move' with 'InfiniteCounter.jump', BUT...
-								// * then one'd lose the current 'move' functionality which is nice for the 'read' and 'write';
-								// ^ IDEA [for a solution]: add the 'InfiniteCounter.jumpDirection' as a 'GeneralArray.jump';
 								jump(
 									index,
 									comparison = this.this.this.this.class
@@ -610,6 +623,8 @@ export function activate(transformation = ID) {
 												// Decrease the length
 												// ? PROBLEM: how does one decide the beginindex (named 'startindex' here)?
 												// TODO: put something else there instead of 'undefined'
+												// ^ SOLUTION: the 'this.this.this.length().get()' that is currently present gets added to the prefix '.jumpDirection(this.this.this.length().get().difference(value))';
+												// * Then, the 'start' might as well just stay 'undefined' - let one have the default for it being equal to 'this.this.this.class.template.class.template.icclass.template.generator()' ('this.this.this.init()', essentially...);
 												this.this.this.deleteMult(
 													undefined,
 													this.this.this
@@ -630,48 +645,119 @@ export function activate(transformation = ID) {
 								},
 								// TODO: implement the sketches of the algorithms listed here...
 								// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-								// * the 'append' methods are the same ones as 'push', just don't act on the object in question;
-								// ! IN FACT: push[...] = (???) => {return (this = this.append(???))};
-								// * Define them like so, pray...
-								// TODO: create for each and every method out there 2 versions: 1 that works on 'this.this.this', another - that merely returns the result of the actual operation for the first...
-								appendfront() {
-									// * Sketch [not actual code]:
-									// * 1. return this.concat([value], this)
+								// TODO: create for each and every GeneralArray method out there [and maybe extend further onto other stuff too...] 2 versions: 1 that works on 'this.this.this', another - that merely returns the result of the actual operation for the first to use on 'this.this.this' (the 'base' method...)...
+								appendfront(x) {
+									// ! Problem [minor]: decide (mean: create a way) for creating an empty array more compactly...
+									const newArr =
+										this.this.this.this.class.template.class.class()
+									newArr.pushback(x)
+									return newArr.concat(this.this.this)
 								},
-								appendback() {
-									// * Sketch [decided to write sketches for these first, then let mr. flesh implement]:
-									// * 0. define a new GeneralArray [copy of the current one];
-									// * 1. for it, get the .length();
-									// * 2. for it, write() 'value' at .length();
+								appendback(
+									x,
+									fast = false,
+									range = this.this.this.this.class.template
+										.class.template.icclass.template.range,
+									comparison = this.this.this.this.class
+										.template.class.template.icclass
+										.template.comparison
+								) {
+									const newArr = this.this.this.copy()
+									return newArr.write(
+										newArr.length().get(),
+										x,
+										fast,
+										range,
+										comparison
+									)
 								},
-								// ! PROBLEM : JS don't work well with objects' self-reference - within it, the native 'this' variable value cannot be changed;
-								// TODO: implement a general object structure that would permit this;
-								// ^ IDEA: have an object with the next [or some other, but the idea is essentially the same] structure:
+								// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
+								// Shape of the modifiable 'this' objects...
 								// const A = {this: {...[the actual object]}}; A.this.reference = A.this;
-								// ^ Then, pray combine this structure with the already present classses, templates and static members;
 								// * The user would access the object by means of 'obj.this';
 								// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
-								// ? QUESTION : should one work on this stuff before or after adding the 'GeneralArray.jump()' + working on the 'GeneralArray.moveDirection'?
-								// * Current decision: before;
-								pushback(value) {
+								// TODO: spread this architecture throughout the project...
+								pushback(
+									value,
+									fast = false,
+									range = this.this.this.this.class.template
+										.class.template.icclass.template.range,
+									comparison = this.this.this.this.class
+										.template.class.template.icclass
+										.template.comparison
+								) {
 									return (this.this.this =
-										this.this.this.appendback(value))
+										this.this.this.appendback(
+											value,
+											fast,
+											range,
+											comparison
+										))
 								},
-								pushfront(value) {
+								pushfront(
+									value,
+									fast = false,
+									range = this.this.this.this.class.template
+										.class.template.icclass.template.range,
+									comparison = this.this.this.this.class
+										.template.class.template.icclass
+										.template.comparison
+								) {
 									return (this.this.this =
-										this.this.this.appendfront(value))
+										this.this.this.appendfront(
+											value,
+											fast,
+											range,
+											comparison
+										))
 								},
-								concat(array) {
-									// * Sketch [pray note that 'array' is same GeneralArray template as the 'this']:
-									// * 1. define a new array [copy of 'array'; 'concatenated'];
-									// * 2. run through 'this', pushing all the elements of it into the array in question; ['concatenated.push(this.array.currelem)']
-									// * 3. return concatenated;
+								concat(
+									array,
+									fast = false,
+									range = this.this.this.this.class.template
+										.class.template.icclass.template.range,
+									comparison = this.this.this.this.class
+										.template.class.template.icclass
+										.template.comparison
+								) {
+									const copied = this.this.this.copy()
+									while (array.loop())
+										copied.pushback(
+											array.currelem,
+											fast,
+											range,
+											comparison
+										)
+									return copied
 								},
-								copy(f = (x) => x) {
-									// * Sketch:
-									// * 1. create a new empty array of the same template-array-type as 'this' ['newarray'];
-									// * 2. run through the 'this' array [until hitting .length()]; each iteration, 'newarray.push(f(this.array.currelem))';
-									// * 3. return newarray
+								copy(
+									f = ID,
+									fast = false,
+									range = this.this.this.this.class.template
+										.class.template.icclass.template.range,
+									comparison = this.this.this.this.class
+										.template.class.template.icclass
+										.template.comparison
+								) {
+									const copied =
+										this.this.this.this.class.template.class.class()
+									// TODO: look into the actual API for the generators... [IT OUGHT TO BE THAT BLOODY SIMPLE... MORE ABSTRACTIONS DON'T DO FUCKING NOTHING...]
+									// ! One majorly overlooked that JS has a ridiculously slightly-over-complicated generators-api... Due to this, the use of 'function*' functions have been grossly compromised. This ought to be fixed...
+									// * Apparantly, proper use is more something like: 
+									// const loop = this.this.this.loop()
+									// while(loop.next().value) {... (same as before...)}
+									// ! PROBLEM [with the 'proper' useage] - don't allow for the flexible 'this.this.this', [and other beautiful stuff resulting from self-modification...]; 
+									// * Conclusion, thus, is such : ONE REQUIRES A DIFFERENT [SELF-MADE] MODEL FOR THE 'YIELDING' (that's the name one choose...) FUNCTIONS...
+									// ^ IDEA [for a general solution]: {template: {icclass: ...}, yeilding: ..., current: ...}; with the 'current' belonging to the 'this.template.icclass'...
+									// todo: pray implement
+									while (this.this.this.loop())
+										copied.pushback(
+											f(this.this.this.currelem),
+											fast,
+											range,
+											comparison
+										)
+									return copied
 								},
 								slice(
 									begin = this.this.this.init(),
@@ -780,11 +866,9 @@ export function activate(transformation = ID) {
 			}
 		},
 
-		// ^ DECIDED: bah; let it be; it's nice... sort of; + it allows to have a general pointer array from a general array;
 		PointerArray(template) {
-			ensureProperty(template, "label", "")
 			return {
-				template: template,
+				template: { label: "", ...template },
 				function: function (iterarr) {
 					let newiterarr = iterarr.class.template.class.class()
 					while (!iterarr.loop()) {
@@ -845,7 +929,7 @@ export function activate(transformation = ID) {
 				function: function (a) {
 					for (const x of this.template.list)
 						if (typeTransform(x).function(a))
-							return infinite.copy()[x](a, this.function)
+							return RESULT.infinite.copy()[x](a, this.function)
 					return a
 				}
 			}
@@ -874,8 +958,9 @@ export function activate(transformation = ID) {
 			switch (typeof a) {
 				case "object":
 					for (const a_ in a)
-						if (!infinite.valueCompare(b[a_], a[a_])) return false
-					if (!oneway) return infinite.valueCompare(b, a, true)
+						if (!RESULT.infinite.valueCompare(b[a_], a[a_]))
+							return false
+					if (!oneway) return RESULT.infinite.valueCompare(b, a, true)
 					return true
 				case "function":
 					return String(a) === String(b)
@@ -1073,7 +1158,7 @@ export function activate(transformation = ID) {
 						if (!resultIndexes) return [a]
 
 						// TODO: get rid of such object-parameters... within both this library and others...
-						result = recursiveIndexation({
+						result = RESULT.recursiveIndexation({
 							object: result,
 							fields: resultIndexes.slice(
 								0,
@@ -1092,18 +1177,14 @@ export function activate(transformation = ID) {
 						// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
 						// * Pray decide...
 						// ! This is the finite version... Infinite one is required for the thing anyway...
-						// result = repeatedApplication(
-						// 	(value) => {
-						// 		value.push([])
-						// 		return value[value.length - 1]
-						// 	},
-						// 	finalDimension,
-						// 	result
-						// )
-						for (let i = 0; i < finalDimension; i++) {
-							result.push([])
-							result = result[result.length - 1]
-						}
+						result = RESULT.repeatedApplication(
+							(value) => {
+								value.push([])
+								return value[value.length - 1]
+							},
+							finalDimension,
+							result
+						)
 						result.push(0)
 						return _result
 					}
@@ -1137,7 +1218,7 @@ export function activate(transformation = ID) {
 					return (
 						a instanceof Array &&
 						a.length &&
-						!!min(
+						!!RESULT.min(
 							a.map(
 								(x) =>
 									typeof x === "number" ||
@@ -1156,7 +1237,7 @@ export function activate(transformation = ID) {
 			if (arr1 instanceof Array != arr2 instanceof Array)
 				return comparison(arr1, arr2)
 
-			return !!min(
+			return !!RESULT.min(
 				generate(1, max([arr1, arr2].map((a) => a.length))).map(
 					(i) => !!this.isSameStructure(arr1[i], arr2[i])
 				)
@@ -1164,7 +1245,7 @@ export function activate(transformation = ID) {
 		},
 
 		// ? Question: generalize for multiple inverses??? [Excellent; Decide how to do this better;]
-		// TODO: make it work with the 'InfiniteCounter'(s); Let there only be 1 single element within the template: 'icclass'; 
+		// TODO: make it work with the 'InfiniteCounter'(s); Let there only be 1 single element within the template: 'icclass';
 		fromNumber(template) {
 			return {
 				template: template,
@@ -2508,7 +2589,34 @@ export function activate(transformation = ID) {
 		list: ["arrayFlat", "objectFlat", "function", "symbol"]
 	})
 
+	// TODO: rewrite the docs...
+	// ! Start by deleting the old docs [those that are completely off what the thing in question is about now...]; the rest - pray rewrite [either on-the-spot, or a tad later...]
+	// * Begin with small and simple stuff that's been mostly finished on conceptual level ; Things like copying functions, examplified...
+	// ^ IDEA: let each and every in-editor documentation bit possess a link to the definition of the thing in question [in GitHub repo, for instance???], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose [along with using full spectre of JSDoc notation, perhaps???];
+	// Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
+	// ? Question: what about aliases? Should one simply leave the 'REFER TO THAT...'-kind of messages for them, repeat the same information???
+	// * Current decision: no, do the 'refer'-thing instead; Cleaner;
+
+	// TODO: work on the within-the-library subtype-system;
+	// * Let aliases be only aliases; The rest of this stuff qualifies to be a proper function [they were just created for shortening frequently repeated general constructions - refactoring]...
+	// Starting to do just that...
+	// ^ IDEA: modularize the library further...
+	// * Let it be divided like so:
+	// RESULT = {
+	// 		submodules : {infinite: {...}},
+	// 		aliases: {...},
+	// 		functions (or 'methods' better?): {...},
+	// 		classes : {...},
+	// 		constants: {...},
+	// 		globals: {...}
+	// 	}
+	// ? Only question would be - how would one oneself qualify each and every element of the library in accordance with the system of such a kind???
+	// * CURRENT CONCLUSION AS TO THE PROGRESS: wonderful! first, however, one ought to work on the particular matters - such as cleaning up, documentation, move things about, finish other related stuff;
+	// For the change would affect each and every single aspect of the module requiring self-reference [and it does it all the time...], it would be [under one's interpretation] a far less prone--to--re-doing--the--bits--of--progress--established--insofar--from--null kind of approach;
+	// TODO: also - work on the 'global's structure... They're supposed to be {get() {...}, set () {...}, object: ...} kind of structures... (akin to the GeneralArray.length())
+
 	// Aliases
+
 	RESULT.exp = op
 	RESULT.repeatedArithmetic = repeatedOperation
 	RESULT.sameOperator = repeatedArithmetic
@@ -2516,9 +2624,10 @@ export function activate(transformation = ID) {
 	RESULT.mostPopularNum = mostPopular
 	RESULT.repeatedApplicationWhile = repeatedApplicationWhilst
 
-	// TODO: use the aliases in appropriate places within the code. Give it a good shortening session: walk about making aliases for repeating expressions and then replace those with the newly introduced names...
+	// TODO: use these things in appropriate places within the code. Give it a good shortening session: walk about making aliases for repeating expressions and then replace those with the newly introduced names...
 	// ? work on renaming the aliases properly....; pay particular attention to the "_" counterparts...
 	RESULT.bind = (a, f, fieldName) => (a[fieldName] = f.bind(a))
+	// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
 	RESULT.last = (arr, obj, comparison = valueCompare) => {
 		return max(indexOfMult(arr, obj, comparison))
 	}
@@ -2548,20 +2657,27 @@ export function activate(transformation = ID) {
 	RESULT.refCompare = (a, b) => a === b
 	RESULT._const = (c) => () => c
 
-	// TODO: rewrite the docs...
 	/**
-	 * Copies an array without referencing its object.
-	 * @param {any[]} nums An array that needs to be copied.
-	 * @returns {number[]} Copy of a passed array, without referencing its object.
+	 * * An alias for the 'infinite.flatCopy' function;
+	 *
+	 * REFER TO THAT...
 	 */
 	RESULT.copy = infinite.flatCopy
-	// * Previous definition (later, clear?)
-	// function copy(nums = [1, 2, 3, 4, 5]) {
-	// 	return nums.map(id)
-	// }
 
 	// * Identity map (just a nice piece of notation, that's all);
+	/**
+	 * * The identity map;
+	 *
+	 * DEFINITION:
+	 * WIKI:
+	 */
 	RESULT.id = ID
+
+	RESULT.negate = (f) => (x) => !f(x)
+	RESULT.compose = (fs) => {
+		if (!fs.length) return undefined
+		return fs[fs.length - 1](RESULT.compose())
+	}
 
 	// Classes
 
@@ -4803,25 +4919,32 @@ export function activate(transformation = ID) {
 		)
 	}
 
-	RESULT.repeatedApplication = function (a, n, initial = undefined) {
-		if (BigInt(n) <= 0) return initial
-		if (BigInt(n) === 1n) return a(initial)
-		return a(repeatedApplication(a, n - 1))
+	RESULT.repeatedApplication = function (a, n, initial) {
+		n = BigInt(n)
+		let curr = initial
+		for (let i = 0n; i < n; i++) curr = a(curr)
+		return curr
+		// * Old recursive definition [replaced with the new one...]
+		// TODO: clean these up later - save somewhere for good memory...
+		// if (BigInt(n) <= 0) return initial
+		// if (BigInt(n) === 1n) return a(initial)
+		// return a(repeatedApplication(a, n - 1))
 	}
 
 	// ? (Reminder) -- the imperative versions of functional code [for the sake of the stack]; Write and separate within the library, similar to the way finite and infinite versions get separated...
-	RESULT.repeatedApplicationIndex = function (
-		a,
-		n,
-		initial = undefined,
-		offset = typeof n === "bigint" ? 1n : 1
-	) {
-		if (BigInt(n) <= 0) return initial
-		if (BigInt(n) === 1) return a(initial, n - offset)
-		return a(
-			repeatedApplicationIndex(a, n - 1, initial, offset),
-			n - offset
-		)
+	RESULT.repeatedApplicationIndex = function (a, n, initial, offset = 0n) {
+		n = BigInt(n)
+		let curr = initial
+		for (let i = 0n; i < n; i++) curr = a(curr, i + offset)
+		return curr
+		// * Old recursive definition [replaced with the new one; these are better on the stack];
+		// ! clean up later... [save somewhere for good memory]
+		// if (BigInt(n) <= 0) return initial
+		// if (BigInt(n) === 1) return a(initial, n - offset)
+		// return a(
+		// 	repeatedApplicationIndex(a, n - 1, initial, offset),
+		// 	n - offset
+		// )
 	}
 
 	// * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
@@ -4830,12 +4953,17 @@ export function activate(transformation = ID) {
 		property,
 		initial = undefined
 	) {
+		let curr = initial
+		while (property()) curr = function_(curr)
+		return curr
 		// ? Allow for input of (function_, property)? this'd allow for greater diversity of uses...
 		// ? GENERAL QUESTION: about diversity of uses: does one want it truly?
 		// * Current decision: YEEEEEASS! (Do it...)
-		return property()
-			? repeatedApplicationWhilst(function_, property, function_(initial))
-			: initial
+
+		// ! Old recursive definition; Being replaced; later, save somewhere for good memory, yada-yada...
+		// return property()
+		// 	? repeatedApplicationWhilst(function_, property, function_(initial))
+		// 	: initial
 	}
 
 	// TODO: create a repeatedApplicationFor...
