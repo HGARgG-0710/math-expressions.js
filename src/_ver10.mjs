@@ -708,8 +708,7 @@ export function activate(transformation = ID) {
 								// TODO: create for each and every GeneralArray method out there [and maybe extend further onto other stuff too...] 2 versions: 1 that works on 'this.this.this', another - that merely returns the result of the actual operation for the first to use on 'this.this.this' (the 'base' method...)...
 								appendfront(x) {
 									// ! Problem [minor]: decide (mean: create a way) for creating an empty array more compactly...
-									const newArr =
-										this.this.this.this.class.template.class.class()
+									const newArr = this.this.this.empty()
 									newArr.pushback(x)
 									return newArr.concat(this.this.this)
 								},
@@ -777,17 +776,37 @@ export function activate(transformation = ID) {
 										.class.template.icclass.template.comparison
 								) {
 									const copied = this.this.this.copy()
+									// ? This thing:
+									// (t) =>
+									// 		copied.pushback(
+									// 			t.object.currelem,
+									// 			fast,
+									// 			range,
+									// 			comparison
+									// 		)
+									// ? Appears rather frequently through this GeneralArray's implementation....
+									// * Pray generalize;
+									// todo: create a plausible to oneself a way for doing it...
 									array
 										.loop()
-										._full(() =>
+										._full((t) =>
 											copied.pushback(
-												array.currelem,
+												t.object.currelem,
 												fast,
 												range,
 												comparison
 											)
 										)
 									return copied
+								},
+								// TODO: MUST NOT BE ATTACHED TO THE 'this' instance... Must be static; REDO...
+								empty() {
+									return this.this.this.this.class.template.class
+										.class(
+											this.this.this.this.class.template.class
+												.template
+										)
+										.class(this.this.this.this.class.template)
 								},
 								copy(
 									f = ID,
@@ -797,20 +816,12 @@ export function activate(transformation = ID) {
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									const copied =
-										this.this.this.this.class.template.class
-											.class(
-												this.this.this.this.class.template
-													.class.template
-											)
-											.class(
-												this.this.this.this.class.template
-											)
+									const copied = this.this.this.empty()
 									this.this.this
 										.loop()
-										._full(() =>
+										._full((t) =>
 											copied.pushback(
-												f(this.this.this.currelem),
+												f(t.object.currelem),
 												fast,
 												range,
 												comparison
@@ -821,8 +832,11 @@ export function activate(transformation = ID) {
 								slice(
 									begin = this.this.this.init(),
 									end = this.this.this.length().get(),
+									fast = false,
 									range = this.this.this.this.class.template.class
-										.template.icclass.template.range
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									if (!range(end))
 										throw new RangeError(
@@ -837,40 +851,114 @@ export function activate(transformation = ID) {
 									this.this.this.begin()
 									this.this.this.go(begin, range)
 
+									// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
+									// TODO: decide generally.... Also, decide about inclusiveness/exclusiveness of indexes used within the algorithms' implementations in question...
 									while (end.compare(this.this.this.currindex)) {
-										sliced.pushback(this.this.this.currelem)
-										this.next()
+										sliced.pushback(
+											this.this.this.currelem,
+											fast,
+											range,
+											comparison
+										)
+										this.this.this.next()
 									}
 
 									this.this.this.currindex = index
 									return sliced
 								},
-								fillfrom(index, value) {
-									// Implement using the .slice()...
-									// * Sketch:
-									// * 1. move to 'index';
-									// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)';
+								fillfrom(
+									index,
+									value,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range
+								) {
+									// * This could be re-implement thing using '.project() + InfiniteCounter.difference() + Creating an empty GeneralArray...'
+									// ? Does one want to ??? Pray think on it...
+									this.this.this.go(index, range)
+									while (
+										!comparison(
+											this.this.this.currindex,
+											this.this.this.length().get().previous()
+										)
+									) {
+										this.this.this.currelem = value
+										this.this.this.next()
+									}
 								},
-								convert(template) {
-									// TODO: re-organize the templates API [this one and the other 'tiny details' shall probably occupy the next element of the agenda;]...
-									// * Sketch:
-									// * 1. Create a new GeneralArray with the given template;
-									// * 2. walk the current array and '.push()' every element in the new one;
-									// * 3. return the new array;
+								convert(
+									templates = [
+										this.this.this.this.class.template.class
+											.template,
+										this.this.this.this.class.template
+									],
+									fast = false,
+									range = templates[0].icclass.template.range,
+									comparison = templates[0].icclass.template
+										.comparison
+								) {
+									const newArr = RESULT.GeneralArray(templates[0])(
+										templates[1]
+									)()
+									this.this.this
+										.loop()
+										._full((t) =>
+											newArr.pushback(
+												t.object.currelem,
+												fast,
+												range,
+												comparison
+											)
+										)
+									return newArr
 								},
-								delete(index) {
-									// * Sketch [not the actual code]:
-									// * 1. this = this.slice(index, indexgenerator(index))
-									// ? Note: one could do it otherwise, as well -- deleting the index not the value;
-									// * IDEA: create a method for this too!
-									// TODO: yes. pray do;
+								delete(
+									index,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									return this.this.this.deleteMult(
+										index,
+										index,
+										fast,
+										range,
+										comparison
+									)
 								},
-								deleteMult(startindex, endindex) {
-									// * sketch:
-									// * 1. this = this.slice(startindex, endindex)
-									// ? Question(idea): rewrite the '.delete' through 'deleteMult'?
+								deleteMult(
+									startindex,
+									endindex = startindex,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									return (this.this.this = this.this.this
+										.slice(
+											this.this.this.init(),
+											startindex.previous(),
+											fast,
+											range,
+											comparison
+										)
+										.concat(
+											this.this.this.slice(
+												endindex.next(),
+												fast,
+												range,
+												comparison
+											)
+										))
 								},
+								// ? Question: how should one project? Completionist-wise [by walking through the entire 'array', ], or fit-wise [by taking only the 'defined' portion]?
+								// * Current decision: completionist-wise...
+								// ^ IDEA: make two ; one - completionist, the other, fit-wise...	
+								// TODO: add appropriate leftover arguments everywhere [the fast/range/comparison]...
 								project(array, index) {
+									this.go(index, range)
 									// * sketch:
 									// * 1. move to the index 'index';
 									// * 2. walk the passed general array [array], until reaching either its or the "this"'s .length(), 'this.write(array.array.currelem)'
