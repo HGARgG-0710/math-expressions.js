@@ -297,13 +297,11 @@ export function activate(transformation = ID) {
 									// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
 									// todo [general] : pray do just that...
 									return (
-										this.this.this.this.class.template
-											.isLabel
+										this.this.this.this.class.template.isLabel
 											? (x) =>
 													x[
-														this.this.this.this
-															.class.template
-															.label
+														this.this.this.this.class
+															.template.label
 													]
 											: id
 									)(
@@ -329,18 +327,16 @@ export function activate(transformation = ID) {
 											(this.this.this.this.class.template
 												.isLabel
 												? Pointer({
-														label: this.this.this
-															.this.class.template
-															.label
+														label: this.this.this.this
+															.class.template.label
 												  })
 												: id)(newval)
 										)
 
 									return (this.this.this.this.class.template.class.template.elem(
 										this.this.this
-									)[
-										this.this.this.this.class.template.label
-									] = newval)
+									)[this.this.this.this.class.template.label] =
+										newval)
 								},
 								// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 								// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
@@ -349,64 +345,99 @@ export function activate(transformation = ID) {
 									const a = {
 										template: {
 											indexiter: (x) => x.object.next(),
-											end: this.this.this.this.class.template.isEnd(),
+											end: this.this.this.this.class.template
+												.isEnd,
 											icclass:
-												this.this.this.this.class
-													.template.class.template
-													.icclass,
+												this.this.this.this.class.template
+													.class.template.icclass,
 											...template
 										},
 										object: this.this.this,
 										restart: function () {
-											this.counter =
-												a.template.icclass.class()
+											this.counter = a.template.icclass.class()
 										},
 										yield: function (
-											_indexiter = this.template
-												.indexiter,
-											end = this.template.end
+											_indexiter = this.template.indexiter,
+											end = this.template.end,
+											iter = true
 										) {
-											// * There still is the problem of the index-preservation...
-											// ? On the other hand ... Does one want to always be preserving it???
-											// ^ IDEA [1; for the solution]: a separate method for preservation of index of the object within the question...
-											// ^ IDEA [2; for the solution]: a more localized version - for the '.loop()' method only... (some .preserve(), method)
-											// * pray decide what to do next....
-											// ? Solved [semi?] : the .full() method does precisely what the previous plain '.loop()' was doing; Without loss of generality;
-											// PRAY DECIDE WHAT TO DO ABOUT THIS NOTE...
-											indexiter(this)
-											this.counter = this.counter.next()
-											return end(this.object)
+											const isend = end(this.object)
+											if (!isend && iter) {
+												_indexiter(this)
+												this.counter = this.counter.next()
+											}
+											return isend
 										},
-										full(
+										_full(
 											each,
 											iter = RESULT._const(
 												this.template.indexiter
 											),
-											end = RESULT._const(
-												this.template.end
-											)
+											end = RESULT._const(this.template.end)
 										) {
 											const index = this.object.currindex
 											this.object.begin()
 											let r = undefined
-											// ? Is one satisfied with the amount of information that the 'each' method is provided access to??? Don't one want a bit more???
-											// ! PROBLEM: what about the 'break' and 'continue'??? Don't work with them, this thing it don't...
-											// ? Currently, don't seem to be one... Due to the purely syntactical nature of presence of 'break/continue' and insensitivity of 'eval' to different loop contexts...
-											// * It appears the user is on their own there... [To render the 'breaking' as total to their current iteration...]
-											// ^ IDEA for a solution: the next thing [perhaps] could be done - ask the user for each iteration as a set of separated instructions between which one'd be accomplishing the procedure in question [basically, the 'infinite.generalLoop']
-											// * DEICDED: yes, one does next thing - combines the two, the multi-operational approach from the generalLoop gets integrated into GeneralArray.loop().full(), whilst the generalLoop itself disappears and the uses get replaced with either the adaptation of Array to GeneralArray ['wrapping'] or different models get used [pray review functional implications in this case...]
-											while (!this.yield(iter(), end())){
+											let is = this.yield(null, end(), false)
+											while (!is) {
 												r = each(this, r)
+												is = this.yield(iter(), end())
 												if (this.broke) break
 											}
+											this.restart()
 											this.broke = false
 											this.object.currindex = index
 											return r
 										},
-										break: function() {
+										// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
+										// TODO: work on their names...
+										// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
+										full(
+											each = this.template.each,
+											iter = RESULT._const(
+												this.template.indexiter
+											),
+											end = RESULT._const(this.template.end)
+										) {
+											const index = this.object.currindex
+											this.object.begin()
+											let r = undefined
+											// * Having done that, the problem appears to be [largely] solved...
+											// ? Question: does one really want to do that 'dissolve generalLoop' thingy??? Pray think on it...
+											let is = this.yield(null, end(), false)
+											while (!is) {
+												const x = each(this)
+												let goOn = true
+												r = x.loop()._full(() => {
+													if (goOn) {
+														if (
+															this.broke ||
+															this.continued
+														) {
+															goOn = false
+															return
+														}
+														return x.currelem()
+													}
+												})
+												is = this.yield(iter(), end())
+												if (this.broke) break
+												goOn = true
+												this.continued = false
+											}
+											this.restart()
+											this.broke = false
+											this.object.currindex = index
+											return r
+										},
+										break: function () {
 											this.broke = true
-										}, 
-										broke: false
+										},
+										continue: function () {
+											this.continued = true
+										},
+										broke: false,
+										continued: false
 									}
 									a.restart()
 									return a
@@ -419,10 +450,11 @@ export function activate(transformation = ID) {
 										RESULT._const(true)
 									)
 								},
+								// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
 								end() {
 									// * skipping the check because one knows that it would be 'true' anyway...
 									return this.this.this.go(
-										this.this.this.length().get(),
+										this.this.this.length().get().previous(),
 										RESULT._const(true)
 									)
 								},
@@ -433,8 +465,8 @@ export function activate(transformation = ID) {
 								// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
 								go(
 									index,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range
 								) {
 									if (!range(index))
 										throw new RangeError(
@@ -450,15 +482,11 @@ export function activate(transformation = ID) {
 								move(
 									index,
 									preface = () => {},
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison,
 									each = (x) => x.next(),
 									stop = (x) =>
-										comparison(
-											x.length().get(),
-											x.currindex
-										)
+										comparison(x.length().get(), x.currindex)
 								) {
 									preface(arguments, this.this.this)
 									while (
@@ -474,14 +502,10 @@ export function activate(transformation = ID) {
 								moveforward(
 									index,
 									begin = false,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison,
 									stop = (x) =>
-										comparison(
-											x.length().get(),
-											x.currindex
-										)
+										comparison(x.length().get(), x.currindex)
 								) {
 									return this.this.this.move(
 										index,
@@ -497,17 +521,14 @@ export function activate(transformation = ID) {
 								movebackward(
 									index,
 									end = false,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison,
-									stop = (x) =>
-										comparison(x.currindex, x.init())
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison,
+									stop = (x) => comparison(x.currindex, x.init())
 								) {
 									return this.this.this.move(
 										index,
 										(args, x) => {
-											if (end)
-												x.currindex = x.length().get()
+											if (end) x.currindex = x.length().get()
 										},
 										comparison,
 										(x) => x.previous(),
@@ -516,35 +537,42 @@ export function activate(transformation = ID) {
 								},
 								movedirection(
 									index,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison,
-									stop = (x) =>
-										comparison(x.currindex, x.init())
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison,
+									stop
 								) {
-									return this.this.this.currindex.compare(
-										index
-									)
+									return this.this.this.currindex.compare(index)
 										? this.moveforward(
 												index,
 												false,
 												comparison,
-												stop
+												(stop =
+													stop ||
+													((x) =>
+														comparison(
+															x.currindex,
+															x.length().get()
+														)))
 										  )
 										: this.movebackward(
 												index,
 												false,
 												comparison,
-												stop
+												(stop =
+													stop ||
+													((x) =>
+														comparison(
+															x.currindex,
+															x.init()
+														)))
 										  )
 								},
 								jump(
 									index,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.comparison,
-									range = this.this.this.this.class.template
-										.class.template.icclass.range
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.comparison,
+									range = this.this.this.this.class.template.class
+										.template.icclass.range
 								) {
 									return (this.this.this.currindex =
 										this.this.this.currindex.jumpDirection(
@@ -562,11 +590,10 @@ export function activate(transformation = ID) {
 								read(
 									index,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									const ind = this.this.this.currindex
 									if (fast) this.this.this.go(index, range)
@@ -584,11 +611,10 @@ export function activate(transformation = ID) {
 									index,
 									value,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									const ind = this.this.this.currindex
 									if (fast) this.this.this.go(index, range)
@@ -610,8 +636,7 @@ export function activate(transformation = ID) {
 									return {
 										object: () => this.this.this,
 										get: () => {
-											const index =
-												this.this.this.currindex
+											const index = this.this.this.currindex
 											this.this.this.begin()
 											while (
 												!this.this.this.this.class.template.class.template.isEnd(
@@ -619,24 +644,19 @@ export function activate(transformation = ID) {
 												)
 											)
 												this.this.this.next()
-											const returned =
-												this.this.this.currindex
+											const returned = this.this.this.currindex
 											this.this.this.currindex = index
 											return returned
 										},
-										// TODO: make the 'range' a template method...
 										set: (
 											value,
-											comparison = this.this.this.this
-												.class.template.class.template
-												.icclass.template.comparison,
+											comparison = this.this.this.this.class
+												.template.class.template.icclass
+												.template.comparison,
 											range = this.this.this.this.class
 												.template.class.template.icclass
 												.template.range
 										) => {
-											// ^ IDEA: solution to the problem of 'going for infinity';
-											// * A truly infinite loop [for a finite structure, that is,] can happen only in the case when the given index is outside the bounds of the index range;
-											// * So, one just gives the user the ability to set their own ranging functions!
 											if (!range(value))
 												throw new RangeError(
 													"Index range error for array length setting"
@@ -644,9 +664,7 @@ export function activate(transformation = ID) {
 
 											if (
 												comparison(
-													this.this.this
-														.length()
-														.get(),
+													this.this.this.length().get(),
 													value
 												)
 											)
@@ -663,24 +681,24 @@ export function activate(transformation = ID) {
 													)
 											) {
 												// Decrease the length
-												// ? PROBLEM: how does one decide the beginindex (named 'startindex' here)?
-												// TODO: put something else there instead of 'undefined'
-												// ^ SOLUTION: the 'this.this.this.length().get()' that is currently present gets added to the prefix '.jumpDirection(this.this.this.length().get().difference(value))';
-												// * Then, the 'start' might as well just stay 'undefined' - let one have the default for it being equal to 'this.this.this.class.template.class.template.icclass.template.generator()' ('this.this.this.init()', essentially...);
 												this.this.this.deleteMult(
-													undefined,
+													this.this.this.init(),
 													this.this.this
 														.length()
 														.get()
+														.jumpDirection(
+															this.this.this
+																.length()
+																.get()
+																.difference(value)
+														)
 												)
 											} else {
 												// Increase the length
-												// ? Problem : number of times???
-												// ^ IDEA [for a solution]: implement the InfiniteCounter.difference(ic) method; would essentially take an 'InfiniteCounter' instance, find the difference between it and the current index;
+												// TODO: finish the sketch...
+												// * Sketch: .pushback() some 'default()' element(s) [settable as a default-template by the user] for the required number of items...
+												// The number of items is supposed to be given by the InfiniteCounter.difference(ic) method... would essentially take an 'InfiniteCounter' instance, find the difference between it and the current index;
 												// * note: the returned difference would be non-absolute and by the chosen generator, that being, one would 'jump' on the appropritate number of times;
-												// TODO: for this, implement the direction-dependent 'jump', ('jumpDirection', for instance), which would jump forward or backward correspondently with the direction of the thing in question;
-												// TODO: create also the 'direction' method for the InfiniteCounter; would essentially return 'this.class.template.generator().compare(ic)' (by default; it would have the thing generalized..., of course);
-												this.this.this.shiftForward()
 											}
 										}
 									}
@@ -698,11 +716,10 @@ export function activate(transformation = ID) {
 								appendback(
 									x,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									const newArr = this.this.this.copy()
 									return newArr.write(
@@ -718,15 +735,14 @@ export function activate(transformation = ID) {
 								// const A = {this: {...[the actual object]}}; A.this.reference = A.this;
 								// * The user would access the object by means of 'obj.this';
 								// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
-								// TODO: spread this architecture throughout the project...
+								// TODO: spread this 'this.this.this' architecture throughout the project...
 								pushback(
 									value,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									return (this.this.this =
 										this.this.this.appendback(
@@ -739,11 +755,10 @@ export function activate(transformation = ID) {
 								pushfront(
 									value,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									return (this.this.this =
 										this.this.this.appendfront(
@@ -756,56 +771,82 @@ export function activate(transformation = ID) {
 								concat(
 									array,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									const copied = this.this.this.copy()
-									const loop = array.loop()
-									while (loop.full())
-										copied.pushback(
-											array.currelem,
-											fast,
-											range,
-											comparison
+									array
+										.loop()
+										._full(() =>
+											copied.pushback(
+												array.currelem,
+												fast,
+												range,
+												comparison
+											)
 										)
 									return copied
 								},
 								copy(
 									f = ID,
 									fast = false,
-									range = this.this.this.this.class.template
-										.class.template.icclass.template.range,
-									comparison = this.this.this.this.class
-										.template.class.template.icclass
-										.template.comparison
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									const copied =
-										this.this.this.this.class.template.class.class()
-									const loop = this.this.this.loop()
-									while (loop.full())
-										copied.pushback(
-											f(this.this.this.currelem),
-											fast,
-											range,
-											comparison
+										this.this.this.this.class.template.class
+											.class(
+												this.this.this.this.class.template
+													.class.template
+											)
+											.class(
+												this.this.this.this.class.template
+											)
+									this.this.this
+										.loop()
+										._full(() =>
+											copied.pushback(
+												f(this.this.this.currelem),
+												fast,
+												range,
+												comparison
+											)
 										)
 									return copied
 								},
 								slice(
 									begin = this.this.this.init(),
-									end = this.this.this.length().get()
+									end = this.this.this.length().get(),
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range
 								) {
-									// * Sketch:
-									// * 1. go until meeting begin; if had already met 'end' before 'begin', make a flag for it;
-									// * 2. until meeting 'end' or hitting the flag [which could be 'true' already], add elements to the GeneralArray of the same structure as this one [using .push()]...
-									// * 3. return the finally obtained array;
-									// ? Question: should it be inclusive to 'end'?
-									// * Current decision: yes.
+									if (!range(end))
+										throw new RangeError(
+											"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
+										)
+
+									const sliced =
+										this.this.this.this.class.template.class
+											.class()
+											.class()
+									const index = this.this.this.currindex
+									this.this.this.begin()
+									this.this.this.go(begin, range)
+
+									while (end.compare(this.this.this.currindex)) {
+										sliced.pushback(this.this.this.currelem)
+										this.next()
+									}
+
+									this.this.this.currindex = index
+									return sliced
 								},
 								fillfrom(index, value) {
+									// Implement using the .slice()...
 									// * Sketch:
 									// * 1. move to 'index';
 									// * 2. until 'isEnd(currvalue)', do 'this.write(currindex, value)';
@@ -906,7 +947,7 @@ export function activate(transformation = ID) {
 				template: { label: "", ...template },
 				function: function (iterarr) {
 					let newiterarr = iterarr.class.template.class.class()
-					iterarr.loop().full(() => {
+					iterarr.loop()._full(() => {
 						// ! Pointer and PointerArray have the same template [again!]
 						// * Pray, when working on the templates of all the templated functions/classes, create the corresponding template connections; Simplify small things such as this here...
 						newiterarr.currelem = Pointer({
@@ -915,9 +956,7 @@ export function activate(transformation = ID) {
 					})
 					// ? Is that [the copying of the .class] required for it to work properly??? Pray check... Oughta be
 					newiterarr.class = flatCopy(newiterarr.class)
-					newiterarr.class.template = flatCopy(
-						newiterarr.class.template
-					)
+					newiterarr.class.template = flatCopy(newiterarr.class.template)
 
 					newiterarr.class.template.isLabel = true
 					newiterarr.class.template.label = this.template.label
@@ -940,9 +979,7 @@ export function activate(transformation = ID) {
 				object: (a, method = id) => objFmap(a, method),
 				function: (a) => a.bind({}),
 				symbol: (a) =>
-					Symbol(
-						((x) => x.slice(0, x.length - 1))(a.toString().slice(7))
-					),
+					Symbol(((x) => x.slice(0, x.length - 1))(a.toString().slice(7))),
 				arrayFlat: (a) => [...a],
 				objectFlat: (a) => ({ ...a })
 			}
@@ -992,8 +1029,7 @@ export function activate(transformation = ID) {
 			switch (typeof a) {
 				case "object":
 					for (const a_ in a)
-						if (!RESULT.infinite.valueCompare(b[a_], a[a_]))
-							return false
+						if (!RESULT.infinite.valueCompare(b[a_], a[a_])) return false
 					if (!oneway) return RESULT.infinite.valueCompare(b, a, true)
 					return true
 				case "function":
@@ -1039,8 +1075,7 @@ export function activate(transformation = ID) {
 				},
 				range: function (a) {
 					return (
-						(typeof a === "object" &&
-							this.range(this.inverse(a))) ||
+						(typeof a === "object" && this.range(this.inverse(a))) ||
 						a === this.template.start
 					)
 				}
@@ -1071,19 +1106,47 @@ export function activate(transformation = ID) {
 							.compare(currcounter);
 						currcounter = currcounter.next()
 					) {
-						const curriter = this.template.iteration(currcounter)
-						const loop = curriter.loop()
-						while (loop.full()) {
-							const r = curriter.currelem(
-								a,
-								currcounter,
-								this.template.self,
-								comparetemplate
-							)
-							if (r[0] === true) return r[1]
-							if (r[0] === false) break
-							// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
-						}
+						// ??? DOES THIS WORK AS INTENDED??? [NOT LOOKS MUCH LIKE IT...]
+						// * NAH, NOT WORTH IT; BETTER OFF JUST REPLACED...
+						// TODO: pray just replace the generalLoop's uses; Think it through carefully regarding the consequences on the functional level...
+						// Previous [for reference]:
+						// 		const curriter = this.template.iteration(currcounter)
+						// 		const loop = curriter.loop()
+						// 		while (loop.full()) {
+						// 			const r = curriter.currelem(
+						// 				a,
+						// 				currcounter,
+						// 				this.template.self,
+						// 				comparetemplate
+						// 			)
+						// 			if (r[0] === true) return r[1]
+						// 			if (r[0] === false) break
+						// 			// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
+						// 		}
+						let shouldReturn = false
+						let res = undefined
+						this.template
+							.iteration(currcounter)
+							.loop()
+							.full(() => {
+								const empty = this.template.arrayclass.class()
+								empty.pushback(() => {
+									const r = curriter.currelem(
+										a,
+										currcounter,
+										this.template.self,
+										comparetemplate
+									)
+									shouldReturn = !!r[0]
+									// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
+									if (typeof r[0] === "boolean") {
+										if (shouldReturn) res = r[1]
+										this.break()
+									}
+								})
+								return empty
+							})
+						if (shouldReturn) return res
 					}
 
 					return this.template.defaultvalue()
@@ -1195,10 +1258,7 @@ export function activate(transformation = ID) {
 						// TODO: get rid of such object-parameters... within both this library and others...
 						result = RESULT.recursiveIndexation({
 							object: result,
-							fields: resultIndexes.slice(
-								0,
-								resultIndexes.length - 1
-							)
+							fields: resultIndexes.slice(0, resultIndexes.length - 1)
 						})
 
 						// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
@@ -1288,9 +1348,7 @@ export function activate(transformation = ID) {
 					// ? make this an alias ('(x) => Number(x) || Number(!isNaN(x))'); this'd return 0 in case when argument is 'NaN'; in other cases, it'd perform a Number-conversion;
 					n = Number(n) || Number(!isNaN(Number(n)))
 					if (n < 0)
-						return fromNumber({ generator: this.template.inverse })(
-							-n
-						)
+						return fromNumber({ generator: this.template.inverse })(-n)
 					return repeatedApplication(
 						(r) => r.next(),
 						BigInt(n),
@@ -1375,8 +1433,7 @@ export function activate(transformation = ID) {
 								i = i.next()
 								return jumping(r)
 							},
-							() =>
-								!i.compare(obstructed, comparison, () => true),
+							() => !i.compare(obstructed, comparison, () => true),
 							{
 								// TODO: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
 								...infinite.deepCopy(this),
@@ -1472,8 +1529,7 @@ export function activate(transformation = ID) {
 							// * Current decision: either - a. No, not at all [they're just form-changing...]; b. Yes, But First Generalize Them properly...
 							obstructor = typeof x === "number"
 								? infinite.fromNumber({
-										generator:
-											this.class.template.generator,
+										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
 								: id
@@ -1504,8 +1560,7 @@ export function activate(transformation = ID) {
 							range = this.class.template.range,
 							obstructor = typeof x === "number"
 								? infinite.fromNumber({
-										generator:
-											this.class.template.generator,
+										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
 								: id,
@@ -1531,8 +1586,7 @@ export function activate(transformation = ID) {
 							range = this.class.template.range,
 							obstructor = typeof x === "number"
 								? infinite.fromNumber({
-										generator:
-											this.class.template.generator,
+										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
 								: id
@@ -1551,8 +1605,7 @@ export function activate(transformation = ID) {
 							range = this.class.template.range,
 							obstructor = typeof x === "number"
 								? infinite.fromNumber({
-										generator:
-											this.class.template.generator,
+										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
 								: id
@@ -2823,8 +2876,8 @@ export function activate(transformation = ID) {
 		// * CURRENT DECISION: sure, why not?
 		add(type, data) {
 			if (
-				indexOfMult(this[`${type}s`], data, infinite.valueCompare)
-					.length !== 0
+				indexOfMult(this[`${type}s`], data, infinite.valueCompare).length !==
+				0
 			)
 				return this[`${type}s`].length
 			const returned =
@@ -2860,8 +2913,8 @@ export function activate(transformation = ID) {
 		// * Current decision: no, let it stay...
 		delete(type, data) {
 			return (this[`${type}s`] =
-				indexOfMult(this[`${type}s`], data, infinite.valueCompare)
-					.length === 0
+				indexOfMult(this[`${type}s`], data, infinite.valueCompare).length ===
+				0
 					? this[`${type}s`]
 					: clearRepetitions(
 							this[`${type}s`],
@@ -2966,8 +3019,7 @@ export function activate(transformation = ID) {
 				dispersion(rows[0], true),
 				dispersion(rows[1], true)
 			]
-			const biggerDispersionIndex =
-				dispersions[0] > dispersions[1] ? 0 : 1
+			const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
 			const difference = exp(
 				[
 					dispersions[biggerDispersionIndex],
@@ -3109,10 +3161,7 @@ export function activate(transformation = ID) {
 		add(item) {
 			if (!this.transform) Vector.typecheck(item, this)
 			this._length++
-			return (
-				this.vector.push(this.transform ? this.transform(item) : item) -
-				1
-			)
+			return this.vector.push(this.transform ? this.transform(item) : item) - 1
 		}
 		swap(index1, index2) {
 			if (
@@ -3216,8 +3265,7 @@ export function activate(transformation = ID) {
 			if (newLength < 0)
 				throw new Error(`Passed negative length: ${newLength}`)
 			if (newLength < this._length)
-				for (let i = this._length; i > newLength; i--)
-					this._vector.pop()
+				for (let i = this._length; i > newLength; i--) this._vector.pop()
 			if (newLength > this._length)
 				for (let i = this._length; i < newLength; i++)
 					this._vector[i] = this.default(this.type)
@@ -3238,9 +3286,7 @@ export function activate(transformation = ID) {
 	RESULT.NumberVector = class extends RESULT.Vector {
 		vectorScalarMultiply(vector) {
 			const main =
-				Math.max(this.length, vector.length) == vector.length
-					? vector
-					: this
+				Math.max(this.length, vector.length) == vector.length ? vector : this
 			const other = main.vector == vector.vector ? this : vector
 			return repeatedArithmetic(
 				other.vector.map((el, i) => el * main.vector[i]),
@@ -3272,12 +3318,10 @@ export function activate(transformation = ID) {
 			// TODO: Use the RectMatrix product formula on wikipedia page.
 		}
 		scalarMultiply(scalar) {
-			for (let i = 0; i < this._vector.length; i++)
-				this._vector[i] *= scalar
+			for (let i = 0; i < this._vector.length; i++) this._vector[i] *= scalar
 		}
 		scalarAdd(scalar) {
-			for (let i = 0; i < this._vector.length; i++)
-				this._vector[i] += scalar
+			for (let i = 0; i < this._vector.length; i++) this._vector[i] += scalar
 		}
 		// TODO: add vector addition...
 	}
@@ -3313,9 +3357,7 @@ export function activate(transformation = ID) {
 			// * The library should have 2 different "kinds" matricies -- generalized generic ones and those for Numbers (based on the first ones);
 			// * As an example: NumberRectMatrix and RectMatrix; NumberRectMatrix extends RectMatrix;
 			if (!arrayEquality(matrix.sidelen, this.sidelen))
-				throw new Error(
-					"Trying to add matrices with different lengths. "
-				)
+				throw new Error("Trying to add matrices with different lengths. ")
 			// ! This here should be replaced with copying the thing (Question: should this be achieved via the constructor or via the deepCopy?)
 			// ? funny, this oughtn't have worked before... Is it another one of those bugs that didn't get fixed in math-expressions.js 0.8?
 			// * Current decision: use a deepCopy; That is because the constructor also checks for validity of a thing and one don't really care for that all that much...
@@ -3366,11 +3408,13 @@ export function activate(transformation = ID) {
 				let n = 0
 				let finale = 0
 				for (let j = 0; j < this.sidelen[0]; j++)
-					matricesDeterminants[this.navigate([0, j])] =
-						findAdditional(this, 0, j)
+					matricesDeterminants[this.navigate([0, j])] = findAdditional(
+						this,
+						0,
+						j
+					)
 				for (const pair in matricesDeterminants) {
-					finale +=
-						matricesDeterminants[pair] * Number(pair) * (-1) ** n
+					finale += matricesDeterminants[pair] * Number(pair) * (-1) ** n
 					n++
 				}
 				return finale
@@ -3411,10 +3455,7 @@ export function activate(transformation = ID) {
 			)
 			let currDivisor
 			for (let i = 0; i < len; i++) {
-				currDivisor = leastCommonDivisor(
-					ratio.numerator,
-					ratio.denomenator
-				)
+				currDivisor = leastCommonDivisor(ratio.numerator, ratio.denomenator)
 				if (!currDivisor) break
 				ratio.numerator /= currDivisor
 				ratio.denomenator /= currDivisor
@@ -3528,19 +3569,7 @@ export function activate(transformation = ID) {
 		static ParseEquation(equationLine, origmappings, variables) {
 			const operators = ["+", "*", "/", "-", "^"]
 			const brackets = ["[", "]", "(", ")", "{", "}"]
-			const digits = [
-				"0",
-				"1",
-				"2",
-				"3",
-				"4",
-				"5",
-				"6",
-				"7",
-				"8",
-				"9",
-				"."
-			]
+			const digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."]
 			let metEquality = false
 			const mappings = { ...origmappings.varmap } // for simplicity of use
 			function eliminateSpaces() {
@@ -3576,9 +3605,7 @@ export function activate(transformation = ID) {
 								line = Equation.replaceIndex(
 									line,
 									i,
-									brackets.indexOf(line[i]) % 2 === 0
-										? "("
-										: ")"
+									brackets.indexOf(line[i]) % 2 === 0 ? "(" : ")"
 								)
 								continue
 							}
@@ -3588,9 +3615,7 @@ export function activate(transformation = ID) {
 								variables.includes(line[i])
 							)
 								continue
-							throw new Error(
-								`Unknown symbol detected: ${line[i]}`
-							)
+							throw new Error(`Unknown symbol detected: ${line[i]}`)
 					}
 				}
 				for (let i = 0; i < line.length; i++) {
@@ -3613,20 +3638,14 @@ export function activate(transformation = ID) {
 		 * @param {number | string | boolean} val Value to be inserted on a place of index "index", thereby replacing it.
 		 */
 		static replaceIndex(string, index, val) {
-			return (
-				string.substring(0, index) + val + string.substring(index + 1)
-			)
+			return string.substring(0, index) + val + string.substring(index + 1)
 		}
 		/**
 		 * Parses an equation, that it's invoked onto.
 		 * @param {VarMapping} mappings Various mappings for variables.
 		 */
 		parse(mappings) {
-			return Equation.ParseEquation(
-				this.equation,
-				mappings,
-				this.variables
-			)
+			return Equation.ParseEquation(this.equation, mappings, this.variables)
 		}
 		constructor(equationText = "", vars = ["x"], defaultMappings = []) {
 			this.variables = []
@@ -3645,18 +3664,10 @@ export function activate(transformation = ID) {
 			const parsed = { ...origparsed } // Making a copy.
 			for (let i = 0; i < parsed.right.length; i++)
 				if (parsed.right[i] === varname)
-					parsed.right = Equation.replaceIndex(
-						parsed.right,
-						i,
-						varvalue
-					)
+					parsed.right = Equation.replaceIndex(parsed.right, i, varvalue)
 			for (let i = 0; i < parsed.left.length; i++)
 				if (parsed.left[i] === varname)
-					parsed.left = Equation.replaceIndex(
-						parsed.left,
-						i,
-						varvalue
-					)
+					parsed.left = Equation.replaceIndex(parsed.left, i, varvalue)
 			return parsed
 		}
 		/**
@@ -3670,11 +3681,7 @@ export function activate(transformation = ID) {
 				throw new Error(
 					`Expected string as an input of variable name, got ${typeof varname}}`
 				)
-			const plugged = Equation.plug(
-				this.parse(mappings),
-				varname,
-				varvalue
-			)
+			const plugged = Equation.plug(this.parse(mappings), varname, varvalue)
 			return eval(plugged.right) - eval(plugged.left)
 		}
 		/**
@@ -3698,13 +3705,7 @@ export function activate(transformation = ID) {
 		 * @param {number} pathlength The length of the search path.
 		 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
 		 */
-		searchSolution(
-			mappings,
-			varname,
-			startvalue,
-			pathlength,
-			precision = 4
-		) {
+		searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
 			const differences = generate(
 				startvalue,
 				startvalue + pathlength,
@@ -3752,13 +3753,7 @@ export function activate(transformation = ID) {
 		 * @param {number} pathlength The length of the search path.
 		 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
 		 */
-		defaultSearchSolution(
-			index,
-			varname,
-			startvalue,
-			pathlength,
-			precision
-		) {
+		defaultSearchSolution(index, varname, startvalue, pathlength, precision) {
 			const differences = generate(
 				startvalue,
 				startvalue + pathlength,
@@ -3818,9 +3813,7 @@ export function activate(transformation = ID) {
 		 */
 		add(name, value) {
 			if (typeof value !== "number")
-				throw new Error(
-					"Given non-numeric data as a value for mapping. "
-				)
+				throw new Error("Given non-numeric data as a value for mapping. ")
 			this.varmap.variables.push(name)
 			this.varmap.mappings.push(value)
 		}
@@ -4023,9 +4016,7 @@ export function activate(transformation = ID) {
 					expression.operators[i],
 					expression.table
 				),
-				double[1] +
-					expression.table[expression.operators[i]][2] -
-					(i > 0)
+				double[1] + expression.table[expression.operators[i]][2] - (i > 0)
 			],
 			expression.operators.length,
 			[expression.objects[0], 0]
@@ -4095,8 +4086,7 @@ export function activate(transformation = ID) {
 			return (
 				nums.length % 2 === 1
 					? id
-					: (firstIndex) =>
-							average([firstIndex, sorted[nums.length / 2]])
+					: (firstIndex) => average([firstIndex, sorted[nums.length / 2]])
 			)(sorted[Math.round(nums.length / 2) - 1])
 		})(sort(nums))
 	}
@@ -4379,10 +4369,7 @@ export function activate(transformation = ID) {
 					multiples(nums[1], nums[0])
 				])
 			)
-		return leastCommonMultiple(
-			nums[0],
-			leastCommonMultiple(...nums.slice(1))
-		)
+		return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
 	}
 
 	RESULT.commonMultiples = function (range, ...nums) {
@@ -4398,10 +4385,7 @@ export function activate(transformation = ID) {
 			return found
 		}
 		const rest = commonMultiples(range, ...nums.slice(1))
-		return arrIntersections([
-			multiples(nums[0], range[range.length - 1]),
-			rest
-		])
+		return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
 	}
 
 	RESULT.leastCommonDivisor = function (...nums) {
@@ -4443,9 +4427,7 @@ export function activate(transformation = ID) {
 				? deviations.push(
 						floor(Math.pow(num - rowAverage, 2), globalPrecision)
 				  )
-				: deviations.push(
-						floor(Math.abs(num - rowAverage), globalPrecision)
-				  )
+				: deviations.push(floor(Math.abs(num - rowAverage), globalPrecision))
 		})
 		deviations.length = row.length
 		return deviations
@@ -4518,17 +4500,11 @@ export function activate(transformation = ID) {
 			  })
 		return isDispersion
 			? floor(
-					exp(
-						[dispersion(row, false), Math.sqrt(newArr.length)],
-						"/"
-					),
+					exp([dispersion(row, false), Math.sqrt(newArr.length)], "/"),
 					globalPrecision
 			  )
 			: floor(
-					exp(
-						[standardDeviation(row), Math.sqrt(newArr.length)],
-						"/"
-					),
+					exp([standardDeviation(row), Math.sqrt(newArr.length)], "/"),
 					globalPrecision
 			  )
 	}
@@ -4596,9 +4572,7 @@ export function activate(transformation = ID) {
 	 * @param {number} number Number, perfectness of which is to be checked.
 	 */
 	RESULT.isPerfect = function (number) {
-		return (
-			repeatedArithmetic(allFactors(number).map(String), "+") === number
-		)
+		return repeatedArithmetic(allFactors(number).map(String), "+") === number
 	}
 
 	/**
@@ -5071,15 +5045,12 @@ export function activate(transformation = ID) {
 					get(key, comparison = infinite.valueCompare, number = 1) {
 						const indexes = indexOfMult(this.keys, key, comparison)
 						if (indexes.length === 0) return this.class.notfound
-						return indexes
-							.slice(0, number)
-							.map((i) => this.values[i])
+						return indexes.slice(0, number).map((i) => this.values[i])
 					},
 					set(key, value, comparison = infinite.valueCompare) {
 						const index = indexOfMult(this.keys, key, comparison)
 						if (index.length !== 0) {
-							for (const _index of index)
-								this.values[_index] = value
+							for (const _index of index) this.values[_index] = value
 							return value
 						}
 						this.keys.push(key)
@@ -5132,9 +5103,7 @@ export function activate(transformation = ID) {
 						const a = {}
 						for (let i = 0; i < this.keys.length; i++)
 							a[
-								(!["symbol", "number"].includes(
-									typeof this.keys[i]
-								)
+								(!["symbol", "number"].includes(typeof this.keys[i])
 									? JSON.stringify
 									: id)(this.keys[i])
 							] = this.values[i]
