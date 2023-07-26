@@ -342,27 +342,74 @@ export function activate(transformation = ID) {
 										this.this.this.this.class.template.label
 									] = newval)
 								},
-								// * For loops; Allows to loop over an array, with a changing index; Usage example:
-								// while (iterarr.loop()) {
-								// 		... (whatever)
-								// }
-								// * pray notice, that the '.currindex' is affected throughout the loop [default]...
-								// TODO: make the 'indexiter' a templated property of the object's class... The default for the template would be this...
-								loop: function* (indexiter = (x) => x.next()) {
-									const index = this.this.this.currindex
-									this.this.this.begin()
-									while (
-										!this.this.this.this.class.template.class.template.isEnd(
-											this.this.this
-										)
-									) {
-										// * note: one yields before having iterated the index not to skip the first one...
-										// works just like a 'for' loop;
-										yield false
-										indexiter(this.this.this)
+								// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
+								// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
+								loop: function (template) {
+									// ? Generalize to a separate class???
+									const a = {
+										template: {
+											indexiter: (x) => x.object.next(),
+											end: this.this.this.this.class.template.isEnd(),
+											icclass:
+												this.this.this.this.class
+													.template.class.template
+													.icclass,
+											...template
+										},
+										object: this.this.this,
+										restart: function () {
+											this.counter =
+												a.template.icclass.class()
+										},
+										yield: function (
+											_indexiter = this.template
+												.indexiter,
+											end = this.template.end
+										) {
+											// * There still is the problem of the index-preservation...
+											// ? On the other hand ... Does one want to always be preserving it???
+											// ^ IDEA [1; for the solution]: a separate method for preservation of index of the object within the question...
+											// ^ IDEA [2; for the solution]: a more localized version - for the '.loop()' method only... (some .preserve(), method)
+											// * pray decide what to do next....
+											// ? Solved [semi?] : the .full() method does precisely what the previous plain '.loop()' was doing; Without loss of generality;
+											// PRAY DECIDE WHAT TO DO ABOUT THIS NOTE...
+											indexiter(this)
+											this.counter = this.counter.next()
+											return end(this.object)
+										},
+										full(
+											each,
+											iter = RESULT._const(
+												this.template.indexiter
+											),
+											end = RESULT._const(
+												this.template.end
+											)
+										) {
+											const index = this.object.currindex
+											this.object.begin()
+											let r = undefined
+											// ? Is one satisfied with the amount of information that the 'each' method is provided access to??? Don't one want a bit more???
+											// ! PROBLEM: what about the 'break' and 'continue'??? Don't work with them, this thing it don't...
+											// ? Currently, don't seem to be one... Due to the purely syntactical nature of presence of 'break/continue' and insensitivity of 'eval' to different loop contexts...
+											// * It appears the user is on their own there... [To render the 'breaking' as total to their current iteration...]
+											// ^ IDEA for a solution: the next thing [perhaps] could be done - ask the user for each iteration as a set of separated instructions between which one'd be accomplishing the procedure in question [basically, the 'infinite.generalLoop']
+											// * DEICDED: yes, one does next thing - combines the two, the multi-operational approach from the generalLoop gets integrated into GeneralArray.loop().full(), whilst the generalLoop itself disappears and the uses get replaced with either the adaptation of Array to GeneralArray ['wrapping'] or different models get used [pray review functional implications in this case...]
+											while (!this.yield(iter(), end())){
+												r = each(this, r)
+												if (this.broke) break
+											}
+											this.broke = false
+											this.object.currindex = index
+											return r
+										},
+										break: function() {
+											this.broke = true
+										}, 
+										broke: false
 									}
-									this.this.this.currindex = index
-									return true
+									a.restart()
+									return a
 								},
 								// ! shorten the code with these 3...
 								begin() {
@@ -398,13 +445,8 @@ export function activate(transformation = ID) {
 								},
 								// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
 
-								// ! PROBLEM [curious]: the '.move' method possesses a very curious under one's interpretation manner of quality...
-								// * It has the defaults corresponding to the default-chosen defaults of the '.moveforward'...
-								// ? 1. SHOULD THIS BE A BEHAVIOUR?
-								// * Current decision: yes, sure, why not...
-								// ? 2. SHOULD .moveforward rely on it???
-								// * CURRENT DECISION: NO, ABSOLUTELY NOT; Because if user change this thing somehow [up to the defaults only, for instance...], the .moveforward loses its own self...
-								// ^ DONE, get rid of these notes on the next commit...
+								// TODO: pray decide about the question of dependence/independence of methods from mutual definition...
+								// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
 								move(
 									index,
 									preface = () => {},
@@ -721,7 +763,8 @@ export function activate(transformation = ID) {
 										.template.comparison
 								) {
 									const copied = this.this.this.copy()
-									while (array.loop())
+									const loop = array.loop()
+									while (loop.full())
 										copied.pushback(
 											array.currelem,
 											fast,
@@ -741,16 +784,8 @@ export function activate(transformation = ID) {
 								) {
 									const copied =
 										this.this.this.this.class.template.class.class()
-									// TODO: look into the actual API for the generators... [IT OUGHT TO BE THAT BLOODY SIMPLE... MORE ABSTRACTIONS DON'T DO FUCKING NOTHING...]
-									// ! One majorly overlooked that JS has a ridiculously slightly-over-complicated generators-api... Due to this, the use of 'function*' functions have been grossly compromised. This ought to be fixed...
-									// * Apparantly, proper use is more something like: 
-									// const loop = this.this.this.loop()
-									// while(loop.next().value) {... (same as before...)}
-									// ! PROBLEM [with the 'proper' useage] - don't allow for the flexible 'this.this.this', [and other beautiful stuff resulting from self-modification...]; 
-									// * Conclusion, thus, is such : ONE REQUIRES A DIFFERENT [SELF-MADE] MODEL FOR THE 'YIELDING' (that's the name one choose...) FUNCTIONS...
-									// ^ IDEA [for a general solution]: {template: {icclass: ...}, yeilding: ..., current: ...}; with the 'current' belonging to the 'this.template.icclass'...
-									// todo: pray implement
-									while (this.this.this.loop())
+									const loop = this.this.this.loop()
+									while (loop.full())
 										copied.pushback(
 											f(this.this.this.currelem),
 											fast,
@@ -871,14 +906,13 @@ export function activate(transformation = ID) {
 				template: { label: "", ...template },
 				function: function (iterarr) {
 					let newiterarr = iterarr.class.template.class.class()
-					while (!iterarr.loop()) {
+					iterarr.loop().full(() => {
 						// ! Pointer and PointerArray have the same template [again!]
 						// * Pray, when working on the templates of all the templated functions/classes, create the corresponding template connections; Simplify small things such as this here...
 						newiterarr.currelem = Pointer({
 							label: this.template.label
 						})(iterarr.currelem)
-					}
-
+					})
 					// ? Is that [the copying of the .class] required for it to work properly??? Pray check... Oughta be
 					newiterarr.class = flatCopy(newiterarr.class)
 					newiterarr.class.template = flatCopy(
@@ -1038,7 +1072,8 @@ export function activate(transformation = ID) {
 						currcounter = currcounter.next()
 					) {
 						const curriter = this.template.iteration(currcounter)
-						while (curriter.loop()) {
+						const loop = curriter.loop()
+						while (loop.full()) {
 							const r = curriter.currelem(
 								a,
 								currcounter,
@@ -2655,6 +2690,15 @@ export function activate(transformation = ID) {
 	RESULT.maxlenarrs = (...arrs) => flenarrs(maxlen, ...arrs)
 	RESULT.propertymap = (prop) => (objs) => objs.map((a) => a[prop])
 	RESULT.refCompare = (a, b) => a === b
+
+	// TODO: work on the phrasing; A lot of work is required on the phrasing....
+	/**
+	 * * Returns a constant-function based on the argument;
+	 *
+	 * DEFINITION:
+	 *
+	 * WIKI:
+	 */
 	RESULT._const = (c) => () => c
 
 	/**
@@ -2669,11 +2713,25 @@ export function activate(transformation = ID) {
 	 * * The identity map;
 	 *
 	 * DEFINITION:
+	 *
 	 * WIKI:
 	 */
 	RESULT.id = ID
 
+	/**
+	 * * Returns the function returning the logical negation of the output of the function passed relative to the input of the newly passed argument;
+	 *
+	 * In short, performs logical negation of a function;
+	 *
+	 * DEFINITION:
+	 *
+	 * WIKI:
+	 */
 	RESULT.negate = (f) => (x) => !f(x)
+
+	/**
+	 *
+	 */
 	RESULT.compose = (fs) => {
 		if (!fs.length) return undefined
 		return fs[fs.length - 1](RESULT.compose())
