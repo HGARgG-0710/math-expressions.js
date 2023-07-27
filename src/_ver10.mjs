@@ -42,6 +42,8 @@ export function activate(transformation = ID) {
 
 	// todo [general]: make all the defaults for ALL the functions configurable useing the 'templates'...
 
+	// TODO [general] : check the correspondence of use with the definition of the methods within the library...
+
 	// [Parts of the Grand Cleanup]:
 	// % 1. (get rid of)/refactor the repeating notes;
 	// % 2. Form for the templates; All functions of the library have the same templates form; Example:
@@ -235,36 +237,27 @@ export function activate(transformation = ID) {
 		// ^ IDEA [for a solution; about the 'elem' method for assigning an array element to an index]: give the methods in question [special cases of GeneralArray] the access to the index generator in question [the template ones];
 		// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite number of counters [uses the MultiInfiniteCounter alternative...]
 		GeneralArray(template) {
-			// ^ IDEA [pray implement within the library!]: the generator-obstructors;
-			// * It's a simple thing - gets to convert some manner of abstract format into a value of a generator;
-			// * Works exatly the same way as 'infinite.fromNumber', but is far more general and works on a particular manner of a format;
-			// * For an obstructor, what one requires is:
-			// 		1. Termination point [abstract format] - some manner of a value within the abstract format provided that causes the process of applying the generator on itself to stop...
-			// 		2. Generator [templated argument]- one that'd do the generation;
-			// 		3. Abstract inverse generator [abstract format] - the generator that'd be the reverse of the format itself - it leads from all the points within the format to the termination point;
-			// * By going through the values of the 'abstract inverse generator' until the 'termination point' and using the 'generator' along, one obtains the conversion of formats desired!!!
-			// ? Question: there is the InfiniteCounter.map() for this sort of stuff...
-			// ! On the other hand, the '.map' is only good when one has a generator;
-			// ^ DECIDED: nah, one's gonna keep it the way it is...
-			// * The InfiniteCounter.map() does just precisely that...
-			// Instead of seeking how to directly generalize the 'fromNumber' one should instead focus on either:
-			// 1. creating and adding to the library a proper native-JS number-based counter [non-infinite], that'd be mappable to any manner of a different one using InfiniteCounter.map();
-			// * It is: {generator: (x) => Number(x) + 1; inverse: (x) => Number(x) - 1; range: (x) => !isNaN(x)}
-			// 2. Leave it as-is, as a 'special' method...;
-			// 3. Create and choose some other one...
-			// * Current decision: [1] - simpler; Allows for precisely the same stuff as the 'fromNumber...';
-
-			// TODO[Current agenda]: Continue work; Finish. Amongst things to do:
-			// 	% 1 [later]. complete the GeneralArray algorithms!
-			// 		2.1. Also, change all the code that is related to introducing 'stopping' functions; They ought to be replaced with 'range+generalized InfiniteCounter.comparison(this.length().get(), ...)'; Using the comparison, one can determine which way to go;
-			return {
+			// TODO: complete the GeneralArray algorithms!
+			const B = {
 				template: {
 					empty: [],
 					isEnd: template.isUndefined,
 					...template
 				},
+				static: {
+					// * Just a convinient static [instance-independent, id est] alias for creation of an 'empty' array...
+					// ! PROBLEM : the definition of the 'empty' array DOES in the end depend upon the instyance of the class in the question!!!
+					// This is because explicit changes to the decided reference for the template object "this.this.this.this.class" would alter the template as well!
+					// ^ SOLUTION [sort of]: keep the both of them...
+					// ? PROBLEM [2] : which one of the two should be used for creation of the 'empty' array by default???
+					// * Perhaps, one'd just let the user choose??? Think about it deeply, pray ...
+					// ^ SOLUTION [complete] : The instance version would be just an alias for the static version, with itself corresponding to the local [instance's] reference to the template in the question;  just keep the instance's, with an appropriate generalization
+					// pray clear these notes after having commited them at least once and done the stuff outlined in them...
+					empty(template) {
+						return this.this.class(template).class()
+					}
+				},
 				class: function (template) {
-					// * Current Level Template variables [about the above todo...]: isLabel = false, label;
 					// TODO: the decided templates shape - {...defaults, ...usertemplate, ...overrides}; (Like here...) Pray ensure it...
 					// ! DECISION: never override the user input; Allow for user to manually interfere with the library's workflow [there's essentially no one 'intended' workflow...]...
 					// Id est, 'overrides = {}' is ALWAYS true; Ensure that as well...
@@ -303,7 +296,7 @@ export function activate(transformation = ID) {
 														this.this.this.this.class
 															.template.label
 													]
-											: id
+											: RESULT.id
 									)(
 										this.this.this.this.class.template.class.template.elem(
 											this.this.this,
@@ -330,7 +323,7 @@ export function activate(transformation = ID) {
 														label: this.this.this.this
 															.class.template.label
 												  })
-												: id)(newval)
+												: RESULT.id)(newval)
 										)
 
 									return (this.this.this.this.class.template.class.template.elem(
@@ -373,10 +366,12 @@ export function activate(transformation = ID) {
 											iter = RESULT._const(
 												this.template.indexiter
 											),
-											end = RESULT._const(this.template.end)
+											end = RESULT._const(this.template.end),
+											// todo: for '._full()' and 'full()', pray make a templated default for that thing...
+											begin = (x) => x.object.begin()
 										) {
 											const index = this.object.currindex
-											this.object.begin()
+											begin(this)
 											let r = undefined
 											let is = this.yield(null, end(), false)
 											while (!is) {
@@ -397,10 +392,12 @@ export function activate(transformation = ID) {
 											iter = RESULT._const(
 												this.template.indexiter
 											),
-											end = RESULT._const(this.template.end)
+											end = RESULT._const(this.template.end),
+
+											begin = (x) => x.object.begin()
 										) {
 											const index = this.object.currindex
-											this.object.begin()
+											begin(this)
 											let r = undefined
 											// * Having done that, the problem appears to be [largely] solved...
 											// ? Question: does one really want to do that 'dissolve generalLoop' thingy??? Pray think on it...
@@ -705,29 +702,36 @@ export function activate(transformation = ID) {
 								},
 								// TODO: implement the sketches of the algorithms listed here...
 								// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
-								// TODO: create for each and every GeneralArray method out there [and maybe extend further onto other stuff too...] 2 versions: 1 that works on 'this.this.this', another - that merely returns the result of the actual operation for the first to use on 'this.this.this' (the 'base' method...)...
+
+								// TODO: get rid of all the methods that employ use of self-copying; Let all the present methods all work on-self; Then, there'd be [separately], the copying method;
+								// * Yes, do that!!! One then could do: 'arrobj.this.copy()....(whatever method one desires to have...)';
+								// ... Now having thought about that a bit ... Perhaps, one does want to keep these methods after all??? But on a different basis - the reverse of the current situation...
+								// ^ IDEA [for a solution] : create a single method .copied, taking one argument - the method decided, which'd do 'const c = this.this.this.copy(); c[method]; return c;'
+								// * The ones 'copying' methods, on the other hand, that are more naturally [minimalistically, id est] defined in this fashion [excellent example - .appendfront()], get to have their own identifiers...
+								// * In process of being done; once has been, delete these notes...
 								appendfront(x) {
-									// ! Problem [minor]: decide (mean: create a way) for creating an empty array more compactly...
 									const newArr = this.this.this.empty()
 									newArr.pushback(x)
 									return newArr.concat(this.this.this)
 								},
-								appendback(
-									x,
+								copied(
+									method,
+									_arguments = [],
+									f = RESULT.id,
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									const newArr = this.this.this.copy()
-									return newArr.write(
-										newArr.length().get(),
-										x,
+									const c = this.this.this.copy(
+										f,
 										fast,
 										range,
 										comparison
 									)
+									c[method](..._arguments)
+									return c
 								},
 								// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
 								// Shape of the modifiable 'this' objects...
@@ -743,13 +747,13 @@ export function activate(transformation = ID) {
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									return (this.this.this =
-										this.this.this.appendback(
-											value,
-											fast,
-											range,
-											comparison
-										))
+									return this.this.this.write(
+										this.this.this.length().get(),
+										value,
+										fast,
+										range,
+										comparison
+									)
 								},
 								pushfront(
 									value,
@@ -767,6 +771,7 @@ export function activate(transformation = ID) {
 											comparison
 										))
 								},
+								// TODO: think deeply on the return values for the GeneralArray algorithms...
 								concat(
 									array,
 									fast = false,
@@ -775,7 +780,6 @@ export function activate(transformation = ID) {
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									const copied = this.this.this.copy()
 									// ? This thing:
 									// (t) =>
 									// 		copied.pushback(
@@ -787,26 +791,25 @@ export function activate(transformation = ID) {
 									// ? Appears rather frequently through this GeneralArray's implementation....
 									// * Pray generalize;
 									// todo: create a plausible to oneself a way for doing it...
-									array
+									// ? Make a static generalized template??? Like it
+									// ^ IDEA: make the 'fast' a template argument - let the functions change in accordance with it... Change the structure [AGAIN....]
+									return array
 										.loop()
 										._full((t) =>
-											copied.pushback(
+											this.this.this.pushback(
 												t.object.currelem,
 												fast,
 												range,
 												comparison
 											)
 										)
-									return copied
 								},
-								// TODO: MUST NOT BE ATTACHED TO THE 'this' instance... Must be static; REDO...
-								empty() {
-									return this.this.this.this.class.template.class
-										.class(
-											this.this.this.this.class.template.class
-												.template
-										)
-										.class(this.this.this.this.class.template)
+								empty(
+									template = this.this.this.this.class.template
+								) {
+									return this.this.this.this.class.template.class.static.empty(
+										template
+									)
 								},
 								copy(
 									f = ID,
@@ -843,27 +846,29 @@ export function activate(transformation = ID) {
 											"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
 										)
 
-									const sliced =
-										this.this.this.this.class.template.class
-											.class()
-											.class()
-									const index = this.this.this.currindex
-									this.this.this.begin()
-									this.this.this.go(begin, range)
+									// TODO: generalize the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
+									const sliced = this.this.this.empty()
 
-									// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
-									// TODO: decide generally.... Also, decide about inclusiveness/exclusiveness of indexes used within the algorithms' implementations in question...
-									while (end.compare(this.this.this.currindex)) {
-										sliced.pushback(
-											this.this.this.currelem,
-											fast,
-											range,
-											comparison
-										)
-										this.this.this.next()
-									}
-
-									this.this.this.currindex = index
+									this.this.this.loop()._full(
+										(t) =>
+											sliced.pushback(
+												t.object.currelem,
+												fast,
+												range,
+												comparison
+											),
+										undefined,
+										// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
+										// TODO: decide generally.... Also, decide about inclusiveness/exclusiveness of indexes used within the algorithms' implementations in question...
+										// * Currenty, inclusiveness is more prevalent...
+										RESULT._const((t) =>
+											end.compare(t.object.currindex)
+										),
+										(t) => {
+											t.object.begin()
+											t.object.go(begin, range)
+										}
+									)
 									return sliced
 								},
 								fillfrom(
@@ -953,16 +958,32 @@ export function activate(transformation = ID) {
 											)
 										))
 								},
-								// ? Question: how should one project? Completionist-wise [by walking through the entire 'array', ], or fit-wise [by taking only the 'defined' portion]?
-								// * Current decision: completionist-wise...
-								// ^ IDEA: make two ; one - completionist, the other, fit-wise...	
-								// TODO: add appropriate leftover arguments everywhere [the fast/range/comparison]...
-								project(array, index) {
-									this.go(index, range)
-									// * sketch:
-									// * 1. move to the index 'index';
-									// * 2. walk the passed general array [array], until reaching either its or the "this"'s .length(), 'this.write(array.array.currelem)'
+								projectComplete(
+									array,
+									index,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									const _index = this.this.this.currindex
+									this.this.this.go(index, range)
+									array.loop()._full((t) => {
+										this.this.this.write(
+											this.this.this.currindex,
+											t.object.currelem,
+											fast,
+											range,
+											comparison
+										)
+										this.this.this.next()
+									})
+									this.this.this.currindex = _index
 								},
+								// TODO: add appropriate leftover arguments everywhere [the fast/range/comparison]...
+								// TODO: expand the list of those arguments; Look for vast generalization possibilities;
+								projectFit() {},
 								insert(index, value) {
 									// * sketch [not the actual code]:
 									// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
@@ -1028,6 +1049,25 @@ export function activate(transformation = ID) {
 					}
 				}
 			}
+			B.static.this = B
+			return B
+		},
+
+		// TODO: give a better name to this thing... After having generalized the 'numberCounter', maybe call it that...
+		// ? Question: generalize for an arbitrary combination of 'range + conversion function'; here, they are native JS - namely '!isNaN + Number';
+		// * Pray think on it as well...
+		// todo: CHANGE THE USES OF THE fromNumber() TO 'InfiniteCounter(number())(thing).map(someothertemplate)';
+		number(template) {
+			return {
+				template: { start: 0, ...template },
+				generator(x = this.template.start) {
+					return Number(x) + 1
+				},
+				inverse(x = this.template.start) {
+					return Number(x) - 1
+				},
+				range: RESULT.negate(isNaN)
+			}
 		},
 
 		PointerArray(template) {
@@ -1063,8 +1103,8 @@ export function activate(transformation = ID) {
 		copy() {
 			// TODO: create an alias of 'trim' from the function in the Symbol-copying operation, with the argument for number of symbols/elements from String/Array, in question (here, only 1);
 			return {
-				array: (a, method = id) => a.map(method),
-				object: (a, method = id) => objFmap(a, method),
+				array: (a, method = RESULT.id) => a.map(method),
+				object: (a, method = RESULT.id) => objFmap(a, method),
 				function: (a) => a.bind({}),
 				symbol: (a) =>
 					Symbol(((x) => x.slice(0, x.length - 1))(a.toString().slice(7))),
@@ -1620,7 +1660,7 @@ export function activate(transformation = ID) {
 										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
-								: id
+								: RESULT.id
 						) {
 							const d = this.class.static.direction(ic)
 							return d
@@ -1651,7 +1691,7 @@ export function activate(transformation = ID) {
 										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
-								: id,
+								: RESULT.id,
 							counterclass = this.class
 						) {
 							// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
@@ -1677,7 +1717,7 @@ export function activate(transformation = ID) {
 										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
-								: id
+								: RESULT.id
 						) {
 							return this.jump(
 								x,
@@ -1696,7 +1736,7 @@ export function activate(transformation = ID) {
 										generator: this.class.template.generator,
 										inverse: this.class.template.inverse
 								  })
-								: id
+								: RESULT.id
 						) {
 							return this.jump(
 								x,
@@ -4173,7 +4213,7 @@ export function activate(transformation = ID) {
 		return (function (sorted) {
 			return (
 				nums.length % 2 === 1
-					? id
+					? RESULT.id
 					: (firstIndex) => average([firstIndex, sorted[nums.length / 2]])
 			)(sorted[Math.round(nums.length / 2) - 1])
 		})(sort(nums))
@@ -5193,7 +5233,7 @@ export function activate(transformation = ID) {
 							a[
 								(!["symbol", "number"].includes(typeof this.keys[i])
 									? JSON.stringify
-									: id)(this.keys[i])
+									: RESULT.id)(this.keys[i])
 							] = this.values[i]
 						return a
 					}
