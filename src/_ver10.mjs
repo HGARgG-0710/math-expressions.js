@@ -245,16 +245,23 @@ export function activate(transformation = ID) {
 					...template
 				},
 				static: {
-					// * Just a convinient static [instance-independent, id est] alias for creation of an 'empty' array...
-					// ! PROBLEM : the definition of the 'empty' array DOES in the end depend upon the instyance of the class in the question!!!
-					// This is because explicit changes to the decided reference for the template object "this.this.this.this.class" would alter the template as well!
-					// ^ SOLUTION [sort of]: keep the both of them...
-					// ? PROBLEM [2] : which one of the two should be used for creation of the 'empty' array by default???
-					// * Perhaps, one'd just let the user choose??? Think about it deeply, pray ...
-					// ^ SOLUTION [complete] : The instance version would be just an alias for the static version, with itself corresponding to the local [instance's] reference to the template in the question;  just keep the instance's, with an appropriate generalization
-					// pray clear these notes after having commited them at least once and done the stuff outlined in them...
 					empty(template) {
 						return this.this.class(template).class()
+					},
+					pushbackLoop(template) {
+						return {
+							template: {
+								arguments: [],
+								transform: RESULT.id,
+								...template
+							},
+							function: function (b) {
+								return this.template.target.pushback(
+									this.template.transform(b.object.currelem),
+									...this.template.arguments
+								)
+							}
+						}
 					}
 				},
 				class: function (template) {
@@ -286,6 +293,7 @@ export function activate(transformation = ID) {
 										this.this.this.currindex.previous())
 								},
 								// ? Do the same thing with the 'currelem' as with the '.length()' (the 'get-set-object' kind of structure???)?
+								// * current decision: nah, keep as-is
 								get currelem() {
 									// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
 									// todo [general] : pray do just that...
@@ -307,7 +315,7 @@ export function activate(transformation = ID) {
 									)
 								},
 								set currelem(newval) {
-									// % note: for thigs to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
+									// % note: for things to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
 									if (
 										!this.this.this.this.class.template
 											.isLabel ||
@@ -701,18 +709,26 @@ export function activate(transformation = ID) {
 									}
 								},
 								// TODO: implement the sketches of the algorithms listed here...
-								// TODO[old, vague; later, when feel like partially solved - remove]: there are a lot of tiny-details-inconsistencies of conventional nature. Resolve them. Decide how certain things handle certain other things particularly.
 
-								// TODO: get rid of all the methods that employ use of self-copying; Let all the present methods all work on-self; Then, there'd be [separately], the copying method;
-								// * Yes, do that!!! One then could do: 'arrobj.this.copy()....(whatever method one desires to have...)';
-								// ... Now having thought about that a bit ... Perhaps, one does want to keep these methods after all??? But on a different basis - the reverse of the current situation...
-								// ^ IDEA [for a solution] : create a single method .copied, taking one argument - the method decided, which'd do 'const c = this.this.this.copy(); c[method]; return c;'
 								// * The ones 'copying' methods, on the other hand, that are more naturally [minimalistically, id est] defined in this fashion [excellent example - .appendfront()], get to have their own identifiers...
-								// * In process of being done; once has been, delete these notes...
-								appendfront(x) {
+								// TODO: yes, ensure that;
+								appendfront(
+									x,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
 									const newArr = this.this.this.empty()
-									newArr.pushback(x)
-									return newArr.concat(this.this.this)
+									newArr.pushback(x, fast, range, comparison)
+									newArr.concat(
+										this.this.this,
+										fast,
+										range,
+										comparison
+									)
+									return newArr
 								},
 								copied(
 									method,
@@ -735,9 +751,10 @@ export function activate(transformation = ID) {
 								},
 								// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
 								// Shape of the modifiable 'this' objects...
-								// const A = {this: {...[the actual object]}}; A.this.reference = A.this;
-								// * The user would access the object by means of 'obj.this';
+								// const A = {this: {...[the actual object]}}; A.this.this = A;
+								// * The user would access the object by means of 'obj.this'; And from within - using 'this.this.this' [for the sake of ability to change the value of 'this.this.this']
 								// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
+								// ? Think on HOW to document it all... Ought to be general yet also representative of the possible uses such as to employ different combinations of separate elements of the library per a single one...
 								// TODO: spread this 'this.this.this' architecture throughout the project...
 								pushback(
 									value,
@@ -771,6 +788,20 @@ export function activate(transformation = ID) {
 											comparison
 										))
 								},
+								pushbackLoop(template) {
+									const origin =
+										this.this.this.this.class.template.class.static.pushbackLoop(
+											template
+										)
+									const T = {
+										template: {
+											target: this.this.this,
+											...origin.template
+										}
+									}
+									T.function = origin.function.bind(this)
+									return T
+								},
 								// TODO: think deeply on the return values for the GeneralArray algorithms...
 								concat(
 									array,
@@ -780,29 +811,11 @@ export function activate(transformation = ID) {
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									// ? This thing:
-									// (t) =>
-									// 		copied.pushback(
-									// 			t.object.currelem,
-									// 			fast,
-									// 			range,
-									// 			comparison
-									// 		)
-									// ? Appears rather frequently through this GeneralArray's implementation....
-									// * Pray generalize;
-									// todo: create a plausible to oneself a way for doing it...
-									// ? Make a static generalized template??? Like it
-									// ^ IDEA: make the 'fast' a template argument - let the functions change in accordance with it... Change the structure [AGAIN....]
-									return array
-										.loop()
-										._full((t) =>
-											this.this.this.pushback(
-												t.object.currelem,
-												fast,
-												range,
-												comparison
-											)
-										)
+									return array.loop()._full(
+										this.this.this.pushbackLoop({
+											arguments: [fast, range, comparison]
+										}).function
+									)
 								},
 								empty(
 									template = this.this.this.this.class.template
@@ -812,7 +825,7 @@ export function activate(transformation = ID) {
 									)
 								},
 								copy(
-									f = ID,
+									f = RESULT.id,
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
@@ -820,16 +833,12 @@ export function activate(transformation = ID) {
 										.class.template.icclass.template.comparison
 								) {
 									const copied = this.this.this.empty()
-									this.this.this
-										.loop()
-										._full((t) =>
-											copied.pushback(
-												f(t.object.currelem),
-												fast,
-												range,
-												comparison
-											)
-										)
+									this.this.this.loop()._full(
+										copied.pushbackLoop({
+											transform: f,
+											arguments: [fast, range, comparison]
+										}).function
+									)
 									return copied
 								},
 								slice(
@@ -846,21 +855,18 @@ export function activate(transformation = ID) {
 											"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
 										)
 
-									// TODO: generalize the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
+									// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
 									const sliced = this.this.this.empty()
 
 									this.this.this.loop()._full(
-										(t) =>
-											sliced.pushback(
-												t.object.currelem,
-												fast,
-												range,
-												comparison
-											),
+										sliced.pushbackLoop({
+											arguments: [fast, range, comparison]
+										}).function,
 										undefined,
 										// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
-										// TODO: decide generally.... Also, decide about inclusiveness/exclusiveness of indexes used within the algorithms' implementations in question...
-										// * Currenty, inclusiveness is more prevalent...
+										// TODO: decide generally....
+										// ^ decided! Let all the algorithms involving indexes all be inclusive to the arguments' values...
+										// TODO: pray ensure that too...
 										RESULT._const((t) =>
 											end.compare(t.object.currindex)
 										),
@@ -875,7 +881,9 @@ export function activate(transformation = ID) {
 									index,
 									value,
 									range = this.this.this.this.class.template.class
-										.template.icclass.template.range
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
 								) {
 									// * This could be re-implement thing using '.project() + InfiniteCounter.difference() + Creating an empty GeneralArray...'
 									// ? Does one want to ??? Pray think on it...
@@ -904,16 +912,11 @@ export function activate(transformation = ID) {
 									const newArr = RESULT.GeneralArray(templates[0])(
 										templates[1]
 									)()
-									this.this.this
-										.loop()
-										._full((t) =>
-											newArr.pushback(
-												t.object.currelem,
-												fast,
-												range,
-												comparison
-											)
-										)
+									this.this.this.loop()._full(
+										newArr.pushbackLoop({
+											arguments: [fast, range, comparison]
+										}).function
+									)
 									return newArr
 								},
 								delete(
@@ -983,7 +986,36 @@ export function activate(transformation = ID) {
 								},
 								// TODO: add appropriate leftover arguments everywhere [the fast/range/comparison]...
 								// TODO: expand the list of those arguments; Look for vast generalization possibilities;
-								projectFit() {},
+								projectFit(
+									array,
+									index,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									const ind = array.currindex
+									this.this.this.loop()._full(
+										// ? Having generalized the previous one [with pushbackLoop...], does one want to generalize this one as well???
+										// * pray think on it...
+										(t) => {
+											t.object.pushback(
+												array.currelem,
+												fast,
+												range,
+												comparison
+											)
+											array.next()
+										},
+										undefined,
+										undefined,
+										(t) => {
+											t.object.go(index, range)
+										}
+									)
+									array.currindex = ind
+								},
 								insert(index, value) {
 									// * sketch [not the actual code]:
 									// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
