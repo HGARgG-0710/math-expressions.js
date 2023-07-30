@@ -2,7 +2,7 @@
 
 THIS README IS A BIT OF A MESS. IS IN PROCESS OF BEING TIDIED AND COMPLETED...
 
-math-expressions.js is a TypeScript (originally, JavaScript) library with a vast variety of covered areas of interest.
+math-expressions.js is a JavaScript library with a vast variety of covered areas of interest.
 <!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
 Amongst those: very handy utilities, some basic statistics, 2D surfaces, collections, abstract objects, 
 multi-dimensional arrays, some simple linear algebra, parsing;

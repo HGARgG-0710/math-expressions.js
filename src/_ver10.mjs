@@ -235,7 +235,7 @@ export function activate(transformation = ID) {
 		// TODO [about GeneralArray; come back a tad later]: isEnd must work differently... it ought to rely on index and array, not the value of it; this way far more general... [must work like in the IterArray]
 
 		// ^ IDEA [for a solution; about the 'elem' method for assigning an array element to an index]: give the methods in question [special cases of GeneralArray] the access to the index generator in question [the template ones];
-		// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite number of counters [uses the MultiInfiniteCounter alternative...]
+		// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
 		GeneralArray(template) {
 			// TODO: complete the GeneralArray algorithms!
 			const B = {
@@ -262,6 +262,17 @@ export function activate(transformation = ID) {
 								)
 							}
 						}
+					},
+					fromArray(
+						arr,
+						fast = false,
+						range = this.this.template.comparison,
+						comparison = this.this.template.comparison
+					) {
+						const generalized = this.empty()
+						for (const a of arr)
+							generalized.pushback(a, fast, range, comparison)
+						return generalized
 					}
 				},
 				class: function (template) {
@@ -1006,8 +1017,8 @@ export function activate(transformation = ID) {
 										}
 									)
 									// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
-									// ! Problem : generally , one might want to implement a sort of a multi-array loop function... 
-									// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that... 
+									// ! Problem : generally , one might want to implement a sort of a multi-array loop function...
+									// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
 									// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
 									this.this.this.currindex = _index
 								},
@@ -1104,27 +1115,48 @@ export function activate(transformation = ID) {
 									return this.this.this.read(i)
 								},
 								// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
-								indexesOf(x) {
-									// * Sketch [perephrase of what's above...; not actual code]:
-									// TODO: problem: decide how to [generally] define an empty array...
-									// * 1. let newarr = GeneralArray(...)([]);
-									// * 2. let curr
-									// * 3. while ((curr = this.firstIndex(x)) != someUnfoundConstantToBeChosen)
-									// * 4. 	newarr.push(curr)
-									// * 5. return newarr
+								indexesOf(
+									x,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									const indexes = this.this.this.empty()
+									this.this.this.loop()._full((arr) => {
+										if (comparison(arr.object().currelem, x))
+											indexes.pushback(
+												arr.currindex,
+												fast,
+												range,
+												comparison
+											)
+									})
+									return indexes
 								},
 								// ? Question[1]: should one template all the methods of this class?
 								// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
 								// * Something like 'comparison = this.comparison || this.class.comparison'?
+								// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
+								// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
+								// 	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
+								// Pray consider and decide...
+
 								firstIndex(
 									x,
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison
 								) {
-									// * Sketch:
-									// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison';
-									// * 2. On find [from within the loop], return the 'currindex';
-									// * 3. On failure [outside the loop], return the 'unfoundConstant';
+									// TODO: replace by the user-defined constant...
+									let index = undefined
+									this.this.this.loop()._full((arr) => {
+										if (comparison(arr.object().currelem, x)) {
+											index = arr.currindex
+											arr.break()
+										}
+									})
+									return index
 								},
 								shiftForward(times, generator, baseelem) {
 									// * Sketch [change the '[]' for GeneralArray constructor]:
