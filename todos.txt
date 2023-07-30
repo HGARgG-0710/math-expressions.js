@@ -120,4 +120,11 @@ It gets changed actively.
 	With infinite stack and continuation-passing style, one could achieve TRULY programmatically unlimited types + infinitely-stacked JS programs. 
 
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
-	will get tied to the corresponding library, so that user have a way of accessing it more directly from it...
+	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
+
+17. TODO: cleanup; 
+	
+	Do a major file cleanup within the project's tree...
+
+	1. delete the 'images.txt'
+	2. delete the 'privatenotes.txt' [only after having completed them... Until then - let they stay '.gitignored'...]
