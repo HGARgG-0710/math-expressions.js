@@ -257,7 +257,7 @@ export function activate(transformation = ID) {
 							},
 							function: function (b) {
 								return this.template.target.pushback(
-									this.template.transform(b.object.currelem),
+									this.template.transform(b.object().currelem),
 									...this.template.arguments
 								)
 							}
@@ -350,20 +350,23 @@ export function activate(transformation = ID) {
 									// ? Generalize to a separate class???
 									const a = {
 										template: {
-											indexiter: (x) => x.object.next(),
-											end: this.this.this.this.class.template
-												.isEnd,
+											indexiter: (x) => x.object().next(),
+											end: (x) =>
+												x
+													.object()
+													.this.class.template.isEnd(
+														x.object()
+													),
+											begin: (x) => x.object().begin(),
 											icclass:
 												this.this.this.this.class.template
 													.class.template.icclass,
 											...template
 										},
-										// ! PROBLEM : with doing it this way ;
-										// * The 'this.object' thing is by default non-responsive to the changes to the 'this.this.this', (which is mostly the point of even doing 'this.this.this'!)
-										// TODO: pray fix, re-do, change the 't.object' to 't.object()';
-										// ^ DECIDED: the functions should be used instead for stuff like '.object()'... [Pray update the note within the .length(), concerning the same stuff...]
-										object: this.this.this,
+										object: RESULT._const(this.this.this),
 										restart: function () {
+											// ? Question: does one desire it to be 'a.template.icclass.class()' or 'this.template.icclass.class()'???
+											// * pray consider...
 											this.counter = a.template.icclass.class()
 										},
 										yield: function (
@@ -371,7 +374,7 @@ export function activate(transformation = ID) {
 											end = this.template.end,
 											iter = true
 										) {
-											const isend = end(this.object)
+											const isend = end(this)
 											if (!isend && iter) {
 												_indexiter(this)
 												this.counter = this.counter.next()
@@ -384,13 +387,16 @@ export function activate(transformation = ID) {
 												this.template.indexiter
 											),
 											end = RESULT._const(this.template.end),
-											// todo: for '._full()' and 'full()', pray make a templated default for that thing...
-											begin = (x) => x.object.begin()
+											begin = this.template.begin
 										) {
-											const index = this.object.currindex
+											const index = this.object().currindex
 											begin(this)
 											let r = undefined
-											let is = this.yield(null, end(), false)
+											let is = this.yield(
+												RESULT._const(null),
+												end(),
+												false
+											)
 											while (!is) {
 												r = each(this, r)
 												is = this.yield(iter(), end())
@@ -398,7 +404,7 @@ export function activate(transformation = ID) {
 											}
 											this.restart()
 											this.broke = false
-											this.object.currindex = index
+											this.object().currindex = index
 											return r
 										},
 										// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
@@ -410,10 +416,9 @@ export function activate(transformation = ID) {
 												this.template.indexiter
 											),
 											end = RESULT._const(this.template.end),
-
-											begin = (x) => x.object.begin()
+											begin = this.template.begin
 										) {
-											const index = this.object.currindex
+											const index = this.object().currindex
 											begin(this)
 											let r = undefined
 											let is = this.yield(null, end(), false)
@@ -439,7 +444,7 @@ export function activate(transformation = ID) {
 											}
 											this.restart()
 											this.broke = false
-											this.object.currindex = index
+											this.object().currindex = index
 											return r
 										},
 										break: function () {
@@ -456,7 +461,6 @@ export function activate(transformation = ID) {
 								},
 								// ! shorten the code with these 3...
 								begin() {
-									// TODO [general]: use '_const' where want to...
 									return this.this.this.go(
 										this.this.this.init(),
 										RESULT._const(true)
@@ -643,35 +647,35 @@ export function activate(transformation = ID) {
 								},
 								length() {
 									// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
+									// ? Or like a getter? As in: 'get get() {...}'; Then, one'd drop the '()' from '.get()' during the calling procedure...
 									// * pray think on it...
-									// ? QUESTION: now that one has gotten rid of all the ridiculous stuff regarding the .begin, .end, 'comparisons' and yada yada yada, won't one come back to the previous .length model???
 									return {
 										object: RESULT._const(this.this.this),
-										// TODO: align the '.length().get()' and '.length().set()' with the 'this.object()';
-										// ? Question: does one desire the 'this.object()' to be a function [like it is here currently] or a changeable value referenced [like, say, in '.loop()']?
-										// * Pray consider generally and choose...
-										get: () => {
-											const index = this.this.this.currindex
-											this.this.this.begin()
+										get() {
+											// ? Could this [the 'length.get()' method] not be rewritten by the means of the '.loop()' method??? Pray consider...
+											// * Yes, indeed! Pray do...
+											// TODO: refactor...
+											const index = this.object().currindex
+											this.object().begin()
 											while (
-												!this.this.this.this.class.template.class.template.isEnd(
-													this.this.this
+												!this.object().this.class.template.class.template.isEnd(
+													this.object()
 												)
 											)
-												this.this.this.next()
-											const returned = this.this.this.currindex
-											this.this.this.currindex = index
+												this.object().next()
+											const returned = this.object().currindex
+											this.object().currindex = index
 											return returned
 										},
-										set: (
+										set(
 											value,
-											comparison = this.this.this.this.class
+											comparison = this.object().this.class
 												.template.class.template.icclass
 												.template.comparison,
-											range = this.this.this.this.class
-												.template.class.template.icclass
-												.template.range
-										) => {
+											range = this.object().this.class.template
+												.class.template.icclass.template
+												.range
+										) {
 											if (!range(value))
 												throw new RangeError(
 													"Index range error for array length setting"
@@ -679,14 +683,14 @@ export function activate(transformation = ID) {
 
 											if (
 												comparison(
-													this.this.this.length().get(),
+													this.object().length().get(),
 													value
 												)
 											)
 												return
 
 											if (
-												this.this.this
+												this.object()
 													.length()
 													.get()
 													.compare(
@@ -696,13 +700,13 @@ export function activate(transformation = ID) {
 													)
 											) {
 												// Decrease the length
-												this.this.this.deleteMult(
-													this.this.this.init(),
-													this.this.this
+												this.object().deleteMult(
+													this.object().init(),
+													this.object()
 														.length()
 														.get()
 														.jumpDirection(
-															this.this.this
+															this.object()
 																.length()
 																.get()
 																.difference(value)
@@ -812,7 +816,6 @@ export function activate(transformation = ID) {
 									T.function = origin.function.bind(this)
 									return T
 								},
-								// TODO: think deeply on the return values for the GeneralArray algorithms...
 								concat(
 									array,
 									fast = false,
@@ -878,11 +881,11 @@ export function activate(transformation = ID) {
 										// ^ decided! Let all the algorithms involving indexes all be inclusive to the arguments' values...
 										// TODO: pray ensure that too...
 										RESULT._const((t) =>
-											end.compare(t.object.currindex)
+											end.compare(t.object().currindex)
 										),
 										(t) => {
-											t.object.begin()
-											t.object.go(begin, range)
+											t.object().begin()
+											t.object().go(begin, range)
 										}
 									)
 									return sliced
@@ -981,21 +984,35 @@ export function activate(transformation = ID) {
 										.class.template.icclass.template.comparison
 								) {
 									const _index = this.this.this.currindex
-									this.this.this.go(index, range)
-									array.loop()._full((t) => {
-										this.this.this.write(
-											this.this.this.currindex,
-											t.object.currelem,
-											fast,
-											range,
-											comparison
-										)
-										this.this.this.next()
-									})
+									array.loop()._full(
+										(t) => {
+											// TODO: generalize this as well - some '.currwriteLoop(value, fast, range, comparison)', or something...
+											this.this.this.write(
+												this.this.this.currindex,
+												t.object().currelem,
+												fast,
+												range,
+												comparison
+											)
+										},
+										RESULT._const((x) => {
+											x.object().next()
+											this.this.this.next()
+										}),
+										undefined,
+										(x) => {
+											x.object().begin()
+											this.this.this.go(index, range)
+										}
+									)
+									// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
+									// ! Problem : generally , one might want to implement a sort of a multi-array loop function... 
+									// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that... 
+									// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
 									this.this.this.currindex = _index
 								},
-								// TODO: add appropriate leftover arguments everywhere [the fast/range/comparison]...
-								// TODO: expand the list of those arguments; Look for vast generalization possibilities;
+								// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
+								// TODO: think deeply on the return values for the GeneralArray algorithms...
 								projectFit(
 									array,
 									index,
@@ -1007,10 +1024,9 @@ export function activate(transformation = ID) {
 								) {
 									const ind = array.currindex
 									this.this.this.loop()._full(
-										// ? Having generalized the previous one [with pushbackLoop...], does one want to generalize this one as well???
-										// * pray think on it...
 										(t) => {
-											t.object.pushback(
+											t.object().write(
+												t.object().currindex,
 												array.currelem,
 												fast,
 												range,
@@ -1019,10 +1035,14 @@ export function activate(transformation = ID) {
 											array.next()
 										},
 										undefined,
-										undefined,
-										(t) => {
-											t.object.go(index, range)
-										}
+										(x) =>
+											x
+												.object()
+												.this.class.template.isEnd(
+													x.object()
+												) ||
+											array.this.class.template.isEnd(array),
+										(t) => t.object().go(index, range)
 									)
 									array.currindex = ind
 								},
@@ -1047,7 +1067,7 @@ export function activate(transformation = ID) {
 									x.concat(e, fast, range, comparison)
 									x.concat(
 										this.this.this.slice(
-											index.next(),
+											index,
 											undefined,
 											fast,
 											range,
@@ -1076,12 +1096,6 @@ export function activate(transformation = ID) {
 								// TODO: later, rewrite in terms of the 'indexesOf' function...
 								has(x) {
 									// ? generalize this double-array construction
-									// * Old;
-									// let c = [this.array.currindex, this.array.currelem]
-									// let u
-									// while (!comparison(c[1], x) && (u = !isEnd(c[1])))
-									// 	c = this.array.next()
-									// return u
 									// * Sketch [not the actual code]:
 									// * return this.firstIndex(x) == someUnFoundConstantPrayChooseItAlready;
 								},
@@ -1102,7 +1116,11 @@ export function activate(transformation = ID) {
 								// ? Question[1]: should one template all the methods of this class?
 								// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
 								// * Something like 'comparison = this.comparison || this.class.comparison'?
-								firstIndex(x) {
+								firstIndex(
+									x,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
 									// * Sketch:
 									// * 1. Run through the array, checking for whether current element 'is' x, via the 'comparison';
 									// * 2. On find [from within the loop], return the 'currindex';
