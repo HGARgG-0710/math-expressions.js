@@ -284,6 +284,13 @@ export function activate(transformation = ID) {
 								array: array,
 								currindex:
 									this.template.class.template.icclass.class(),
+								// ^ IDEA: naming-maps-defined methods!
+								// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
+								// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
+								// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
+								// One could even generalize to the 'args' passed to the function, doing it like so:
+								// 		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
+								// * with the 'value' getting changed in the 'switch'
 								next() {
 									return (this.this.this.currindex =
 										this.this.this.currindex.next())
@@ -292,8 +299,6 @@ export function activate(transformation = ID) {
 									return (this.this.this.currindex =
 										this.this.this.currindex.previous())
 								},
-								// ? Do the same thing with the 'currelem' as with the '.length()' (the 'get-set-object' kind of structure???)?
-								// * current decision: nah, keep as-is
 								get currelem() {
 									// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
 									// todo [general] : pray do just that...
@@ -341,7 +346,7 @@ export function activate(transformation = ID) {
 								},
 								// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 								// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
-								loop: function (template) {
+								loop(template) {
 									// ? Generalize to a separate class???
 									const a = {
 										template: {
@@ -353,6 +358,10 @@ export function activate(transformation = ID) {
 													.class.template.icclass,
 											...template
 										},
+										// ! PROBLEM : with doing it this way ;
+										// * The 'this.object' thing is by default non-responsive to the changes to the 'this.this.this', (which is mostly the point of even doing 'this.this.this'!)
+										// TODO: pray fix, re-do, change the 't.object' to 't.object()';
+										// ^ DECIDED: the functions should be used instead for stuff like '.object()'... [Pray update the note within the .length(), concerning the same stuff...]
 										object: this.this.this,
 										restart: function () {
 											this.counter = a.template.icclass.class()
@@ -407,8 +416,6 @@ export function activate(transformation = ID) {
 											const index = this.object.currindex
 											begin(this)
 											let r = undefined
-											// * Having done that, the problem appears to be [largely] solved...
-											// ? Question: does one really want to do that 'dissolve generalLoop' thingy??? Pray think on it...
 											let is = this.yield(null, end(), false)
 											while (!is) {
 												const x = each(this)
@@ -486,7 +493,7 @@ export function activate(transformation = ID) {
 								// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
 								move(
 									index,
-									preface = () => {},
+									preface = RESULT.void,
 									comparison = this.this.this.this.class.template
 										.class.template.icclass.template.comparison,
 									each = (x) => x.next(),
@@ -639,7 +646,10 @@ export function activate(transformation = ID) {
 									// * pray think on it...
 									// ? QUESTION: now that one has gotten rid of all the ridiculous stuff regarding the .begin, .end, 'comparisons' and yada yada yada, won't one come back to the previous .length model???
 									return {
-										object: () => this.this.this,
+										object: RESULT._const(this.this.this),
+										// TODO: align the '.length().get()' and '.length().set()' with the 'this.object()';
+										// ? Question: does one desire the 'this.object()' to be a function [like it is here currently] or a changeable value referenced [like, say, in '.loop()']?
+										// * Pray consider generally and choose...
 										get: () => {
 											const index = this.this.this.currindex
 											this.this.this.begin()
@@ -682,7 +692,7 @@ export function activate(transformation = ID) {
 													.compare(
 														value,
 														undefined,
-														() => true
+														RESULT._const(true)
 													)
 											) {
 												// Decrease the length
@@ -1016,9 +1026,52 @@ export function activate(transformation = ID) {
 									)
 									array.currindex = ind
 								},
-								insert(index, value) {
-									// * sketch [not the actual code]:
-									// * 1. this = this.slice(index, indexgenerator(index)).concat(new GeneralArray(...)(value)).concat(this.slice(indexgenerator(index)));
+								inserted(
+									index,
+									value,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									const x = this.this.this.slice(
+										undefined,
+										index.previous(),
+										fast,
+										range,
+										comparison
+									)
+									const e = this.this.this.empty()
+									e.pushback(value, fast, range, comparison)
+									x.concat(e, fast, range, comparison)
+									x.concat(
+										this.this.this.slice(
+											index.next(),
+											undefined,
+											fast,
+											range,
+											comparison
+										)
+									)
+									return x
+								},
+								insert(
+									index,
+									value,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template
+										.class.template.icclass.template.comparison
+								) {
+									return (this.this.this = this.inserted(
+										index,
+										value,
+										fast,
+										range,
+										comparison
+									))
 								},
 								// TODO: later, rewrite in terms of the 'indexesOf' function...
 								has(x) {
@@ -1613,9 +1666,10 @@ export function activate(transformation = ID) {
 							// * An observation: this is one of the ways to be able to reference a function from within itself...
 							return this.class.class(this)
 						},
-						// _? 'previous'? or 'prev'? Or something else?
-						// _* Current decision: let it be 'prev'...
-						// ? GENERAL QUESTION: should one prefer complete words to abbriviations/shortenings, or vice versa? Or should one use both? Should there be a clearly decided [semi-static] general distinction between the cases of uses of each one of them or ought they be handled arbitrarily?
+						// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
+						// One-worded names are preferred to all the other ones...
+						// flatcase (submodules, methods, varnames, general ids) is generally preferred to camelCase (methods, varnames), which is preferred to PascalCase ("classes" and some templated functions), which is prefereed to UPPERCASE, which is preferred to all else...
+						// TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
 						previous() {
 							return this.class.template.inverse(this)
 						},
@@ -2870,6 +2924,8 @@ export function activate(transformation = ID) {
 	 */
 	RESULT._const = (c) => () => c
 
+	RESULT.void = () => {}
+
 	/**
 	 * * An alias for the 'infinite.flatCopy' function;
 	 *
@@ -3214,7 +3270,7 @@ export function activate(transformation = ID) {
 			// TODO: let there be way for user to give their own defaults for this thing...
 			ensureProperties(vectorargs, {
 				vector: [],
-				defaultelement: () => null,
+				defaultelement: RESULT._const(null),
 				transform: null,
 				vectortypes: [
 					"number",
@@ -3460,7 +3516,9 @@ export function activate(transformation = ID) {
 				)
 			const copy = this.toArray()
 			const matrixCopy = matrix.toArray()
-			const result = copy.map(() => matrixCopy[0].map(() => 0))
+			const result = copy.map(
+				RESULT._const(matrixCopy[0].map(RESULT._const(0)))
+			)
 			for (let i = 0; i < this.sidelen[1]; i++)
 				for (let j = 0; j < matrix.sidelen[0]; j++)
 					for (let k = 0; k < this.sidelen[0]; k++)
@@ -3505,7 +3563,7 @@ export function activate(transformation = ID) {
 		 */
 		determinant() {
 			function findAdditional(matrix, i, j) {
-				const final = matrix.matrix.slice(1).vector.map(() => [])
+				const final = matrix.matrix.slice(1).vector.map(RESULT._const([]))
 				for (let index = 0; index < matrix.sidelen; index++)
 					for (let jndex = 0; jndex < matrix.sidelen; jndex++)
 						if (index !== i && jndex !== j)
@@ -4002,7 +4060,7 @@ export function activate(transformation = ID) {
 	RESULT.Matrix = function (
 		vector,
 		typechecker,
-		defaultMatrix = [() => null, () => null],
+		defaultMatrix = [RESULT._const(null), RESULT._const(null)],
 		defaultTransform = [null, null]
 	) {
 		return nestedVector(
@@ -4020,8 +4078,8 @@ export function activate(transformation = ID) {
 	RESULT.nestedVector = function (
 		vector,
 		typechecker,
-		defaultElems = vector.map(() => () => null),
-		transform = vector.map(() => null),
+		defaultElems = vector.map(RESULT._const(RESULT._const(null))),
+		transform = vector.map(RESULT._const(null)),
 		dimensions = Infinity,
 		currDim = 0
 	) {
@@ -4101,7 +4159,7 @@ export function activate(transformation = ID) {
 	) {
 		return new Expression(
 			objects,
-			objects.map(() => operator),
+			objects.map(RESULT._const(operator)),
 			table
 		).execute()
 	}
