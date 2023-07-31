@@ -289,15 +289,12 @@ export function activate(transformation = ID) {
 							class: this,
 							...template
 						},
-						class: function (
-							array = this.template.class.template.empty
-						) {
+						class: function (array = this.template.class.template.empty) {
 							// TODO: ensure that all the objects within the library possess this style [uniformity; so that it's more intuitive to work with (under certain particular interpretation of 'intuitive' + it has more features...)]; Allows for changing the 'this' dynamically easily [something that plain JS 'this' don't really allow];
 							const A = { class: this }
 							A.this = {
 								array: array,
-								currindex:
-									this.template.class.template.icclass.class(),
+								currindex: this.template.class.template.icclass.class(),
 								// ^ IDEA: naming-maps-defined methods!
 								// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
 								// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
@@ -320,8 +317,8 @@ export function activate(transformation = ID) {
 										this.this.this.this.class.template.isLabel
 											? (x) =>
 													x[
-														this.this.this.this.class
-															.template.label
+														this.this.this.this.class.template
+															.label
 													]
 											: RESULT.id
 									)(
@@ -336,27 +333,24 @@ export function activate(transformation = ID) {
 								set currelem(newval) {
 									// % note: for things to work here properly for both the non-labeled arrays, one ought to have the 'newvalue' method being such as to set the value to an index regardless of whethere it is or is not undefined...
 									if (
-										!this.this.this.this.class.template
-											.isLabel ||
+										!this.this.this.this.class.template.isLabel ||
 										this.this.this.this.class.template.class.template.isUndefined(
 											this.this.this
 										)
 									)
 										return this.this.this.this.class.template.class.template.newvalue(
 											this.this.this,
-											(this.this.this.this.class.template
-												.isLabel
+											(this.this.this.this.class.template.isLabel
 												? Pointer({
-														label: this.this.this.this
-															.class.template.label
+														label: this.this.this.this.class
+															.template.label
 												  })
 												: RESULT.id)(newval)
 										)
 
 									return (this.this.this.this.class.template.class.template.elem(
 										this.this.this
-									)[this.this.this.this.class.template.label] =
-										newval)
+									)[this.this.this.this.class.template.label] = newval)
 								},
 								// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 								// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
@@ -373,8 +367,8 @@ export function activate(transformation = ID) {
 													),
 											begin: (x) => x.object().begin(),
 											icclass:
-												this.this.this.this.class.template
-													.class.template.icclass,
+												this.this.this.this.class.template.class
+													.template.icclass,
 											...template
 										},
 										object: RESULT._const(this.this.this),
@@ -397,9 +391,7 @@ export function activate(transformation = ID) {
 										},
 										_full(
 											each,
-											iter = RESULT._const(
-												this.template.indexiter
-											),
+											iter = RESULT._const(this.template.indexiter),
 											end = RESULT._const(this.template.end),
 											begin = this.template.begin
 										) {
@@ -426,9 +418,7 @@ export function activate(transformation = ID) {
 										// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 										full(
 											each = this.template.each,
-											iter = RESULT._const(
-												this.template.indexiter
-											),
+											iter = RESULT._const(this.template.indexiter),
 											end = RESULT._const(this.template.end),
 											begin = this.template.begin
 										) {
@@ -515,18 +505,15 @@ export function activate(transformation = ID) {
 								move(
 									index,
 									preface = RESULT.void,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
 									each = (x) => x.next(),
 									stop = (x) =>
 										comparison(x.length().get(), x.currindex)
 								) {
 									preface(arguments, this.this.this)
 									while (
-										!comparison(
-											this.this.this.currindex,
-											index
-										) &&
+										!comparison(this.this.this.currindex, index) &&
 										!stop(this.this.this)
 									)
 										each(this.this.this)
@@ -535,8 +522,8 @@ export function activate(transformation = ID) {
 								moveforward(
 									index,
 									begin = false,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
 									stop = (x) =>
 										comparison(x.length().get(), x.currindex)
 								) {
@@ -554,8 +541,8 @@ export function activate(transformation = ID) {
 								movebackward(
 									index,
 									end = false,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
 									stop = (x) => comparison(x.currindex, x.init())
 								) {
 									return this.this.this.move(
@@ -570,8 +557,8 @@ export function activate(transformation = ID) {
 								},
 								movedirection(
 									index,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
 									stop
 								) {
 									return this.this.this.currindex.compare(index)
@@ -602,8 +589,8 @@ export function activate(transformation = ID) {
 								},
 								jump(
 									index,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.comparison,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.comparison,
 									range = this.this.this.this.class.template.class
 										.template.icclass.range
 								) {
@@ -625,8 +612,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const ind = this.this.this.currindex
 									if (fast) this.this.this.go(index, range)
@@ -646,8 +633,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const ind = this.this.this.currindex
 									if (fast) this.this.this.go(index, range)
@@ -657,8 +644,7 @@ export function activate(transformation = ID) {
 											true,
 											comparison
 										)
-									const returned = (this.this.this.currelem =
-										value)
+									const returned = (this.this.this.currelem = value)
 									this.this.this.currindex = ind
 									return returned
 								},
@@ -686,12 +672,11 @@ export function activate(transformation = ID) {
 										},
 										set(
 											value,
-											comparison = this.object().this.class
-												.template.class.template.icclass
-												.template.comparison,
-											range = this.object().this.class.template
+											comparison = this.object().this.class.template
 												.class.template.icclass.template
-												.range
+												.comparison,
+											range = this.object().this.class.template
+												.class.template.icclass.template.range
 										) {
 											if (!range(value.value))
 												throw new RangeError(
@@ -748,19 +733,14 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const newArr =
 										this.this.this.this.class.template.class.static.fromArray(
 											[x]
 										)
-									newArr.concat(
-										this.this.this,
-										fast,
-										range,
-										comparison
-									)
+									newArr.concat(this.this.this, fast, range, comparison)
 									return newArr
 								},
 								copied(
@@ -770,8 +750,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const c = this.this.this.copy(
 										f,
@@ -794,8 +774,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									return this.this.this.write(
 										this.this.this.length().get(),
@@ -810,16 +790,15 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
-									return (this.this.this =
-										this.this.this.appendfront(
-											value,
-											fast,
-											range,
-											comparison
-										))
+									return (this.this.this = this.this.this.appendfront(
+										value,
+										fast,
+										range,
+										comparison
+									))
 								},
 								pushbackLoop(template) {
 									const origin =
@@ -840,8 +819,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									return array.loop()._full(
 										this.this.this.pushbackLoop({
@@ -849,9 +828,7 @@ export function activate(transformation = ID) {
 										}).function
 									)
 								},
-								empty(
-									template = this.this.this.this.class.template
-								) {
+								empty(template = this.this.this.this.class.template) {
 									return this.this.this.this.class.template.class.static.empty(
 										template
 									)
@@ -861,8 +838,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const copied = this.this.this.empty()
 									this.this.this.loop()._full(
@@ -879,8 +856,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									if (!range(end.value))
 										throw new RangeError(
@@ -909,16 +886,44 @@ export function activate(transformation = ID) {
 									)
 									return sliced
 								},
+								*forin() {
+									for (
+										let c = this.this.this.init();
+										!c.compare(this.this.this.length().get());
+										c = c.next()
+									)
+										yield c
+								},
+								*[Symbol.iterator](
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
+								) {
+									for (
+										let c = this.this.this.init();
+										!c.compare(this.this.this.length().get());
+										c = c.next()
+									)
+										yield this.this.this.read(
+											c,
+											fast,
+											range,
+											comparison
+										)
+								},
 								fillfrom(
 									index,
 									value,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									// * This could be re-implement thing using '.project() + InfiniteCounter.difference() + Creating an empty GeneralArray...'
 									// ? Does one want to ??? Pray think on it...
+									// TODO: consider...
 									this.this.this.go(index, range)
 									while (
 										!comparison(
@@ -932,14 +937,12 @@ export function activate(transformation = ID) {
 								},
 								convert(
 									templates = [
-										this.this.this.this.class.template.class
-											.template,
+										this.this.this.this.class.template.class.template,
 										this.this.this.this.class.template
 									],
 									fast = false,
 									range = templates[0].icclass.template.range,
-									comparison = templates[0].icclass.template
-										.comparison
+									comparison = templates[0].icclass.template.comparison
 								) {
 									const newArr = RESULT.GeneralArray(templates[0])(
 										templates[1]
@@ -956,8 +959,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									return this.this.this.deleteMult(
 										index,
@@ -973,8 +976,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									return (this.this.this = this.this.this
 										.slice(
@@ -999,8 +1002,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const _index = this.this.this.currindex
 									array.loop()._full(
@@ -1038,8 +1041,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const ind = array.currindex
 									this.this.this.loop()._full(
@@ -1057,9 +1060,7 @@ export function activate(transformation = ID) {
 										(x) =>
 											x
 												.object()
-												.this.class.template.isEnd(
-													x.object()
-												) ||
+												.this.class.template.isEnd(x.object()) ||
 											array.this.class.template.isEnd(array),
 										(t) => t.object().go(index, range)
 									)
@@ -1071,8 +1072,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const x = this.this.this.slice(
 										undefined,
@@ -1109,8 +1110,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									return (this.this.this = this.inserted(
 										index,
@@ -1122,10 +1123,10 @@ export function activate(transformation = ID) {
 								},
 								has(
 									x,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
-									unfound = this.this.this.this.class.template
-										.class.template.unfound
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
+									unfound = this.this.this.this.class.template.class
+										.template.unfound
 								) {
 									return !comparison(
 										this.this.this.firstIndex(x),
@@ -1133,8 +1134,15 @@ export function activate(transformation = ID) {
 									)
 								},
 								// * Just an alias...
-								index(i) {
-									return this.this.this.read(i)
+								index(
+									i,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
+								) {
+									return this.this.this.read(i, fast, range, comparison)
 								},
 								// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
 								indexesOf(
@@ -1142,8 +1150,8 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const indexes = this.this.this.empty()
 									this.this.this.loop()._full((arr) => {
@@ -1167,10 +1175,10 @@ export function activate(transformation = ID) {
 
 								firstIndex(
 									x,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison,
-									unfound = this.this.this.this.class.template
-										.class.template.unfound
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison,
+									unfound = this.this.this.this.class.template.class
+										.template.unfound
 								) {
 									let index = unfound
 									this.this.this.loop()._full((arr) => {
@@ -1184,14 +1192,14 @@ export function activate(transformation = ID) {
 								// TODO: template the 'baseelem' argument, pray;
 								shiftForward(
 									times,
-									icclass = this.this.this.this.class.template
-										.class.template.icclass,
+									icclass = this.this.this.this.class.template.class
+										.template.icclass,
 									baseelem = undefined,
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									const x =
 										this.this.this.this.class.template.class.static
@@ -1220,15 +1228,10 @@ export function activate(transformation = ID) {
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.comparison
 								) {
-									return this.this.this.copy(
-										f,
-										fast,
-										range,
-										comparison
-									)
+									return this.this.this.copy(f, fast, range, comparison)
 								},
 								isEmpty() {
 									const index = this.this.this.currindex
@@ -1240,13 +1243,20 @@ export function activate(transformation = ID) {
 									this.this.this.currindex = index
 									return val
 								},
-								sort(
+								/**
+								 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
+								 *
+								 * DEFINITION:
+								 *
+								 * WIKI:
+								 */
+								sorted(
 									predicate,
 									fast = false,
 									range = this.this.this.this.class.template.class
 										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template
-										.class.template.icclass.template.comparison
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
 								) {
 									// TODO: create an alias for that thing...
 									// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
@@ -1256,8 +1266,8 @@ export function activate(transformation = ID) {
 												RESULT.infinite.number({ start: -1 })
 											)({ value: x })
 											.map(
-												this.this.this.this.class.template
-													.class.template.icclass
+												this.this.this.this.class.template.class
+													.template.icclass
 											)
 
 									const TWO = ALIAS(2),
@@ -1322,21 +1332,41 @@ export function activate(transformation = ID) {
 											const merged = this.this.this.empty()
 
 											// * One was expecting this to be far more unwieldy...
-											// ? Question: make it better? Pray do sometime later... 
+											// ? Question: make it better? Pray do sometime later...
 											const F = (x) => {
 												const K = (ampt, bmpt) => {
 													const f1 = elem_sort(
 														a.this.class.template.class.static.fromArray(
 															ampt
-																? [b.read(b.init())]
+																? [
+																		b.read(
+																			b.init(),
+																			fast,
+																			range,
+																			comparison
+																		)
+																  ]
 																: bmpt
-																? [a.read(a.init())]
+																? [
+																		a.read(
+																			a.init(),
+																			fast,
+																			range,
+																			comparison
+																		)
+																  ]
 																: [
 																		a.read(
-																			a.init()
+																			a.init(),
+																			fast,
+																			range,
+																			comparison
 																		),
 																		b.read(
-																			b.init()
+																			b.init(),
+																			fast,
+																			range,
+																			comparison
 																		)
 																  ],
 															fast,
@@ -1345,28 +1375,41 @@ export function activate(transformation = ID) {
 														)
 													)
 													merged.pushback(
-														f1.read(f1.init()),
+														f1.read(
+															f1.init(),
+															fast,
+															range,
+															comparison
+														),
 														fast,
 														range,
 														comparison
 													)
 													const c =
 														bmpt ||
-														a.has(f1.read(f1.init()))
+														a.has(
+															f1.read(
+																f1.init(),
+																fast,
+																range,
+																comparison
+															)
+														)
 															? a
 															: b
 													// TODO: finish the .shiftBackward() first... - one is required to delete only 1 element from the start...
 													c.shiftBackward()
-													c.previous()
 												}
-												// * This code does not run when both are false, by the way...
+												// * This code does not run when both are true, by the way...
 												K(a.isEmpty(), b.isEmpty())
 											}
-											const T = (x) => x.loop()._full(F)
+											const T = (x) =>
+												x
+													.loop()
+													._full(F, RESULT._const(RESULT.void))
 
 											T(a)
 											T(b)
-											T(a)
 
 											return merged
 										}
@@ -1379,31 +1422,108 @@ export function activate(transformation = ID) {
 												)),
 											undefined,
 											undefined,
-											(x) =>
-												x
-													.object()
-													.go(x.object().init().next())
+											(x) => x.object().go(x.object().init().next())
 										)
 									}
 									function elem_sort(a) {
-										// TODO: finish
 										// * Here, define the 2-case, then through it, the 3-case. These two are the only cases that require handling...
+										function TWOCASE(a) {
+											const first = a.read(
+												a.init(),
+												fast,
+												range,
+												comparison
+											)
+											const second = a.read(
+												a.init().next(),
+												fast,
+												range,
+												comparison
+											)
+											return predicate(second, first)
+												? a
+												: a.this.class.template.class.static.fromArray(
+														[second, first],
+														fast,
+														range,
+														comparison
+												  )
+										}
+										function THREECASE(a) {
+											const first = a.read(a.init())
+											// todo: pray finish the arguments list for .shiftBackward()...
+											const copied = elem_sort(
+												a.copied("shiftBackward")
+											)
+
+											const c1 = copied.read(copied.init())
+											const c2 = copied.read(copied.init().next())
+
+											const fC1 = predicate(first, c1)
+											const fC2 = predicate(first, c2)
+
+											// ? QUESTION: should one try to shorten these kinds of things....
+											// * Pray consider in some depth...
+											return fC1
+												? fC2
+													? a.this.class.template.class.static.fromArray(
+															[c1, c2, first],
+															fast,
+															range,
+															comparison
+													  )
+													: a.this.class.template.class.static.fromArray(
+															[c1, first, c2],
+															fast,
+															range,
+															comparison
+													  )
+												: a.this.class.template.class.static.fromArray(
+														[first, c1, c2],
+														fast,
+														range,
+														comparison
+												  )
+										}
+										return comparison(a.length().get(), TWO)
+											? TWOCASE(a)
+											: THREECASE(a)
 									}
 
-									// * Sketch:
-
-									// 1. Split continuously, until one has 2-arrays...
-									// 2. Sort the 2-arrays...
-									// 3. Merge the arrays continuously, until one has only 1 sorted array...
-
 									return merge(split(this.this.this))
-
-									// * This one's a bit curious...
-									// One would just create an algorithm for sorting 'an' array over a certain manner of a predicate...
-									// Let it be merge-sort...
 								},
-								isSorted(predicate) {
-									// TODO: just check for their similarity structurally [something like a generalizaiton of 'return infinite.valueCompare(this.this.this, this.this.this.copied("sort"))', for instance...]
+								sort(
+									predicate,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
+								) {
+									return (this.this.this = this.this.this.sorted(
+										predicate,
+										fast,
+										range,
+										comparison
+									))
+								},
+								isSorted(
+									predicate,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
+								) {
+									return comparison(
+										this.this.this,
+										this.this.this.sorted(
+											predicate,
+											fast,
+											range,
+											comparison
+										)
+									)
 								}
 								// TODO: pray add more new algorithms here...
 							}
@@ -1482,8 +1602,7 @@ export function activate(transformation = ID) {
 		copyFunction(template) {
 			// TODO: do something about that inner one; shouldn't be there...
 			function typeTransform(x) {
-				if (x === "array" || x === "arrayFlat")
-					return (p) => p instanceof Array
+				if (x === "array" || x === "arrayFlat") return (p) => p instanceof Array
 				if (x === "objectFlat") return (p) => typeof p === "object"
 				return (p) => typeof p === x
 			}
@@ -1840,8 +1959,7 @@ export function activate(transformation = ID) {
 				value: function (n) {
 					// ? make this an alias ('(x) => Number(x) || Number(!isNaN(x))'); this'd return 0 in case when argument is 'NaN'; in other cases, it'd perform a Number-conversion;
 					n = Number(n) || Number(!isNaN(Number(n)))
-					if (n < 0)
-						return fromNumber({ generator: this.template.inverse })(-n)
+					if (n < 0) return fromNumber({ generator: this.template.inverse })(-n)
 					return repeatedApplication(
 						(r) => r.next(),
 						BigInt(n),
@@ -1875,13 +1993,7 @@ export function activate(transformation = ID) {
 			const copied = copy ? util.deepCopy(array) : array
 			for (let i = 0; i < copied.length; i++) {
 				if (copied[i] instanceof Array) {
-					currval = sameStructure(
-						copied[i],
-						generator,
-						currval,
-						false,
-						true
-					)
+					currval = sameStructure(copied[i], generator, currval, false, true)
 					continue
 				}
 				// * Found out that in JS, 'a(undefined) = a()';
@@ -2074,12 +2186,7 @@ export function activate(transformation = ID) {
 							comparison = this.class.template.comparison,
 							range = this.class.template.range
 						) {
-							return this.jump(
-								x,
-								(k) => k.previous(),
-								comparison,
-								range
-							)
+							return this.jump(x, (k) => k.previous(), comparison, range)
 						},
 						map(
 							icClass = this.class,
@@ -2107,11 +2214,7 @@ export function activate(transformation = ID) {
 			ensureProperty(template, "comparison", infinite.valueCompare)
 			return {
 				template: template,
-				class: function (
-					previous,
-					index,
-					generators = this.template.generators
-				) {
+				class: function (previous, index, generators = this.template.generators) {
 					return {
 						class: this,
 						generators: generators,
@@ -2197,10 +2300,7 @@ export function activate(transformation = ID) {
 							class: this.class
 						},
 						value: function (keys, values) {
-							if (
-								!(keys instanceof Array) &&
-								typeof keys === "object"
-							) {
+							if (!(keys instanceof Array) && typeof keys === "object") {
 								// TODO: isn't this code already used somewhere??? [UniversalMap, check if redundant...]
 								// ? use the objArr() here?
 								values = Object.values(keys)
@@ -3190,8 +3290,7 @@ export function activate(transformation = ID) {
 	RESULT.insert = (arr, index, values) =>
 		arr.slice(0, index).concat(values).concat(arr.slice(index))
 	RESULT._insert = (arr, index, val) => insert(arr, index, [val])
-	RESULT.remove = (arr, start, end) =>
-		arr.slice(0, start).concat(arr.slice(end + 1))
+	RESULT.remove = (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1))
 	RESULT._remove = (arr, index) => remove(arr, index, index)
 	RESULT.minlen = (...arrs) => flen(min, ...arrs)
 	RESULT.maxlen = (...arrs) => flen(max, ...arrs)
@@ -3340,10 +3439,7 @@ export function activate(transformation = ID) {
 		// ? make the "line" have the same shape as a segment? This way, one could have lines that are "not full" in the middle...
 		// * CURRENT DECISION: sure, why not?
 		add(type, data) {
-			if (
-				indexOfMult(this[`${type}s`], data, infinite.valueCompare).length !==
-				0
-			)
+			if (indexOfMult(this[`${type}s`], data, infinite.valueCompare).length !== 0)
 				return this[`${type}s`].length
 			const returned =
 				type === "segment"
@@ -3378,15 +3474,10 @@ export function activate(transformation = ID) {
 		// * Current decision: no, let it stay...
 		delete(type, data) {
 			return (this[`${type}s`] =
-				indexOfMult(this[`${type}s`], data, infinite.valueCompare).length ===
-				0
+				indexOfMult(this[`${type}s`], data, infinite.valueCompare).length === 0
 					? this[`${type}s`]
-					: clearRepetitions(
-							this[`${type}s`],
-							data,
-							0,
-							infinite.valueCompare
-					  )).length
+					: clearRepetitions(this[`${type}s`], data, 0, infinite.valueCompare))
+				.length
 		}
 		draw(width, height, title = `Surface ${this.n}`) {
 			// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
@@ -3480,10 +3571,7 @@ export function activate(transformation = ID) {
 		 */
 		static F_test(...rows) {
 			Tests.sizecheck(rows, 2)
-			const dispersions = [
-				dispersion(rows[0], true),
-				dispersion(rows[1], true)
-			]
+			const dispersions = [dispersion(rows[0], true), dispersion(rows[1], true)]
 			const biggerDispersionIndex = dispersions[0] > dispersions[1] ? 0 : 1
 			const difference = exp(
 				[
@@ -3544,10 +3632,7 @@ export function activate(transformation = ID) {
 		 * @param {number[]} numbers An array of numbers, required to calculate the Z-score for the given number.
 		 */
 		static Z_score(testedNum, numbers) {
-			return exp(
-				[testedNum - average(numbers), standardDeviation(numbers)],
-				"/"
-			)
+			return exp([testedNum - average(numbers), standardDeviation(numbers)], "/")
 		}
 	}
 
@@ -3579,10 +3664,7 @@ export function activate(transformation = ID) {
 				typefunction: (x) => typeof x,
 				type: ["any"],
 				typecheck: (item) => {
-					if (
-						!this.type.includes(typeof item) &&
-						!this.type.includes("any")
-					) {
+					if (!this.type.includes(typeof item) && !this.type.includes("any")) {
 						if (this.transform) return this.transform(item)
 						throw new Error(
 							`Type of item ${item} is not equal to vector type: [${this.type
@@ -3727,8 +3809,7 @@ export function activate(transformation = ID) {
 			this._vector = this.vector.map((a) => Vector.typecheck(a, this))
 		}
 		set length(newLength) {
-			if (newLength < 0)
-				throw new Error(`Passed negative length: ${newLength}`)
+			if (newLength < 0) throw new Error(`Passed negative length: ${newLength}`)
 			if (newLength < this._length)
 				for (let i = this._length; i > newLength; i--) this._vector.pop()
 			if (newLength > this._length)
@@ -3809,9 +3890,7 @@ export function activate(transformation = ID) {
 				)
 			const copy = this.toArray()
 			const matrixCopy = matrix.toArray()
-			const result = copy.map(
-				RESULT._const(matrixCopy[0].map(RESULT._const(0)))
-			)
+			const result = copy.map(RESULT._const(matrixCopy[0].map(RESULT._const(0))))
 			for (let i = 0; i < this.sidelen[1]; i++)
 				for (let j = 0; j < matrix.sidelen[0]; j++)
 					for (let k = 0; k < this.sidelen[0]; k++)
@@ -3953,10 +4032,7 @@ export function activate(transformation = ID) {
 			return this.add(ratio.addinverse())
 		}
 		power(exponent) {
-			return new Ratio(
-				this.numerator ** exponent,
-				this.denomenator ** exponent
-			)
+			return new Ratio(this.numerator ** exponent, this.denomenator ** exponent)
 		}
 		root(exponent) {
 			return this.power(1 / exponent)
@@ -4012,9 +4088,7 @@ export function activate(transformation = ID) {
 				for (let j = 0; j < gotten[i].length; j++) {
 					gotten[i + 1].push(gotten[i][j])
 					if (j !== gotten[i].length - 1)
-						gotten[i + 1].push(
-							formNewRatio(gotten[i][j], gotten[i][j + 1])
-						)
+						gotten[i + 1].push(formNewRatio(gotten[i][j], gotten[i][j + 1]))
 				}
 			}
 			return gotten
@@ -4062,9 +4136,7 @@ export function activate(transformation = ID) {
 								line = Equation.replaceIndex(
 									line,
 									i,
-									mappings.mappings[
-										mappings.variables.indexOf(line[i])
-									]
+									mappings.mappings[mappings.variables.indexOf(line[i])]
 								)
 								continue
 							}
@@ -4183,8 +4255,7 @@ export function activate(transformation = ID) {
 			})
 			return (
 				startvalue +
-				differences.indexOf(min(differences)) *
-					floor(10 ** -precision, precision)
+				differences.indexOf(min(differences)) * floor(10 ** -precision, precision)
 			)
 		}
 		defaultDifferRightLeft(index, varname, varvalue) {
@@ -4192,11 +4263,7 @@ export function activate(transformation = ID) {
 				throw new Error(
 					`Expected string as an input of variable name, got ${typeof varname}}`
 				)
-			const plugged = Equation.plug(
-				this.defaultParsed[index],
-				varname,
-				varvalue
-			)
+			const plugged = Equation.plug(this.defaultParsed[index], varname, varvalue)
 			return eval(plugged.right) - eval(plugged.left)
 		}
 		/**
@@ -4231,8 +4298,7 @@ export function activate(transformation = ID) {
 			})
 			return (
 				startvalue +
-				differences.indexOf(min(differences)) *
-					floor(10 ** -precision, precision)
+				differences.indexOf(min(differences)) * floor(10 ** -precision, precision)
 			)
 		}
 	}
@@ -4260,9 +4326,7 @@ export function activate(transformation = ID) {
 					)
 			for (let i = 0; i < vars.length; i++) {
 				if (!hasLetters(vars[i]))
-					throw new Error(
-						`Varname without letters is being passed: ${vars[i]}`
-					)
+					throw new Error(`Varname without letters is being passed: ${vars[i]}`)
 				for (let j = i + 1; j < vars.length; j++)
 					if (vars[j] === vars[i])
 						throw new Error(
@@ -4356,14 +4420,7 @@ export function activate(transformation = ID) {
 		defaultMatrix = [RESULT._const(null), RESULT._const(null)],
 		defaultTransform = [null, null]
 	) {
-		return nestedVector(
-			vector,
-			typechecker,
-			defaultMatrix,
-			defaultTransform,
-			2,
-			0
-		)
+		return nestedVector(vector, typechecker, defaultMatrix, defaultTransform, 2, 0)
 	}
 
 	// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
@@ -4445,11 +4502,7 @@ export function activate(transformation = ID) {
 	 * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
 	 * @param {string} operator - A string, containing an operator, with which expression will be executed.
 	 */
-	RESULT.repeatedOperation = function (
-		objects = [],
-		operator,
-		table = defaultTable
-	) {
+	RESULT.repeatedOperation = function (objects = [], operator, table = defaultTable) {
 		return new Expression(
 			objects,
 			objects.map(RESULT._const(operator)),
@@ -4475,10 +4528,9 @@ export function activate(transformation = ID) {
 				exp(
 					[
 						double[0],
-						generate(
-							0,
-							expression.table[expression.operators[i]][1] - 2
-						).map((j) => expression.objects[double[1] + j])
+						generate(0, expression.table[expression.operators[i]][1] - 2).map(
+							(j) => expression.objects[double[1] + j]
+						)
 					],
 					expression.operators[i],
 					expression.table
@@ -4646,8 +4698,7 @@ export function activate(transformation = ID) {
 			(-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
 		)[0]
 		const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-		for (let i = start; proposition(i); i += step)
-			generated.push(floor(i, precision))
+		for (let i = start; proposition(i); i += step) generated.push(floor(i, precision))
 		return generated
 	}
 
@@ -4672,8 +4723,7 @@ export function activate(transformation = ID) {
 						if (value === obj) {
 							result = true
 							foundTimes++
-							if (!foundIndexes.includes(index))
-								foundIndexes.push(index)
+							if (!foundIndexes.includes(index)) foundIndexes.push(index)
 						}
 					})
 				)
@@ -4857,8 +4907,7 @@ export function activate(transformation = ID) {
 
 	RESULT.leastCommonDivisor = function (...nums) {
 		// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-		return ((x) =>
-			typeof x === "number" || typeof x === "undefined" ? x : min(x))(
+		return ((x) => (typeof x === "number" || typeof x === "undefined" ? x : min(x)))(
 			commonDivisors(...nums)
 		)
 	}
@@ -4868,10 +4917,7 @@ export function activate(transformation = ID) {
 		if (nums.length === 1) return nums[0]
 		if (nums.length === 2)
 			return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
-		return arrIntersections([
-			factorOut(nums[0]),
-			commonDivisors(...nums.slice(1))
-		])
+		return arrIntersections([factorOut(nums[0]), commonDivisors(...nums.slice(1))])
 	}
 
 	/**
@@ -4891,9 +4937,7 @@ export function activate(transformation = ID) {
 		const deviations = []
 		row.forEach((num) => {
 			isSquare
-				? deviations.push(
-						floor(Math.pow(num - rowAverage, 2), globalPrecision)
-				  )
+				? deviations.push(floor(Math.pow(num - rowAverage, 2), globalPrecision))
 				: deviations.push(floor(Math.abs(num - rowAverage), globalPrecision))
 		})
 		deviations.length = row.length
@@ -4933,11 +4977,7 @@ export function activate(transformation = ID) {
 	 * @param {boolean} isPopulation A boolean, representing should function return the population standard deviation or sample standard deviation.
 	 * @param {number[]} indexes An array of numbers, representing indexes of the sample, sample standard deviation deviation for which shall be found.
 	 */
-	RESULT.standardDeviation = function (
-		row = [],
-		isPopulation = true,
-		indexes = []
-	) {
+	RESULT.standardDeviation = function (row = [], isPopulation = true, indexes = []) {
 		return floor(
 			Math.sqrt(dispersion(row, true, isPopulation, indexes)),
 			globalPrecision
@@ -5122,8 +5162,7 @@ export function activate(transformation = ID) {
 	RESULT.arrayEquality = function (...arrays) {
 		function equalBinary(arr1, arr2) {
 			if (arr1.length !== arr2.length) return false
-			for (let i = 0; i < arr1.length; i++)
-				if (arr1[i] !== arr2[i]) return false
+			for (let i = 0; i < arr1.length; i++) if (arr1[i] !== arr2[i]) return false
 			return true
 		}
 		for (let i = 1; i < arrays.length; i++)
@@ -5307,9 +5346,7 @@ export function activate(transformation = ID) {
 	) {
 		const firstMet = indexOfMult(arr, el, comparison)
 		return firstMet.length
-			? arr.filter(
-					(a, i) => firstMet.indexOf(i) < tokeep || !comparison(a, el)
-			  )
+			? arr.filter((a, i) => firstMet.indexOf(i) < tokeep || !comparison(a, el))
 			: [...arr]
 	}
 
@@ -5545,19 +5582,11 @@ export function activate(transformation = ID) {
 					// * hahaha!
 					// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
 					[Symbol.iterator]: function* () {
-						for (
-							this.index = 0;
-							this.index < this.keys.length;
-							this.index++
-						)
+						for (this.index = 0; this.index < this.keys.length; this.index++)
 							yield this.get(this.keys[this.index])
 					},
 					forin(body) {
-						for (
-							this.index = 0;
-							this.index < this.keys.length;
-							this.index++
-						)
+						for (this.index = 0; this.index < this.keys.length; this.index++)
 							body(this.keys[this.index])
 					},
 

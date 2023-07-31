@@ -1,10 +1,7 @@
 One revisits this file to use it as a sort of todo-list...
 
 InfiniteArray<
-	[Symbol.iterator]
-	forin(body) // for-in construction
 	reverse()
-	sort(pred)  [CHECK]
 	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
 	every(func) // like Array.every(); min(Array.map(boolmapfunction))
 	any(func) // max(Array.map(boolmapfunction))
@@ -12,7 +9,6 @@ InfiniteArray<
 	[filter/property/sub]() // like Array.filter()
 	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes
 	each<generator=defaultgenerator>((ind, el, arr) => {...}) // same as Array.forEach()
-	fillfrom<generator=defaultgenerator, comparison>(index, value) // fills the array from the one moment when the given 'generator' becomes 'comparable' to the 'value'; 
 > (array) {}
 
 
