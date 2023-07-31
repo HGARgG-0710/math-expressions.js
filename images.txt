@@ -1,26 +1,15 @@
-? Question: define the InfiniteArray's true image as a special case for InfiniteMap? 
+One revisits this file to use it as a sort of todo-list...
 
 InfiniteArray<
-	defaultgenerator
-	defaultcomparison
-	pushback(thing) // add to the end
-	pushfront(thing) // add to the beginning
-	index<generator=defaultgenerator, comparison=defaultcomparison>(_index) // returns thing at a given index; [uses generator to get new indexes and 'comparison' to 'compare' with the given index, checking for the element...]
-	delete<generator=defaultgenerator>(index) // deletes at an appropriate index, with appropriate generator
 	[Symbol.iterator]
 	forin(body) // for-in construction
 	reverse()
-	map()
-	sort(pred) 
-	length() // length function
-	concat(infarr) // concatenate with another infinitearray [question -- should this thing be templated as well?]
+	sort(pred)  [CHECK]
 	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
 	every(func) // like Array.every(); min(Array.map(boolmapfunction))
 	any(func) // max(Array.map(boolmapfunction))
 	reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
-	slice<generator>(start, end) // uses the generator; same as Array.slice(), but both indexes are inclusive
-	[filter/property]() // like Array.filter()
-	indexesOf<comparison=defaultcomparison, generator>(ele) // generalized of Array.indexOf(), and Array.lastIndexOf() -- uses 'generator' to create indexes and 'comparison' to check for given element[?s array?] 'ele'; 
+	[filter/property/sub]() // like Array.filter()
 	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes
 	each<generator=defaultgenerator>((ind, el, arr) => {...}) // same as Array.forEach()
 	fillfrom<generator=defaultgenerator, comparison>(index, value) // fills the array from the one moment when the given 'generator' becomes 'comparable' to the 'value'; 
