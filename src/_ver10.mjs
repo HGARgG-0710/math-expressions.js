@@ -1297,14 +1297,16 @@ export function activate(transformation = ID) {
 								 *
 								 * WIKI:
 								 */
-								sorted(
-									predicate,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								sorted(predicate, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									// TODO: create an alias for that thing...
 									// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
 									const ALIAS = (x) =>
@@ -1322,25 +1324,23 @@ export function activate(transformation = ID) {
 
 									function split(a) {
 										if (
-											comparison(TWO, a.length().get()) ||
-											comparison(a.length().get(), THREE)
+											leftovers.comparison(TWO, a.length().get()) ||
+											leftovers.comparison(a.length().get(), THREE)
 										)
 											return this.this.this.this.class.template.class.static.fromArray(
 												[a],
-												fast,
-												range,
-												comparison
+												leftovers
 											)
 
 										// ? Should one generalize this ???
 										// * YES, this code is getting slightly repetitious and unwieldy...
 										const counter = this.this.ths.init()
 										while (
-											!comparison(
+											!leftovers.comparison(
 												a.finish(),
 												counter.jump(counter)
 											) &&
-											!comparison(
+											!leftovers.comparison(
 												a.finish(),
 												counter.jump(counter.next())
 											)
@@ -1350,26 +1350,11 @@ export function activate(transformation = ID) {
 										// TODO: it's really time to generalize this [the empty arrays thing...]!!!
 										const final = this.this.this.empty()
 										final.concat(
-											split(
-												a.slice(
-													a.init(),
-													counter,
-													fast,
-													range,
-													comparison
-												)
-											)
+											split(a.slice(a.init(), counter, leftovers))
 										)
 										final.concat(
-											split(
-												a.slice(
-													counter,
-													undefined,
-													fast,
-													range,
-													comparison
-												)
-											)
+											split(a.slice(counter, undefined, leftovers)),
+											leftovers
 										)
 										return final
 									}
@@ -1378,6 +1363,7 @@ export function activate(transformation = ID) {
 											// TODO: AGAIN...
 											const merged = this.this.this.empty()
 
+											// TODO: make the default 'index' for .read() to be '.init()'...; Then, here, one'd just write 'undefined everywhere...'
 											// * One was expecting this to be far more unwieldy...
 											// ? Question: make it better? Pray do sometime later...
 											const F = (x) => {
@@ -1388,59 +1374,38 @@ export function activate(transformation = ID) {
 																? [
 																		b.read(
 																			b.init(),
-																			fast,
-																			range,
-																			comparison
+																			leftovers
 																		)
 																  ]
 																: bmpt
 																? [
 																		a.read(
 																			a.init(),
-																			fast,
-																			range,
-																			comparison
+																			leftovers
 																		)
 																  ]
 																: [
 																		a.read(
 																			a.init(),
-																			fast,
-																			range,
-																			comparison
+																			leftovers
 																		),
 																		b.read(
 																			b.init(),
-																			fast,
-																			range,
-																			comparison
+																			leftovers
 																		)
 																  ],
-															fast,
-															range,
-															comparison
+															leftovers
 														)
 													)
 													merged.pushback(
-														f1.read(
-															f1.init(),
-															fast,
-															range,
-															comparison
-														),
-														fast,
-														range,
-														comparison
+														f1.read(f1.init(), leftovers),
+														leftovers
 													)
+													// TODO: fix up the usage of 'a.has' here...
 													const c =
 														bmpt ||
 														a.has(
-															f1.read(
-																f1.init(),
-																fast,
-																range,
-																comparison
-															)
+															f1.read(f1.init(), leftovers)
 														)
 															? a
 															: b
@@ -1460,7 +1425,9 @@ export function activate(transformation = ID) {
 
 											return merged
 										}
-										let current = elem_sort(a.index(a.init()))
+										let current = elem_sort(
+											a.index(a.init(), leftovers)
+										)
 										a.loop()._full(
 											(x) =>
 												(current = binmerge(
@@ -1475,25 +1442,16 @@ export function activate(transformation = ID) {
 									function elem_sort(a) {
 										// * Here, define the 2-case, then through it, the 3-case. These two are the only cases that require handling...
 										function TWOCASE(a) {
-											const first = a.read(
-												a.init(),
-												fast,
-												range,
-												comparison
-											)
+											const first = a.read(a.init(), leftovers)
 											const second = a.read(
 												a.init().next(),
-												fast,
-												range,
-												comparison
+												leftovers
 											)
 											return predicate(second, first)
 												? a
 												: a.this.class.template.class.static.fromArray(
 														[second, first],
-														fast,
-														range,
-														comparison
+														leftovers
 												  )
 										}
 										function THREECASE(a) {
@@ -1503,8 +1461,14 @@ export function activate(transformation = ID) {
 												a.copied("shiftBackward")
 											)
 
-											const c1 = copied.read(copied.init())
-											const c2 = copied.read(copied.init().next())
+											const c1 = copied.read(
+												copied.init(),
+												leftovers
+											)
+											const c2 = copied.read(
+												copied.init().next(),
+												leftovers
+											)
 
 											const fC1 = predicate(first, c1)
 											const fC2 = predicate(first, c2)
@@ -1515,61 +1479,50 @@ export function activate(transformation = ID) {
 												? fC2
 													? a.this.class.template.class.static.fromArray(
 															[c1, c2, first],
-															fast,
-															range,
-															comparison
+															leftovers
 													  )
 													: a.this.class.template.class.static.fromArray(
 															[c1, first, c2],
-															fast,
-															range,
-															comparison
+															leftovers
 													  )
 												: a.this.class.template.class.static.fromArray(
 														[first, c1, c2],
-														fast,
-														range,
-														comparison
+														leftovers
 												  )
 										}
-										return comparison(a.length().get(), TWO)
+										return leftovers.comparison(a.length().get(), TWO)
 											? TWOCASE(a)
 											: THREECASE(a)
 									}
 
 									return merge(split(this.this.this))
 								},
-								sort(
-									predicate,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								sort(predicate, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return (this.this.this = this.this.this.sorted(
 										predicate,
-										fast,
-										range,
-										comparison
+										leftovers
 									))
 								},
-								isSorted(
-									predicate,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
-									return comparison(
+								isSorted(predicate, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									return leftovers.comparison(
 										this.this.this,
-										this.this.this.sorted(
-											predicate,
-											fast,
-											range,
-											comparison
-										)
+										this.this.this.sorted(predicate, leftovers)
 									)
 								}
 								// TODO: pray add more new algorithms here...
@@ -2074,8 +2027,14 @@ export function activate(transformation = ID) {
 					direction(ic) {
 						return ic.compare(this.this.class())
 					},
-					// TODO: clean that one up a bit later...
-					forloop(i, comparison, jumping, goal) {
+					// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+					// * Pray make it work generally, put all the methods into this one form;
+					forloop(
+						i = this.this.class(),
+						comparison = this.this.template.comparison,
+						jumping,
+						goal
+					) {
 						// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
 						// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
 						return repeatedApplicationWhilst(
@@ -2085,20 +2044,24 @@ export function activate(transformation = ID) {
 							},
 							() => !i.compare(goal, comparison, () => true),
 							{
-								// TODO: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
+								// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
 								...infinite.deepCopy(this),
 								class: this.class
 							}
 						)
 					},
-					// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-					// * Pray make it work generally, put all the methods into this one form;
 					// ^ idea [for a solution of the 'leftover args' problem] : just tuch them all under the 'leftover' object, which is the last argument; then, give it a default value + reference all the stuff like 'leftovers.[something...]';
-					whileloop(start = this.this.class(), end, each) {
-						// TODO: generalization of the commented out thing within the 'InfiniteCounter.compare'
+					// TODO: ensure the use of theirs ['leftover' argument objects] across the library...
+					whileloop(start = this.this.class(), end, each, iter = (x) => x.next(),  comparison = this.this.template.comparison) {
+						let curr = infinite.deepCopy(start)
+						while (!(comparison(curr, end))) {
+							each()
+							curr = iter(curr)
+						}
+						return curr
 					}
 				},
-				template: { comparison: infinite.valueCompare, ...template },
+				template: { comparison: infinite.valueCompare, unfound: null, ...template },
 				class: function (previous) {
 					return {
 						class: this,
@@ -2136,12 +2099,13 @@ export function activate(transformation = ID) {
 						compare(
 							ic,
 							comparison = this.class.template.comparison,
-							range = this.class.template.range
+							range = this.class.template.range, 
+							unfound = this.class.template.unfound
 						) {
 							// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
 
 							// TODO: generalize to give any user-predefined null-constant, instead of it being necessarily 'null'...
-							if (!range(ic.value)) return null
+							if (!range(ic.value)) return unfound
 
 							let pointerfor = ic
 							let pointerback = ic
@@ -2159,45 +2123,23 @@ export function activate(transformation = ID) {
 							}
 
 							return comparison(pointerfor, this)
-
-							// ! Old code;
-
-							// Note:
-							// There had also been a line:
-							//		let isIt = false
-							// Used to be the return result. It got deleted...
-
-							// TODO: pray work on it properly a bit later; something there was left unfinished...
-
-							// ? Generalize this thing somehow? One ends up repeating the same code twice for two different values and methods...
-							// * Something like 'searchUntil', for instance?
-							// ? Same for the arguments... Does one really want to have 2 different values?
-							// %
-							// while (!(isIt = comparison(pointer.value, this.value)))
-							//	pointer = pointer.previous()
-							// if (isIt) return true
-
-							// ! PROBLEM: these 2 ought to be generalized somehow, BUT...
-							// * They don't work; not really; for instance, if one has that a certain counter is in certain 'moving direction' from another one, then checking the wrong one
-							// * still causes an infinite loop!
-							// ^ Solution: one just checks for each one at a time!
-							// * So, for example, they have loop with 2 infinite counters for each direction advancing at the same time; Then, they're both checked and the first one to be gotten to be the one sought gets to be compared with!
-							// %
-							// pointer = ic
-							// while (!(isIt = comparison(pointer.value, this.value)))
-							//	pointer = pointer.next()
-							// if (isIt) return false
 						},
-						// TODO: finish...
-						difference(ic) {},
+						// TODO: having finished, verify...
+						difference(ic) {
+							let current = this.class.class()
+							// TODO: put in the appropriate arguments here... finish; 
+							// * Do that once having worked on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
+							this.class.static.whileloop()
+							return current
+						},
 						jumpDirection(
 							ic,
 							comparison = this.class.template.comparison,
 							range = this.class.template.range
 						) {
 							const d = this.class.static.direction(ic)
-							// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)');
-							// TODO [general] : pray consider this small detail over any manner of a 'return' statement of any piece of code ;
+							// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
+							// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
 							return d
 								? this.jumpForward(ic, comparison, range)
 								: d === null
