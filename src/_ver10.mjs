@@ -519,86 +519,93 @@ export function activate(transformation = ID) {
 										each(this.this.this)
 									return this.this.this.currindex
 								},
-								moveforward(
-									index,
-									begin = false,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison,
-									stop = (x) =>
-										comparison(x.length().get(), x.currindex)
-								) {
+								moveforward(index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										begin: false,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison,
+										stop: (x) =>
+											leftovers.comparison(
+												x.length().get().next(),
+												x.currindex
+											)
+									})
 									return this.this.this.move(
 										index,
 										(args, x) => {
-											if (begin) x.currindex = x.init()
+											if (leftovers.begin) x.currindex = x.init()
 										},
-										comparison,
+										leftovers.comparison,
 										(x) => x.next(),
-										stop
+										leftovers.stop
 									)
 								},
 								// TODO [GENERAL]: work on the order of arguments of various methods and functions... Update things in correspondence with them.
-								movebackward(
-									index,
-									end = false,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison,
-									stop = (x) => comparison(x.currindex, x.init())
-								) {
+								movebackward(index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										end: false,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison,
+										stop: (x) =>
+											leftovers.comparison(x.init(), x.currindex)
+									})
 									return this.this.this.move(
 										index,
 										(args, x) => {
-											if (end) x.currindex = x.length().get()
+											if (leftovers.end)
+												x.currindex = x.length().get()
 										},
-										comparison,
+										leftovers.comparison,
 										(x) => x.previous(),
-										stop
+										leftovers.stop
 									)
 								},
-								movedirection(
-									index,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison,
-									stop
-								) {
+								movedirection(index, leftovers = {}) {
+									RESULT.ensureProperty(
+										leftovers,
+										"comparison",
+										this.this.this.this.class.template.class.template
+											.icclass.template.comparison
+									)
 									return this.this.this.currindex.compare(index)
-										? this.moveforward(
-												index,
-												false,
-												comparison,
-												(stop =
-													stop ||
+										? this.moveforward(index, {
+												begin: false,
+												comparison: leftovers.comparison,
+												stop: (leftovers.stop =
+													leftovers.stop ||
 													((x) =>
-														comparison(
+														leftovers.comparison(
 															x.currindex,
 															x.length().get()
 														)))
-										  )
-										: this.movebackward(
-												index,
-												false,
-												comparison,
-												(stop =
-													stop ||
+										  })
+										: this.movebackward(index, {
+												end: false,
+												comparison: leftovers.comparison,
+												stop: (leftovers.stop =
+													leftovers.stop ||
 													((x) =>
-														comparison(
+														leftovers.comparison(
 															x.currindex,
 															x.init()
 														)))
-										  )
+										  })
 								},
-								jump(
-									index,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.comparison,
-									range = this.this.this.this.class.template.class
-										.template.icclass.range
-								) {
+								jump(index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.comparison,
+										range: this.this.this.this.class.template.class
+											.template.icclass.range
+									})
 									return (this.this.this.currindex =
 										this.this.this.currindex.jumpDirection(
 											index,
-											comparison,
-											range
+											leftovers.comparison,
+											leftovers.range
 										))
 								},
 								/**
@@ -607,42 +614,47 @@ export function activate(transformation = ID) {
 								 * * might...
 								 * TODO: pray check if these kinds of 'nested'ly stuctured objects' methods even get their in-editor JSDoc documentation properly... [Quite a jolly surprise if they do!]
 								 */
-								read(
-									index,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								read(index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const ind = this.this.this.currindex
-									if (fast) this.this.this.go(index, range)
+									if (leftovers.fast)
+										this.this.this.go(index, leftovers.range)
 									else
 										this.this.this.moveforward(
 											index,
 											true,
-											comparison
+											leftovers.comparison
 										)
 									this.this.this.currindex = ind
 									const c = this.this.this.currelem
 									return c
 								},
-								write(
-									index,
-									value,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								write(index, value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const ind = this.this.this.currindex
-									if (fast) this.this.this.go(index, range)
+									if (leftovers.fast)
+										this.this.this.go(index, leftovers.range)
 									else
 										this.this.this.moveforward(
 											index,
 											true,
-											comparison
+											leftovers.comparison
 										)
 									const returned = (this.this.this.currelem = value)
 									this.this.this.currindex = ind
@@ -670,21 +682,24 @@ export function activate(transformation = ID) {
 											this.object().currindex = index
 											return returned
 										},
-										set(
-											value,
-											comparison = this.object().this.class.template
-												.class.template.icclass.template
-												.comparison,
-											range = this.object().this.class.template
-												.class.template.icclass.template.range
-										) {
-											if (!range(value.value))
+										set(value, leftovers = {}) {
+											RESULT.ensureProperties(leftovers, {
+												range: this.object().this.class.template
+													.class.template.icclass.template
+													.range,
+												comparison:
+													this.object().this.class.template
+														.class.template.icclass.template
+														.comparison
+											})
+
+											if (!leftovers.range(value.value))
 												throw new RangeError(
 													"Index range error for array length setting"
 												)
 
 											if (
-												comparison(
+												leftovers.comparison(
 													this.object().length().get(),
 													value
 												)
@@ -728,38 +743,52 @@ export function activate(transformation = ID) {
 
 								// * The ones 'copying' methods, on the other hand, that are more naturally [minimalistically, id est] defined in this fashion [excellent example - .appendfront()], get to have their own identifiers...
 								// TODO: yes, ensure that;
-								appendfront(
-									x,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								appendfront(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const newArr =
 										this.this.this.this.class.template.class.static.fromArray(
-											[x]
+											[x],
+											leftovers.fast,
+											leftovers.range,
+											leftovers.comparison
 										)
-									newArr.concat(this.this.this, fast, range, comparison)
+									newArr.concat(
+										this.this.this,
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
+									)
 									return newArr
 								},
 								copied(
 									method,
 									_arguments = [],
 									f = RESULT.id,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
+									leftovers = {}
 								) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									const c = this.this.this.copy(
 										f,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									)
-									c[method](..._arguments)
+									if (c[method]) c[method](..._arguments)
 									return c
 								},
 								// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
@@ -769,35 +798,37 @@ export function activate(transformation = ID) {
 								// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
 								// ? Think on HOW to document it all... Ought to be general yet also representative of the possible uses such as to employ different combinations of separate elements of the library per a single one...
 								// TODO: spread this 'this.this.this' architecture throughout the project...
-								pushback(
-									value,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								pushback(value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return this.this.this.write(
 										this.this.this.length().get(),
 										value,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									)
 								},
-								pushfront(
-									value,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								pushfront(value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return (this.this.this = this.this.this.appendfront(
 										value,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									))
 								},
 								pushbackLoop(template) {
@@ -815,16 +846,25 @@ export function activate(transformation = ID) {
 									return T
 								},
 								concat(
+									// TODO: make the 'array' an '.empty()' by default in such and other similar cases...
 									array,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
+									leftovers = {}
 								) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return array.loop()._full(
 										this.this.this.pushbackLoop({
-											arguments: [fast, range, comparison]
+											arguments: [
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
+											]
 										}).function
 									)
 								},
@@ -833,19 +873,25 @@ export function activate(transformation = ID) {
 										template
 									)
 								},
-								copy(
-									f = RESULT.id,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								copy(f = RESULT.id, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const copied = this.this.this.empty()
 									this.this.this.loop()._full(
 										copied.pushbackLoop({
 											transform: f,
-											arguments: [fast, range, comparison]
+											arguments: [
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
+											]
 										}).function
 									)
 									return copied
@@ -853,13 +899,18 @@ export function activate(transformation = ID) {
 								slice(
 									begin = this.this.this.init(),
 									end = this.this.this.finish(),
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
+									leftovers = {}
 								) {
-									if (!range(end.value))
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
+									if (!leftovers.range(end.value))
 										throw new RangeError(
 											"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
 										)
@@ -869,7 +920,11 @@ export function activate(transformation = ID) {
 
 									this.this.this.loop()._full(
 										sliced.pushbackLoop({
-											arguments: [fast, range, comparison]
+											arguments: [
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
+											]
 										}).function,
 										undefined,
 										// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
@@ -881,7 +936,7 @@ export function activate(transformation = ID) {
 										),
 										(t) => {
 											t.object().begin()
-											t.object().go(begin, range)
+											t.object().go(begin, leftovers.range)
 										}
 									)
 									return sliced
@@ -894,13 +949,15 @@ export function activate(transformation = ID) {
 									)
 										yield c
 								},
-								*[Symbol.iterator](
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								*[Symbol.iterator](leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									for (
 										let c = this.this.this.init();
 										!c.compare(this.this.this.length().get());
@@ -908,25 +965,27 @@ export function activate(transformation = ID) {
 									)
 										yield this.this.this.read(
 											c,
-											fast,
-											range,
-											comparison
+											leftovers.fast,
+											leftovers.range,
+											leftovers.comparison
 										)
 								},
-								fillfrom(
-									index,
-									value,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								fillfrom(index, value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									const indexsaved = this.this.this.currindex
 									// * This could be re-implement thing using '.project() + InfiniteCounter.difference() + Creating an empty GeneralArray...'
 									// ? Does one want to ??? Pray think on it...
 									// TODO: consider...
-									this.this.this.go(index, range)
+									// ? This could also be rewritten far more handily using a .loop()._full()...
+									this.this.this.go(index, leftovers.range)
 									while (
-										!comparison(
+										!leftovers.comparison(
 											this.this.this.currindex,
 											this.this.this.finish()
 										)
@@ -934,77 +993,93 @@ export function activate(transformation = ID) {
 										this.this.this.currelem = value
 										this.this.this.next()
 									}
+									this.this.this.currindex = indexsaved
 								},
 								convert(
+									// ? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
 									templates = [
 										this.this.this.this.class.template.class.template,
 										this.this.this.this.class.template
 									],
-									fast = false,
-									range = templates[0].icclass.template.range,
-									comparison = templates[0].icclass.template.comparison
+									leftovers = {}
 								) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: templates[0].icclass.template.range,
+										comparison:
+											templates[0].icclass.template.comparison
+									})
 									const newArr = RESULT.GeneralArray(templates[0])(
 										templates[1]
 									)()
 									this.this.this.loop()._full(
 										newArr.pushbackLoop({
-											arguments: [fast, range, comparison]
+											arguments: [
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
+											]
 										}).function
 									)
 									return newArr
 								},
-								delete(
-									index,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								delete(index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return this.this.this.deleteMult(
 										index,
 										index,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									)
 								},
 								deleteMult(
 									startindex,
 									endindex = startindex,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
+									leftovers = {}
 								) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return (this.this.this = this.this.this
 										.slice(
 											this.this.this.init(),
 											startindex.previous(),
-											fast,
-											range,
-											comparison
+											leftovers.fast,
+											leftovers.range,
+											leftovers.comparison
 										)
 										.concat(
 											this.this.this.slice(
 												endindex.next(),
-												fast,
-												range,
-												comparison
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
 											)
 										))
 								},
-								projectComplete(
-									array,
-									index,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								projectComplete(array, index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const _index = this.this.this.currindex
 									array.loop()._full(
 										(t) => {
@@ -1012,9 +1087,9 @@ export function activate(transformation = ID) {
 											this.this.this.write(
 												this.this.this.currindex,
 												t.object().currelem,
-												fast,
-												range,
-												comparison
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
 											)
 										},
 										RESULT._const((x) => {
@@ -1024,7 +1099,7 @@ export function activate(transformation = ID) {
 										undefined,
 										(x) => {
 											x.object().begin()
-											this.this.this.go(index, range)
+											this.this.this.go(index, leftovers.range)
 										}
 									)
 									// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
@@ -1035,24 +1110,25 @@ export function activate(transformation = ID) {
 								},
 								// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
 								// TODO: think deeply on the return values for the GeneralArray algorithms...
-								projectFit(
-									array,
-									index,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								projectFit(array, index, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const ind = array.currindex
 									this.this.this.loop()._full(
 										(t) => {
 											t.object().write(
 												t.object().currindex,
 												array.currelem,
-												fast,
-												range,
-												comparison
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
 											)
 											array.next()
 										},
@@ -1062,105 +1138,111 @@ export function activate(transformation = ID) {
 												.object()
 												.this.class.template.isEnd(x.object()) ||
 											array.this.class.template.isEnd(array),
-										(t) => t.object().go(index, range)
+										(t) => t.object().go(index, leftovers.range)
 									)
 									array.currindex = ind
 								},
-								inserted(
-									index,
-									value,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								inserted(index, value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+
 									const x = this.this.this.slice(
 										undefined,
 										index.previous(),
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									)
-									x.concat(
-										this.this.this.this.class.template.class.static.fromArray(
-											[value],
-											fast,
-											range,
-											comparison
-										),
-										fast,
-										range,
-										comparison
-									)
+									x.pushback(value, leftovers)
 									x.concat(
 										this.this.this.slice(
 											index,
 											undefined,
-											fast,
-											range,
-											comparison
+											leftovers.fast,
+											leftovers.range,
+											leftovers.comparison
 										)
 									)
 									return x
 								},
-								insert(
-									index,
-									value,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								insert(index, value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									return (this.this.this = this.inserted(
 										index,
 										value,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									))
 								},
-								has(
-									x,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison,
-									unfound = this.this.this.this.class.template.class
-										.template.unfound
-								) {
-									return !comparison(
-										this.this.this.firstIndex(x, comparison, unfound),
-										unfound
+								has(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										unfound:
+											this.this.this.this.class.template.class
+												.template.unfound,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									return !leftovers.comparison(
+										this.this.this.firstIndex(
+											x,
+											leftovers.comparison,
+											leftovers.unfound
+										),
+										leftovers.unfound
 									)
 								},
 								// * Just an alias...
-								index(
-									i,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
-									return this.this.this.read(i, fast, range, comparison)
+								index(i, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									return this.this.this.read(
+										i,
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
+									)
 								},
 								// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
-								indexesOf(
-									x,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+								indexesOf(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									const indexes = this.this.this.empty()
 									this.this.this.loop()._full((arr) => {
-										if (comparison(arr.object().currelem, x))
+										if (
+											leftovers.comparison(arr.object().currelem, x)
+										)
 											indexes.pushback(
 												arr.currindex,
-												fast,
-												range,
-												comparison
+												leftovers.fast,
+												leftovers.range,
+												leftovers.comparison
 											)
 									})
 									return indexes
@@ -1173,16 +1255,20 @@ export function activate(transformation = ID) {
 								//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
 								// Pray consider and decide...
 
-								firstIndex(
-									x,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison,
-									unfound = this.this.this.this.class.template.class
-										.template.unfound
-								) {
-									let index = unfound
+								firstIndex(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										unfound:
+											this.this.this.this.class.template.class
+												.template.unfound,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									let index = leftovers.unfound
 									this.this.this.loop()._full((arr) => {
-										if (comparison(arr.object().currelem, x)) {
+										if (
+											leftovers.comparison(arr.object().currelem, x)
+										) {
 											index = arr.currindex
 											arr.break()
 										}
@@ -1195,36 +1281,49 @@ export function activate(transformation = ID) {
 									icclass = this.this.this.this.class.template.class
 										.template.icclass,
 									baseelem = undefined,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
+									leftovers = {}
 								) {
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									const x =
 										this.this.this.this.class.template.class.static
 											.fromArray([baseelem])
 											.repeat(times, icclass)
-									x.concat(this, fast, range, comparison)
+									x.concat(
+										this.this.this,
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
+									)
 									return x
 								},
 								shiftBackward(
-									times,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.template.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.template.comparison
-								) {
+									times,	
+									leftovers = {}, 
+								) {	
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
 									this.this.this = this.this.this.slice(
 										times.map(
 											this.this.this.this.template.class.template
 												.icclass
 										),
 										undefined,
-										fast,
-										range,
-										comparison
+										leftovers.fast,
+										leftovers.range,
+										leftovers.comparison
 									)
 								},
 								repeat(times, icclass) {
@@ -1238,29 +1337,33 @@ export function activate(transformation = ID) {
 									// _* 4. return newarr
 								},
 								reversed() {
-									// * Sketch: 
+									// * Sketch:
 									// 0. create a new empty array ('reversedArr')
-									// * Sketch [1]: 
-									// 1. Do a 'reverse-.loop()'; Start from the end [length()] of the array, going back (.prev()), until meeting the beginning's previous; 
-									// 2. Along the way - pushback the current one into the reveresedArr (pushbackLoop); 
+									// * Sketch [1]:
+									// 1. Do a 'reverse-.loop()'; Start from the end [length()] of the array, going back (.prev()), until meeting the beginning's previous;
+									// 2. Along the way - pushback the current one into the reveresedArr (pushbackLoop);
 									// 3. return reveresedArr
 									// * Sketch [2]
-									// 1. Do a traditional '.loop()' - from start (begin()) to finish(), but on the way to it, push-front(), instead of pushing-back(); 
-									// TODO: decide which one to do... Do the generalization of the 'pushfrontLoop' same as pushbackLoop. 
+									// 1. Do a traditional '.loop()' - from start (begin()) to finish(), but on the way to it, push-front(), instead of pushing-back();
+									// TODO: decide which one to do... Do the generalization of the 'pushfrontLoop' same as pushbackLoop.
 								},
-								reverse () {
+								reverse() {
 									return (this.this.this = this.this.this.reversed())
-								}, 
+								},
 								// * Just an alias for 'copy'...
 								map(
-									f = RESULT.id,
-									fast = false,
-									range = this.this.this.this.class.template.class
-										.template.icclass.range,
-									comparison = this.this.this.this.class.template.class
-										.template.icclass.comparison
-								) {
-									return this.this.this.copy(f, fast, range, comparison)
+									f = RESULT.id,	
+									leftovers = {}, 
+								) {	
+									RESULT.ensureProperties(leftovers, {
+										fast: false,
+										range: this.this.this.this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.this.this.this.class.template.class
+												.template.icclass.template.comparison
+									})
+									return this.this.this.copy(f, leftovers)
 								},
 								isEmpty() {
 									const index = this.this.this.currindex
@@ -1272,6 +1375,7 @@ export function activate(transformation = ID) {
 									this.this.this.currindex = index
 									return val
 								},
+								// TODO: add the 'leftovers' to this one separately - after all the others...
 								/**
 								 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
 								 *
