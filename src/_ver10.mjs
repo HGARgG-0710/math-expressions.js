@@ -1129,7 +1129,7 @@ export function activate(transformation = ID) {
 										.template.unfound
 								) {
 									return !comparison(
-										this.this.this.firstIndex(x),
+										this.this.this.firstIndex(x, comparison, unfound),
 										unfound
 									)
 								},
@@ -1208,20 +1208,49 @@ export function activate(transformation = ID) {
 									x.concat(this, fast, range, comparison)
 									return x
 								},
-								shiftBackward(times, generator) {
-									// * Sketch:
-									// * 0. let curr;
-									// * 1. while (!comparison(curr = generator(curr), times))
-									// * 2.		this = this.slice(indexgenerator(this.array.initindex))
+								shiftBackward(
+									times,
+									fast = false,
+									range = this.this.this.this.class.template.class
+										.template.icclass.template.range,
+									comparison = this.this.this.this.class.template.class
+										.template.icclass.template.comparison
+								) {
+									this.this.this = this.this.this.slice(
+										times.map(
+											this.this.this.this.template.class.template
+												.icclass
+										),
+										undefined,
+										fast,
+										range,
+										comparison
+									)
 								},
-								repeat(times, generator) {
-									// * Sketch [not the actual code]:
-									// * 1. let newarr = GeneralArray(...)()
-									// * 2. let curr = generator()
-									// * 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
-									// * 4. return newarr
+								repeat(times, icclass) {
+									// * New sketch : use the icclass.static.forloop
+									// TODO: finally clean up the InfiniteCounter's comments leftovers and the '.static.forloop()";
+									// * Old
+									// _* Sketch [not the actual code]:
+									// _* 1. let newarr = GeneralArray(...)()
+									// _* 2. let curr = generator()
+									// _* 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
+									// _* 4. return newarr
 								},
-								reverse() {},
+								reversed() {
+									// * Sketch: 
+									// 0. create a new empty array ('reversedArr')
+									// * Sketch [1]: 
+									// 1. Do a 'reverse-.loop()'; Start from the end [length()] of the array, going back (.prev()), until meeting the beginning's previous; 
+									// 2. Along the way - pushback the current one into the reveresedArr (pushbackLoop); 
+									// 3. return reveresedArr
+									// * Sketch [2]
+									// 1. Do a traditional '.loop()' - from start (begin()) to finish(), but on the way to it, push-front(), instead of pushing-back(); 
+									// TODO: decide which one to do... Do the generalization of the 'pushfrontLoop' same as pushbackLoop. 
+								},
+								reverse () {
+									return (this.this.this = this.this.this.reversed())
+								}, 
 								// * Just an alias for 'copy'...
 								map(
 									f = RESULT.id,
@@ -2043,6 +2072,12 @@ export function activate(transformation = ID) {
 								class: this.class
 							}
 						)
+					},
+					// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+					// * Pray make it work generally, put all the methods into this one form;
+					// ^ idea [for a solution of the 'leftover args' problem] : just tuch them all under the 'leftover' object, which is the last argument; then, give it a default value + reference all the stuff like 'leftovers.[something...]';
+					whileloop(start = this.this.class(), end, each) {
+						// TODO: generalization of the commented out thing within the 'InfiniteCounter.compare'
 					}
 				},
 				template: { comparison: infinite.valueCompare, ...template },
@@ -2093,15 +2128,13 @@ export function activate(transformation = ID) {
 							let pointerfor = ic
 							let pointerback = ic
 
-							// TODO: generalize this thing...
-							// ? QUESTION: DOES ONE DO 'comparison(ic.value, otheric.value)' or simply 'comparison(ic, otheric)'?
-							// * CURRENT DECISION: 'comparison(ic.value, otheric.value)';
-							// Far more general this way...
-							// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison')
-							// TODO [general]: Do the above thing generally...
+							// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison(x.value, t.value)')
+							// TODO [general]: Do the above thing [InfiniteCounter wrapper influence removal] generally...
+
+							// TODO: generalize this loop thing...
 							while (
-								!comparison(pointerfor, this) &&
-								!comparison(pointerback, this)
+								!comparison(pointerfor.value, this.value) &&
+								!comparison(pointerback.value, this.value)
 							) {
 								pointerfor = pointerfor.next()
 								pointerback = pointerback.previous()
@@ -2272,74 +2305,18 @@ export function activate(transformation = ID) {
 		// * Return a bit later...
 		// ! Re-assess the old notes...
 		// ? What is it even (the 'keyorder')? Pray re-assess carefully later...
-		InfiniteMap(keyorder) {
+		InfiniteMap(template) {
 			return {
-				template: { keyorder },
-				value: function (
-					set,
-					get,
-					entries,
-					every,
-					forof,
-					forin,
-					generator = null,
-					comparison = null
-				) {
-					return {
-						template: {
-							generator,
-							comparison,
-							set,
-							get,
-							entries,
-							every,
-							// ? Again, Forof? Rename?
-							forof,
-							forin,
-							// TODO: this stuff [naming conventions] should really be re-thought; gets confusing with property names like that...
-							class: this.class
-						},
-						value: function (keys, values) {
-							if (!(keys instanceof Array) && typeof keys === "object") {
-								// TODO: isn't this code already used somewhere??? [UniversalMap, check if redundant...]
-								// ? use the objArr() here?
-								values = Object.values(keys)
-								keys = Object.keys(keys)
-							}
-
-							// ! This code with the templates is very beautiful and useful, but with this syntax -- rather confusing (namely, the feature of having the 'this' equal to the parent object variable)
-							// * Check it thouroughly...
-							return {
-								keys,
-								values,
-								class: this,
-								set(comparison = this.class.comparison) {
-									return {
-										template: { comparison },
-										value: this.class.set(comparison)
-									}
-								},
-								get(comparison = this.class.comparison) {
-									return {
-										template: { comparison },
-										value: this.class.get(comparison)
-									}
-								},
-								entries(generator = this.class.generator) {
-									return {
-										template: { generator: generator },
-										value: this.class.entries(generator)
-									}
-								},
-								// TODO: this one is more troublesome -- one requires to know what kind of an InfiniteMap is it that one is in fact mapping to (first creating, then setting corresponding things...)
-								// ? Return back to the question of how are the arguments handled within this thing...
-								map() {},
-								every: this.class.every,
-								[Symbol.iterator]: this.class.forof,
-								forin: this.class.forin
-							}
+				template: { keyclass: template.valueclass, ...template },
+				class: function (initial) {
+					const final = {
+						this: {
+							// TODO: Create the InfiniteMap - let it be based upon 2 GeneralArray classes, with 2 GeneralArray(s) within itself; Base all the algorithms on the GeneralArray...
 						}
 					}
+					final.this.this = final
+					for (const key in initial) final.this.set(key, initial[key])
+					return final
 				}
 			}
 		}
@@ -5227,8 +5204,8 @@ export function activate(transformation = ID) {
 	// TODO: Implement the compareUniversal(...arrays), which uses dim;
 
 	// ! PROBLEM:
-	// ? Does one want to be unifying those with the arrays methods for doing so?
-	// TODO [thing mr. flesh has forgotten]: implement the replacement methods for arrays...
+	// ? Does one want to be unifying those with the (equivalent) arrays methods [for doing so]?
+	// TODO [thing one hasn't done yet]: implement the replacement methods for arrays...
 	// ? Are there any manner of performance advantages in general separation of algorithms for native JS strings [don't seem to find anything on it... pray make one's own mini-research]?
 
 	// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
