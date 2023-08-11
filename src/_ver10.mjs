@@ -2052,16 +2052,26 @@ export function activate(transformation = ID) {
 					},
 					// ^ idea [for a solution of the 'leftover args' problem] : just tuch them all under the 'leftover' object, which is the last argument; then, give it a default value + reference all the stuff like 'leftovers.[something...]';
 					// TODO: ensure the use of theirs ['leftover' argument objects] across the library...
-					whileloop(start = this.this.class(), end, each, iter = (x) => x.next(),  comparison = this.this.template.comparison) {
+					whileloop(
+						start = this.this.class(),
+						end,
+						each,
+						iter = (x) => x.next(),
+						comparison = this.this.template.comparison
+					) {
 						let curr = infinite.deepCopy(start)
-						while (!(comparison(curr, end))) {
+						while (!comparison(curr, end)) {
 							each()
 							curr = iter(curr)
 						}
 						return curr
 					}
 				},
-				template: { comparison: infinite.valueCompare, unfound: null, ...template },
+				template: {
+					comparison: infinite.valueCompare,
+					unfound: null,
+					...template
+				},
 				class: function (previous) {
 					return {
 						class: this,
@@ -2099,12 +2109,12 @@ export function activate(transformation = ID) {
 						compare(
 							ic,
 							comparison = this.class.template.comparison,
-							range = this.class.template.range, 
+							range = this.class.template.range,
 							unfound = this.class.template.unfound
 						) {
 							// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
 
-							// TODO: generalize to give any user-predefined null-constant, instead of it being necessarily 'null'...
+							// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
 							if (!range(ic.value)) return unfound
 
 							let pointerfor = ic
@@ -2124,12 +2134,29 @@ export function activate(transformation = ID) {
 
 							return comparison(pointerfor, this)
 						},
-						// TODO: having finished, verify...
-						difference(ic) {
+						difference(
+							ic,
+							comparison = this.class.template.comparison,
+							range = this.class.template.range,
+							unfound = this.class.template.unfound
+						) {
 							let current = this.class.class()
-							// TODO: put in the appropriate arguments here... finish; 
-							// * Do that once having worked on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
-							this.class.static.whileloop()
+							// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
+							// ? If not created that 'alias' already...
+							const next = ic.compare(this, comparison, range, unfound)
+								? (x) => x.previous()
+								: (x) => x.next()
+							// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
+							// TODO: above *; 
+							this.class.static.whileloop(
+								infinite.deepCopy(this),
+								ic,
+								() => {
+									current = next(current)
+								},
+								next,
+								comparison
+							)
 							return current
 						},
 						jumpDirection(
@@ -2253,22 +2280,12 @@ export function activate(transformation = ID) {
 			return infinite.InfiniteArray(...arguments)()
 		},
 
-		// _? Should one make the arguments for this sort of thing named (using a single object-argument, containing all the info instead of the separate ones containing information on each particular topic) ???
-		// _* Pray think about it...
-		// _! Again, the thing with choosing between null/undefined...
-		// _TODO: after having written InfiniteMap and InfiniteArray wrappers, pray write some implementations of it all... Align different methods to work with them particularly...
-		// _? Should one choose 'null' as a default, the '(a, b) => a === b' or the valueCompare?
-		// _* Documentation, Documentation, Documentation. This thing badly needs it [which properties are in it, yada, yada, yada];
-		// _TODO: finish the InfiniteMap class; the UniversalMap has a limitation of 2**32 - 1 elements on it, whilst the InfiniteMap would have no such limitation...
-		// _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
+		// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
 		// _? Question: store the pointer to the 'infinite' structure within the thing in question.
-		// * Return a bit later...
-		// ! Re-assess the old notes...
-		// ? What is it even (the 'keyorder')? Pray re-assess carefully later...
 		InfiniteMap(template) {
 			return {
 				template: { keyclass: template.valueclass, ...template },
-				class: function (initial) {
+				class: function (initial = {}) {
 					const final = {
 						this: {
 							// TODO: Create the InfiniteMap - let it be based upon 2 GeneralArray classes, with 2 GeneralArray(s) within itself; Base all the algorithms on the GeneralArray...
@@ -2299,198 +2316,19 @@ export function activate(transformation = ID) {
 		//	return newgenarr
 		// },
 
+		
 		// ! all the old [potentially dead or half-dead or required-for-reworking/generalizing code ought to be looked at later (when the definitely dead stuff has been eliminated, problems solved on conceptual level, simple stuff done, and the most fundamental aspects of the cleanup have been made...)]
-		// // TODO: currently, work with the RecursiveArrays is such a pain; Do something about it;
-		// // * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
-		// // * Also, the library (probably) should export this thing from the different library as well (would give the user a way of getting less dependencies...)
-		// // TODO: finish this thing... (as well as others...)
-		// InfiniteArray: class {
-		//	currIndex() {
-		//		return this.index
-		//	}
-		//	next() {
-		// _* Same as below...
-		// _TODO: these recursive functions should get generalizations that would become dependencies...
-		// _? perhaps, the library function that does this kind of stuff should too be rewritten (after adding math-expressions.js as a dependency) to work with InfiniteCounter(s)
-		// function recursive(array, index, path) {
-		//	for (let i = 0; i < path.length; i++) {
-		//		const indexed = path[i]
-		//		if (typeof indexed !== "number") {
-		//			;[array, index] = recursive(array, index, indexed)
-		//			continue
-		//		}
-		//		const indexindexed = index[indexed]
-		//		const arrayindexed = array[indexed]
-		//		if (typeof indexindexed === "boolean") break
-		//		index = indexindexed
-		//		array = arrayindexed
-		//	}
-		//	return [array, index]
-		// }
-		// const path = this.currElement()
-		// let [array, index] = recursive(this.array, this.index, path)
-		// const lastIndex = path[path.length - 1]
-		// if (typeof lastIndex === "number") index[lastIndex] = false
-		// _TODO: as one have decided that the InfiniteArrays can have user-defined, there comes the question of finding and marking the next index... do this;
-		// _* There is a strong feeling for far more advanced API for working with the RecursiveArrays; This API is to be added
-		// _! Pray do walk the code up and down and decide what to do about this...
-		//	}
-		//	currElement() {
-		// _* Again, an algorithm. Should be a wrapper AROUND AN ARBITRARY algorithm...
-		// let current = this.index
-		// function recursive() {
-		//	const prevCurrent = current
-		//	let temp = false
-		//	if (prevCurrent instanceof Array) {
-		//		for (let i = 0; i < prevCurrent.length; i++) {
-		//			current = prevCurrent[i]
-		//			if (typeof current === "boolean") {
-		//				if (current) return [i]
-		//				continue
-		//			}
-		//			temp = recursive()
-		//			if (temp !== false) {
-		//				if (temp.length < MAX_ARRAY_LENGTH)
-		//					return [i, ...temp]
-		//				return [i, temp]
-		//			}
-		//		}
-		//		current = prevCurrent
-		//	}
-		//	return temp
-		// }
-		// return recursive()
-		//	}
-		//	// ! this thing should get some documentation. very very much should...
-		//	// * finds the first index and sets the thing to it...
-		//	// TODO: should work differently... This thing (along with most of the infinite API) is poorly planned and designed...
-		//	first(shouldSet = true) {
-		// _^ These are nice algorithms, they should get their own functions -- this is a wrapper for algorithms of the user.
-		// _* Library should provide general wrappers and particular algorithms separately from each other, this way alowing for infinitely greater diversity in the final code in question
-		// _* (not necesserily neglecting presence of defaults...)
-		// _TODO: create defaults for all manner of these things...
-		// this.index = sameStructure(this.index, () => false)
-		// const index = []
-		// let indexpointer = index
-		// let current = this.index
-		// // TODO: create a function in a different library for general dealing with these things... Later, pray do change this for that too...
-		// while (true) {
-		//	if (typeof current[0] !== "boolean") {
-		//		const isFull = indexpointer.length === MAX_ARRAY_LENGTH - 1
-		//		indexpointer.push(isFull ? [] : 0)
-		//		const lastPointer = indexpointer[indexpointer.length - 1]
-		//		if (isFull && lastPointer instanceof Array)
-		//			indexpointer = lastPointer
-		//		current = current[0]
-		//		continue
-		//	}
-		//	break
-		// }
-		// if (shouldSet) current[0] = true
-		// return index
-		//	}
-		//	// * IDEAS FOR UNITED API OF WORKING WITH THE RECURSIVEARRAYS:
-		//	// * 1. Function for indexation by means of some RecursiveArray<number>; There should be a way to establish the order of following (DECIDE HOW IT WOULD BE IMPLEMENTED WITHIN THIS LIBRARY);
-		//	// * 2. Function for setting values to an array value based on a RecursiveArray<number>-index, with the same kind of "order" thing as in 1.
-		//	// ? Currently, that's just the stuff that the InfiniteArray implementation is concerned with;
-		//	// ! Now, if one was to write it for the InfiniteArray<Type>, one would then generalize the stuff to an arbitrary RecursiveArray<Type> and then just define InfiniteArray as a convinient in-built wrapper around the stuff...
-		//	// ? This still don't solve the problem of generalizing the specific cases of recursive functions that are a part of the InfiniteArray methods, though;
-		//	// * This would have in it the ideas of the order, structure of the given array (ways of copying it, changing it flexibly, reading via some handy InfiniteMap-structure);
-		//	// * Also, should be ways of assigning to it an "index-array" with the same structure, which would contain various kinds of datatypes in it, allowing to read the array in various ways (simplest example -- boolean for marking an element; one could have one type with some "n" different modes, allowing for different ways of accessing it...);
-		//	// * The "index-arrays" along with the orders and different comparison functions should be useable to read something from a recursive array...
-		//	// ! Then, the InfiniteArray would simply become a special case of all this with it having the index array being boolean, or something (or it would become a truly general wrapper with 'boolean' as merely a default case...);
-		//	// ! There is also another small trouble preventing the swift generalization of all these things -- lack of singular form for checking the same stuff (somewhere, 'typeof' is used and somewhere else 'instanceof', for example);
-		//	// * Also: to avoid "if-else" (branching), one uses 'if-continue' or 'if-break';
-		//	// * Different things are checked and the return types are not unanimous (they differ, though could (probably) be made to be in the same general form);
-		//	// * Different loops are used;
-		//	// ! Also, there should be ways of transforming a non-infinite Array into an Infinite one;
-		//	last() {}
-		//	// * retuns if the current index is the last...
-		//	isLast() {}
-		//	// TODO: implement a safe-check that the last element of the last of the last ... of the last array IS, in fact, a RecursiveArray<Type>; if not, pray do change the structure of the final array,
-		//	constructor(objects, order) {
-		//		this.array = objects
-		//		// ! AGAIN: particular implementation, instead use the one given by the user here, set this [or something else] of self as default and then ...
-		//		// ? Should indexes work this way?
-		//		// this.index = sameStructure(this.array, () => false)
-		//		this.first(true)
-		//	}
-		// },
+		// TODO: finish work on the RecursiveArrays API; Whilst giving general implementations to LastIndexArray, DepthArray and other arrays, pray work on it extensively...
+		// * The matter of recursiveIndexation and other such library things (code re-doing) would solve a considerable part of the problem;
+		// * Also, the library (probably) should export this thing from the different library as well (would give the user a way of getting less dependencies...)
 
-		// TODO: generalize.... Make this a template... Let the arbitrary positional function 'k' be chosen, instead of current default `k := (_x) => MAX_ARRAY_LENGTH - 1`
-		// TODO: generalize even further -- give a number of different indexes to be pursued, add a pattern for choosing between them...
-		// TODO: generalize even further -- give the 'max_index=MAX_ARRAY_LENGTH' -- after this index, it would behave as if there's no index space left within the current level of recursive array...
-		// ! Obsolete code; rewrite as LastIndexArray - special case of the GeneralArray;
-		// lastIndexArray: function (arrays, currArr = [], deepen = true) {
-		//	let arr = currArr
+		// * OLD NOTES REGARDING THE GENERALIZATIONS OF LastIndexArray; Pray re-asses in full detail slightly later...
+		// _TODO: generalize.... Make this a template... Let the arbitrary positional function 'k' be chosen, instead of current default `k := (_x) => MAX_ARRAY_LENGTH - 1`
+		// _TODO: generalize even further -- give a number of different indexes to be pursued, add a pattern for choosing between them...
+		// _TODO: generalize even further -- give the 'max_index=MAX_ARRAY_LENGTH' -- after this index, it would behave as if there's no index space left within the current level of recursive array...
 
-		//	if (arr.length === MAX_ARRAY_LENGTH) {
-		//		if (
-		//			(deepen && !(deepen instanceof Array)) ||
-		//			(deepen instanceof Array && deepen[0])
-		//		)
-		//			arr = [...arr.slice(0, arr.length - 1), [arr[arr.length - 1]]]
-		//		// TODO: use the alias last() for arrays [simplify code with it...];
-		//		// TODO: create a generalization orderIndex(arr, indexes, i = 0) := arr[indexes[i]]
-		//		// ! Problem: with the 'deepen' argument -- it's not general enough...
-		//		// TODO: generalize it to encompass any possible pattern...
-		//		// ? Should one even have that one???
-		//		// * Many difficulties as to how the API should look like precisely...
-		//		return infinite.lastIndexArray(
-		//			arrays,
-		//			arrays[arrays.length - 1],
-		//			deepen instanceof Array && deepen.length > 1
-		//				? deepen.slice(1)
-		//				: deepen
-		//		)
-		//	}
-
-		//	for (let i = 0; i < arrays.length; i++) {
-		//		for (let j = 0; j < arrays[i].length; j++) {
-		//			if (arr.length < MAX_ARRAY_LENGTH - 1) {
-		//				arr.push(arrays[i][j])
-		//				continue
-		//			}
-		//			if (arr.length === MAX_ARRAY_LENGTH - 1) arr.push([])
-		//			return infinite.lastIndexArray(
-		//				arrays.slice(i).map((a, t) => (t > 0 ? a : a.slice(j))),
-		//				arr[arr.length - 1]
-		//			)
-		//		}
-		//	}
-
-		//	return arr
-		// },
-
-		// lastIndexArrayHas(array, thing, comparison) {
-		//	for (let i = 0; i < array.length - 1; i++)
-		//		if (comparison(array[i], thing)) return true
-		//	if (array[array.length - 1] instanceof Array)
-		//		return this.lastIndexArrayHas(
-		//			array[array.length - 1],
-		//			thing,
-		//			comparison
-		//		)
-		//	return comparison(array[array.length - 1], thing)
-		// },
-
-		// mergeLastIndexArrs(arrs) {},
-
-		// TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := lastIndexArray([1,2,3,4,5])
-		// ! Currently commented out, later pray revisit and do properly...
-		// _TODO: let these thing NOT rely upon lastIndexArray, but rather allow to give some different infinite indexing structure [decide how should it work -- first write like that, then vastly generalize];
-		// _? generalize this thing too?
-		// _! THIS DOESN'T WORK. Because:
-		// _* There should be an API within this thing for 'mergeing' different kinds of recursive arrays -- that is the main problem. THEY AREN'T FLUID, like the way they are supposed to be.
-		// _^ IDEAS for doing it:
-		// _* 1. Turn them to the same format (example: lastIndexArray);
-		// _* 2. Provide ways for user to define 'conversion' function-parameters for these kinds of things.
-		// _! Problems with 1:
-		// _* One could easily define conversion to lastIndexArray (because they're one format), but what about the reverse? If one chooses this, there should be recursiveRecerse function for this kind of stuff on emphasis of 'how does one keep the recursive pattern'...
-		// _! Problems with 2:
-		// _* This'd work, but would complicate ALL pieces of the 'infinite' api, not just some 1, like in the first one;
-		// _* CURRENT DECISION: unless one creates some better idea for it, 1 will be the way...
-		// _TODO: after having done that, pray rewrite and fix.
+		// TODO: old code of the 'depthOrder' commented out; Pray re-visit later...
+		// * _ TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := lastIndexArray([1,2,3,4,5])
 		// depthOrder(array, isElement = (x) => !(x instanceof Array), first = true) {
 		//	let currarr = []
 		//	// TODO: the library is in bad need of a very powerful and thorough clean-up... Both code, comments and TODOS. Do it, pray
@@ -2520,646 +2358,10 @@ export function activate(transformation = ID) {
 		// _TOdo : let the particulars [implementations] use it instead [after having written some that do, pray delete the todo];
 		// ! Problem: this thing don't appear to be used anymore...
 		// * After GeneralArray came in to be, it became obsolete... The stuff that it's doing is now generalized by it [and again, it's really the UnlimitedArray, not InfiniteArray];
-		// TODO: commented out for now, later - pray rewrite to be actual InfiniteArray [not UnlimitedArray]; Also, don't throw out right away - make it so that the stuff from it makes its way into the GeneralArray too [stuff that didn't already, that be...]
-		// InfiniteArray(comparison, indexgenerator, notfound) {
-		//	return {
-		//		template: { comparison, indexgenerator, notfound },
-		//		value: function (
-		//			pushback,
-		//			pushfront,
-		//			index,
-		//			_delete,
-		//			// ? names: forof, forin
-		//			forof,
-		//			forin,
-		//			reverse,
-		//			map,
-		//			sort,
-		//			length,
-		//			concat,
-		//			copyWithin,
-		//			every,
-		//			any,
-		//			reduce,
-		//			slice,
-		//			property,
-		//			indexesOf,
-		//			entries,
-		//			each,
-		//			fillfrom,
-		//			has
-		//		) {
-		//			return {
-		//				template: {
-		//					pushback,
-		//					pushfront,
-		//					index,
-		//					delete: _delete,
-		//					forof,
-		//					forin,
-		//					reverse,
-		//					map,
-		//					sort,
-		//					length,
-		//					concat,
-		//					copyWithin,
-		//					every,
-		//					any,
-		//					reduce,
-		//					slice,
-		//					property,
-		//					indexesOf,
-		//					entries,
-		//					each,
-		//					fillfrom,
-		//					has,
-		//					template: this
-		//				},
-		//				value: function (array) {
-		//					return {
-		//						array,
-		//						class: this,
-		//						pushback: this.pushback,
-		//						pushfront: this.pushfront,
-		//						// TODO: another [general] problem -- the classes are generally supposed to hide things like: push(arr, elem) -> arr.push(elem) [the methods should have the first 'this' argument replaced by the 'this.array'];
-		//						// * There's a couple of other problems concerning the function definitions within the InfiniteArray, InfiniteMap and InfiniteCounter; pray check them, and change throughout the entire code...;
-		//						// TODO: 'initial' should be given for generators everywhere as a conditional parameter [by default undefined -- calls generator(), like the way it is now...]
-		//						index(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator,
-		//							comparison = this.class.template.comparison
-		//						) {
-		//							// todo: here, the 'this' feature with changing templates mid-stream don't really work [because the functionTemplate 'this' is not really used...]
-		//							// * Pray scan all the code that uses the in-library templates on the matter of having it working...
-		//							// ? Question: should the function templates within the methods in question also have the 'class' thing, or not???; Would seem appropriate...
-		//							// * Answer: yes; add that to all the things of the sort as well...
-		//							// ! Pray tidy up this todo/note from redundacies later...
-		//							return {
-		//								template: {
-		//									indexgenerator,
-		//									comparison,
-		//									object: this
-		//								},
-		//								value: function (_index) {
-		//									return this.object.class.index(
-		//										this.indexgenerator,
-		//										comparison
-		//									)(this.object.array, _index)
-		//								}
-		//							}
-		//						},
-		//						delete(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function (_index) {
-		//									return this.object.class.delete(
-		//										this.indexgenerator
-		//									)(this.object.array, _index)
-		//								}
-		//							}
-		//						},
-		//						[Symbol.iterator]: this.forof,
-		//						forin: this.forin,
-		//						reverse: this.reverse,
-		//						map: this.map,
-		//						sort: this.sort,
-		//						length: this.length,
-		//						concat: this.concat,
-		//						copyWithin(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function (
-		//									beginind,
-		//									endind,
-		//									targetind
-		//								) {
-		//									return this.object.class.copyWithin(
-		//										this.indexgenerator
-		//									)(
-		//										this.object.array,
-		//										beginind,
-		//										endind,
-		//										targetind
-		//									)
-		//								}
-		//							}
-		//						},
-		//						every: this.every,
-		//						any: this.any,
-		//						reduce(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function (
-		//									initial,
-		//									direction,
-		//									callback
-		//								) {
-		//									return this.object.class.reduce(
-		//										this.indexgenerator
-		//									)(
-		//										this.object.array,
-		//										initial,
-		//										direction,
-		//										callback
-		//									)
-		//								}
-		//							}
-		//						},
-		//						slice(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function (start, end) {
-		//									return this.object.class.slice(
-		//										this.indexgenerator
-		//									)(this.object.array, start, end)
-		//								}
-		//							}
-		//						},
-		//						property: this.property,
-		//						indexesOf(
-		//							comparison = this.class.template.comparison,
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: {
-		//									indexgenerator,
-		//									comparison,
-		//									object: this
-		//								},
-		//								value: function (ele) {
-		//									return this.object.class.indexesOf(
-		//										this.indexgenerator
-		//									)(this.object.array, ele)
-		//								}
-		//							}
-		//						},
-		//						entries(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function () {
-		//									return this.object.class.entries(
-		//										this.indexgenerator
-		//									)(this.object.array)
-		//								}
-		//							}
-		//						},
-		//						each(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator
-		//						) {
-		//							return {
-		//								template: { indexgenerator, object: this },
-		//								value: function (callback) {
-		//									return this.object.class.each(
-		//										this.indexgenerator
-		//									)(this.object.array, callback)
-		//								}
-		//							}
-		//						},
-		//						fillfrom(
-		//							indexgenerator = this.class.template
-		//								.indexgenerator,
-		//							comparison = this.class.template.comparison
-		//						) {
-		//							return {
-		//								template: {
-		//									indexgenerator,
-		//									comparison,
-		//									object: this
-		//								},
-		//								value: function (index, value) {
-		//									return this.class.fillfrom(
-		//										this.indexgenerator,
-		//										this.comparison
-		//									)(this.object.array, index, value)
-		//								}
-		//							}
-		//						},
-		//						has(comparison = this.class.template.comparison) {
-		//							return {
-		//								template: { comparison, object: this },
-		//								value: function (elem) {
-		//									return this.class.has(this.comparison)(
-		//										this.object.array,
-		//										elem
-		//									)
-		//								}
-		//							}
-		//						}
-		//					}
-		//				}
-		//			}
-		//		}
-		//	}
-		// },
+		// TODO: pray create an actual InfiniteArray implementation [not that of UnlimitedArray]; 
 
-		// _? Should one not then write the InfiniteArray class, then use it in the InfiniteString class (not to repeat the same things all over again)?
-		// _TODO: finish the InfiniteString class; It would allow work like with a string, though would be based on the InfiniteCounter/TrueInteger classes...
-		// _* Let it have all the capabilities (methods, properties) of a string and more -- let there be a way to reverse() it natively...;
-		// * Return to this a bit later...
-		// ! Get fundamentally redone; followup in the previous notes + the UnlimitedString idea...;
-		// InfiniteString: class {
-		//	append(x) {
-		//		// ? generalize and then make an export ?
-		//		function appendStrRecursive(str, thisArg, i = 0) {
-		//			// TODO: replace with repeatedApplication or recursiveIndexation or something such within a different library...
-		//			let currLevel = thisArg.string
-		//			for (let j = 0; j < i; j++) {
-		//				const indexed = currLevel[currLevel.length - 1]
-		//				if (typeof indexed === "string") break
-		//				currLevel = indexed
-		//			}
-		//			if (currLevel.length < MAX_ARRAY_LENGTH - 1) {
-		//				thisArg.length = thisArg.length.next()
-		//				currLevel.push(str)
-		//				return
-		//			}
-		//			if (currLevel.length === MAX_ARRAY_LENGTH - 1)
-		//				currLevel.push([])
-		//			return appendStrRecursive(str, thisArg, i + 1)
-		//		}
-		//		function appendInfStringRecursive(arr, thisArg) {
-		//			for (let i = 0; i < arr.string.length - 1; i++) {
-		//				const currStr = arr.string[i]
-		//				if (typeof currStr !== "string") break
-		//				appendStrRecursive(currStr, thisArg)
-		//			}
-		//			if (arr.string.length === MAX_ARRAY_LENGTH) {
-		//				appendInfStringRecursive(
-		//					new InfiniteString(
-		//						arr.string[arr.string.length - 1],
-		//						arr.indexGenerator
-		//					),
-		//					this
-		//				)
-		//			}
-		//		}
-		//		if (typeof x === "string") return appendStrRecursive(x, this)
-		//		return appendInfStringRecursive(x, this)
-		//	}
-		//	copy() {
-		//		return util.deepCopy(this)
-		//	}
-		//	// TODO: allow for use of the InfiniteString as an argument... (That is, copying an InfiniteString; new instance is by default its extension...)
-		//	// TODO: allow for use of the RecursiveArray<string>... (for this, generalize the last element-safety check...)
-		//	constructor(initial, indexGenerator) {
-		//		if (typeof initial === "string") {
-		//			this.string = [initial]
-		//			return
-		//		}
-		//		this.string = initial
-		//		// TODO: use the util.gut... and util.encircle... functions for the finalized check (make it all the same form -- [string, ...., pointer to RecursiveArray<string>])
-		//		if (initial.length === MAX_ARRAY_LENGTH) {
-		//			this.string[this.string.length - 1] = [
-		//				this.string[this.string.length - 1]
-		//			]
-		//		}
-		//		this.length = fromNumber(indexGenerator)(initial.length)
-		//		this.indexGenerator = indexGenerator
-		//	}
-		// },
-
-		// _TODO: delete or greatly rework after having finished with the GeneralArray stuff...;
-		// algorithms: {
-		//	recarrays: {
-		//		pushback: {
-		//			// TODO: generalize the 'lastIndex' arrays to a 'recursivePoints' arrays [sets of recursive (not lastIndex, then generalization won't work...)-array index arrays for the indexes of the 'recursion points'; lastIndex is trivial case -- with the 'points' being [MAX_ARRAY_LENGTH]];
-		//			// * then, add this one as a special case...
-		//			lastIndex(
-		//				MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
-		//				isUndefined = (a) => a === undefined
-		//			) {
-		//				return functionTemplate(
-		//					{ MAX_ARRAY_LENGTH, isUndefined },
-		//					function (arr, elem) {
-		//						for (let i = 0; i < MAX_ARRAY_LENGTH - 1; i++) {
-		//							if (this.isUndefined(arr[i])) {
-		//								arr[i] = elem
-		//								return elem
-		//							}
-		//						}
-		//						if (!arr[MAX_ARRAY_LENGTH - 1]) {
-		//							arr.push([elem])
-		//							return elem
-		//						}
-		//						return infinite.algorithms.recarrays.pushback.lastIndex(
-		//							MAX_ARRAY_LENGTH,
-		//							isUndefined
-		//						)(arr[arr.length - 1], elem)
-		//					}
-		//				)
-		//			}
-		//		},
-		//		// TODO: implement [perhaps as .concat([pushedelem], arr)?]; which would really be ".shiftForward(array, pushedelem)"
-		//		pushfront: {},
-		//		// TODO : pray add as a method for the InfiniteArray(s); Same goes for all the unadded methods from the 'algorithms'...
-		//		shiftForward: {
-		//			lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
-		//				return functionTemplate(
-		//					{ MAX_ARRAY_LENGTH },
-		//					function (array, baseelem = undefined) {
-		//						return infinite.algorithms.recarrays.concat.lastIndex(
-		//							MAX_ARRAY_LENGTH
-		//						)([baseelem], array)
-		//					}
-		//				)
-		//			}
-		//		},
-		//		shiftForwardMult: {
-		//			lastIndex(
-		//				generator,
-		//				shiftValue,
-		//				comparison = infinite.valueCompare,
-		//				MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
-		//				baseelemfunc = () => undefined
-		//			) {
-		//				return functionTemplate(
-		//					{ MAX_ARRAY_LENGTH },
-		//					function (array) {
-		//						const newArr = []
-		//						let currGenerated
-		//						while (
-		//							!comparison(
-		//								((currGenerated = generator()), shiftValue)
-		//							)
-		//						)
-		//							infinite.algorithms.recarrays.push.lastIndex(
-		//								newArr,
-		//								baseelemfunc(currGenerated)
-		//							)
-		//						return infinite.algorithms.recarrays.concat.lastIndex(
-		//							MAX_ARRAY_LENGTH,
-		//							false
-		//						)(newArr, array)
-		//					}
-		//				)
-		//			}
-		//		},
-		//		// TODO: implement; this thing is like the 'insert' alias...;
-		//		insert: {},
-		//		slice: {
-		//			lastIndex(
-		//				MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
-		//				generator,
-		//				comparison = valueCompare,
-		//				undefinedSymbol = undefined,
-		//				isUndefined = (x) => x === undefined
-		//			) {
-		//				return functionTemplate(
-		//					{
-		//						MAX_ARRAY_LENGTH,
-		//						generator,
-		//						comparison,
-		//						undefinedSymbol
-		//					},
-		//					function (
-		//						array,
-		//						begind,
-		//						enind,
-		//						currIndex = undefinedSymbol,
-		//						haveReached = false,
-		//						baseArr = []
-		//					) {
-		//						let newArr = baseArr
-		//						let curr = undefinedSymbol
-		//						let i = 0
-
-		//						// ? generalize???
-		//						// TODO: the code should be looked through thoroughly in search for generalizations, simplifications, making things more tangible [stuff like this.MAX_ARRAY_LENGTH, instead of JUST MAX_ARRAY_LENGTH and on and on and on...]
-		//						// * Mayhaps, do it only after the very first sketches of algorithms implementations have been written...
-		//						if (!haveReached) {
-		//							let isBegin = false
-		//							// TODO: repeatedApplication... replace with... refactor...
-		//							for (; i < MAX_ARRAY_LENGTH - 1; i++)
-		//								if (
-		//									(isBegin = comparison(
-		//										(curr = generator(curr)),
-		//										begind
-		//									)) ||
-		//									isUndefined(array[i])
-		//								)
-		//									break
-
-		//							if (!isBegin) {
-		//								if (
-		//									!isUndefined(
-		//										array[MAX_ARRAY_LENGTH - 2]
-		//									) &&
-		//									!isUndefined(
-		//										array[MAX_ARRAY_LENGTH - 1]
-		//									)
-		//								)
-		//									return infinite.algorithms.recarrays.slice.lastIndex(
-		//										MAX_ARRAY_LENGTH,
-		//										generator,
-		//										comparison,
-		//										curr
-		//									)(
-		//										array[MAX_ARRAY_LENGTH - 1],
-		//										begind,
-		//										enind,
-		//										currIndex
-		//									)
-
-		//								return baseArr
-		//							}
-		//						}
-
-		//						let isEnd = false
-		//						let j = i
-
-		//						// ! This thing with repeated 'loop for checking for element undefinedness' should really be generalized...
-		//						// TODO: pray do so...
-		//						// ? Shouldn't one place the 'if' within the "for"'s condition???
-		//						// * Pray think a bit on it...
-		//						for (; j < MAX_ARRAY_LENGTH - 1; j++) {
-		//							if (
-		//								(isEnd = comparison(
-		//									(curr = generator(curr)),
-		//									enind
-		//								)) ||
-		//								isUndefined(array[j])
-		//							)
-		//								break
-		//							infinite.algorithms.recarrays.pushback.lastIndex(
-		//								MAX_ARRAY_LENGTH,
-		//								isUndefined
-		//							)(newArr, array[j])
-		//						}
-
-		//						if (isEnd || isUndefined(array[j])) return newArr
-		//						return infinite.algorithms.recarrays.concat.lastIndex(
-		//							MAX_ARRAY_LENGTH,
-		//							false
-		//						)(newArr, array[j])
-		//					}
-		//				)
-		//			}
-		//		},
-		//		// * Projects a piece of an array onto another array of the same recursive type after and before having met certain index of the generator with a certain 'compared' property...;
-		//		// ^ IDEA: into the docs, pray introduce the idea of 'array recursive type'; It'd allow to [more explicitly and structuredly on documentation level] separate all the 'recarrays' things from each other on a type level, not only the concept-level...
-		//		// ! MORE AND MORE OF THESE THINGS TEND TO BE ARRAY-TYPE-INDEPENDENT!
-		//		// TODO: create a list of array methods that are defining of the structure of it, then make them into separate algorithms, the general ones make into 'templated' methods [that being, just add a 'arrtypelabel' parameter];
-		//		// TODO: create the generalized templated elementary recursive functions for dealing with the recursive arrays [those that could be used by the user on a general basis for construction of new array types];
-		//		// TODO: after having done so, pray make the already available recursive array algorithms into the combinations of these elementary methods...
-		//		project: {},
-		//		concat: {
-		//			lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH, copy = true) {
-		//				return functionTemplate(
-		//					{ MAX_ARRAY_LENGTH, copy },
-		//					function (...arrays) {
-		//						if (arrays.length < 2) return arrays[0]
-		//						if (arrays.length > 2)
-		//							return infinite.algorithms.recarrays.concat.lastIndex(
-		//								MAX_ARRAY_LENGTH,
-		//								false
-		//							)(
-		//								infinite.algorithms.recarrays.concat.lastIndex(
-		//									MAX_ARRAY_LENGTH,
-		//									arrays.length === 3
-		//								)(arrays.slice(0, arrays.length - 1)),
-		//								arrays[arrays.length - 1]
-		//							)
-
-		//						// todo: problem with using the 'deepCopy' on recursive arrays: fix;
-		//						// * Problem is such -- one wants only a ARRAY-STRUCTURAL copy, not the object copies;
-		//						// * SOLUTION: have a copying algorithm for each and every kind of recursive array [infinite.algorithms.recarrays.copy]...
-		//						// TODO: implement it...
-		//						const copied = copy
-		//							? infinite.deepCopy(arrays[0])
-		//							: arrays[0]
-
-		//						for (let i = 0; i < arrays[1].length - 1; i++)
-		//							infinite.algorithms.recarrays.pushback.lastIndex(
-		//								MAX_ARRAY_LENGTH
-		//							)(copied, arrays[1][i])
-
-		//						// ? Now, this decision about the notation for the 'infinite' 'algorithms' subobject, one is happy. HOWEVER...
-		//						// * It does look raaather cumbersome. What to do?
-		//						// ^ IDEA: provide a 'shortcuts' object;
-		//						// ! PROBLEM: it either won't be meaningfully named [like the way one would want] or it would be in essence the same thing, but uglier
-		//						// * CONCLUSION: this thing shouldn't be done on the library level
-		//						// later, pray delete this note...
-		//						if (
-		//							arrays[1][arrays[1].length - 1] instanceof Array
-		//						)
-		//							return infinite.algorithms.recarrays.concat.lastIndex(
-		//								copied,
-		//								arrays[1][arrays[1].length - 1]
-		//							)
-
-		//						infinite.algorithms.recarrays.pushback.lastIndex(
-		//							copied,
-		//							arrays[1][arrays[1].length - 1]
-		//						)
-		//						return copied
-		//					}
-		//				)
-		//			}
-		//		},
-		//		// ? Question: about the matter of whether to affect the arrays in question??? How should methods be implemented?
-		//		// TODO: think on it and decide [currently preferred: copying];
-		//		delete: {
-		//			lastIndex(
-		//				MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH,
-		//				generator,
-		//				comparison = valueCompare,
-		//				undefinedSymbol = undefined,
-		//				isUndefined = (x) => x === undefined
-		//			) {
-		//				return functionTemplate(
-		//					{
-		//						MAX_ARRAY_LENGTH,
-		//						generator,
-		//						comparison,
-		//						isUndefined,
-		//						undefinedSymbol
-		//					},
-		//					function (array, index, currIndex = undefinedSymbol) {
-		//						let curr = currIndex
-		//						let haveFound = false
-		//						// TODO: again, refactor...
-		//						for (
-		//							let i = 0;
-		//							i < MAX_ARRAY_LENGTH &&
-		//							!(haveFound = comparison(
-		//								(curr = generator(curr)),
-		//								index
-		//							)) &&
-		//							!isUndefined(array[i]);
-		//							i++
-		//						) {}
-		//						// ! PROBLEM [format];
-		//						// * The ()() notation actually isn't correct. One forgot about the '.function' bit.
-		//						// TODO: for now, write like that, then fix everywhere else. These are rough sketches for now...
-		//						if (!haveFound)
-		//							return infinite.algorithms.recarrays.delete.lastIndex(
-		//								MAX_ARRAY_LENGTH,
-		//								generator,
-		//								comparison,
-		//								undefinedSymbol,
-		//								isUndefined
-		//							)(array, index, curr)
-
-		//						infinite.algorithms.recarrays.shiftBackward.lastIndex(
-		//							MAX_ARRAY_LENGTH
-		//						)(array)
-		//						return
-		//					}
-		//				)
-		//			}
-		//		},
-		//		shiftBackward: {
-		//			// ! PROBLEM: arrays like [..., [...]] would be treated ambigiously always when choosing between the arr.length - 1 and MAX_ARRAY_LENGTH as a 'recursion point'!
-		//			// * CONCLUSION: DON'T DO THAT 'choose the min-length' thing; keeping for this commit, but generally...
-		//			// TODO: GET RID OF IT. Make the 'place of recursion' static [like the way it is!]! Make algorithms implementations [generally] more internally integral and coherent.
-		//			// TODO: again, the 'object' thing -- this don't use the template's value; it's not useful for writing here; Rewrite all the stuff that ever uses templates in a manner which DOES use this...
-		//			lastIndex(MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH) {
-		//				return functionTemplate(
-		//					{ MAX_ARRAY_LENGTH },
-		//					function (array) {
-		//						// TODO: micro-optimize the library harshly; little things like "change all the 'i++' to '++i'" or "use 'p[p.length] = ...' instead of 'p.push(...)'"[that's just a tiny bit faster...]
-		//						// ^ IDEA: an alias 'fpush' for 'fast push' 'fpush := (a, e) => (a[a.length] = e);';
-		//						// * Add;
-		//						for (let i = 0; i < array.length - 2; ++i)
-		//							array[i] = array[i + 1]
-		//						if (array[MAX_ARRAY_LENGTH - 1]) {
-		//							array[MAX_ARRAY_LENGTH - 2] =
-		//								array[MAX_ARRAY_LENGTH - 1][0]
-		//							infinite.algorithms.recarrays.shiftBackward.lastIndex(
-		//								MAX_ARRAY_LENGTH
-		//							)(array[MAX_ARRAY_LENGTH - 1])
-		//							return
-		//						}
-		//						delete array[array.length - 1]
-		//					}
-		//				)
-		//			}
-		//		},
-		//		// * Here, all the 'conversion' arrays go; This thing assumes an input to be either a 'flat' [id est, finite native to JS] array or its recursive extension used by the 'backward' methods...
-		//		convertForward: {},
-		//		// * Here, all the 'inverse-conversions' go; they convert all the supported types of the recursive arrays into the universal form used by the library which is an extension of the 'flat' arrays...
-		//		// TODO: create such a format;
-		//		// ! PROBLEM: may not turn out it to be an 'extension'; same problem as before -- format ambiguity -- questions like "is the array that is an element merely a part of the recursive structure or an actual element?";
-		//		convertBackward: {}
-		//	}
-		// },
+		// TODO: implement the actual InfiniteString [truly infinite] + implement the actual UnlimitedString [arbitrarily-lengthed]; 
+		// TODO: implement the TrueInteger class; Same for TrueRatio (pair of integers) + TrueSum/TrueSequence [for an InfiniteSum of TrueRatio-s]; Let they be all highly compatible with InfiniteCounter; 
 	}
 
 	// * Copies an object/array deeply...
