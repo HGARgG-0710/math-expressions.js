@@ -1799,7 +1799,7 @@ export function activate(transformation = ID) {
 							) {
 								let curr = infinite.deepCopy(start)
 								while (!comparison(curr, end)) {
-									each()
+									each(curr)
 									curr = iter(curr)
 								}
 								return curr
@@ -1813,12 +1813,13 @@ export function activate(transformation = ID) {
 						class: function (previous) {
 							return {
 								class: this,
+								// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
 								value: !previous
 									? this.template.generator()
-									: this.template.generator(previous.value),
+									: previous.value,
 								next() {
 									// * An observation: this is one of the ways to be able to reference a function from within itself...
-									return this.class.class(this)
+									return this.class.template.generator(this)
 								},
 								// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
 								// One-worded names are preferred to all the other ones...
@@ -1842,18 +1843,20 @@ export function activate(transformation = ID) {
 								 *
 								 * * 'null' means 'no strict following in appearance (no linear order) under chosen pair of generators';
 								 *
-								 * @return { null | any }
+								 * ! NOTE: this thing is pretty much useless... The new API DON'T WORK WITH JSDoc NOTATION VERY WELL... INSTEAD, RESERVE TO SIMPLE DESCRIPTIONS WHEN IT COMES DOWN TO WRITING THE DOCS...
+								 * @return { any }
 								 */
-								compare(
-									ic,
-									comparison = this.class.template.comparison,
-									range = this.class.template.range,
-									unfound = this.class.template.unfound
-								) {
+								compare(ic, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range,
+										unfound: this.class.template.unfound
+									})
 									// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
 
 									// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
-									if (!range(ic.value)) return unfound
+									if (!leftovers.range(ic.value))
+										return leftovers.unfound
 
 									let pointerfor = ic
 									let pointerback = ic
@@ -1863,30 +1866,32 @@ export function activate(transformation = ID) {
 
 									// TODO: generalize this loop thing...
 									while (
-										!comparison(pointerfor.value, this.value) &&
-										!comparison(pointerback.value, this.value)
+										!leftovers.comparison(
+											pointerfor.value,
+											this.value
+										) &&
+										!leftovers.comparison(
+											pointerback.value,
+											this.value
+										)
 									) {
 										pointerfor = pointerfor.next()
 										pointerback = pointerback.previous()
 									}
 
-									return comparison(pointerfor, this)
+									return leftovers.comparison(pointerfor, this)
 								},
-								difference(
-									ic,
-									comparison = this.class.template.comparison,
-									range = this.class.template.range,
-									unfound = this.class.template.unfound
-								) {
+								difference(ic, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range,
+										unfound: this.class.template.unfound
+									})
+
 									let current = this.class.class()
 									// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
 									// ? If not created that 'alias' already...
-									const next = ic.compare(
-										this,
-										comparison,
-										range,
-										unfound
-									)
+									const next = ic.compare(this, leftovers)
 										? (x) => x.previous()
 										: (x) => x.next()
 									// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
@@ -1898,76 +1903,67 @@ export function activate(transformation = ID) {
 											current = next(current)
 										},
 										next,
-										comparison
+										leftovers.comparison
 									)
 									return current
 								},
-								jumpDirection(
-									ic,
-									comparison = this.class.template.comparison,
-									range = this.class.template.range
-								) {
+								jumpDirection(ic, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range
+									})
 									const d = this.class.static.direction(ic)
 									// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
 									// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
 									return d
-										? this.jumpForward(ic, comparison, range)
+										? this.jumpForward(ic, leftovers)
 										: d === null
 										? this
-										: this.jumpBackward(ic, comparison, range)
+										: this.jumpBackward(ic, leftovers)
 								},
 								// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
-								jump(
-									x,
-									jumping = (k) => k.next(),
-									comparison = this.class.template.comparison,
-									range = this.class.template.range,
-									counterclass = this.class
-								) {
+								jump(x, jumping = (k) => k.next(), leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range,
+										counterclass: this.class
+									})
 									// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
 									// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
 									// What one means is:
 									//		`const a = ...; f(a); c(a); ...` -> `((a) => {f(a); c(a); ...})(...)`
 									// Really just replaces 'const' with these brackets and an arrow...
-									if (!range(x.value)) return this
+									if (!leftovers.range(x.value)) return this
 									return this.class.static.forloop(
-										infinite.InfiniteCounter(counterclass)(),
-										comparison,
+										infinite.InfiniteCounter(
+											leftovers.counterclass
+										)(),
+										leftovers.comparison,
 										jumping,
 										x
 									)
 								},
-								jumpForward(
-									x,
-									comparison = this.class.template.comparison,
-									range = this.class.template.range
-								) {
-									return this.jump(
-										x,
-										(a) => a.next(),
-										comparison,
-										range
-									)
+								jumpForward(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range
+									})
+									return this.jump(x, (a) => a.next(), leftovers)
 								},
-								jumpBackward(
-									x,
-									comparison = this.class.template.comparison,
-									range = this.class.template.range
-								) {
-									return this.jump(
-										x,
-										(k) => k.previous(),
-										comparison,
-										range
-									)
+								jumpBackward(x, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison,
+										range: this.class.template.range
+									})
+									return this.jump(x, (k) => k.previous(), leftovers)
 								},
-								map(
-									icClass = this.class,
-									comparison = this.class.template.comparison
-								) {
+								map(icClass = this.class, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										comparison: this.class.template.comparison
+									})
 									let current = this.class.class()
 									let alterCurrent = icClass.class()
-									while (!comparison(current, this))
+									while (!leftovers.comparison(current, this))
 										alterCurrent = alterCurrent.next()
 									return alterCurrent
 								}
@@ -2080,23 +2076,123 @@ export function activate(transformation = ID) {
 							return final
 						}
 					}
-				}, 
+				},
 
 				// TODO: implement UnlimitedString [arbitrarily-lengthed];
-				UnlimitedString() {}, 
+				UnlimitedString() {},
 				// TODO: implement InfiniteString [truly infinite]
 				InfiniteString() {},
-				
+
 				// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
-				InfiniteArray() {}, 
+				InfiniteArray() {},
+
+				// ? question: does one want to go implementing the 'InfiniteNumber' as well? [As a special case of the GeneralArray, perhaps?]
 
 				// * note: all supposed to be highly compatible with InfiniteCounter
 				// TODO: implement the TrueInteger class
-				TrueInteger() {}, 
-				// TODO: implement the TrueRatio class (pair of TrueIntegers): 
-				TrueRatio () {},
-				// TODO: implement the TrueSum class ('infinite' sum of TrueRatio-s): 
-				TrueSum() {},  
+				TrueInteger(template) {
+					return {
+						// * 'template' has the 'icclass';
+						template: { ...template },
+						class: function (v = this.template.icclass.class()) {
+							return {
+								class: this,
+								value: v,
+								// * Would return added value;
+								add(added) {
+									return TrueInteger(this.class.template)(
+										this.value.jumpDirection(
+											added.value.map(this.class.template.icclass)
+										)
+									)
+								},
+								// * Would return multiplied value
+								multiply(multiplied) {
+									// * Sketch: loop through the 'multiplied', repeatedly adding the current one to itself [id est: 'a*b := a + a + ... (b times altogether) + a'];
+								},
+								// * Would return the additive inverse;
+								invadd() {
+									// TODO: generalize this operation as a '.static()' - let it be something like 'ICClass-reversal';
+									const ICCLASS = this.class.template.icclass.template
+									return this.value.map({
+										generator(x) {
+											if (x === undefined)
+												return ICCLASS.generator()
+											return ICCLASS.inverse(x)
+										},
+										inverse(x) {
+											return ICCLASS.generator(x)
+										},
+										range(x) {
+											return ICCLASS.range(x)
+										}
+									})
+								},
+								// * Would return a TrueRatio
+								invmult() {
+									return TrueRatio(this.class.template)(
+										this.class.template.icclass.class(),
+										this
+									)
+								}
+							}
+						}
+					}
+				},
+				// TODO: implement the TrueRatio class (pair of TrueIntegers):
+				TrueRatio(template) {
+					return {
+						// * 'template' has the 'icclass';
+						template: { ...template },
+						class: function (numer, denom) {
+							return {
+								value: [numer, denom],
+								// TODO: add implementations of 'add' and 'multiply'...
+								add() {},
+								multiply() {},
+								invadd() {
+									return TrueRatio([
+										this.value[0].invadd(),
+										this.value[1]
+									])
+								},
+								invmult() {
+									return TrueRatio(...this.value.reverse())
+								},
+								isWhole() {
+									return this.class.template.icclass.template.comparison(
+										this.value[1],
+										this.class.template.icclass.class()
+									)
+								}
+							}
+						}
+					}
+				},
+				// TODO: implement the InfiniteSum class ('infinite' sum of TrueRatio-s):
+				InfiniteSum(template) {
+					return {
+						template: { ...template },
+						class: function (f = template.f) {
+							return {
+								// * Sums up to a given point 'point'; The 'template' has an index-'generator' in it... That's used for index-generation, and 'point' is of the same icounter-type...
+								// uses 'f' for it...
+								sum(point) {
+									let added = TrueInteger(this.template.icclass)()
+									this.template.icclass.static.whileloop(
+										this.template.icclass.class(),
+										point,
+										(i) => {
+											added = added.add(f(i))
+										}
+									)
+									return added
+								}
+								// ? Does one want to implement anything else for this thing???
+							}
+						}
+					}
+				}
 
 				// ! all the old [potentially dead or half-dead or required-for-reworking/generalizing] code ought to be looked at later (when the definitely dead stuff has been eliminated, problems solved on conceptual level, simple stuff done, and the most fundamental aspects of the cleanup have been made...)
 				// TODO: finish work on the RecursiveArrays API; Whilst giving general implementations to LastIndexArray, DepthArray and other arrays, pray work on it extensively...
@@ -2134,7 +2230,6 @@ export function activate(transformation = ID) {
 
 				//	return currarr
 				// },
-
 			}
 		},
 		aliases: {
