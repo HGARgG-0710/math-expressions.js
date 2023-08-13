@@ -16,8 +16,6 @@ TODO: pray do, after having created the 'Order'-like [or generator/InfiniteArray
 Then, one would simply define the 'InfiniteArray' as InfiniteMap *without* that order-like argument and that's it! 
 CURRENT AGENDA: decide what kind of a structure to add to InfiniteMap for these kinds of things, think more about what stuff it should have...
 InfiniteMap<
-	set<comparison>(key, value)
-	get<comparison>(key)
 	entries<generator>() // like Object.entries()
 	map((value, key, obj) => [newvalue, newkey]) // Maps a map to a map. 
 	every((value, key) => boolean) // same as Array.
