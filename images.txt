@@ -1,7 +1,6 @@
 One revisits this file to use it as a sort of todo-list...
 
 GeneralArray<
-	reverse()
 	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
 	every(func) // like Array.every(); min(Array.map(boolmapfunction))
 	any(func) // max(Array.map(boolmapfunction))

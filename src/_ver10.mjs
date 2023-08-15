@@ -9,7 +9,8 @@ const ID = (a) => a
 
 // TODO [most recent agenda]: WORK ON THE BASIC MODULE STRUCTURE...
 // * Works like so - exports an 'activate' function returning the object of the module, on which the given transformation has first been applied; By default the transformation is 'id';
-// The module
+// TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'activate' function;
+// * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 export function activate(transformation = ID) {
 	// TODO: clean up the references... [fix the broken ones; due to the library's re-organization...]
 	// ? also - work on the 'global's structure... Do one want to have them : { get() {...}, set () {...}, object: ... } kind of structures... (akin to the GeneralArray.length())
@@ -42,7 +43,7 @@ export function activate(transformation = ID) {
 							empty(template) {
 								return this.this.class(template).class()
 							},
-							pushbackLoop(template) {
+							pushbackLoop(template = {}) {
 								return {
 									template: {
 										arguments: [],
@@ -51,6 +52,23 @@ export function activate(transformation = ID) {
 									},
 									function(b) {
 										return this.template.target.pushback(
+											this.template.transform(b.object().currelem),
+											...this.template.arguments
+										)
+									}
+								}
+							},
+							// * This is pretty much THE SAME code as above for the 'pushbackLoop';
+							// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
+							pushfrontLoop(template = {}) {
+								return {
+									template: {
+										arguments: [],
+										transform: RESULT.id,
+										...template
+									},
+									function(b) {
+										return this.template.target.pushfront(
 											this.template.transform(b.object().currelem),
 											...this.template.arguments
 										)
@@ -109,7 +127,7 @@ export function activate(transformation = ID) {
 								},
 								// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 								// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
-								loop(template) {
+								loop(template = {}) {
 									// ? Generalize to a separate class???
 									const a = {
 										template: {
@@ -569,7 +587,22 @@ export function activate(transformation = ID) {
 										leftovers
 									))
 								},
-								pushbackLoop(template) {
+								// TODO: ensure these kinds of 'saviour' default empty templates all over the templated code;
+								pushfrontLoop(template = {}) {
+									const origin =
+										this.this.this.this.class.static.pushfrontkLoop(
+											template
+										)
+									const T = {
+										template: {
+											target: this.this.this,
+											...origin.template
+										}
+									}
+									T.function = origin.function.bind(T)
+									return T
+								},
+								pushbackLoop(template = {}) {
 									const origin =
 										this.this.this.this.class.static.pushbackLoop(
 											template
@@ -580,7 +613,7 @@ export function activate(transformation = ID) {
 											...origin.template
 										}
 									}
-									T.function = origin.function.bind(this)
+									T.function = origin.function.bind(T)
 									return T
 								},
 								concat(
@@ -991,26 +1024,25 @@ export function activate(transformation = ID) {
 										leftovers
 									)
 								},
-								repeat(times, icclass) {
-									// * New sketch : use the icclass.static.forloop
-									// TODO: finally clean up the InfiniteCounter's comments leftovers and the '.static.forloop()";
-									// * Old
-									// _* Sketch [not the actual code]:
-									// _* 1. let newarr = GeneralArray(...)()
-									// _* 2. let curr = generator()
-									// _* 3. do {curr = generator(curr); newarr.concat(this)} while (!comparison(curr, times));
-									// _* 4. return newarr
+								repeat(
+									times = this.this.this.init(),
+									icclass = this.this.this.this.class.template.icclass,
+									leftovers = {}
+								) {
+									const newarr = this.this.this.empty()
+									icclass.static.whileloop(icclass.class(), times, () =>
+										newarr.concat(this.this.this, leftovers)
+									)
+									return newarr
 								},
-								reversed() {
-									// * Sketch:
-									// 0. create a new empty array ('reversedArr')
-									// * Sketch [1]:
-									// 1. Do a 'reverse-.loop()'; Start from the end [length()] of the array, going back (.prev()), until meeting the beginning's previous;
-									// 2. Along the way - pushback the current one into the reveresedArr (pushbackLoop);
-									// 3. return reveresedArr
-									// * Sketch [2]
-									// 1. Do a traditional '.loop()' - from start (begin()) to finish(), but on the way to it, push-front(), instead of pushing-back();
-									// TODO: decide which one to do... Do the generalization of the 'pushfrontLoop' same as pushbackLoop.
+								reversed(leftovers = {}) {
+									const reversedArr = this.this.this.empty()
+									this.this.this.loop()._full(
+										reversedArr.pushfrontLoop({
+											arguments: [leftovers]
+										}).function
+									)
+									return reversedArr
 								},
 								reverse() {
 									return (this.this.this = this.this.this.reversed())
@@ -1036,7 +1068,6 @@ export function activate(transformation = ID) {
 									this.this.this.currindex = index
 									return val
 								},
-								// TODO: add the 'leftovers' to this one separately - after all the others...
 								/**
 								 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
 								 *
@@ -1787,6 +1818,13 @@ export function activate(transformation = ID) {
 							},
 							// ^ idea [for a solution of the 'leftover args' problem] : just tuch them all under the 'leftover' object, which is the last argument; then, give it a default value + reference all the stuff like 'leftovers.[something...]';
 							// TODO: ensure the use of theirs ['leftover' argument objects] across the library...
+							// ! PROBLEM: what's the actual bloody difference between the 'forloop' and 'whileloop'? They're the same bloody 'for'-loop. Pray reconsider the names...;
+							// ? Maybe, even replace one with another [less general with more general]? Or just add another one as an alias for a special case of the other ? Pray consider deeply;
+							// * This [InfiniteCounter.static-related stuff...] part of code is (currently) [generally] very very 'not' the way one wants it...
+							// ^ CONCLUSION: decided, only this:
+							// 	1. 'forloop' renamed to something else;
+							//  2. 'whileloop' renamed to 'forloop' or something else [to indicate that it is a loop PURELY between the indexes];
+							// ! they both also ought to be polished on the simple matter of correspondence with the newest changes in the API...
 							whileloop(
 								start = this.this.class(),
 								end,
@@ -2081,7 +2119,50 @@ export function activate(transformation = ID) {
 				},
 
 				// TODO: implement UnlimitedString [arbitrarily-lengthed];
-				UnlimitedString() {},
+				// * It'd be based off a GeneralArray-class, with implementation of String-like methods in the next fashion:
+				// ^ Pray create and decide on a structure for it to work...
+				// * Example 1:
+				// 		First off, [for addition of string characters] one'd work with the 'current' (InfiniteCounter-based)-indexed string until the moment that its length is overwhelming, when it'd create a new string position within the underlying class for GeneralArray;
+				// 		Then, [for deletion], when taking out a symbol from a single 'position' inside the string, one'd take it out from within the appropriate string, then move all the following strings down 1 symbol [Slow];
+				// 		Then, for reading and re-writing an already present value - one'd either use the already existent stuff from GeneralArray class passed, or use these 2 for
+				// * Example 2: make it a method-wrapper around an instance of the passed GeneralArray of 1-lengthed string characters [simple and (probably) faster, though far less memory efficient];
+				// ? Question: should this not be then the 'GeneralString' instead???
+				// * Suggestion: perhaps, create it as a 'multi-versioned' implementation? Namely, let one be oriented on the lesser memory-cost [1] and the other - lesser time-cost[2];
+				// ! though, how much difference there is, one ought to first find out... Perhaps, first implement the 2nd one, then the first and [after having compared their productivity], decide?
+				// One could compare memory usage and execution speed using the internal Node.js tools...
+				// TODO: for this implementation - accomplish some truly heavy generalizational works pray...
+				UnlimitedString(template) {
+					return {
+						template: { ...template },
+						class(string) {
+							const X = {
+								this: {
+									string: this.template.genarrclass.static.empty(),
+									append(string = "") {
+										for (const x of string)
+											this.this.this.string.pushback(x)
+									},
+									slice(begin, end, leftovers = {}) {
+										return this.this.this.string.slice(begin, end, leftovers)
+									}, 
+									read(index, leftovers = {}) {
+										return this.this.this.string.read(index, leftovers)
+									}, 
+									index(index) {
+										return this.this.this.read(index)
+									}, 
+									// ? What other methods does one desire within this one???
+									// * Ideally, it ought to have all the possibilities of the GeneralArray; 
+									// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
+									// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...; 
+								}
+							}
+							X.this.this = X
+							X.this.append(string)
+							return X
+						}
+					}
+				},
 				// TODO: implement InfiniteString [truly infinite]
 				InfiniteString() {},
 
