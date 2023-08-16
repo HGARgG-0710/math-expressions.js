@@ -1006,6 +1006,7 @@ export function activate(transformation = ID) {
 									x.concat(this.this.this, leftovers)
 									return x
 								},
+								// TODO [general]: do proper work on the functions' defaults;
 								shiftBackward(times, leftovers = {}) {
 									RESULT.ensureProperties(leftovers, {
 										fast: false,
@@ -1304,7 +1305,7 @@ export function activate(transformation = ID) {
 										this.this.this.sorted(predicate, leftovers)
 									)
 								}
-								// TODO: pray add more new algorithms here...
+								// ? Add more? Consider [and also, what]...
 							}
 							A.this.this = A
 							return A
@@ -1618,7 +1619,7 @@ export function activate(transformation = ID) {
 							// *	return false
 							// * }
 							let resultIndexes = findDeepUnfilledNum(a)
-							const _result = util.deepCopy(a)
+							const _result = infinite.deepCopy(a)
 							let result = _result
 							if (!resultIndexes) {
 								resultIndexes = findDeepUnfilledArr(a)
@@ -1753,7 +1754,7 @@ export function activate(transformation = ID) {
 					copy = true,
 					subcall = false
 				) {
-					const copied = copy ? util.deepCopy(array) : array
+					const copied = copy ? infinite.deepCopy(array) : array
 					for (let i = 0; i < copied.length; i++) {
 						if (copied[i] instanceof Array) {
 							currval = sameStructure(
@@ -1773,17 +1774,7 @@ export function activate(transformation = ID) {
 				},
 
 				// TODO: for this thing, pray first introduce max() for an array of InfiniteCounters(generator) [that is a static method, so depend only upon chosen 'generator', not 'this.generator']...
-				// ! Make this array-type-independent; a general algorithm for arbitrary arrays, working with the use of InfiniteCounter(s);
-				// * Sketch (takes in an 'icclass', to allow for working with generator and uniformity of output...; 'prev', to allow for getting the previously calculated value for counter...):
-				// ! not complete yet... problems met;
-				//		ic = (array instanceof Array ? (x) => x.jump(ic.template.generator().jump()) : id)(prev)
-				// ? Note: this thing [probably] wouldn't actually be able to work well anyway due to JS stack limitations...
-				// * The 'returnless' (v1.1) version, though, would work like intended;
-				// ! PROBLEM: with the InfiniteCounter... and the 'jump' method; What is the convention one chooses - does .generator() (also, known as 'initial') count as a 1-jump (same as 'next'?);
-				// * The problem is with the symbolic '0'-jump; how does one designate it???
-				// * One could choose a different convention - taking the jump FROM the 'initial', then jumping up to BUT NOT INCLUDING the given 'jump-destination'; Then, 'a.jump(a.template.generator()) = a'
-				// TODO: yes, do that; it solves the problem well...
-				// ? These kinds of small 'convention cases' are all over the spot within the library currently (especially regarding counters, arrays and generators...); they all ought to be fixed;
+				// * Same algorithm as 'functions.dim', but first - properly [and more or less thouroughly] finish the implementation of the inifintie versions of all [the desired] the functions, classes within the original '.classes/.functions';
 				dim(recarr) {},
 
 				// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
@@ -2065,12 +2056,89 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				// TODO: redo completely as GeneralArray(s)... instead;
-				LastIndexArray(comparison, indexgenerator, notfound) {
-					return infinite.InfiniteArray(...arguments)()
+				// TODO [general]: polish...
+				LastIndexArray(template) {
+					return {
+						template: {
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.numberCounter()
+							),
+							maxint: RESULT.constants.MAX_INT,
+							filling: null,
+							...template
+						},
+						class: RESULT.submodules.infinite.GeneralArray({
+							this: this,
+							elem: function (array, pointer = false) {
+								const begin = array.init()
+								let currarr = array.array
+								for (
+									let index = 0;
+									!array.this.class.template.icclass.template.comparison(
+										begin,
+										array.currindex
+									);
+									array.previous()
+								) {
+									const isnew = !(index in currarr)
+
+									if (index < this.this.template.maxint) {
+										if (isnew)
+											return pointer
+												? [null, currarr, index]
+												: undefined
+										index++
+										continue
+									}
+
+									if (isnew)
+										return pointer
+											? [undefined, currarr, index]
+											: undefined
+									currarr = currarr[index]
+									index = 0
+								}
+								return !pointer ? currarr[index] : [currarr, index]
+							},
+							// ? This is rather pretty, of course [without repetition of the same stuff...]; but it's not very FAST; it requires noticeably more steps to add a new thing that are, really, just re-reading the same elements...;
+							// * On the other hand, this is a result of not 'remembering' how long one's gone [which allows to not bother about the introduction of InfiniteCounters; maybe one ought to? Pray consider...]
+							newvalue: function (array, value) {
+								let pointer = this.elem(array, true)
+								while (!pointer[0]) {
+									pointer[1][pointer[2]] = (
+										pointer[0] === undefined
+											? (x) => [x]
+											: RESULT.aliases.id
+									)(this.this.template.filling)
+									pointer = this.elem(array, true)
+								}
+								return (pointer[0][ponter[1]] = value)
+							},
+							icclass: this.template.icclass
+						})
+					}
 				},
-				DeepArray(comparison, indexgenerator, notfound) {
-					return infinite.InfiniteArray(...arguments)()
+				DeepArray(template) {
+					// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
+					return RESULT.submodules.infinite.GeneralArray({})()
+				},
+				CommonArray(template) {
+					return {
+						template: { offset: -1, ...template },
+						class: RESULT.submodules.infinite.GeneralArray({
+							newvalue: function (arr, value) {
+								return (arr.array[arr.currindex] = value)
+							},
+							elem: function (arr) {
+								return arr.array[arr.currindex]
+							},
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.number({
+									start: this.this.template.offset
+								})
+							)
+						})
+					}
 				},
 
 				// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
@@ -2143,18 +2211,25 @@ export function activate(transformation = ID) {
 											this.this.this.string.pushback(x)
 									},
 									slice(begin, end, leftovers = {}) {
-										return this.this.this.string.slice(begin, end, leftovers)
-									}, 
+										return this.this.this.string.slice(
+											begin,
+											end,
+											leftovers
+										)
+									},
 									read(index, leftovers = {}) {
-										return this.this.this.string.read(index, leftovers)
-									}, 
+										return this.this.this.string.read(
+											index,
+											leftovers
+										)
+									},
 									index(index) {
 										return this.this.this.read(index)
-									}, 
+									}
 									// ? What other methods does one desire within this one???
-									// * Ideally, it ought to have all the possibilities of the GeneralArray; 
+									// * Ideally, it ought to have all the possibilities of the GeneralArray;
 									// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
-									// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...; 
+									// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
 								}
 							}
 							X.this.this = X
@@ -2172,8 +2247,7 @@ export function activate(transformation = ID) {
 				// ? question: does one want to go implementing the 'InfiniteNumber' as well? [As a special case of the GeneralArray, perhaps?]
 
 				// * note: all supposed to be highly compatible with InfiniteCounter
-				// TODO: implement the TrueInteger class
-				// TODO: do some great generalizational work on this thing... [add 'leftovers']
+				// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
 				// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
 				TrueInteger(template) {
 					return {
@@ -2244,7 +2318,6 @@ export function activate(transformation = ID) {
 						}
 					}
 				},
-				// TODO: implement the TrueRatio class (pair of TrueIntegers):
 				TrueRatio(template) {
 					return {
 						// * 'template' has the 'icclass';
@@ -2298,7 +2371,6 @@ export function activate(transformation = ID) {
 						}
 					}
 				},
-				// TODO: implement the InfiniteSum class ('infinite' sum of TrueRatio-s):
 				InfiniteSum(template) {
 					return {
 						template: { ...template },
@@ -2909,7 +2981,7 @@ export function activate(transformation = ID) {
 			},
 
 			// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
-			// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the newapi.util.arrIntersections)
+			// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
 			/**
 			 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
 			 * @param {number} firstNum First number.
@@ -5083,23 +5155,22 @@ export function activate(transformation = ID) {
 	// * 6. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
 
 	// Submodules
-	// TODO: that's where the 'returnless' is going...
 
 	// * IDEA to the organization of the duality of library's codebase: have a finite version of something, then precisely after it, a definition of infinite.[thing's name] -- its infinite counterpart; For stuff that don't have an explicit finite/infinite counterpart it is left alone/put into the original definition of the 'infinite'
 	// ^ These ones would use templates + general version of InfintieArray/InfiniteMap
 
 	// * Copies an object/array deeply...
-	RESULT.modules.infinite.deepCopy = RESULT.infinite.copyFunction({
+	RESULT.submodules.infinite.deepCopy = RESULT.submodules.infinite.copyFunction({
 		list: ["array", "object", "function", "symbol", "primitive"]
 	})
 
 	// * Keeps the functions references intact whilst copying...
-	RESULT.modules.infinite.dataCopy = RESULT.infinite.copyFunction({
+	RESULT.submodules.infinite.dataCopy = RESULT.submodules.infinite.copyFunction({
 		list: ["array", "object", "symbol"]
 	})
 
 	// * Does a flat copy of something;
-	RESULT.modules.infinite.flatCopy = RESULT.infinite.copyFunction({
+	RESULT.submodules.infinite.flatCopy = RESULT.submodules.infinite.copyFunction({
 		list: ["arrayFlat", "objectFlat", "function", "symbol"]
 	})
 
