@@ -243,7 +243,6 @@ export function activate(transformation = ID) {
 										RESULT._const(true)
 									)
 								},
-								// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
 								end() {
 									// * skipping the check because one knows that it would be 'true' anyway...
 									return this.this.this.go(
@@ -254,6 +253,7 @@ export function activate(transformation = ID) {
 								init() {
 									return this.this.this.this.class.template.icclass.class()
 								},
+								// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
 								finish() {
 									return this.this.this.length().get().previous()
 								},
@@ -1575,8 +1575,37 @@ export function activate(transformation = ID) {
 							//// _* It'd just have: generator(x) := [...x, 0]? (Like in this thing)
 							//// _* Yes, pray do that!
 
-							// TODO: bring these special cases into the outer scope as well later... As aliases [similar to the thing done to the 'copying' functions... There's one general version for them, rest are kept as special cases + aliases...]
-							// TODO: Create the template for the 'GeneralArray' to choose here... pray; Same for the 'icclass' and 'copyfunction'... For both the functions...
+							// * Old; Re-doing this stuff capitally now...
+							// _ TODO: bring these special cases into the outer scope as well later... As aliases [similar to the thing done to the 'copying' functions... There's one general version for them, rest are kept as special cases + aliases...]
+							// _TODO: Create the template for the 'GeneralArray' to choose here... pray; Same for the 'icclass' and 'copyfunction'... For both the functions...
+
+							// TODO: new plan - for the arrays with arbitrary length [the 'prevArr' argument...] use the GeneralArrays (perhpas, the arrCounter-based LastIndexArray?), and the '.loop().full()' method...
+							// ? QUESTION: just how FAR does one want to go with this thing?
+							// ! This is supposed to [end up] looking somewhat similar to a template-function generating funcitons designed to find the first occurence of an object [as in entity, not just '{...:...}'] with desired properties [as in 'predicate-functions', not 'varset-keys']
+							// within a recursive array... Namely, it is supposed to either return 'false' [if there's not one within the recursive array in question], or a GeneralArray of indexes...
+							// * The gist of the generalization plan :
+							// 		1. Use the 'GeneralArray(s)' for the 'prevArr';
+							//		2. Use the native JS arrays for the 'a' argument [the 'for' loops stay almost exaclty the same...];
+
+							// * Sketch-y sketch for a general function...
+							// ^ CREATED : Yup, that's the stuff... Generalizes these two [and many more others] precisely...
+							// TODO: finish this properly...
+							function generalSearch(arrrec, prevArr = empty()) {
+								const i = prevArr.copy()
+								i.pushback(0)
+								i.end()
+								for (; i.currelem < arrrec.length; i.currelem++) {
+									if (soughtProp(arrrec[i])) return i
+
+									if (arrec[i.currelem] instanceof Array) {
+										const r = generalSearch(arrrec[i.currelem])
+										if (!r) continue
+										return r
+									}
+								}
+								return false
+							}
+
 							const ArrNum = RESULT.infinite.GeneralArray({})
 							const ArrArr = RESULT.infinite.GeneralArray({})
 							const findDeepUnfilledNum = RESULT.infinite.generalLoop({
@@ -2056,71 +2085,105 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				// TODO [general]: polish...
+				// TODO [general]: polish [look for small issues and solve them] and tidy [make the thing as of itself look more liked by oneself]...
 				LastIndexArray(template) {
-					return {
+					const A = {
 						template: {
 							icclass: RESULT.submodules.infinite.InfiniteCounter(
 								RESULT.submodules.infinite.numberCounter()
 							),
-							maxint: RESULT.constants.MAX_INT,
+							maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
 							filling: null,
 							...template
+						}
+					}
+
+					A.class = RESULT.submodules.infinite.GeneralArray({
+						this: A,
+						elem: function (
+							arrobj,
+							array = arrobj.array,
+							pointer = false,
+							beginningobj = array.currindex,
+							beginningind = 0
+						) {
+							// TODO [general]: a very small thing - format the spaces between lines; group the lines that in a fashion that is by oneself desireable...
+							const begin = arrobj.init()
+							let currarr = array
+							const original = arrobj.currindex
+							array.currindex = beginningobj
+							let isReturn = [false, undefined]
+							let index = beginningind
+							for (
+								;
+								!arrobj.this.class.template.icclass.template.comparison(
+									begin,
+									arrobj.currindex
+								);
+								arrobj.previous()
+							) {
+								const withinbounds =
+									index < this.this.template.maxarrlen - 1
+
+								if (!(index in currarr)) {
+									isReturn[0] = true
+									if (withinbounds) isReturn[1] = null
+									break
+								}
+
+								if (withinbounds) {
+									index++
+									continue
+								}
+
+								currarr = currarr[index]
+								index = 0
+							}
+							const returned = arrobj.currindex
+							arrobj.currindex = original
+							return isReturn[0]
+								? pointer
+									? [isReturn[1], currarr, index, returned]
+									: undefined
+								: !pointer
+								? currarr[index]
+								: [currarr, index]
 						},
+						newvalue: function (array, value) {
+							let pointer = this.elem(array, undefined, true)
+							while (!pointer[0]) {
+								pointer[1][pointer[2]] = (
+									pointer[0] === undefined
+										? (x) => [x]
+										: RESULT.aliases.id
+								)(this.this.template.filling)
+								pointer = this.elem(
+									array,
+									pointer[1],
+									true,
+									pointer[3],
+									pointer[2]
+								)
+							}
+							return (pointer[0][ponter[1]] = value)
+						},
+						icclass: A.template.icclass
+					})
+
+					return A
+				},
+				// * This is the 'arr.length > MAXLENGTH -> arr = [arr] ELSE arr.push([recursively, until hitting the 'min-depth']) THEN arr.push(newvalue)'-kind of an array [the one that is very resourceful and with slowly growin layers...]
+				// ! First deal with the related numberCounter/stringCounter-generalization-stuff (it's based off the exactly same recursive array structure-principle, but generalized...); Maybe they'll converge or something...
+				DeepArray(template) {
+					// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
+					return {
+						template: { icclass: RESULT.submodules.infinite.numberCounter() },
 						class: RESULT.submodules.infinite.GeneralArray({
-							this: this,
-							elem: function (array, pointer = false) {
-								const begin = array.init()
-								let currarr = array.array
-								for (
-									let index = 0;
-									!array.this.class.template.icclass.template.comparison(
-										begin,
-										array.currindex
-									);
-									array.previous()
-								) {
-									const isnew = !(index in currarr)
-
-									if (index < this.this.template.maxint) {
-										if (isnew)
-											return pointer
-												? [null, currarr, index]
-												: undefined
-										index++
-										continue
-									}
-
-									if (isnew)
-										return pointer
-											? [undefined, currarr, index]
-											: undefined
-									currarr = currarr[index]
-									index = 0
-								}
-								return !pointer ? currarr[index] : [currarr, index]
-							},
-							// ? This is rather pretty, of course [without repetition of the same stuff...]; but it's not very FAST; it requires noticeably more steps to add a new thing that are, really, just re-reading the same elements...;
-							// * On the other hand, this is a result of not 'remembering' how long one's gone [which allows to not bother about the introduction of InfiniteCounters; maybe one ought to? Pray consider...]
-							newvalue: function (array, value) {
-								let pointer = this.elem(array, true)
-								while (!pointer[0]) {
-									pointer[1][pointer[2]] = (
-										pointer[0] === undefined
-											? (x) => [x]
-											: RESULT.aliases.id
-									)(this.this.template.filling)
-									pointer = this.elem(array, true)
-								}
-								return (pointer[0][ponter[1]] = value)
-							},
+							newvalue: function (array, value) {},
+							elem(array) {},
 							icclass: this.template.icclass
 						})
 					}
-				},
-				DeepArray(template) {
-					// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
-					return RESULT.submodules.infinite.GeneralArray({})()
 				},
 				CommonArray(template) {
 					return {
@@ -2134,7 +2197,7 @@ export function activate(transformation = ID) {
 							},
 							icclass: RESULT.submodules.infinite.InfiniteCounter(
 								RESULT.submodules.infinite.number({
-									start: this.this.template.offset
+									start: this.template.offset
 								})
 							)
 						})

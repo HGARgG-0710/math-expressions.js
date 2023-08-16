@@ -157,3 +157,7 @@ It gets changed actively.
 		2. Take the old code [old README.md documentation] (<=v0.8) + make a notice about buggy code and: 
 			2.1. Document the things like before, but more thouroughly and one's style; 
 			2.2. Document all the possible bugs; ALSO: let there be a disclaimer advising against using versions pre-1.0 [part of the BUGS disclaimer]; 
+
+20. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
+
+	As one had suspected, the latter don't actually work in the cases when the 'undefined' is used as a value...
