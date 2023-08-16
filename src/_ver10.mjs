@@ -1459,72 +1459,27 @@ export function activate(transformation = ID) {
 				// * Make a special case of the numberCounter generalization...
 				stringCounter(a) {},
 
-				// * Two methods from the current numberCounter definition [findDeepUnfilledNum and findDeepUnfilledArr] generalized...
-				// One uses it for the generalizations like so: the 'curriter.currelem' function [on success; 'r[0] === true'] changes the 'comparetemplate' passed based on the last argument - the current 'comparetemplate'
-				generalLoop(template) {
-					const A = {
-						function(
-							a,
-							prevcounter = this.template.icclass.class(),
-							comparetemplate = this.template.icclass
+				generalSearch(template) {
+					return {
+						template: { ...template },
+						function: function (
+							arrrec = [],
+							prevArr = this.template.genarrclass.static.empty()
 						) {
-							let currcounter = this.template.copyfunction(prevcounter)
-							for (
-								;
-								RESULT.infinite
-									.fromNumber(comparetemplate)(a.length)
-									.compare(currcounter);
-								currcounter = currcounter.next()
-							) {
-								// ??? DOES THIS WORK AS INTENDED??? [NOT LOOKS MUCH LIKE IT...]
-								// * NAH, NOT WORTH IT; BETTER OFF JUST REPLACED...
-								// TODO: pray just replace the generalLoop's uses; Think it through carefully regarding the consequences on the functional level...
-								// Previous [for reference]:
-								//		const curriter = this.template.iteration(currcounter)
-								//		const loop = curriter.loop()
-								//		while (loop.full()) {
-								//			const r = curriter.currelem(
-								//				a,
-								//				currcounter,
-								//				this.template.self,
-								//				comparetemplate
-								//			)
-								//			if (r[0] === true) return r[1]
-								//			if (r[0] === false) break
-								//			// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
-								//		}
-								let shouldReturn = false
-								let res = undefined
-								this.template
-									.iteration(currcounter)
-									.loop()
-									.full(() => {
-										const empty = this.template.arrayclass.class()
-										empty.pushback(() => {
-											const r = curriter.currelem(
-												a,
-												currcounter,
-												this.template.self,
-												comparetemplate
-											)
-											shouldReturn = !!r[0]
-											// 'anything else' would essentially mean continuation of the list of things to 'check' within the current iteration...
-											if (typeof r[0] === "boolean") {
-												if (shouldReturn) res = r[1]
-												this.break()
-											}
-										})
-										return empty
-									})
-								if (shouldReturn) return res
+							const i = prevArr.copy()
+							i.pushback(0)
+							i.end()
+							for (; i.currelem < arrrec.length; i.currelem++) {
+								if (this.template.soughtProp(arrrec[i.currelem])) return i
+								if (arrec[i.currelem] instanceof Array) {
+									const r = this.function(arrrec[i.currelem], i)
+									if (!r) continue
+									return r
+								}
 							}
-
-							return this.template.defaultvalue()
+							return false
 						}
 					}
-					// * note: 'self' here is to allow the user to choose a different manner of an object for 'recursion'; Also to allow to change its value and stuff...
-					A.template = { self: A, ...template }
-					return A
 				},
 
 				// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
@@ -1538,86 +1493,38 @@ export function activate(transformation = ID) {
 					return {
 						// TODO: make more flexible and 'laid-off'... (with {...template} + ensureProperty + other such methods)
 						template: {
-							maxint: RESULT.MAX_INT,
-							maxarrlen: RESULT.MAX_ARRAY_LENGTH,
+							maxint: RESULT.constants.MAX_INT,
+							maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
 							...template
 						},
 						generator: function (a) {
+							// ? Is this useful? If after having fixed the numberCounter, it don't happen to be, get rid of it...
 							const _this = this
 							if (!this.range(a)) return [0]
 
-							// * Old notes; will get deleted soon enough...
-							// TODO: once handled all the below stuff [the active numberCounter generalization process], pray do...
-							//// _TODO : generalize these greately, use here as special cases; put outside the function's context...
-							//// _! PROBLEM [with generalization of recursion]: how does one go about it???
-							//// _* This might be a solution to both the problem above [generalization] and the matter of choosing the array-index model...
-							//// _^ IDEA [for a solution]: have the things generalized in the next fashion : let the second argument (prevArr=[]), be actually belonging to some 'indexing class';
-							//// _^ The functions within the 'for' might be templated + be such:
-							//// _* Consist of an array of [f], such that:
-							//// _		'f: (currarr, currindex, mainfunction) => [booleanval, returnval]', with 'booleanval=true <-> "return returnval" && booleanval=false <-> continue && booleanval=null <-> nextf(f)()'
-							//// _* where 'currarr' is the first argument ['a', the array]; 'currindex' is 'i' - the indexing thing; 'mainfunction' is the function called [to permit recursion...];
-							//// _^ Finishing with the 'defreturn' argument - in these cases 'false' - the stuff that gets returned at any case...
-
-							//// _! PROBLEM [still] : even after having solved this thing [still not resolved what is the 'indexing thing' is supposed to be yet..., the lower Problem still hangs],
-							//// _* There still remains the problem of the stack; This particular manner of abstraction of things, though truly beautiful, requires an additional stack frame for each and every array layer...
-							//// _* This'd reduce the capacity of the final version of the counter by a half;
-							//// _^ Solution: JS fault, not the library or the style; Still going with it;
-							//// _TODO: make a very big note about all this stuff inside the docs for the 1.0 version... [That the 'unlimited' stuff is merely structurally unlimited; not V8-permitted-stack-frame-memory-wise];
-
-							//// _! PROBLEM [after all!] : difficulty with all that stuff GeneralArray/(native JS Array) after all...
-							//// _* It is roughly such: though the native arrays permit [within THIS PARTICULAR VERSION OF THE LIBRARY ONLY] to have a far more powerful counter...
-							//// _* Within any other, it would be still as limited, whereas with the counters, it would be un-limited!
-							//// _? So, what ought one do for this version - prefer the matter of having the memory-level unlimitedness, even though stack-level-wise, in this particular case it is far more wise to pick a different counter?
-							//// _^ Solution: use [generally] the InfiniteCounter for the indexing model...
-							//// _? Although, could one not dress the native JS array into a [false] InfiniteCounter???
-							//// _! As a default ONLY! That being, the user still is able to choose their own one, for instance; The function has the InfiniteCounter class as a part of its template...
-							//// _! That being, choose as a part of the numberCounter template and as a part of this template, one'd have this 'false' generator as a default for the use of the 2 generalized functions...
-							//// _* It'd just have: generator(x) := [...x, 0]? (Like in this thing)
-							//// _* Yes, pray do that!
-
-							// * Old; Re-doing this stuff capitally now...
-							// _ TODO: bring these special cases into the outer scope as well later... As aliases [similar to the thing done to the 'copying' functions... There's one general version for them, rest are kept as special cases + aliases...]
-							// _TODO: Create the template for the 'GeneralArray' to choose here... pray; Same for the 'icclass' and 'copyfunction'... For both the functions...
-
-							// TODO: new plan - for the arrays with arbitrary length [the 'prevArr' argument...] use the GeneralArrays (perhpas, the arrCounter-based LastIndexArray?), and the '.loop().full()' method...
-							// ? QUESTION: just how FAR does one want to go with this thing?
-							// ! This is supposed to [end up] looking somewhat similar to a template-function generating funcitons designed to find the first occurence of an object [as in entity, not just '{...:...}'] with desired properties [as in 'predicate-functions', not 'varset-keys']
-							// within a recursive array... Namely, it is supposed to either return 'false' [if there's not one within the recursive array in question], or a GeneralArray of indexes...
-							// * The gist of the generalization plan :
-							// 		1. Use the 'GeneralArray(s)' for the 'prevArr';
-							//		2. Use the native JS arrays for the 'a' argument [the 'for' loops stay almost exaclty the same...];
-
-							// * Sketch-y sketch for a general function...
-							// ^ CREATED : Yup, that's the stuff... Generalizes these two [and many more others] precisely...
-							// TODO: finish this properly...
-							function generalSearch(arrrec, prevArr = empty()) {
-								const i = prevArr.copy()
-								i.pushback(0)
-								i.end()
-								for (; i.currelem < arrrec.length; i.currelem++) {
-									if (soughtProp(arrrec[i])) return i
-
-									if (arrec[i.currelem] instanceof Array) {
-										const r = generalSearch(arrrec[i.currelem])
-										if (!r) continue
-										return r
-									}
-								}
-								return false
-							}
-
-							const ArrNum = RESULT.infinite.GeneralArray({})
-							const ArrArr = RESULT.infinite.GeneralArray({})
-							const findDeepUnfilledNum = RESULT.infinite.generalLoop({
-								icclass: {},
-								copyfunction() {},
-								iteration: RESULT._const(ArrNum)
+							// TODO: pick the GeneralArray class for this thing [LastIndexArray + 'arrCounter' as counter?]
+							// ? Keep these as a part of 'submodules.infinite'? Pray consider...
+							const findDeepUnfilledNum = generalSearch({
+								genarrclass: RESULT.submodules.infinite.LastIndexArray({
+									icclass: RESULT.submodules.infinite.InfiniteCounter(
+										RESULT.submodules.infinite.arrayCounter()
+									)
+								}),
+								soughtProp: (x) =>
+									typeof x === "number" && x < this.template.maxint
 							}).function
-							const findDeepUnfilledArr = RESULT.infinite.generalLoop({
-								icclass: {},
-								copyfunction() {},
-								iteration: RESULT._const(ArrArr)
+							const findDeepUnfilledArr = generalSearch({
+								genarrclass: RESULT.submodules.infinite.LastIndexArray({
+									icclass: RESULT.submodules.infinite.InfiniteCounter(
+										RESULT.submodules.infinite.arrayCounter()
+									)
+								}),
+								soughtProp: (x) =>
+									x instanceof Array &&
+									x.length < this.template.maxarrlen
 							}).function
+
+							// ! Old; Currently present for reference only...
 							// * function findDeepUnfilledNum(a, prevArr = []) {
 							// *	const i = [...prevArr, 0]
 							// *	for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
@@ -1647,6 +1554,10 @@ export function activate(transformation = ID) {
 							// *	}
 							// *	return false
 							// * }
+
+							// ! All the stuff past here is not [currently] considered by one to be fully functional; 
+							// TODO: pray finish the: 1. fixing of the numberCounter; 2. generalization of the numberCounter...
+
 							let resultIndexes = findDeepUnfilledNum(a)
 							const _result = infinite.deepCopy(a)
 							let result = _result
