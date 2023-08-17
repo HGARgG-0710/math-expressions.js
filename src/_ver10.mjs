@@ -1524,68 +1524,38 @@ export function activate(transformation = ID) {
 									x.length < this.template.maxarrlen
 							}).function
 
-							// ! Old; Currently present for reference only...
-							// * function findDeepUnfilledNum(a, prevArr = []) {
-							// *	const i = [...prevArr, 0]
-							// *	for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-							// *		if (a[i[i.length - 1]] instanceof Array) {
-							// *			const temp = findDeepUnfilledNum(a, i)
-							// *			if (temp) return temp
-							// *			continue
-							// *		}
-							// *		if (a[i[i.length - 1]] < _this.template.maxint)
-							// *			return i
-							// *	}
-							// *	return false
-							// * }
-							//
-							// * function findDeepUnfilledArr(a, prevArr = []) {
-							// *	const i = [...prevArr, 0]
-							// *	for (; i[i.length - 1] < a.length; i[i.length - 1]++) {
-							// *		if (a[i[i.length - 1]] instanceof Array) {
-							// *			if (
-							// *				a[i[i.length - 1]].length <
-							// *				_this.template.maxarrlen
-							// *			)
-							// *				return i
-							// *			const temp = findDeepUnfilledArr(a, i)
-							// *			if (temp) return temp
-							// *		}
-							// *	}
-							// *	return false
-							// * }
-
-							// ! All the stuff past here is not [currently] considered by one to be fully functional; 
-							// TODO: pray finish the: 1. fixing of the numberCounter; 2. generalization of the numberCounter...
-
 							let resultIndexes = findDeepUnfilledNum(a)
 							const _result = infinite.deepCopy(a)
 							let result = _result
+
+							// ! All the stuff past here is not [currently] considered by one to be fully functional;
+							// TODO: pray finish the generalization of the numberCounter...
+
 							if (!resultIndexes) {
 								resultIndexes = findDeepUnfilledArr(a)
 								if (!resultIndexes) return [a]
 
-								// TODO: get rid of such object-parameters... within both this library and others...
-								result = RESULT.recursiveIndexation({
-									object: result,
-									fields: resultIndexes.slice(
-										0,
-										resultIndexes.length - 1
-									)
-								})
+								// TODO [general]: consider carefully the arguments' format - does one desire the object-like ones? [Like here with 'recursiveIndexation' currently?]
 
-								// TODO: THIS DOESN'T WORK; oldapi dim() handles only finitely deep arrays (id est, it's useless...); do the thing manually here... newapi 'dim' will use the numberCounter...
-								// ! As well -- resultIndexes IS A FINITE ARRAY; Wouldn't allow one do more than (2**53 - 1)**(2 ** 32 - 1) with this; Using InfiniteArray instead would allow for this thing to work properly...
-								// * Actually, not necessarily... One would just write one recursive and that would work just as well...
-								// ^ Idea: use a two-index system -- compare each and every index sequence within the array in question...
-								// ! Problem: that would require InfiniteArray...
-								// * Conclusion: first finish the InfiniteArray...
-								const finalDimension = dim(a) - resultIndexes.length
+								result = RESULT.submodules.infinite.recursiveIndexation()(
+									result,
+									resultIndexes.slice(
+										undefined,
+										resultIndexes.length().previous().previous()
+									)
+								)
+
+								const finalDimension = dim({
+									icclass: resultIndexes.this.class.template.icclass
+								})(a).difference(resultIndexes.length())
+
 								// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
 								// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
 								// * Pray decide...
-								// ! This is the finite version... Infinite one is required for the thing anyway...
-								result = RESULT.repeatedApplication(
+								// ^ DECIDED: yes; one is concerned about the SEMANTICAL and STRUCTURAL lengths, not name-wise or line-wise length;
+								// ^ id est: If it has less elements in itself after having been refactored and the elements are of more 'elementary' nature, then it is considered successful relative to one's own refactoring goals...
+
+								result = RESULT.submodules.infinite.repeatedApplication()(
 									(value) => {
 										value.push([])
 										return value[value.length - 1]
@@ -1597,11 +1567,16 @@ export function activate(transformation = ID) {
 								return _result
 							}
 
-							result = recursiveIndexation({
-								object: result,
-								field: resultIndexes.slice(0, resultIndexes.length - 1)
-							})
-							result[resultIndexes[resultIndexes.length - 1]]++
+							result = RESULT.submodules.infinite.recursiveIndexation(
+								result,
+								resultIndexes.slice(
+									undefined,
+									resultIndexes.finish().previous()
+								)
+							)
+							// ? Does one desire further generalization on the GeneralArray usages front in non-GeneralArray [as of self] related pieces of the library???
+							// * Pray consider... [Current decision: no; one don't];
+							result[resultIndexes.read(resultIndexes.finish())]++
 							return _result
 						},
 						// TODO: finish the inverse
@@ -1713,9 +1688,104 @@ export function activate(transformation = ID) {
 					return !subcall ? currval : copied
 				},
 
-				// TODO: for this thing, pray first introduce max() for an array of InfiniteCounters(generator) [that is a static method, so depend only upon chosen 'generator', not 'this.generator']...
-				// * Same algorithm as 'functions.dim', but first - properly [and more or less thouroughly] finish the implementation of the inifintie versions of all [the desired] the functions, classes within the original '.classes/.functions';
-				dim(recarr) {},
+				dim(template = {}) {
+					return {
+						template: { ...template },
+						function: function (recarr = []) {
+							if (recarr instanceof Array)
+								return template.icclass
+									.class()
+									.next()
+									.jumpDirection(
+										RESULT.submodules.infinite.maxfinite(
+											recarr.map(this.function)
+										)
+									)
+							return template.icclass.class()
+						}
+					}
+				},
+
+				// * NOTE: for now assumes that all the elements of the 'finarr' have the same 'icclass'
+				// TODO: create an 'arrIcclassSame' functions for: 1. identyfying if it is [indeed] the same icclass; 2. making it the same [regardless of the results of 1.];
+				maxfinite(finarr) {
+					let maxr = finarr[0]
+					for (const x of finarr.slice(1)) if (!maxr.compare(x)) maxr = x
+					return maxr
+				},
+				// ? One could just implement it as the 'maxfinite()' of the reversed icclass [there was a todo for making this a separate operation]...
+				// * Pray consider...
+				minfinite(finarr) {
+					let minr = finarr[0]
+					for (const x of finarr.slice(1)) if (minr.compare(x)) minr = x
+					return minr
+				},
+				mingeneral(finarr) {},
+				maxgeneral(genarr) {},
+
+				recursiveIndexationInfFields(template = {}) {
+					return {
+						template: { ...template },
+						function: function (
+							object,
+							fields = this.template.genarrclass.static.empty()
+						) {
+							return RESULT.submodules.infinite.repeatedApplicationIndex({
+								icclass: fields.this.class.template.icclass,
+								...this.template
+							})(
+								(x, i) => {
+									return x[fields.read(i)]
+								},
+								fields.length(),
+								object
+							)
+						}
+					}
+				},
+
+				repeatedApplication(template) {
+					return {
+						template: { ...template },
+						function: function (
+							f = this.template.f,
+							times = this.template.times,
+							initial = this.template.initial
+						) {
+							let r = initial
+							for (
+								let i = {
+									icclass: times.class,
+									...this.template
+								}.icclass.class();
+								!i.compare(times);
+								i = i.next()
+							)
+								r = f(r)
+							return r
+						}
+					}
+				},
+				repeatedApplicationIndex(template) {
+					return {
+						template: { ...template },
+						function: function (
+							f = this.template.f,
+							times = this.template.times,
+							initial = this.template.initial,
+							offset = this.template.icclass.class()
+						) {
+							let r = initial
+							for (
+								let i = template.icclass.class();
+								!i.compare(times);
+								i = i.next()
+							)
+								r = f(r, i.difference(offset))
+							return r
+						}
+					}
+				},
 
 				// TODO: add the circular counters (too, an infiniteCounter, just one that is looped)
 				// TODO [general; old; vague; needs further looking into; do a tad later...]: finish this thing (add orders, other things from the previous file)...
@@ -3618,6 +3688,7 @@ export function activate(transformation = ID) {
 			// TODO: match the order of the definitions with the order of exports... Do the same for all the files...
 			// * Also, match with the original "math-expressions.js" file...
 
+			// TODO: add a proper template for 'notfound' and 'treatUniversal';
 			UniversalMap: function (notfound, treatUniversal = false) {
 				return {
 					template: { notfound, treatUniversal },
@@ -3724,6 +3795,7 @@ export function activate(transformation = ID) {
 			// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
 			// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary sequence...
 			// TODO: extend this thing (add more stuff to it, create powerful extensions)
+			// ! rewrite using the repeatedApplication...
 			recursiveIndexation: function ({ object, fields }) {
 				let res = object
 				for (const f of fields) res = res[f]

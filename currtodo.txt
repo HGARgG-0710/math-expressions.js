@@ -1,0 +1,7 @@
+This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
+
+In 'numberCounter': 
+
+// ! All the stuff past here is not [currently] considered by one to be fully functional; 
+// TODO: pray finish the generalization of the numberCounter...
+
