@@ -1461,18 +1461,21 @@ export function activate(transformation = ID) {
 
 				generalSearch(template) {
 					return {
-						template: { ...template },
+						template: { self: false, ...template },
 						function: function (
 							arrrec = [],
-							prevArr = this.template.genarrclass.static.empty()
+							prevArr = this.template.genarrclass.static.empty(),
+							self = this.template.self
 						) {
 							const i = prevArr.copy()
+							if (self && this.template.soughtProp(arrrec)) return i
+
 							i.pushback(0)
 							i.end()
 							for (; i.currelem < arrrec.length; i.currelem++) {
 								if (this.template.soughtProp(arrrec[i.currelem])) return i
 								if (arrec[i.currelem] instanceof Array) {
-									const r = this.function(arrrec[i.currelem], i)
+									const r = this.function(arrrec[i.currelem], i, false)
 									if (!r) continue
 									return r
 								}
@@ -1488,48 +1491,21 @@ export function activate(transformation = ID) {
 				// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 				// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 				// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
+				// TODO: pray finish the generalization of the numberCounter...
 				numberCounter(template) {
 					// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
-					return {
-						// TODO: make more flexible and 'laid-off'... (with {...template} + ensureProperty + other such methods)
+					const A = {
 						template: {
 							maxint: RESULT.constants.MAX_INT,
 							maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
 							...template
 						},
 						generator: function (a) {
-							// ? Is this useful? If after having fixed the numberCounter, it don't happen to be, get rid of it...
-							const _this = this
 							if (!this.range(a)) return [0]
-
-							// TODO: pick the GeneralArray class for this thing [LastIndexArray + 'arrCounter' as counter?]
-							// ? Keep these as a part of 'submodules.infinite'? Pray consider...
-							const findDeepUnfilledNum = generalSearch({
-								genarrclass: RESULT.submodules.infinite.LastIndexArray({
-									icclass: RESULT.submodules.infinite.InfiniteCounter(
-										RESULT.submodules.infinite.arrayCounter()
-									)
-								}),
-								soughtProp: (x) =>
-									typeof x === "number" && x < this.template.maxint
-							}).function
-							const findDeepUnfilledArr = generalSearch({
-								genarrclass: RESULT.submodules.infinite.LastIndexArray({
-									icclass: RESULT.submodules.infinite.InfiniteCounter(
-										RESULT.submodules.infinite.arrayCounter()
-									)
-								}),
-								soughtProp: (x) =>
-									x instanceof Array &&
-									x.length < this.template.maxarrlen
-							}).function
 
 							let resultIndexes = findDeepUnfilledNum(a)
 							const _result = infinite.deepCopy(a)
 							let result = _result
-
-							// ! All the stuff past here is not [currently] considered by one to be fully functional;
-							// TODO: pray finish the generalization of the numberCounter...
 
 							if (!resultIndexes) {
 								resultIndexes = findDeepUnfilledArr(a)
@@ -1539,15 +1515,8 @@ export function activate(transformation = ID) {
 
 								result = RESULT.submodules.infinite.recursiveIndexation()(
 									result,
-									resultIndexes.slice(
-										undefined,
-										resultIndexes.length().previous().previous()
-									)
+									resultIndexes
 								)
-
-								const finalDimension = dim({
-									icclass: resultIndexes.this.class.template.icclass
-								})(a).difference(resultIndexes.length())
 
 								// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
 								// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
@@ -1560,14 +1529,18 @@ export function activate(transformation = ID) {
 										value.push([])
 										return value[value.length - 1]
 									},
-									finalDimension,
+									dim({
+										icclass: resultIndexes.this.class.template.icclass
+									})(a)
+										.difference(resultIndexes.length())
+										.previous(),
 									result
 								)
 								result.push(0)
 								return _result
 							}
 
-							result = RESULT.submodules.infinite.recursiveIndexation(
+							result = RESULT.submodules.infinite.recursiveIndexation()(
 								result,
 								resultIndexes.slice(
 									undefined,
@@ -1587,21 +1560,37 @@ export function activate(transformation = ID) {
 						//		4. numberCounterInverse([MAX_INT]) = [MAX_INT, -1]
 						//		...
 						// * And so on; Basically, same as the numberInverse, except the numbers are negative...
-						// ? Does one really want to rewrite all that stuff completely???
-						// ^ idea [for a plan]: first, patch up the numberCounter, fix all the problems and decide how it's going to look like,
-						// ^ then think of a way to beautifully generalize the both of them (the counter and its inverse; + maybe some additional method);
-						// * Then, create the method in question, write the two of those as a special case of it...
-						// ^ One could start with generalizing the two inner methods of the numberCounter; Then, having generalized them, brought onto the higher scope,
-						// ^ one could work exclusively on the numberCounter part...
-						// ? Mayhaps, allow for a creation of a template, that'd use some particular manner of generator for generation of elements within such a nested array, with these two being '(x) => {if (!x) return [0]; return x +- 1}' corespondently?
-						// ^ Additionally, generalize the 'range' too...
-						// * Current decision: yes, excellent; just that... pray do
-						inverse: function (a) {},
+						// todo: DECIDED; first - pray work on the inverse separately, then - see if they're really 'same enough'; Then, transform into something straightly generalizable, then generalize...
+						inverse: function (a) {
+							if (!this.range(a)) return [0]
+							if (RESULT.submodules.infinite.valueCompare(a, [0])) {
+								// todo: the '2' in the sketch...
+							}
+
+							let resultIndexes = findDeepUnfilledNum(a)
+							if (!resultIndexes) {
+								resultIndexes = findDeepUnfilledArr(a)
+								if (resultIndexes && a.length === 1) return a[0]
+							}
+
+							// TODO: the '1' in the sketch...
+							
+							// ! problem [with this sketch] : it don't handle the negative numbers as well...
+							// ^ idea [for a solution] : let it handle them if passed '[0] (-> [-1])', or any of the results of passing '[0]'
+							// * Sketch [what next]:
+							//  0 [done]. Handle the 'return [a]' case of the 'generator()'; Write the inverse for it... [Layer-raising reverse]
+							// 	1 [TODO, the 'inverse' case]. Find the 'lastly ordered' integer [seek from the end, looking for the first one...] (goto 1.1.); 
+							// 		1.1. One might want for a 'recursiveReverse()' algorithm, for the array in question to be then performed the operation for finding the 'first number'; Then, just apply the 'arr.length - i' transformation to the recieved indexes array recursively, et voila! One has the indexes for the original array...
+							// 		1.2. Decrease the integer by 1 IF it's greater than 0...; If it's already zero, then just remove it; Then, check if the array in question has non-zero length; If it's zero-lengthed, go 1.3, else 'return result'; 
+							// 		1.3. Go 1 layer up, then delete the last (current) 0-lengthed element-array; then, return the result...
+							// 2 [TODO, the negative-constructive case...]: This is the one that's 'just like numberCounter().generator()', but all the numbers are negative and the comparison sign is all jacked up; 
+							// 		2.1. Think about how to generalize this thing... After having generalized the sign for these two, one might 
+						},
 						range: function (a) {
 							return (
 								a instanceof Array &&
 								a.length &&
-								!!RESULT.min(
+								!!RESULT.functions.min(
 									a.map(
 										(x) =>
 											typeof x === "number" ||
@@ -1612,6 +1601,30 @@ export function activate(transformation = ID) {
 							)
 						}
 					}
+
+					// TODO: when putting out into the higher scope [RESULT.submodules.infinite], pray generalize - not just these general array types and counters [these'd get used in this particular version...];
+					// ? Keep these 2 as a part of 'submodules.infinite'?
+					// * Decided: yes! Add them, here [when generalizing], pray replace with the general constructions for this stuff...
+					const findDeepUnfilledNum = RESULT.submodules.infinite.generalSearch({
+						genarrclass: RESULT.submodules.infinite.LastIndexArray({
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.arrayCounter()
+							)
+						}),
+						soughtProp: (x) => typeof x === "number" && x < A.template.maxint
+					}).function
+					const findDeepUnfilledArr = RESULT.submodules.infinite.generalSearch({
+						genarrclass: RESULT.submodules.infinite.LastIndexArray({
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.arrayCounter()
+							)
+						}),
+						soughtProp: (x) =>
+							x instanceof Array && x.length < A.template.maxarrlen,
+						self: true
+					}).function
+
+					return A
 				},
 
 				// * It checks for the same array structure... That being, if array are precisely isomorphic...
