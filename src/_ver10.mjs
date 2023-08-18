@@ -1461,21 +1461,34 @@ export function activate(transformation = ID) {
 
 				generalSearch(template) {
 					return {
-						template: { self: false, ...template },
+						template: { self: false, reversed: false, ...template },
 						function: function (
 							arrrec = [],
 							prevArr = this.template.genarrclass.static.empty(),
-							self = this.template.self
+							self = this.template.self,
+							reversed = this.template.reversed
 						) {
 							const i = prevArr.copy()
 							if (self && this.template.soughtProp(arrrec)) return i
 
-							i.pushback(0)
+							const boundprop = reversed
+								? (x) => x >= 0
+								: (x) => x < arrrec.length
+							i.pushback(reversed ? arrrec.length - 1 : 0)
 							i.end()
-							for (; i.currelem < arrrec.length; i.currelem++) {
+							for (
+								;
+								boundprop(i.currelem);
+								i.currelem += (-1) ** reversed
+							) {
 								if (this.template.soughtProp(arrrec[i.currelem])) return i
 								if (arrec[i.currelem] instanceof Array) {
-									const r = this.function(arrrec[i.currelem], i, false)
+									const r = this.function(
+										arrrec[i.currelem],
+										i,
+										false,
+										reversed
+									)
 									if (!r) continue
 									return r
 								}
@@ -1513,10 +1526,11 @@ export function activate(transformation = ID) {
 
 								// TODO [general]: consider carefully the arguments' format - does one desire the object-like ones? [Like here with 'recursiveIndexation' currently?]
 
-								result = RESULT.submodules.infinite.recursiveIndexation()(
-									result,
-									resultIndexes
-								)
+								result =
+									RESULT.submodules.infinite.recursiveIndexationInfFields()(
+										result,
+										resultIndexes
+									)
 
 								// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
 								// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
@@ -1540,13 +1554,14 @@ export function activate(transformation = ID) {
 								return _result
 							}
 
-							result = RESULT.submodules.infinite.recursiveIndexation()(
-								result,
-								resultIndexes.slice(
-									undefined,
-									resultIndexes.finish().previous()
+							result =
+								RESULT.submodules.infinite.recursiveIndexationInfFields()(
+									result,
+									resultIndexes.slice(
+										undefined,
+										resultIndexes.finish().previous()
+									)
 								)
-							)
 							// ? Does one desire further generalization on the GeneralArray usages front in non-GeneralArray [as of self] related pieces of the library???
 							// * Pray consider... [Current decision: no; one don't];
 							result[resultIndexes.read(resultIndexes.finish())]++
@@ -1563,28 +1578,91 @@ export function activate(transformation = ID) {
 						// todo: DECIDED; first - pray work on the inverse separately, then - see if they're really 'same enough'; Then, transform into something straightly generalizable, then generalize...
 						inverse: function (a) {
 							if (!this.range(a)) return [0]
+
+							// ? Use a different identifier for the copy of orginal 'a'? Pray consider...
+							a = RESULT.submodules.infinite.deepCopy(a)
+
 							if (RESULT.submodules.infinite.valueCompare(a, [0])) {
 								// todo: the '2' in the sketch...
+								// ! NOTE [essential...]: The 'generator' must work as an inverse for 'inverse' TOO! Thus, CONCLUSION: the entire thing consists of 2 general functions that both 'generator' and 'inverse' use with their only difference of theirs being the sign;
 							}
 
-							let resultIndexes = findDeepUnfilledNum(a)
-							if (!resultIndexes) {
-								resultIndexes = findDeepUnfilledArr(a)
-								if (resultIndexes && a.length === 1) return a[0]
+							if (
+								!findDeepUnfilledNum(a) &&
+								findDeepUnfilledArr(a) &&
+								a.length === 1
+							)
+								return a[0]
+
+							// TODO [general]: use the 'recursiveSetting' where appropriate; Create an infinite version for it as well...
+							let lastNumIndexes = findDeepLastNum(a)
+							const finind = lastNumIndexes.final()
+							const ffinind = finind.previous()
+							// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
+							let ppointer =
+								RESULT.submodules.infinite.recursiveIndexationInfFields()(
+									a,
+									lastNumIndexes.slice(undefined, ffinind.previous())
+								)
+							let pointer =
+								RESULT.submodules.infinite.recursiveIndexationInfFields()(
+									a,
+									lastNumIndexes.slice(undefined, ffinind)
+								)
+							const llindex = lastNumIndexes.read(ffinind)
+							const lindex = lastNumIndexes.read(finind)
+
+							if (pointer[lindex] > 0) {
+								pointer[lindex]--
+								return a
 							}
 
-							// TODO: the '1' in the sketch...
-							
+							ppointer[llindex] = RESULT.aliases._remove(
+								ppointer[llindex],
+								lindex
+							)
+							pointer = ppointer[llindex]
+
+							let index = lindex
+							let hlindex = llindex
+
+							// TODO [local refactoring]: the pre-while-loop piece of code is nigh exactly the same as that within the loop; Pray re-organize to make this stuff shorter and more concise... [for instance, separate declarations from definitions and on and on...]
+							while (!pointer.length) {
+								// TODO: now, this is a RECURSIVE step, so, for instance, one accomplishes this same one procedure not just for 'pointer', but for the 'ppointer' and all the other ones such as well...
+								// * Consider carefully how to do this precisely...
+								// ? These things do tend to re-appear quite some number of times here... Generalize?
+								index = index.previous()
+								ppointer =
+									RESULT.submodules.infinite.recursiveIndexationInfFields()(
+										a,
+										lastNumIndexes.slice(
+											undefined,
+											(hlindex = hlindex.previous())
+										)
+									)
+								ppointer[hlindex] = RESULT.aliases._remove(
+									ppointer[hlindex],
+									index
+								)
+								pointer =
+									RESULT.submodules.infinite.recursiveIndexationInfFields()(
+										a,
+										lastNumIndexes.slice(undefined, index)
+									)
+							}
+
+							return a
+
 							// ! problem [with this sketch] : it don't handle the negative numbers as well...
 							// ^ idea [for a solution] : let it handle them if passed '[0] (-> [-1])', or any of the results of passing '[0]'
 							// * Sketch [what next]:
-							//  0 [done]. Handle the 'return [a]' case of the 'generator()'; Write the inverse for it... [Layer-raising reverse]
-							// 	1 [TODO, the 'inverse' case]. Find the 'lastly ordered' integer [seek from the end, looking for the first one...] (goto 1.1.); 
-							// 		1.1. One might want for a 'recursiveReverse()' algorithm, for the array in question to be then performed the operation for finding the 'first number'; Then, just apply the 'arr.length - i' transformation to the recieved indexes array recursively, et voila! One has the indexes for the original array...
-							// 		1.2. Decrease the integer by 1 IF it's greater than 0...; If it's already zero, then just remove it; Then, check if the array in question has non-zero length; If it's zero-lengthed, go 1.3, else 'return result'; 
-							// 		1.3. Go 1 layer up, then delete the last (current) 0-lengthed element-array; then, return the result...
-							// 2 [TODO, the negative-constructive case...]: This is the one that's 'just like numberCounter().generator()', but all the numbers are negative and the comparison sign is all jacked up; 
-							// 		2.1. Think about how to generalize this thing... After having generalized the sign for these two, one might 
+							// 	todo: implement the 'Alias := (p) => ((x) => x[p]())' alias, then one'd not have this 'recursiveReverse()' thing [it'd just be repeatedApplication() + Alias('reverse')];
+							// 	? Or maybe implement? Consider pray...
+
+							// * This thing corresponds to implementing the one part of 'inverse' which is the sign-inverse of the presently written 'general' part; HOWEVER, to this part of it, there must also be an inverse - the one which is the not-yet-implemented part of the 'generator()' ; 
+							// ^ CONCLUSION: such is the structure of the counter and the most basic elements for the generalization [in their current form] have been created and implemented; 
+							// 2 [TODO, the negative-constructive case...]: This is the one that's 'just like numberCounter().generator()', but all the numbers are negative and the comparison sign is all jacked up;
+							// 		2.1. Think about how to generalize this thing... After having generalized the sign for these two, one might
 						},
 						range: function (a) {
 							return (
@@ -1622,6 +1700,16 @@ export function activate(transformation = ID) {
 						soughtProp: (x) =>
 							x instanceof Array && x.length < A.template.maxarrlen,
 						self: true
+					}).function
+
+					const findDeepLastNum = RESULT.submodules.infinite.generalSearch({
+						genarrclass: RESULT.submodules.infinite.LastIndexArray({
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.arrayCounter()
+							)
+						}),
+						soughtProp: (x) => typeof x === "number",
+						reversed: true
 					}).function
 
 					return A
