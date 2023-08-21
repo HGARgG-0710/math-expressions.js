@@ -1500,11 +1500,176 @@ export function activate(transformation = ID) {
 
 				// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 
+				// * The generalization of the 'numberCounter';
+				// TODO : later, pray rename it to something more liked by oneself...
+				recursiveCounter(template) {
+					// ^ IDEA: generalizet this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences...
+					// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
+					const returned = {
+						template: {
+							comparison: RESULT.submodules.infinite.valueCompare,
+							maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
+							type: RESULT.aliases._const(true),
+							...template
+						},
+						// TODO: generalize the construction(s) for the generator/inverse (their only actual difference is the 'true/false'); Otherwise, it's the same function...
+						// ! consider how to save the memory on these 'signedAdd/signedDelete' functions with this being in act... [one could just create another wrapper for this, one that'd choose the precalculated variables' values instead...]
+						generator(x) {
+							return generalgenerator(x, true, this)
+						},
+						inverse(x) {
+							return generalgenerator(x, false, this)
+						},
+						range(x) {
+							return (
+								x instanceof Array &&
+								!!x.length &&
+								!!RESULT.functions.min(
+									(x) =>
+										this.template.type(x) ||
+										(x instanceof Array && this.range(x))
+								)
+							)
+						}
+					}
+
+					// * Outline of the two functions' structure:
+					// 	1. have the template-variable for the counter's 'arrval-domain' consisting of values for the arrays and being separated into two by a 'sign' predicate;
+					// ? First off - the domain; What describes it fully?
+					// 	* List:
+					// 		1.(-1). The 'type' predicate (to 'ensure' that the thing in question is of the right 'type') [By default RESULT.aliases._const(true)];
+					// 		1.0. Sign predicate;
+					// 		1.1. Lower-bound [L is the 'lower bound' of the domain (one that don't belong to either signs)];
+					// 		1.2. Upper-bound [U is the 'upper bound' of the domain ('this.template.sign(U) = true')];
+					// 		1.3. Reverse-uppser-bound predicate [R is the 'reverse upper bound' of the domain (this.template.sign(R) = false)];
+					// 		1.4. 'Forward' function (F(x) will 'move' towards the lower bound [if !this.template.sign(x)] and [if this.template.sign(x)] upper bound);
+					// 		1.5. 'Backward' function (B(x) will 'move' towards the lower bound [if this.template.sign(x)] and [if !this.template.sign(x)] reverse-upper bound);
+					// * Corresponding elements are added into a recursive array structure...
+					//  2. have the two functions, both having their respective sign versions, that are used for the 'generator' and 'inverse'; These are generalizations of the 'numberCounter' stuff;
+					function signedAdd(sign) {
+						return function (thisobject) {
+							return function (x) {
+								let indexes = findDeepUnfilled(sign)(x)
+								let result = x
+
+								if (!indexes) {
+									indexes = findDeepUnfilledArr(x)
+									if (!indexes) return [x]
+
+									result =
+										RESULT.submodules.infinite.recursiveIndexationInfFields()(
+											result,
+											indexes
+										)
+
+									// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
+									// * Including the infinite versions of them...
+									result =
+										RESULT.submodules.infinite.repeatedApplication()(
+											(value) => {
+												value.push([])
+												return value[value.length - 1]
+											},
+											dim({
+												icclass:
+													indexes.this.class.template.icclass
+											})(a)
+												.difference(indexes.length())
+												.previous(),
+											result
+										)
+									result.push(thisobject.template.lower)
+									return x
+								}
+
+								result =
+									RESULT.submodules.infinite.recursiveIndexationInfFields()(
+										result,
+										indexes.slice(
+											undefined,
+											indexes.finish().previous()
+										)
+									)
+								// ? Does one desire further generalization on the GeneralArray usages front in non-GeneralArray [as of self] related pieces of the library???
+								// * Pray consider... [Current decision: no; one don't];
+								const endind = indexes.read(indexes.finish())
+								result[endind] = (
+									sign
+										? thisobject.template.forward
+										: thisobject.template.backward
+								)(result[endind])
+								return x
+							}
+						}
+					}
+					function signedDelete(sign) {
+						return function (thisobject) {
+							return function (x) {
+								// todo: implementation...
+							}
+						}
+					}
+
+					const sat = signedAdd(true),
+						saf = signedAdd(false),
+						sdt = signedDelete(true),
+						sdf = signedDelete(false)
+
+					function boolfunctswitch(f, bool) {
+						return f ? (bool ? sat : saf) : bool ? sdt : sdf
+					}
+
+					function generalgenerator(x, bool, thisobj) {
+						if (!thisobj.range(x)) return thisobj.template.start
+						let r = RESULT.submodules.infinite.deepCopy(x)
+						return boolfunctswitch(thisobj.template.sign(r), bool)(thisobj)(r)
+					}
+
+					// ! PROBLEM [same - with the re-creation of different methods for the purpose of running this thing...];
+					// TODO: DO THE SAME THERE...
+					// TODO: generalize the 'LastIndexArray + arrayCounter()' part...
+					// ? What about putting these things out into the 'submodules.infinite.' or some other more global scope? 
+					const findDeepUnfilled = (t = true) => {
+						RESULT.submodules.infinite.generalSearch({
+							genarrclass: RESULT.submodules.infinite.LastIndexArray({
+								icclass: RESULT.submodules.infinite.InfiniteCounter(
+									RESULT.submodules.infinite.arrayCounter()
+								)
+							}),
+							soughtProp: (x) =>
+								returned.template.type(x) &&
+								(t ? RESULT.aliases.id : RESULT.aliases.n)(
+									returned.template.sign(x)
+								) &&
+								!returned.template.comparison(
+									t
+										? returned.template.upper
+										: returned.template.rupper,
+									x
+								)
+						}).function
+					}
+					const findDeepUnfilledArr = RESULT.submodules.infinite.generalSearch({
+						genarrclass: RESULT.submodules.infinite.LastIndexArray({
+							icclass: RESULT.submodules.infinite.InfiniteCounter(
+								RESULT.submodules.infinite.arrayCounter()
+							)
+						}),
+						soughtProp: (x) =>
+							x instanceof Array && x.length < returned.template.maxarrlen,
+						self: true
+					}).function
+
+					return returned
+				},
+
 				// * That's an example of an infinite counter;
 				// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
 				// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 				// ! but its output should not be used for reference-checking things, it creates entirely new objects when being called...
 				// TODO: pray finish the generalization of the numberCounter...
+				// ? Question: how to organize the structure of the numberCounter after having fully generalized it?
+				// * Also, one'd be wanting to create a 'this.template.sign()' function for it...
 				numberCounter(template) {
 					// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 					const A = {
@@ -1531,13 +1696,6 @@ export function activate(transformation = ID) {
 										result,
 										resultIndexes
 									)
-
-								// ? whilst refactoring, one have noticed a funny thing... -- doing so makes the code LONGER, not shorter...
-								// * Does one truly want these kinds of pieces refactored (those simple enough, but when refactored become longer?)
-								// * Pray decide...
-								// ^ DECIDED: yes; one is concerned about the SEMANTICAL and STRUCTURAL lengths, not name-wise or line-wise length;
-								// ^ id est: If it has less elements in itself after having been refactored and the elements are of more 'elementary' nature, then it is considered successful relative to one's own refactoring goals...
-
 								result = RESULT.submodules.infinite.repeatedApplication()(
 									(value) => {
 										value.push([])
@@ -1659,11 +1817,12 @@ export function activate(transformation = ID) {
 							// 	todo: implement the 'Alias := (p) => ((x) => x[p]())' alias, then one'd not have this 'recursiveReverse()' thing [it'd just be repeatedApplication() + Alias('reverse')];
 							// 	? Or maybe implement? Consider pray...
 
-							// * This thing corresponds to implementing the one part of 'inverse' which is the sign-inverse of the presently written 'general' part; HOWEVER, to this part of it, there must also be an inverse - the one which is the not-yet-implemented part of the 'generator()' ; 
-							// ^ CONCLUSION: such is the structure of the counter and the most basic elements for the generalization [in their current form] have been created and implemented; 
+							// * This thing corresponds to implementing the one part of 'inverse' which is the sign-inverse of the presently written 'general' part; HOWEVER, to this part of it, there must also be an inverse - the one which is the not-yet-implemented part of the 'generator()' ;
+							// ^ CONCLUSION: such is the structure of the counter and the most basic elements for the generalization [in their current form] have been created and implemented;
 							// 2 [TODO, the negative-constructive case...]: This is the one that's 'just like numberCounter().generator()', but all the numbers are negative and the comparison sign is all jacked up;
 							// 		2.1. Think about how to generalize this thing... After having generalized the sign for these two, one might
 						},
+						// ! NOTE [when generalizing the 'range']: pray use (x) => typeof x === "number" || x instanceof Number instead of just '(x) => typeof x === "number"'; Also, create the alias for the thing...
 						range: function (a) {
 							return (
 								a instanceof Array &&
@@ -2639,6 +2798,8 @@ export function activate(transformation = ID) {
 			 * WIKI:
 			 */
 			negate: (f) => (x) => !f(x),
+
+			n: (x) => !x,
 
 			/**
 			 *
