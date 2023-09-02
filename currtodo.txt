@@ -46,6 +46,32 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 		
 		Which, then'd allow to define corresponding things with ease...
 	
+	Solves just about everything...
+	Except for the stuff like 'IterableSet', which is really just finite versions of generalized objects' factories [far simpler (using native JS), yes, probably faster (using native JS), yes, but it's still FUNCTIONALLY, the same thing...]
+		Should they [such things] be considered for keeping? Or not? 
+		Is this REALLY an optimization matter? If so, does one want to consider it? If not, does one still wish to remove them? 
+			This'd lead to a tremendous simplification of many of the library's aspects with simultaneuous concentration on the functional concerns rather than the possibilities of purely time/memory-cost nature...
+			QUESTION IS: WOULD ONE LOVE THAT? 
+			ANSWER IS: sure; So, the newly created conclusion, thus, is that: 
+				1. All the contents of 'RESULT.classes' get to be generalized and turned into templated 'function-classes' (object-returning functions); 
+				2. 'Result.clases' and 'Results.submodules.infinite' gets merged with 'Results.methods' into 'Results.main'; 
+					The currently decided cretaed description of the merge procedure goes here... 
+
+						The stuff from 'results.submodules.infinite' gets to generalize all the stuff from the 'finite' versions [thus, 'replaceing' and 'covering' them at the same time in the '.main' field]; 
+						Each and every abstraction from 'native JS' used by the library gets generalized within the new 'results.submodules.infinite'; 
+
+						[What about things like 'ensureProperty?'; They're extremely useful in both their variants (finite AND infinite) and the finite version gets used througout the library's code a lot...]; 
+						For the cases, where one'd love to keep both the 'finite' and 'infinite' versions... 
+						Let's consider various ways to implement this kind of 'localized' distinction: 	
+
+							1. prefixes [nope; would be too many + too ugly + code repetition]; 
+							2. separate structures [clumsy RESULT object; don't like it...]; 
+							
+						The problem comes down to identifying which particular *types* of functions are those that are desired to be kept in this particular fashion...
+						CONCLUSION: all such functions are, in effect, really just aliases working with native types; 
+						So, for instance, one could store those finite versions under 'RESULT.aliases.native'; 
+						This way, there'd be 2 kinds of 'ensureProperty' [and other similarly defined functions] for both the native JS object type and a templated general InfiniteMap; 
+	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
 	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
