@@ -1754,10 +1754,12 @@ export function activate(transformation = ID) {
 							)
 						},
 						type: (x) => typeof x === "number",
+						forward: (x) => x + 1,
+						backward: (x) => x - 1,
 						...template
 					})
 					// ! Old code for the [incomplete] definition of the 'numberCounter'; The renewed code [in accordance with the general 'recursiveCounter' counter] is above;
-					// TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to ; [Also, check correspondence with the newer version...]
+					// TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to; [Also, check correspondence with the newer version...]
 					// // TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 					// const A = {
 					// 	template: {
@@ -2067,7 +2069,8 @@ export function activate(transformation = ID) {
 					for (const x of finarr.slice(1)) if (minr.compare(x)) minr = x
 					return minr
 				},
-				mingeneral(finarr) {},
+				// * Same as above, but with the 'GeneralArray' instead...
+				mingeneral(genarr) {},
 				maxgeneral(genarr) {},
 
 				recursiveIndexationInfFields(template = {}) {
@@ -2952,7 +2955,7 @@ export function activate(transformation = ID) {
 				})
 			},
 
-			// * Counts all non-array elements within a multidimensional array passed...
+			// * Counts all non-array elements within a multidimensional array passed... [recursively so]
 			nonArrElems: function (array) {
 				return array instanceof Array
 					? repeatedArithmetic(array.map(nonArrElems), "+")

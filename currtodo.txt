@@ -1,7 +1,56 @@
 This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
 
-In 'numberCounter': 
+1 [main]. TODO [local; only in this file...]: Create all the infinite versions for all the finite [original] methods; 
+For this, first make a list; 
 
-// ! All the stuff past here is not [currently] considered by one to be fully functional; 
-// TODO: pray finish the generalization of the numberCounter...
+Method list [to be generalized to the 'infinite' submodule; current list]: 
 
+	'GeneralMatrix' (based off the GeneralArray)
+	nonArrElems
+	totalElems
+	op
+	repeatedOperation
+	[Wait... Blast, it's all of them; Look further onto the line 15]
+
+IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite methods using some manner of uniter-abstraction (for instance, use the CommonArray for the 'finite' cases?); 
+	[Or maybe, v1.0?] There's just too many methods to be desireably separated for the two versions of these...
+	It really is just mapping one architecture into another one, performing [essentially] the exactly same tasks; [Trivial, simply, boring...]; 
+	How'd one accomplish this thing without all this ridiculous copy-paste? 
+	Simple: generalize; How exactly, though? 
+	One'd love to use the Infinite versions for this; 
+	But it should still work with finite ones [The finite wrappers of the same form as those used within the 'infinite' would do the trick there]; 
+	Next question becomes - how does this 'transform-unite transition' take its place on the minimum execution level?
+	Is it performed manually by the user? (As in 'methodName(CommonArray(arrname)).array'?)
+	
+	It [the problem]'s really all about this 'conversion step'; Once it's been dealt with, the library might progress exceedingly smoothly...
+	Problem lies in lack of unity of the architecture of Infinite part of the library and 'finite' native JS types used within the 'finite' part of 'math-expressions.js'
+
+	IDEA [for a solution]: create a set of methods like: 
+		
+		function fi (fu) {
+			return (x) => fu(CommonArray(x)).array	
+		}
+	
+		These methods would, in self allow to do stuff like 'fi(Matrix)(...)'; 
+		Which'd essentially solve the issues of: 
+			
+			1. Library being to 'heavy' with repeating methods; 
+			2. Writing difficulties [twice the writing time for all this stuff...]; 
+			3. Copying of the same architecture/funcitonality across the library; 
+		
+		As one'd desire to make this kind of thing 'general' (not merely the 'CommonArray' usage), one'd make something akin to: 
+
+			function wrapper (in, out) {
+				return (f) => ((x) => out(f(in(x))))
+			}
+		
+		Which, then'd allow to define corresponding things with ease...
+	
+
+2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
+	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
+	2.2. Decide what to do with the merging of 'RESULT.constants' and 'RESULT.globals' and 'RESULT.defaults' into something like 'RESULT.variables'; Decide about the 'variables' structure;
+	2.3. Finish the work on the 'Surface' class; 
+	2.4. Finish all the great amount of 'small' TODOs written all over the source code file; 
+	2.5. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
+	2.6. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
