@@ -23,9 +23,6 @@ const VARIABLE = (x) => {
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'activate' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 export function activate(transformation = ID) {
-	// TODO: clean up the references... [fix the broken ones; due to the library's re-organization...]
-	// ? also - work on the 'global's structure... Do one want to have them : { get() {...}, set () {...}, object: ... } kind of structures... (akin to the GeneralArray.length())
-
 	// ? Question: about spacing ; Does one want to do it like 'RESULT.submodules[thing] = value', or as a part of this 'const' definition?
 	// TODO: pray, after having put EVERYTHING there, THOUROUGHLY come through ALL THE CODE, fixing all the broken references;
 	// * Also, create the priority-of-definition order, by which it would be decided which of the elements of RESULT to put within its 'block-definition', and the rest - out of it;
@@ -41,7 +38,222 @@ export function activate(transformation = ID) {
 	const RESULT = {
 		// ? Should 'aliases' get renamed into 'semantic'? Or something else? Think, pray...
 		aliases: {
-			// todo: work extensively on the precise list of aliases...
+			// todo: work extensively on the precise list of aliases... Also, their names...
+
+			// ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
+			native: {
+				ensureProperty: function (object, property, value) {
+					if (!object.hasOwnProperty(property)) object[property] = value
+				},
+				// * A convinient general-version...
+				ensureProperties: function (object, defaultobj) {
+					for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
+				},
+
+				// ? Should one also add one that is related to shape-things? (Consider)
+				Matrix: function (
+					vector,
+					typechecker,
+					defaultMatrix = [RESULT._const(null), RESULT._const(null)],
+					defaultTransform = [null, null]
+				) {
+					return nestedVector(
+						vector,
+						typechecker,
+						defaultMatrix,
+						defaultTransform,
+						2,
+						0
+					)
+				},
+
+				// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
+				// Depth of the final vector is equal to the depth of the original array...
+				// ! Rework this thing later...
+				nestedVector: function (
+					vector,
+					typechecker,
+					defaultElems = vector.map(RESULT._const(RESULT._const(null))),
+					transform = vector.map(RESULT._const(null)),
+					dimensions = Infinity,
+					currDim = 0
+				) {
+					return new Vector({
+						vectortypes: ["any"],
+						vector: vector.map((el) =>
+							el instanceof Array &&
+							!typechecker(el) &&
+							currDim < dimensions
+								? nestedVector(
+										el,
+										typechecker,
+										defaultElems.slice(1),
+										transform.slice(1),
+										dimensions,
+										currDim + 1
+								  )
+								: el
+						),
+						type: defaultElems[0],
+						transform: transform[0]
+					})
+				},
+
+				// * Counts all non-array elements within a multidimensional array passed... [recursively so]
+				nonArrElems: function (array) {
+					return array instanceof Array
+						? repeatedArithmetic(array.map(nonArrElems), "+")
+						: 1
+				},
+
+				// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+				totalElems: function (array) {
+					return array instanceof Array
+						? array.length + repeatedArithmetic(array.map(totalElems), "+")
+						: 0
+				},
+
+				// * Creates a function for execution of operations based on the given operations table...;
+				op: function (template = {}) {
+					return {
+						template: {
+							defop: undefined,
+							defobjs: [],
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (
+							operator = this.template.defop,
+							objects = this.template.defobjs
+						) {
+							// ? Create some kind of a shortcut (alias) for this thing?
+							return Object.values(this.template.optable)
+								.map((x) => x[0])
+								[Object.keys(this.template.optable).indexOf(operator)](
+									...objects
+								)
+						}
+					}
+				},
+
+				/**
+				 * This class represents a mathematical arithmetic expression.
+				 *
+				 * It can also come in helpful when evaluating the same expression various number of times.
+				 */
+				Expression: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						class: function (
+							objects = [],
+							operators = [],
+							indexes = operators.map(RESULT.aliases._const(0))
+						) {
+							return {
+								this: this,
+								objects: objects,
+								operators: operators,
+								indexes: indexes,
+								/**
+								 * Just a wrapper for fullExp() function. Watch documentation for it.
+								 */
+								execute() {
+									return fullExp(this.this.template).function(
+										this.operators,
+										this.objects,
+										this.indexes
+									)
+								},
+								// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
+								// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
+								/**
+								 * Wrapper for repeatExp() function. Watch documentation for it.
+								 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
+								 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
+								 */
+								repeat(operator, times = 1) {
+									return repeatExp(this, operator, times)
+								},
+								// ! Problem: how does one handle different-table merges? What about naming conflicts? How should they be resolved [if at all?];
+								merge(expression) {
+									for (const x of ["operators", "objects", "indexes"])
+										this[x] = this[x].concat(expression[x])
+								}
+							}
+						}
+					}
+				},
+
+				// Executes an expression;
+				fullExp: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (
+							operators = [],
+							objects = [],
+							indexes = operators.map(RESULT.aliases._const(0))
+						) {
+							// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
+							return repeatedApplicationIndex(
+								(double, i) => {
+									let hasMet = false
+									return [
+										// ? Should it use 'this.template' for 'exp' here instead?;
+										// * Consider more generally on the library-scale...
+										exp({ optable: this.template.optable }).function(
+											operators[i],
+											generate(
+												0,
+												this.template.optable[operators[i]][1] - 1
+											).map((j) => {
+												if (j == indexes[i]) {
+													hasMet = i > 0
+													return double[0]
+												}
+												return objects[double[1] + j - hasMet]
+											})
+										),
+										double[1] +
+											this.template.optable[operators[i]][1] -
+											1
+									]
+								},
+								operators.length,
+								[objects[0], 1]
+							)[0]
+						}
+					}
+				},
+
+				subobjects(object) {
+					const returned = []
+					if (object instanceof Object)
+						for (const a in object)
+							if (object[a] instanceof Object) {
+								returned.push(object[a])
+								returned.concat(this.subobjects(object[a]))
+							}
+					return returned
+				},
+
+				// * Checks if a certain object contains a recursive reference;
+				isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
+					if (!(object instanceof Object)) return false
+					return max(
+						Object.keys(object).map(
+							(x) =>
+								prevobjsarr.includes(object[x]) ||
+								this.isRecursive(object[x], prevobjsarr)
+						)
+					)
+				}
+			},
 
 			exp: op,
 			repeatedArithmetic: repeatedOperation,
@@ -91,6 +303,7 @@ export function activate(transformation = ID) {
 			 */
 			_const: (c) => () => c,
 
+			// * The 'do nothing' function; useful as a placeholder in places requiring a function argument;
 			void: () => {},
 
 			/**
@@ -119,10 +332,25 @@ export function activate(transformation = ID) {
 			 *
 			 * WIKI:
 			 */
+			// TODO [general] : perform hardcore alias-reusage procedure, thus shortening and simplifying code using newly/previously introduced aliases...
+			// * in this case, rewrite this via a wrapper...
 			negate: (f) => (x) => !f(x),
 
 			n: (x) => !x,
 
+			bool: Boolean,
+			str: String,
+			num: Number,
+			obj: Object,
+			sym: Symbol,
+			udef: undefined,
+			set: Set,
+			arr: Array,
+			// ? Maybe, 'fn' instead?
+			fun: Function,
+			bi: BigInt,
+
+			// ! this is for generalized use, not like 'wrapper', which is for alias-like-use
 			/**
 			 * Finds the composition of given functions array on each other;
 			 * TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
@@ -1507,7 +1735,7 @@ export function activate(transformation = ID) {
 			},
 
 			// * Probably the simplest infinite counter one would have in JS;
-			arrayCounter(template) {
+			arrayCounter(template = {}) {
 				return {
 					template: {
 						start: null,
@@ -1530,7 +1758,7 @@ export function activate(transformation = ID) {
 			},
 
 			// * Generalization of the thing above (arrayCounter)...
-			objCounter(template) {
+			objCounter(template = {}) {
 				return {
 					template: { field: "", start: null, ...template },
 					generator: function (a = this.template.start) {
@@ -2031,7 +2259,7 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			repeatedApplication(template) {
+			repeatedApplication(template = {}) {
 				return {
 					template: { ...template },
 					function: function (
@@ -2053,7 +2281,7 @@ export function activate(transformation = ID) {
 					}
 				}
 			},
-			repeatedApplicationIndex(template) {
+			repeatedApplicationIndex(template = {}) {
 				return {
 					template: { ...template },
 					function: function (
@@ -2745,159 +2973,28 @@ export function activate(transformation = ID) {
 
 			// ! These 2 get 'poured out' into the 'main' field;
 			methods: {
-				ensureProperty: function (object, property, value) {
-					if (!object.hasOwnProperty(property)) object[property] = value
-				},
-
-				// * A convinient general-version...
-				ensureProperties: function (object, defaultobj) {
-					for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
-				},
-
-				// ? Should one also add one that is related to shape-things? (Consider)
-				Matrix: function (
-					vector,
-					typechecker,
-					defaultMatrix = [RESULT._const(null), RESULT._const(null)],
-					defaultTransform = [null, null]
-				) {
-					return nestedVector(
-						vector,
-						typechecker,
-						defaultMatrix,
-						defaultTransform,
-						2,
-						0
-					)
-				},
-
-				// This thing is flexible; it adapts the output to input -- the result is a vector of corresponding depth (the input's inside arrays that are not the given type are all turned into vectors; all else is left untouched...)
-				// Depth of the final vector is equal to the depth of the original array...
-				nestedVector: function (
-					vector,
-					typechecker,
-					defaultElems = vector.map(RESULT._const(RESULT._const(null))),
-					transform = vector.map(RESULT._const(null)),
-					dimensions = Infinity,
-					currDim = 0
-				) {
-					return new Vector({
-						vectortypes: ["any"],
-						vector: vector.map((el) =>
-							el instanceof Array &&
-							!typechecker(el) &&
-							currDim < dimensions
-								? nestedVector(
-										el,
-										typechecker,
-										defaultElems.slice(1),
-										transform.slice(1),
-										dimensions,
-										currDim + 1
-								  )
-								: el
-						),
-						type: defaultElems[0],
-						transform: transform[0]
-					})
-				},
-
-				// * Counts all non-array elements within a multidimensional array passed... [recursively so]
-				nonArrElems: function (array) {
-					return array instanceof Array
-						? repeatedArithmetic(array.map(nonArrElems), "+")
-						: 1
-				},
-
-				// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-				totalElems: function (array) {
-					return array instanceof Array
-						? array.length + repeatedArithmetic(array.map(totalElems), "+")
-						: 0
-				},
-
-				// TODO: this thing it to be rewritten (both the JSDoc and the function...)
-				/**
-				 * Executes an arithmetic expression with two numbers
-				 *
-				 * * Note: with it you can even build a very simple calculator.
-				 * * Plus, it's more secure an allows only aritmetic (for now, at least).
-				 *
-				 * @param {number} firstObj  First number.
-				 * @param {number} secondObj Second number.
-				 * @param {string} operator  String, containing an ariphmetic operator(+, -, /, *, ** or %).
-				 * @returns {number} Result of a mathematical expression.
-				 */
-				op: function (objects, operator, operatorTable = defaultTable) {
-					// TODO: in a different library of mr. body, there's a _switch function that works on a passed object like a generalized switch; use this here, when code-reworking for 1.1;
-					const values = Object.values(operatorTable)
-					const keys = Object.keys(operatorTable)
-					for (let i = 0; i < values.length; i++)
-						if (operator === keys[i]) return values[i](...objects)
-					throw new Error(`Undefined operator ${operator}!`)
-				},
-
-				// ? make the Expressions' api more complex? Add orders of following, arities, that sort of thing?
-				// TODO: rewrite this later, as a repeated application of the same function on itself...
-				// * Example of how one's future Code might look like (currrently, won't work; no dependency):
-				// const repeatedOperation = (objects: string[], operator: string) =>
-				// {
-				// let i = 1
-				// let result = objects[0]
-				// const repeated = () => {result = exp(result, objects[i++], operator)}
-				// return repeatedApplication(repeated, objects.length)
-				// }
+				// * Most of the Expressions' Api's a bloody mess currently; Re-do most of it...
 				/**
 				 * Executes mathematical expression with the same operator repeating, but different numbers.
 				 * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
 				 * @param {string} operator - A string, containing an operator, with which expression will be executed.
 				 */
-				repeatedOperation: function (
-					objects = [],
-					operator,
-					table = defaultTable
-				) {
-					return new Expression(
-						objects,
-						objects.map(RESULT._const(operator)),
-						table
-					).execute()
+				repeatedOperation: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (operator, objects = []) {
+							return Expression(this.template)
+								.class(objects, objects.map(RESULT._const(operator)))
+								.execute()
+						}
+					}
 				},
 
-				// * Rework this thing capitally...
-				// TODO: make this more configurable -- let there be ways for user to set at which index is the things concatenated together (currently, the 'operated' argument is always the first to be passed)...
-				/**
-				 * Executes mathematical expression with different operators and numbers.
-				 *
-				 * ! NOTE: passed operators[] array must be shorter than the passed numbers[] array for one element or the same length
-				 * ! (b   ut in this case  last element of the operators[] array will be ignored).
-				 *
-				 * @param {Expression} expression An object, containing two array properties, one of which is for numbers(or strings) using which expression will be executed and the second is for strings, each of which contains an ariphmetic operator, using which expression shall be executed.
-				 */
-				fullExp: function (expression) {
-					// TODO: decide which one value to use as a "default" for library's "unknown value" -- null or undefined;
-					// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-					return repeatedApplicationIndex(
-						(double) => [
-							exp(
-								[
-									double[0],
-									generate(
-										0,
-										expression.table[expression.operators[i]][1] - 2
-									).map((j) => expression.objects[double[1] + j])
-								],
-								expression.operators[i],
-								expression.table
-							),
-							double[1] +
-								expression.table[expression.operators[i]][2] -
-								(i > 0)
-						],
-						expression.operators.length,
-						[expression.objects[0], 0]
-					)[0]
-				},
+				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 
 				// TODO: same difficulty as above. WORKS ONLY WITH BINARY OPERATORS...
 				// * This can be rewritten as a repeatedApplication of fullExp...
@@ -2907,21 +3004,39 @@ export function activate(transformation = ID) {
 				 * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
 				 * ! Wrong names of keys will cause an Error.
 				 *
-				 * @par   am {Expression} exssion An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
+				 * @param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
 				 * @param {number} timesRepeat   A number of repeats of ariphmetic operation.
 				 * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
 				 */
-				repeatExp: function (expression, repeatOperator, timesRepeat = 1) {
-					const tempRes = fullExp(expression)
-					let result = deepCopy(tempRes)
-					for (let i = 0; i < timesRepeat - 1; i++)
-						result = exp([result, ...generate()], repeatOperator)
-					return result
+				repeatExp: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (
+							objects,
+							operators,
+							roperator,
+							indexes,
+							repetitions = 1
+						) {
+							return repeatedOperation(this.template)(
+								roperator,
+								fullExp(this.template)(objects, operators, indexes)
+							)
+						}
+					}
+					// const tempRes = fullExp(expression)
+					// let result = deepCopy(tempRes)
+					// for (let i = 0; i < timesRepeat - 1; i++)
+					// 	result = exp([result, ...generate()], repeatOperator)
+					// return result
 				},
 
 				/**
 				 * Takes the number array and rerturns an average of it.
-				 * @par   am {number[]} nuAn array of numbers passed to the function.
+				 * @param {number[]} nums An array of numbers passed to the function.
 				 * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
 				 * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
 				 */
@@ -2936,7 +3051,7 @@ export function activate(transformation = ID) {
 				},
 
 				/**
-				 * Take   s an array oumbers and returns the smallest of thems.
+				 * Takes an array of umbers and returns the smallest of thems.
 				 * @param {number[]} nums An array of numbers passed to the function.
 				 * @returns {number} The smallest number of the passed array.
 				 */
@@ -4110,13 +4225,10 @@ export function activate(transformation = ID) {
 					)
 				},
 
-				// * The 'recognizedl' and 'recognizedv' arguments are supposed to be template arguments; they are for the user to have the ability to make the Pointer objects recognizable...
-				// ^ IDEA: Change some of self's APIs to allow for the work with various user-defined Pointer(s), which would also fix the problems with the API not being general enough...I
 				// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
-				// TODO: make more dynamic; work on those...
-				Pointer: function (template) {
+				Pointer: function (template = {}) {
 					return {
-						template: template,
+						template: { label: "", ...template },
 						class: function (value) {
 							return { [template.label]: value }
 						}
@@ -4180,6 +4292,8 @@ export function activate(transformation = ID) {
 				 * This class represents a geometric surface with dots, segments and lines on it.
 				 * They are represented via coordinates.
 				 */
+				// ! One rather wonders if this thing does not fall outside this library's set of covered items...
+				// * Yes. Create a separate JS library for this thing [it'd use Math-expressions.js as a dependency...]
 				Surface: class {
 					static n = 0
 					// TODO: add capability to have the initial Surface not being empty (unlike it is at the moment...)
@@ -4257,40 +4371,6 @@ export function activate(transformation = ID) {
 					}
 					draw(width, height, title = `Surface ${this.n}`) {
 						// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
-					}
-				},
-
-				/**
-				 * This class represents a mathematical arithmetic expression.
-				 *
-				 * It can also come in helpful when evaluating the same expression various number of times.
-				 */
-				Expression: class {
-					/**
-					 * Takes two arrays, one of which contains numbers, used in the expression and the other one contains strings, containing operators, using which expression shall be executed (only after calling one of functions, working with expressions: exp(), repeatedArithmetic(), fullExp(), repeatExp().)
-					 * @param {string[]} objects An array, containing numbers of expression.
-					 * @param {string[]} operators An array, containing operators of expression.
-					 */
-					constructor(objects = [], operators = [], table = defaultTable) {
-						this.objects = objects
-						this.operators = operators
-						this.table = table
-					}
-					/**
-					 * Just a wrapper for fullExp() function. Watch documentation for it.
-					 */
-					execute() {
-						return fullExp(this)
-					}
-					// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
-					// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
-					/**
-					 * Wrapper for repeatExp() function. Watch documentation for it.
-					 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
-					 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
-					 */
-					repeat(operator, times = 1) {
-						return repeatExp(this, operator, times)
 					}
 				},
 

@@ -71,6 +71,12 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 						CONCLUSION: all such functions are, in effect, really just aliases working with native types; 
 						So, for instance, one could store those finite versions under 'RESULT.aliases.native'; 
 						This way, there'd be 2 kinds of 'ensureProperty' [and other similarly defined functions] for both the native JS object type and a templated general InfiniteMap; 
+
+					FURTHER CONCLUSION: about the reorganization procedures; 
+						The distinction between which of the functions one desires to keep as native types insofar have been one, whose resolution is that of rather cloudy nature...
+						Due to this, one will break up the reorganization of the 'finite' part of the library into two more steps: 
+							1. putting ALL OF THEM [reworked] into the 'aliases.native', then finding out which doth and which doth not one desire to be kept within the library in their current state; 
+							2. Then, generalizing one-by-one all of them, deleting the undesired finite versions... [with CommonArray, and other such generalized wrapper-types, one's able to have the PRECISE SAME behaviour as that of the non-general ones...]
 	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
