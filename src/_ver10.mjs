@@ -5,36 +5,27 @@
  */
 
 // Space for the local constants... [used for semantics and simplification of development/code-reading];
+// ? Should one export them as well? If so, should one export them separately or as a part of 'activate'?
+
 const ID = (a) => a
-// ^ IDEA : generalize this thing to a TYPED_VARIABLE;
-// * Use within the library as an exported 'type', it'd have the ability for the user to set their own 'checking' function on the 'set' method;
-// ^ IDEA: export the 'VARIABLE'; Also, the TYPED_VARIABLE...
-const VARIABLE = (x) => {
-	return {
-		get: x,
-		set(t) {
-			return (this.get = t)
+
+export const TYPED_VARIABLE =
+	(type = ID) =>
+	(x) => {
+		return {
+			get: type(x),
+			set(t) {
+				return (this.get = type(t))
+			}
 		}
 	}
-}
 
-// TODO [most recent agenda]: WORK ON THE BASIC MODULE STRUCTURE...
-// * Works like so - exports an 'activate' function returning the object of the module, on which the given transformation has first been applied; By default the transformation is 'id';
+export const VARIABLE = TYPED_VARIABLE()
+
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'activate' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 export function activate(transformation = ID) {
-	// ? Question: about spacing ; Does one want to do it like 'RESULT.submodules[thing] = value', or as a part of this 'const' definition?
-	// TODO: pray, after having put EVERYTHING there, THOUROUGHLY come through ALL THE CODE, fixing all the broken references;
-	// * Also, create the priority-of-definition order, by which it would be decided which of the elements of RESULT to put within its 'block-definition', and the rest - out of it;
-	// As in: 'const RESULT = {modules: {smthng: {x : ...}, ...}, ...} -> RESULT.modules.smthng.x = ...; '
-
-	// * Current work on the new structure for the 'RESULT':
-	// 		1. No '.submodules'; (the 'returnless' version will be a completely different file, completely different function, completely different object and written in a completely different style)
-	// 		? 2. Should there be the separation between the '.classes' and '.methods'? Should they be merged into something else?
-	// 		! these two are connected; the issue of creation of a single united '.main' field (or separation onto '.methods' and '.classes');
-	// 		3 [IN PROGRESS]. No separation between variables' types; They all receive the same object-structure; They all get treated the same way; They all go under 'var[iable?]s';
-	// 		4. Is separation for the 'aliases' [because they bear semantic significance for the code [or, at least, in accordance with their original (non-altered, id est) definitions they did]];
-
+	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
 	const RESULT = {
 		// ? Should 'aliases' get renamed into 'semantic'? Or something else? Think, pray...
 		aliases: {
@@ -206,6 +197,8 @@ export function activate(transformation = ID) {
 									return [
 										// ? Should it use 'this.template' for 'exp' here instead?;
 										// * Consider more generally on the library-scale...
+
+										// ! Write an alias for this 'argument-compilation' procedure from the 'fullExpr'...
 										exp({ optable: this.template.optable }).function(
 											operators[i],
 											generate(
@@ -231,6 +224,40 @@ export function activate(transformation = ID) {
 					}
 				},
 
+				// ? Consider refactoring [couldn't it be rewritten via fullExp];
+				repeatExp: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (args, indexes, roperator, repetitions = 1) {
+							return repeatedApplicationIndex(
+								(r, i) => {
+									let hasMet = false
+									return RESULT.aliases.native
+										.op(this.template)
+										.function(
+											roperator,
+											generate(
+												0,
+												this.optable[roperator][1] - 1
+											).map((x) => {
+												if (x == indexes[i]) {
+													hasMet = i > 0
+													return r
+												}
+												return otherargs[i][x - hasMet]
+											})
+										)
+								},
+								repetitions,
+								args[0][0]
+							)
+						}
+					}
+				},
+
 				subobjects(object) {
 					const returned = []
 					if (object instanceof Object)
@@ -252,6 +279,27 @@ export function activate(transformation = ID) {
 								this.isRecursive(object[x], prevobjsarr)
 						)
 					)
+				},
+
+				repeatedOperation: function (template = {}) {
+					return {
+						template: {
+							optable: RESULT.variables.defaultTable.get,
+							...template
+						},
+						function: function (
+							operator,
+							objects = [],
+							indexes = objects.map(RESULT.aliases._const(0))
+						) {
+							return Expression(this.template)
+								.class(
+									objects,
+									objects.map(RESULT._const(operator), indexes)
+								)
+								.execute()
+						}
+					}
 				}
 			},
 
@@ -262,8 +310,6 @@ export function activate(transformation = ID) {
 			mostPopularNum: mostPopular,
 			repeatedApplicationWhile: repeatedApplicationWhilst,
 
-			// TODO: use these things in appropriate places within the code. Give it a good shortening session: walk about making aliases for repeating expressions and then replace those with the newly introduced names...
-			// ? work on renaming the aliases properly....; pay particular attention to the "_" counterparts...
 			bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
 			// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
 			last: (arr, obj, comparison = valueCompare) => {
@@ -293,7 +339,8 @@ export function activate(transformation = ID) {
 			propertymap: (prop) => (objs) => objs.map((a) => a[prop]),
 			refCompare: (a, b) => a === b,
 
-			// TODO: work on the phrasing; A lot of work is required on the phrasing....
+			numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
+
 			/**
 			 * * Returns a constant-function based on the argument;
 			 *
@@ -466,9 +513,6 @@ export function activate(transformation = ID) {
 						}
 					},
 					class: function (array = this.template.empty) {
-						// TODO: the decided templates shape - {...defaults, ...usertemplate, ...overrides}; (Like here...) Pray ensure it...
-						// ! DECISION: never override the user input; Allow for user to manually interfere with the library's workflow [there's essentially no one 'intended' workflow...]...
-						// Id est, 'overrides = {}' is ALWAYS true; Ensure that as well...
 						// TODO: ensure that all the objects within the library possess this style [uniformity; so that it's more intuitive to work with (under certain particular interpretation of 'intuitive' + it has more features...)]; Allows for changing the 'this' dynamically easily [something that plain JS 'this' don't really allow];
 						const A = { class: this }
 						A.this = {
@@ -1719,20 +1763,44 @@ export function activate(transformation = ID) {
 			// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))';
 			// ! All that'd be required is a JS parser...
 			// todo: having created the JSONF, for the 1.1 [or even the 1.2] release, pray add this there too...
-			valueCompare(a, b, oneway = false) {
-				if (typeof a !== typeof b) return false
-				switch (typeof a) {
-					case "object":
-						for (const a_ in a)
-							if (!RESULT.infinite.valueCompare(b[a_], a[a_])) return false
-						if (!oneway) return RESULT.infinite.valueCompare(b, a, true)
-						return true
-					case "function":
-						return String(a) === String(b)
-					default:
-						return a === b
+			valueCompare(template = {}) {
+				function TWOCASE(oneway = false) {
+					return (a, b) => {
+						if (typeof a !== typeof b) return false
+						switch (typeof a) {
+							case "object":
+								for (const a_ in a)
+									if (!TWOCASE()(b[a_], a[a_])) return false
+								if (!oneway) return TWOCASE(true)(b, a)
+								return true
+							case "function":
+								return String(a) === String(b)
+							case "symbol":
+								return a.toString() === b.toString()
+							default:
+								return a === b
+						}
+					}
+				}
+				return {
+					template: {
+						oneway: false,
+						...template
+					},
+					function: function (...args) {
+						return !!RESULT.aliases.native.min(
+							args
+								.slice(0, args.length - 1)
+								.map((x, i) =>
+									TWOCASE(this.template.oneway)(x, args[i + 1])
+								)
+						)
+					}
 				}
 			},
+
+			// TODO [GENERAL] : add the ability for certain methods to take arbitrary number of arguments from the user... Let it use the '...something' operator for Arguments-to-Array conversion...
+			// Like the way one's done recently with the valueCompare...
 
 			// * Probably the simplest infinite counter one would have in JS;
 			arrayCounter(template = {}) {
@@ -2973,66 +3041,8 @@ export function activate(transformation = ID) {
 
 			// ! These 2 get 'poured out' into the 'main' field;
 			methods: {
-				// * Most of the Expressions' Api's a bloody mess currently; Re-do most of it...
-				/**
-				 * Executes mathematical expression with the same operator repeating, but different numbers.
-				 * @param {number[]} objects An array of numbers(or strings) using which expression will be executed.
-				 * @param {string} operator - A string, containing an operator, with which expression will be executed.
-				 */
-				repeatedOperation: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (operator, objects = []) {
-							return Expression(this.template)
-								.class(objects, objects.map(RESULT._const(operator)))
-								.execute()
-						}
-					}
-				},
-
 				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-
-				// TODO: same difficulty as above. WORKS ONLY WITH BINARY OPERATORS...
-				// * This can be rewritten as a repeatedApplication of fullExp...
-				/**
-				 * Repeats an expression a bunch of times and returns you the result of making an ariphmetic actions between them.
-				 *
-				 * ! NOTE: keys of the key-value pairs of the passed object must have the next names: nums, operators.
-				 * ! Wrong names of keys will cause an Error.
-				 *
-				 * @param {Expression} expression An object, that contains two key-value pairs, where each value is an array. First array contains nums, second - operators.
-				 * @param {number} timesRepeat   A number of repeats of ariphmetic operation.
-				 * @param {string} repeatOperator   A string, containing an operator, with which ariphmetic operation upon the expression result will be done a several times.
-				 */
-				repeatExp: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (
-							objects,
-							operators,
-							roperator,
-							indexes,
-							repetitions = 1
-						) {
-							return repeatedOperation(this.template)(
-								roperator,
-								fullExp(this.template)(objects, operators, indexes)
-							)
-						}
-					}
-					// const tempRes = fullExp(expression)
-					// let result = deepCopy(tempRes)
-					// for (let i = 0; i < timesRepeat - 1; i++)
-					// 	result = exp([result, ...generate()], repeatOperator)
-					// return result
-				},
 
 				/**
 				 * Takes the number array and rerturns an average of it.
@@ -3655,25 +3665,6 @@ export function activate(transformation = ID) {
 					return (globalPrecision = precision | 0)
 				},
 
-				// TODO : separate onto reference-equality (current) and value-equality (for this, one could employ newapi.utils.valueComparison)
-				// ! Better - transform into a generalized version for the 'infinite', with a 'comparison' value; make this a special case;
-				/**
-				 * This funciton takes in n arrays of dimension 1 (dim (arr) = 1) and compares them.
-				 * (I.e. returns the boolean value, representing whether they're equal or not).
-				 * @param {any[]} arrays An array of one-dimensional array of any length.
-				 */
-				arrayEquality: function (...arrays) {
-					function equalBinary(arr1, arr2) {
-						if (arr1.length !== arr2.length) return false
-						for (let i = 0; i < arr1.length; i++)
-							if (arr1[i] !== arr2[i]) return false
-						return true
-					}
-					for (let i = 1; i < arrays.length; i++)
-						if (!equalBinary(arrays[i - 1], arrays[i])) return false
-					return true
-				},
-
 				/**
 				 * This function takes in array and determines how nested it is (its dimensions).
 				 * If it is not array, dimension is 0.
@@ -3684,23 +3675,11 @@ export function activate(transformation = ID) {
 				 * This function is defined recursively.
 				 * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
 				 */
-				// * Alternative implementation (second one):
 				dim: function (array) {
 					if (array instanceof Array)
 						return 1 + (array.length === 0 ? 0 : max(array.map(dim)))
 					return 0
 				},
-
-				// function dim(array: any) {
-				//	const d = (elem) => (elem instanceof Array ? t(elem) : 0)
-				//	const t = (arr) =>
-				//		1 + (arr.length === 0 ? 0 : max(arr.map(d))
-				//	return d(array)
-				// }
-				// ? They're both so good... Which one should be?
-				// * first is 4 function calls per level;
-				// * second is 3 function calls per level;
-				// * CURRENT DECISION: both shall stay, but the first one will be commented out...
 
 				/**
 				 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
@@ -3728,7 +3707,8 @@ export function activate(transformation = ID) {
 					)
 				},
 
-				// TODO: Implement the compareUniversal(...arrays), which uses dim;
+				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
+				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
 
 				// ! PROBLEM:
 				// ? Does one want to be unifying those with the (equivalent) arrays methods [for doing so]?
@@ -3748,20 +3728,11 @@ export function activate(transformation = ID) {
 						Math.min(inds.length, values.length),
 						string
 					)
-					// * Previous: before refactoring (check that they are the same thing...)
-					// let copy = string
-					// for (let i = 0; i < inds.length; i++)
-					//	copy = replaceStrInd(copy, inds[i], values[i])
-					// return copy
 				},
 
 				// * 2.
 				// * Replace the first occurence of a given value within a string...
 				stringReplaceFirst: function (string, x, y) {
-					// ? Question: which definition to keep? The original: [below]
-					// const split = string.split(x)
-					// return split[0] + y + split.slice(1).join(x)
-					// ? or the current one:
 					return stringReplaceIndexes(string, x, y)
 				},
 				// * replaces occurences of a value within a string at the given posiitons...
@@ -3828,19 +3799,6 @@ export function activate(transformation = ID) {
 					return indexes
 				},
 
-				// ? which one to use as an export? (they will both be kept in any case...)
-				// * Current decision: the newer one (one below);
-				// * Alternative implementation (this time, with a searchIndex -- i parameter):
-				//  const indexOfMult = (
-				//	array: any[],
-				//	el: any,
-				//	comparison: (a: any, b: any) => boolean = (a: any, b: any) => a === b,
-				//  i: number = 0
-				// ) => {
-				//		if (i >= array.length) return []
-				//		const next = indexOfMult(array, el, comparison, i + 1)
-				//		return comparison(array[i], el) ? [i, ...next]: [...next]
-				// }
 				// * clears all but the first `tokeep` repetition of `el`
 				clearRepetitions: function (
 					arr,
@@ -3898,12 +3856,14 @@ export function activate(transformation = ID) {
 				// * "reverses" the gutInnerArrs (only once, at a given place)
 				// TODO: generalize; make a version of multiple encirclements;
 				// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
+				// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
 				arrEncircle: function (a, from = 0, to = a.length) {
 					const copied = []
 					for (let i = 0; i < a.length; i++) {
 						if (i >= from && i <= to) {
 							copied.push(a.slice(from, to + 1))
 							i = to
+							continue
 						}
 						copied.push(a[i])
 					}
@@ -3929,10 +3889,7 @@ export function activate(transformation = ID) {
 				// TODO: add more methods to UniversalMap and InfiniteMap;
 				// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
 
-				// ! There is something I do not like about the 'comparison' parameter...
-				// * It is only of 2 variables...
-				// TODO: think about generalizing to arbitrary number of variables...
-				// * IDEA: a recursive function-building type!
+				// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
 
 				// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
 				arrIntersections: function (arrs, comparison = (a, b) => a === b) {
@@ -3980,17 +3937,9 @@ export function activate(transformation = ID) {
 					let curr = initial
 					for (let i = 0n; i < n; i++) curr = a(curr, i + offset)
 					return curr
-					// * Old recursive definition [replaced with the new one; these are better on the stack];
-					// ! clean up later... [save somewhere for good memory]
-					// if (BigInt(n) <= 0) return initial
-					// if (BigInt(n) === 1) return a(initial, n - offset)
-					// return a(
-					//	repeatedApplicationIndex(a, n - 1, initial, offset),
-					//	n - offset
-					// )
 				},
 
-				// * This can create infinite loops... Equiv. of `function () {let a = initial; while (property()) {a = b(a)}; return a}`; (Should one not also add this one thing?)
+				// * This can create infinite loops...
 				repeatedApplicationWhilst: function (
 					function_,
 					property,
@@ -3999,14 +3948,6 @@ export function activate(transformation = ID) {
 					let curr = initial
 					while (property()) curr = function_(curr)
 					return curr
-					// ? Allow for input of (function_, property)? this'd allow for greater diversity of uses...
-					// ? GENERAL QUESTION: about diversity of uses: does one want it truly?
-					// * Current decision: YEEEEEASS! (Do it...)
-
-					// ! Old recursive definition; Being replaced; later, save somewhere for good memory, yada-yada...
-					// return property()
-					//	? repeatedApplicationWhilst(function_, property, function_(initial))
-					//	: initial
 				},
 
 				// TODO: create a repeatedApplicationFor...
@@ -4137,20 +4078,20 @@ export function activate(transformation = ID) {
 
 				// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
 				// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
-				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary sequence...
+				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
 				// TODO: extend this thing (add more stuff to it, create powerful extensions)
 				// ! rewrite using the repeatedApplication...
-				recursiveIndexation: function ({ object, fields }) {
+				recursiveIndexation: function (object, fields) {
 					let res = object
 					for (const f of fields) res = res[f]
 					return res
 				},
 
-				recursiveSetting: function ({ object, fields, value }) {
-					return (recursiveIndexation({
-						object: object,
-						fields: fields.slice(0, fields.length - 1)
-					})[fields[fields.length - 1]] = value)
+				recursiveSetting: function (object, fields, value) {
+					return (recursiveIndexation(
+						object,
+						fields.slice(0, fields.length - 1)
+					)[fields[fields.length - 1]] = value)
 				},
 
 				objInverse: function (notfound, treatUniversal = false) {
@@ -4167,7 +4108,7 @@ export function activate(transformation = ID) {
 
 				// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
 
-				obj: function (keys, values) {
+				obj: function (keys = [], values = []) {
 					let length = min([keys.length, values.length])
 					const returned = {}
 					for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
@@ -4183,14 +4124,14 @@ export function activate(transformation = ID) {
 					return newobj
 				},
 
-				objFmap: function (obj, f) {
+				objFmap: function (obj = {}, f = ID) {
 					const newobj = {}
 					for (const a in obj) newobj[a] = f(obj[a])
 					return newobj
 				},
 
-				objArr: function (obj) {
-					return [Object.keys(obj), Object.values(obj)]
+				objArr: function (obj = {}) {
+					return [Object.keys, Object.values].map((x) => x(obj))
 				},
 
 				objSwap: function (obj1, obj2) {
@@ -4199,7 +4140,7 @@ export function activate(transformation = ID) {
 						objClear(obj2, obj2Copy)
 						objInherit(obj1, obj2Copy)
 						objInherit(obj2, obj1Copy)
-					})(...arguments.map(flatCopy))
+					})(...Array.from(arguments).map(flatCopy))
 				},
 
 				objClear: function (obj, objCopy = flatCopy(obj)) {
@@ -4216,13 +4157,10 @@ export function activate(transformation = ID) {
 					obj[prop2] = temp
 				},
 
-				// * checks whether 2 objects' keys lists are the same; Essentially same as 'infinite.valueCompare(Object.keys(a1),Object.keys(a2))';
-				// ? Wonder if one should rewrite as this, or use 'boolmap' to make this this already present version tidier???
-				ismapped: function (a1, a2) {
-					return min(
-						min(Object.keys(a1).map((_a1) => !!a2[_a1])),
-						min(Object.keys(a2).map((_a2) => !!a1[_a2]))
-					)
+				ismapped: function (...args) {
+					// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
+					while (args.length < 2) args.push({})
+					return RESULT.main.valueCompare().function(...args.map(Object.keys))
 				},
 
 				// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
@@ -4230,7 +4168,7 @@ export function activate(transformation = ID) {
 					return {
 						template: { label: "", ...template },
 						class: function (value) {
-							return { [template.label]: value }
+							return { [this.template.label]: value }
 						}
 					}
 				}
@@ -5483,7 +5421,6 @@ export function activate(transformation = ID) {
 			// ! Make this thing more useful - when using unlimited types, use it to the full extent...
 			globalPrecision: VARIABLE(16),
 			// ! PREV. 'constants';
-			// TODO: use these as default arguments [where considered appropriate, that is];
 			// TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
 			// TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 			MAX_ARRAY_LENGTH: VARIABLE(2 ** 32 - 1),
@@ -5832,27 +5769,3 @@ export function activate(transformation = ID) {
 // }).function
 
 // return A
-
-// * B
-// fromNumber(template = {}) {
-// 	return {
-// 		template: template,
-// 		value: function (n) {
-// 			// ? make this an alias ('(x) => Number(x) || Number(!isNaN(x))'); this'd return 0 in case when argument is 'NaN'; in other cases, it'd perform a Number-conversion;
-// 			n = Number(n) || Number(!isNaN(Number(n)))
-// 			if (n < 0)
-// 				return fromNumber({
-// 					generator: this.template.inverse
-// 				})(-n)
-// 			return repeatedApplication(
-// 				(r) => r.next(),
-// 				BigInt(n),
-// 				// ? Shouldn't they really share the templates? [Yup, they do... Pray fix when finishing them...]
-// 				InfiniteCounter({
-// 					generator: this.template.generator,
-// 					inverse: this.template.inverse
-// 				})()
-// 			)
-// 		}
-// 	}
-// },
