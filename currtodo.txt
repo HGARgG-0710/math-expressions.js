@@ -83,13 +83,16 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 					This is why the current API is so very multi-directioned; 
 					One ought to consider each and every part of it and what to do with it: 
 
+						[THIS LIST SHOULD GET REVISED AFTER HAVING INTRODUCED THE STRUCTURAL CHANGES...]
 						1. 'Statistics' part (Statistics and Tests classes and all the related number-theoretic/statistics functions) [in progress]: 
 							All this stuff gets generalized; 
 							The names for the functions get to remain as a 'finite' special case (as in 'number()'); 
-						2. 'Surface' part [done; take this out at the next commit]: 
-							Take out of the scope of the library; 
-							Make into a new (possibly, non-JS) library that's going to operate on these things...	
-						3. VarMapping and 'Equation' part:
+
+							It goes into the 'statistics' namespace; 
+
+							But what to do about the number-theoretic functions? Should they be considered a part of this thing? 
+							[No, one don't want to; They were developed largely independent of everything so one decides to consider them separate; Thus, they'll have their own namespace and a development punct...]
+						2. VarMapping and 'Equation' part:
 							Not sure about generalizing this thing; 
 							Problem is: it uses rational approximations for obtaining of solutions to given equations; 
 
@@ -111,13 +114,15 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 							DECISION: yes. Do this work on them, pray; 
 
-						4. Algorithms part [along with the 'Ratio' class]: 
+						3. Algorithms part [along with the 'Ratio' class]: 
 							'Algorithms' "static" class gets turned into an object structure for algorithms; 
 							'Ratio' (maybe?) gets 'deleted' and becomes a label for the special case of the TrueRatio (one that uses finite 'number()'); 
-						5. 'Linear' part [Matricies, Vectors]: 
+								Only, first pray check for the functionality match between the two; If there is lack - finish the implementation of the corresponding algorithms on a more general level...
+							What about generalizing the 'Algorithms'? Does one want to? 
+						4. 'Linear' part [Matricies, Vectors]: 
 							Generalize; 
 							[Maybe] keep the names for those 'finite' versions as aliases; 
-						6. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
+						5. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
 							The functions stay as a part of the 'aliases.native'; 
 
 	

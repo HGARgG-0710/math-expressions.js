@@ -300,6 +300,234 @@ export function activate(transformation = ID) {
 								.execute()
 						}
 					}
+				},
+
+				// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
+				/**
+				 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
+				 * @param {number} num A number, from which to make a better-looking version of it.
+				 */
+				readable: function (num) {
+					const arr = String(num).split("")
+					let changeStr = ""
+					while (arr.length % 3 > 0) {
+						changeStr += arr[0]
+						if ((arr.length - 1) % 3 === 0) changeStr += " "
+						arr.shift()
+					}
+					arr.forEach((number, index) => {
+						index % 3 === 0 && index > 0
+							? (changeStr += ` ${number}`)
+							: (changeStr += `${number}`)
+					})
+					return changeStr
+				},
+
+				/**
+				 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
+				 * @param {number} start Start number in array(it's supposed to be the least number in it)
+				 * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
+				 * @param {number} step Value, by which the count is incremented every iteration.
+				 * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
+				 */
+				generate: function (start, end, step = 1, precision = 1) {
+					const generated = []
+					const upper = realAddition(
+						end,
+						(-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
+					)[0]
+					const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
+					for (let i = start; proposition(i); i += step)
+						generated.push(floor(i, precision))
+					return generated
+				},
+
+				// TODO: this should also separate onto findValue and findReference;
+				// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
+				// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
+				// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
+				/**
+				 * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
+				 * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
+				 * @param {number | number[] | string} searchVal Searched value.
+				 * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
+				 */
+				find: function (searchArr, searchVal) {
+					let result = false
+					let foundTimes = 0
+					const foundIndexes = []
+					if (searchVal instanceof Array && searchArr instanceof Array)
+						searchVal.forEach((value) =>
+							searchArr.forEach((arr, index) =>
+								arr.forEach((obj) => {
+									if (value === obj) {
+										result = true
+										foundTimes++
+										if (!foundIndexes.includes(index))
+											foundIndexes.push(index)
+									}
+								})
+							)
+						)
+					else
+						for (let i = 0; i < searchArr.length; i++)
+							searchArr[i] === searchVal
+								? ((result = true), foundTimes++, foundIndexes.push(i))
+								: null
+					return [result, foundTimes, foundIndexes]
+				},
+
+				permutations: function (array) {
+					if (array.length < 2) return [[...array]]
+
+					const pprev = permutations(array.slice(0, array.length - 1))
+					const pnext = []
+
+					for (let i = 0; i < array.length; i++)
+						for (let j = 0; j < pprev[i].length; j++)
+							pnext.push([
+								pprev[i].slice(0, i),
+								array[array.length - 1],
+								pprev[i].slice(i, pprev.length)
+							])
+
+					return pnext
+				},
+
+				// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
+				// TODO: write such a function as well for both old api and new api!
+				// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
+				/**
+				 * Floors the given number to the needed level of precision.
+				 * @param {number} number Number to be floored.
+				 * @param {number} afterDot How many positions after dot should there be.
+				 * @returns {number}
+				 */
+				floor: function (number, afterDot = globalPrecision) {
+					return Number(number.toFixed(afterDot))
+				},
+
+				// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
+				// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
+				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
+				// TODO: extend this thing (add more stuff to it, create powerful extensions)
+				// ! rewrite using the repeatedApplication...
+				recursiveIndexation: function (object, fields) {
+					let res = object
+					for (const f of fields) res = res[f]
+					return res
+				},
+
+				recursiveSetting: function (object, fields, value) {
+					return (recursiveIndexation(
+						object,
+						fields.slice(0, fields.length - 1)
+					)[fields[fields.length - 1]] = value)
+				},
+
+				objInverse: function (notfound, treatUniversal = false) {
+					return {
+						template: { notfound, treatUniversal },
+						value: function (obj, treatUniversal = this.treatUniversal) {
+							return ((a) =>
+								((universal) => a(universal.values, universal.keys))(
+									a(obj, treatUniversal)
+								))(UniversalMap(this.notfound))
+						}
+					}
+				},
+
+				// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
+
+				obj: function (keys = [], values = []) {
+					let length = min([keys.length, values.length])
+					const returned = {}
+					for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
+					return returned
+				},
+
+				objMap: function (obj, keys, id = true) {
+					const newobj = {}
+					for (const key in keys) newobj[keys[key]] = obj[key]
+					if (id)
+						for (const key in obj)
+							if (!Object.values(keys).has(key)) newobj[key] = obj[key]
+					return newobj
+				},
+
+				objFmap: function (obj = {}, f = ID) {
+					const newobj = {}
+					for (const a in obj) newobj[a] = f(obj[a])
+					return newobj
+				},
+
+				objArr: function (obj = {}) {
+					return [Object.keys, Object.values].map((x) => x(obj))
+				},
+
+				objSwap: function (obj1, obj2) {
+					;((obj1Copy, obj2Copy) => {
+						objClear(obj1, obj1Copy)
+						objClear(obj2, obj2Copy)
+						objInherit(obj1, obj2Copy)
+						objInherit(obj2, obj1Copy)
+					})(...Array.from(arguments).map(flatCopy))
+				},
+
+				objClear: function (obj, objCopy = flatCopy(obj)) {
+					for (const dp in objCopy) delete obj[dp]
+				},
+
+				objInherit: function (obj, parObj) {
+					for (const ap in parObj) obj[ap] = parObj[ap]
+				},
+
+				propSwap: function (obj, prop1, prop2) {
+					const temp = obj[prop1]
+					obj[prop1] = obj[prop2]
+					obj[prop2] = temp
+				},
+
+				ismapped: function (...args) {
+					// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
+					while (args.length < 2) args.push({})
+					return RESULT.main.valueCompare().function(...args.map(Object.keys))
+				},
+
+				// * For iteration over an array; this thing is index-free; handles them for the user;
+				// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+				// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
+				IterableSet: class {
+					curr() {
+						return Array.from(this.elements.values())[this.currindex]
+					}
+					updateIndex(change = 1) {
+						this.currindex = (this.currindex + change) % this.elements.size
+					}
+					prev() {
+						this.updateIndex(-1)
+						return this.curr()
+					}
+					next() {
+						this.updateIndex()
+						return this.curr()
+					}
+					add(x) {
+						return this.elements.add(x)
+					}
+					has(x) {
+						return this.elements.has(x)
+					}
+					get size() {
+						return this.elements.size
+					}
+					delete(x) {
+						return this.elements.delete(x)
+					}
+					constructor(elems = new Set([])) {
+						this.currindex = 0
+						this.elements = elems
+					}
 				}
 			},
 
@@ -417,6 +645,7 @@ export function activate(transformation = ID) {
 			},
 
 			// ? Question: generalize for MultiInfiniteCounter?
+			// * Nope; 'number()' is only one mere counter; This kind of logic is complex enough for user to be able to do it easier and more directly than the library [from this one spot of approach, that is...];
 			fromNumber(template = {}) {
 				return {
 					template: { ...template },
@@ -428,6 +657,7 @@ export function activate(transformation = ID) {
 					}
 				}
 			},
+
 			mostf(template = {}) {
 				return {
 					template: { ...template },
@@ -439,6 +669,7 @@ export function activate(transformation = ID) {
 					}
 				}
 			},
+
 			mostg(template = {}) {
 				return {
 					template: { ...template },
@@ -451,6 +682,15 @@ export function activate(transformation = ID) {
 						return most
 					}
 				}
+			},
+
+			// * just a convinient syntax...
+			arrThisApply: function (f, arr, thisArg = null) {
+				return f.apply(thisArg, arr)
+			},
+
+			arrApply: function (f, arr) {
+				return f(...arr)
 			}
 		},
 		main: {
@@ -3039,12 +3279,354 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// ! These 2 get 'poured out' into the 'main' field;
-			methods: {
-				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
-				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
+			UniversalMap: function (template = {}) {
+				return {
+					template: {
+						// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
+						notfound: undefined,
+						treatUniversal: false,
+						comparison: RESULT.main.valueCompares,
+						...template
+					},
+					class: function (
+						keys = [],
+						values = [],
+						treatUniversal = this.template.treatUniversal
+					) {
+						// * Conversion from a non-array object...
+						if (!(keys instanceof Array)) {
+							if (keys.keys && keys.values && treatUniversal) {
+								values = values.values
+								keys = keys.keys
+							} else {
+								keys = Object(keys)
+								values = Object.values(keys)
+								keys = Object.keys(keys)
+							}
+						}
+						return {
+							keys: keys,
+							values: values,
+							index: 0,
+							class: this,
+							get(key, number = 1) {
+								const indexes = indexOfMult(
+									this.keys,
+									key,
+									this.class.template.comparison
+								)
+								if (indexes.length === 0)
+									return this.class.template.notfound
+								return indexes.slice(0, number).map((i) => this.values[i])
+							},
+							set(key, value) {
+								const index = indexOfMult(
+									this.keys,
+									key,
+									this.class.template.comparison
+								)
+								if (index.length !== 0)
+									for (const _index of index)
+										this.values[_index] = value
+								else {
+									this.keys.push(key)
+									this.values.push(value)
+								}
+								return value
+							},
+							// TODO: define the [Symbol.iterator] for all the types of all objects;
+							// * Similarly, define 'forin'
+							// ^ Funny, that reminds oneself:
+							// Thorin
+							// Fili
+							// Kili
+							// Oin
+							// Gloin
+							// Forin
+							// Balin
+							// Dwalin
+							// Ori
+							// Dori
+							// Nori
+							// Bifur
+							// Bofur
+							// Bombur
+							// * Noticed anything different? :D
+							// * hahaha!
+							// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
+							[Symbol.iterator]: function* () {
+								for (
+									this.index = 0;
+									this.index < this.keys.length;
+									this.index++
+								)
+									yield this.get(this.keys[this.index])
+							},
+							forin(body) {
+								for (
+									this.index = 0;
+									this.index < this.keys.length;
+									this.index++
+								)
+									body(this.keys[this.index])
+							},
 
+							// TODO: create a method for checking if this kind of conversion is valid; 'isValidObject', for instance...
+							toObject() {
+								const a = {}
+								for (let i = 0; i < this.keys.length; i++)
+									a[
+										(!["symbol", "number"].includes(
+											typeof this.keys[i]
+										)
+											? JSON.stringify
+											: RESULT.id)(this.keys[i])
+									] = this.values[i]
+								return a
+							}
+						}
+					}
+				}
+			},
+
+			// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
+			Pointer: function (template = {}) {
+				return {
+					template: { label: "", ...template },
+					class: function (value) {
+						return { [this.template.label]: value }
+					}
+				}
+			},
+
+			// TODO: extend this thing - create new algorithms implementations for the library...
+			// ! Generalize this stuff, maybe?
+			algorithms: {
+				BinarySearch(array, number) {
+					// * For getting the middle index of the array.
+					const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
+					const copyArray = sort(array)
+					let index = middle(copyArray)
+					let copyArr = copy(copyArray)
+					let copyIndex = index
+					for (let i = 0; ; i++) {
+						if (number === copyArray[index]) return index
+						if (copyArr.length === 1) break
+						const isBigger = number > copyArray[index]
+						copyArr = isBigger
+							? copyArr.slice(copyIndex + 1, copyArr.length)
+							: copyArr.slice(0, copyIndex)
+						copyIndex = middle(copyArr)
+						index = isBigger ? index + copyIndex : index - copyIndex
+					}
+					return -1
+				},
+				/**
+				 * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
+				 * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
+				 * @param {Ratio} endRatio Ratio, that is used as an upper bound in the algorithm.
+				 * @param {number} iterations Number of iterations (integer).
+				 */
+				Farey(startRatio, endRatio, iterations = 0) {
+					// ? add as an operation to the Ratio class?
+					function formNewRatio(first, second) {
+						return new Ratio(
+							first.numerator + second.numerator,
+							first.denomenator + second.denomenator
+						)
+					}
+					const gotten = [[startRatio, endRatio]]
+					for (let i = 0; i < iterations; i++) {
+						gotten.push([])
+						for (let j = 0; j < gotten[i].length; j++) {
+							gotten[i + 1].push(gotten[i][j])
+							if (j !== gotten[i].length - 1)
+								gotten[i + 1].push(
+									formNewRatio(gotten[i][j], gotten[i][j + 1])
+								)
+						}
+					}
+					return gotten
+				}
+			},
+
+			statistics: {
 				// ! Problem: what to do with the 'statistics' part of the API? [CONSIDER, PRAY...]
+				/**
+				 * This class represents an assembly of various statistics on the array of numeric data given.
+				 *
+				 * Useful when needing a lot of info about data in one place.
+				 */
+				Statistics: class {
+					static isNumeric(data) {
+						for (let i = 0; i < data.length; i++)
+							if (typeof data[i] !== "number") return false
+						return true
+					}
+					/**
+					 * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
+					 * @param {number[]} nums An array of numbers passed to the function.
+					 * @param {boolean} forward Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
+					 */
+					constructor(nums = [], forward = true, nullValue = "None") {
+						if (Statistics.isNumeric(nums)) {
+							this.min = min(nums)
+							this.max = max(nums)
+							this.sorted = sort(nums, forward)
+							this.range = range(nums)
+							this.interquartRange = range(nums, true)
+							this.median = median(nums)
+							this.average = average(nums)
+							this.truncatedAverage = average(nums, true)
+							this.deviations = deviations(nums)
+							this.populationVariance = dispersion(nums)
+							this.populationStandDev = standardDeviation(nums)
+							this.standardError = standardError(nums)
+						} else {
+							this.min = null
+							this.max = null
+							this.sorted = null
+							this.range = null
+							this.interquartRange = null
+							this.median = null
+							this.average = null
+							this.truncatedAverage = null
+							this.deviations = null
+							this.populationVariance = null
+							this.populationStandDev = null
+							this.standardError = null
+						}
+						this.mostPopular = mostPopular(nums, nullValue)
+						this.length = nums.length
+						this.dim = dim(nums)
+					}
+				},
+
+				// TODO: look through this stuff; rename, refactor/shorten, generalize code where want to;
+				/**
+				 * This a class that contains various statistical tests.
+				 * It is a static class, i.e. it is supposed to be like this:
+				 * * Tests.testName();
+				 */
+				Tests: class {
+					constructor() {
+						throw new TypeError("Tests is not a constructor")
+					}
+					/**
+					 * Takes an array and a number and checks if the length of the given array equals the given number. If not, throws new Error. Otherwise returns void.
+					 * @param {any[]} arr An array, size of which is to be checked for being equal to size parameter.
+					 * @param {number} size A number, equality to which is checked.
+					 * @throws Error, if the length of given array is not equal to the size parameter.
+					 */
+					static sizecheck(arr, size) {
+						if (arr.length !== size)
+							throw new Error(
+								`Expected ${size} elements inside of the passed array, got ${arr.length}.`
+							)
+					}
+					/**
+					 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
+					 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
+					 */
+					static t_Students_test(...rows) {
+						Tests.sizecheck(rows, 2)
+						const averages = [average(rows[0]), average(rows[1])]
+						const errors = [
+							Math.pow(standardError(rows[0]), 2),
+							Math.pow(standardError(rows[1]), 2)
+						]
+						return floor(
+							exp(
+								[
+									Math.abs(exp([averages[0], averages[1]], "-")),
+									Math.sqrt(exp([errors[0], errors[1]], "+"))
+								],
+								"/"
+							),
+							globalPrecision
+						)
+					}
+					// ? question: should one keep the runtime checks if the compile-time check is already there?
+					// TODO: make a decision and change/keep correspondently;
+					// * CURRENT DECISION: nah, let it stay; one likes it, that is cute;
+					/**
+					 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
+					 * @param {number[]} rows Two one-dimensional arrays, the equality of dispersions of which shall be found.
+					 */
+					static F_test(...rows) {
+						Tests.sizecheck(rows, 2)
+						const dispersions = [
+							dispersion(rows[0], true),
+							dispersion(rows[1], true)
+						]
+						const biggerDispersionIndex =
+							dispersions[0] > dispersions[1] ? 0 : 1
+						const difference = exp(
+							[
+								dispersions[biggerDispersionIndex],
+								dispersions[Number(!biggerDispersionIndex)]
+							],
+							"/"
+						)
+						return floor(difference, globalPrecision)
+					}
+					/**
+					 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
+					 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
+					 * @param {number[][]} rows Two one-dimensional arrays, using which the u-test is to be done.
+					 */
+					static U_test(...rows) {
+						Tests.sizecheck(rows, 2)
+						let firstSum = 0
+						let secondSum = 0
+						let tempNum = 0
+						const general = []
+						const ranks = []
+						;`${rows[0]},${rows[1]}`
+							.split(",")
+							.forEach((str) => general.push(Number(str)))
+						const final = sort(general)
+						final.forEach((num, index) => {
+							if (num != final[index - 1] && num != final[index + 1]) {
+								ranks.push(index + 1)
+								tempNum = 0
+							} else {
+								//! NOT WORKING! FIX!
+								if (num === final[index + 1]) {
+									ranks.push(index + 1.5) //! Reason is in this thing!
+									tempNum = index + 1.5 //! And in this one also. Instead of putting 1.5 here I need to somehow rank the repeating numbers the correct way (but how ???).
+								} else {
+									ranks.push(tempNum)
+								}
+							}
+						})
+						final.forEach((num, index) => {
+							if (rows[0].includes(num)) firstSum += ranks[index]
+							if (rows[1].includes(num)) secondSum += ranks[index]
+						})
+						const firstResult =
+							rows[0].length * rows[1].length +
+							(rows[0].length * (rows[0].length + 1)) / 2 -
+							firstSum
+						const secondResult =
+							rows[0].length * rows[1].length +
+							(rows[1].length * (rows[1].length + 1)) / 2 -
+							secondSum
+						return min([firstResult, secondResult])
+					}
+					/**
+					 * Takes a number and an array of numbers and returns the Z-score for the given number.
+					 * @param {number} testedNum A number for which the Z-score is to be found.
+					 * @param {number[]} numbers An array of numbers, required to calculate the Z-score for the given number.
+					 */
+					static Z_score(testedNum, numbers) {
+						return exp(
+							[testedNum - average(numbers), standardDeviation(numbers)],
+							"/"
+						)
+					}
+				},
+
 				/**
 				 * Takes the number array and rerturns an average of it.
 				 * @param {number[]} nums An array of numbers passed to the function.
@@ -3169,252 +3751,20 @@ export function activate(transformation = ID) {
 				},
 
 				/**
-				 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
-				 * @param {number} start Start number in array(it's supposed to be the least number in it)
-				 * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
-				 * @param {number} step Value, by which the count is incremented every iteration.
-				 * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
-				 */
-				generate: function (start, end, step = 1, precision = 1) {
-					const generated = []
-					const upper = realAddition(
-						end,
-						(-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
-					)[0]
-					const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-					for (let i = start; proposition(i); i += step)
-						generated.push(floor(i, precision))
-					return generated
-				},
-
-				// TODO: this should also separate onto findValue and findReference;
-				// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
-				// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
-				// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
-				/**
-				 * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
-				 * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
-				 * @param {number | number[] | string} searchVal Searched value.
-				 * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
-				 */
-				find: function (searchArr, searchVal) {
-					let result = false
-					let foundTimes = 0
-					const foundIndexes = []
-					if (searchVal instanceof Array && searchArr instanceof Array)
-						searchVal.forEach((value) =>
-							searchArr.forEach((arr, index) =>
-								arr.forEach((obj) => {
-									if (value === obj) {
-										result = true
-										foundTimes++
-										if (!foundIndexes.includes(index))
-											foundIndexes.push(index)
-									}
-								})
-							)
-						)
-					else
-						for (let i = 0; i < searchArr.length; i++)
-							searchArr[i] === searchVal
-								? ((result = true), foundTimes++, foundIndexes.push(i))
-								: null
-					return [result, foundTimes, foundIndexes]
-				},
-
-				// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
-				/**
-				 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
-				 * @param {number} num A number, from which to make a better-looking version of it.
-				 */
-				readable: function (num) {
-					const arr = String(num).split("")
-					let changeStr = ""
-					while (arr.length % 3 > 0) {
-						changeStr += arr[0]
-						if ((arr.length - 1) % 3 === 0) changeStr += " "
-						arr.shift()
-					}
-					arr.forEach((number, index) => {
-						index % 3 === 0 && index > 0
-							? (changeStr += ` ${number}`)
-							: (changeStr += `${number}`)
-					})
-					return changeStr
-				},
-
-				permutations: function (array) {
-					if (array.length < 2) return [[...array]]
-
-					const pprev = permutations(array.slice(0, array.length - 1))
-					const pnext = []
-
-					for (let i = 0; i < array.length; i++)
-						for (let j = 0; j < pprev[i].length; j++)
-							pnext.push([
-								pprev[i].slice(0, i),
-								array[array.length - 1],
-								pprev[i].slice(i, pprev.length)
-							])
-
-					return pnext
-				},
-
-				whileFunctional: function (prop, body, endElem = null) {
-					return prop()
-						? [body(), whileFunctional(prop, body, endElem)]
-						: endElem
-				},
-
-				/**
-				 * Factors out a passed number to the prime numbers. Works quite quickly.
-				 * @param {number} num Number, to be factored out.
-				 * @returns {number[]} Prime factors array.
-				 */
-				factorOut: function (number) {
-					const factors = []
-					for (
-						let currDevisor = 2;
-						number !== 1;
-						currDevisor += currDevisor === 2 ? 1 : 2
-					) {
-						while (number % currDevisor === 0) {
-							factors.push(currDevisor)
-							number /= currDevisor
-						}
-					}
-					return factors
-				},
-
-				isPrime: function (x) {
-					return factorOut(x).length === 1
-				},
-
-				primesBefore: function (x) {
-					return generate(1, x).filter(isPrime)
-				},
-
-				// * Brings whatever is given within the given base to base 10;
-				// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-				nbase: function (nstr, base, alphabet = defaultAlphabet) {
-					return repeatedArithmetic(
-						generate(0, nstr.length - 1).map(
-							(i) => alphabet.indexOf(nstr[i]) * base ** i
-						),
-						"+"
-					)
-				},
-
-				// * Brings whatever in base 10 to whatever in whatever base is given...
-				nbasereverse: function (n, base, alphabet = defaultAlphabet) {
-					const coefficients = []
-					// TODO: call this thing nrepresentation(), then use here...
-					// TODO: change this for either one's own implementation of log, or this, as an alias...
-					let i = Math.floor(Math.log(n) / Math.log(base))
-					while (n !== 0) {
-						// TODO: add an operator for that to the defaultTable...
-						n = (n - (n % base ** i)) / base
-						coefficients.push(n)
-						i--
-					}
-					// TODO: create a generalized map() function that would map to both functions, arrays and objects;
-					return coefficients.map((i) => alphabet[i]).join("")
-				},
-
-				strMap: function (str, symb) {
-					return str.split("").map(symb)
-				},
-
-				baseconvert: function (a, basebeg, baseend) {
-					return nbasereverse(nbase(a, basebeg), baseend)
-				},
-
-				/**
 				 * Takes a numeric array and a number and truncates the passed array, using the second paramater as a count of percents of numbers, that shall be deleted.
 				 * @param {number[]} nums An array to be truncated.
 				 * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
 				 */
 				truncate: function (nums = [], percents = 10) {
 					const shortened = sort(copy(nums))
-					const toDelete = Number(Math.trunc((shortened.length / 100) * percents))
+					const toDelete = Number(
+						Math.trunc((shortened.length / 100) * percents)
+					)
 					for (let i = 0; i < toDelete; i++) {
 						shortened.shift()
 						shortened.pop()
 					}
 					return shortened
-				},
-
-				// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
-				// ? This thing don't include 0. Should it include 0?
-				multiples: function (n, range) {
-					return generate(1, range).map((a) => a * n)
-				},
-
-				// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
-				// ? That is, if that is desired... Is it? Pray think...
-				multiplesBefore: function (n, x) {
-					return multiples(n, floor(x / n))
-				},
-
-				// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
-				// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-				/**
-				 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
-				 * @param {number} firstNum First number.
-				 * @param {number} secondNum Second number.
-				 */
-				leastCommonMultiple: function (...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2)
-						return min(
-							arrIntersections([
-								multiples(nums[0], nums[1]),
-								multiples(nums[1], nums[0])
-							])
-						)
-					return leastCommonMultiple(
-						nums[0],
-						leastCommonMultiple(...nums.slice(1))
-					)
-				},
-
-				commonMultiples: function (range, ...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2) {
-						const found = arrIntersections([
-							multiples(nums[0], range[range.length - 1]),
-							multiples(nums[1], nums[range[range.length - 2]])
-						])
-						range.pop()
-						range.pop()
-						return found
-					}
-					const rest = commonMultiples(range, ...nums.slice(1))
-					return arrIntersections([
-						multiples(nums[0], range[range.length - 1]),
-						rest
-					])
-				},
-
-				leastCommonDivisor: function (...nums) {
-					// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-					return ((x) =>
-						typeof x === "number" || typeof x === "undefined" ? x : min(x))(
-						commonDivisors(...nums)
-					)
-				},
-
-				commonDivisors: function (...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2)
-						return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
-					return arrIntersections([
-						factorOut(nums[0]),
-						commonDivisors(...nums.slice(1))
-					])
 				},
 
 				/**
@@ -3553,19 +3903,6 @@ export function activate(transformation = ID) {
 					return floor(repeatedArithmetic(values.map(String), "+"))
 				},
 
-				// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
-				// TODO: write such a function as well for both old api and new api!
-				// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
-				/**
-				 * Floors the given number to the needed level of precision.
-				 * @param {number} number Number to be floored.
-				 * @param {number} afterDot How many positions after dot should there be.
-				 * @returns {number}
-				 */
-				floor: function (number, afterDot = globalPrecision) {
-					return Number(number.toFixed(afterDot))
-				},
-
 				// TODO: generalize to allow for arbitrary "random" function...
 				/**
 				 * Takes the max length of the random array, it's max value, the flag, characterizing whether numbers in it should be integers.
@@ -3583,6 +3920,156 @@ export function activate(transformation = ID) {
 								: floor(Math.random() * maxValue, globalPrecision)
 						)
 					return storage
+				}
+			},
+
+			// ! These 2 get 'poured out' into the 'main' field;
+			methods: {
+				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
+
+				// ! Does one really want this thing? Pray consider...
+				whileFunctional: function (prop, body, endElem = null) {
+					return prop()
+						? [body(), whileFunctional(prop, body, endElem)]
+						: endElem
+				},
+
+				// ? Where does one put all this number-theoretic stuff? Along with 'statistics'? Or not? Does one want to have it separate somehow? Does one really want to generalize it?
+				/**
+				 * Factors out a passed number to the prime numbers. Works quite quickly.
+				 * @param {number} num Number, to be factored out.
+				 * @returns {number[]} Prime factors array.
+				 */
+				factorOut: function (number) {
+					const factors = []
+					for (
+						let currDevisor = 2;
+						number !== 1;
+						currDevisor += currDevisor === 2 ? 1 : 2
+					) {
+						while (number % currDevisor === 0) {
+							factors.push(currDevisor)
+							number /= currDevisor
+						}
+					}
+					return factors
+				},
+
+				isPrime: function (x) {
+					return factorOut(x).length === 1
+				},
+
+				primesBefore: function (x) {
+					return generate(1, x).filter(isPrime)
+				},
+
+				// * Brings whatever is given within the given base to base 10;
+				// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
+				nbase: function (nstr, base, alphabet = defaultAlphabet) {
+					return repeatedArithmetic(
+						generate(0, nstr.length - 1).map(
+							(i) => alphabet.indexOf(nstr[i]) * base ** i
+						),
+						"+"
+					)
+				},
+
+				// * Brings whatever in base 10 to whatever in whatever base is given...
+				nbasereverse: function (n, base, alphabet = defaultAlphabet) {
+					const coefficients = []
+					// TODO: call this thing nrepresentation(), then use here...
+					// TODO: change this for either one's own implementation of log, or this, as an alias...
+					let i = Math.floor(Math.log(n) / Math.log(base))
+					while (n !== 0) {
+						// TODO: add an operator for that to the defaultTable...
+						n = (n - (n % base ** i)) / base
+						coefficients.push(n)
+						i--
+					}
+					// TODO: create a generalized map() function that would map to both functions, arrays and objects;
+					return coefficients.map((i) => alphabet[i]).join("")
+				},
+
+				strMap: function (str, symb) {
+					return str.split("").map(symb)
+				},
+
+				baseconvert: function (a, basebeg, baseend) {
+					return nbasereverse(nbase(a, basebeg), baseend)
+				},
+
+				// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
+				// ? This thing don't include 0. Should it include 0?
+				multiples: function (n, range) {
+					return generate(1, range).map((a) => a * n)
+				},
+
+				// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
+				// ? That is, if that is desired... Is it? Pray think...
+				multiplesBefore: function (n, x) {
+					return multiples(n, floor(x / n))
+				},
+
+				// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
+				// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
+				/**
+				 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
+				 * @param {number} firstNum First number.
+				 * @param {number} secondNum Second number.
+				 */
+				leastCommonMultiple: function (...nums) {
+					if (nums.length === 0) return undefined
+					if (nums.length === 1) return nums[0]
+					if (nums.length === 2)
+						return min(
+							arrIntersections([
+								multiples(nums[0], nums[1]),
+								multiples(nums[1], nums[0])
+							])
+						)
+					return leastCommonMultiple(
+						nums[0],
+						leastCommonMultiple(...nums.slice(1))
+					)
+				},
+
+				commonMultiples: function (range, ...nums) {
+					if (nums.length === 0) return undefined
+					if (nums.length === 1) return nums[0]
+					if (nums.length === 2) {
+						const found = arrIntersections([
+							multiples(nums[0], range[range.length - 1]),
+							multiples(nums[1], nums[range[range.length - 2]])
+						])
+						range.pop()
+						range.pop()
+						return found
+					}
+					const rest = commonMultiples(range, ...nums.slice(1))
+					return arrIntersections([
+						multiples(nums[0], range[range.length - 1]),
+						rest
+					])
+				},
+
+				leastCommonDivisor: function (...nums) {
+					// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
+					return ((x) =>
+						typeof x === "number" || typeof x === "undefined" ? x : min(x))(
+						commonDivisors(...nums)
+					)
+				},
+
+				commonDivisors: function (...nums) {
+					if (nums.length === 0) return undefined
+					if (nums.length === 1) return nums[0]
+					if (nums.length === 2)
+						return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
+					return arrIntersections([
+						factorOut(nums[0]),
+						commonDivisors(...nums.slice(1))
+					])
 				},
 
 				/**
@@ -3658,14 +4145,6 @@ export function activate(transformation = ID) {
 				},
 
 				/**
-				 * This function takes an integer value, representing the new precision of the output and sets fixdSize equal to it.
-				 * @param {number} precision The new value of fixedSize.
-				 */
-				setPrecision: function (precision = 0) {
-					return (globalPrecision = precision | 0)
-				},
-
-				/**
 				 * This function takes in array and determines how nested it is (its dimensions).
 				 * If it is not array, dimension is 0.
 				 * If it is an empty array, then it's dimension is 1.
@@ -3701,7 +4180,7 @@ export function activate(transformation = ID) {
 					k = Number(k) | 0
 					return floor(
 						repeatedArithmetic(
-							generate(0, k - 1, 1).map((num) => String(n - num)),
+							generate(0, k - 1, 1).map((num) => n - num),
 							"*"
 						) / factorial(k)
 					)
@@ -3769,15 +4248,6 @@ export function activate(transformation = ID) {
 						if (index !== -1) resArray[i] = transformation(y[index])
 					}
 					return resArray
-				},
-
-				// * just a convinient syntax...
-				arrThisApply: function (f, arr, thisArg = null) {
-					return f.apply(thisArg, arr)
-				},
-
-				arrApply: function (f, arr) {
-					return f(...arr)
 				},
 
 				countAppearences: function (
@@ -3924,14 +4394,8 @@ export function activate(transformation = ID) {
 					let curr = initial
 					for (let i = 0n; i < n; i++) curr = a(curr)
 					return curr
-					// * Old recursive definition [replaced with the new one...]
-					// TODO: clean these up later - save somewhere for good memory...
-					// if (BigInt(n) <= 0) return initial
-					// if (BigInt(n) === 1n) return a(initial)
-					// return a(repeatedApplication(a, n - 1))
 				},
 
-				// ? (Reminder) -- the imperative versions of functional code [for the sake of the stack]; Write and separate within the library, similar to the way finite and infinite versions get separated...
 				repeatedApplicationIndex: function (a, n, initial, offset = 0n) {
 					n = BigInt(n)
 					let curr = initial
@@ -3962,393 +4426,11 @@ export function activate(transformation = ID) {
 				// ^ Note: The first index stays for the elements, the second one stays for the function...
 				multmap: function (a, fs) {
 					return a.map((el) => fs.map((f) => f(el)))
-				},
-
-				// TODO: match the order of the definitions with the order of exports... Do the same for all the files...
-				// * Also, match with the original "math-expressions.js" file...
-
-				// TODO: add a proper template for 'notfound' and 'treatUniversal';
-				UniversalMap: function (notfound, treatUniversal = false) {
-					return {
-						template: { notfound, treatUniversal },
-						value: function (
-							keys = [],
-							values = [],
-							treatUniversal = this.treatUniversal
-						) {
-							// * Conversion from a non-array object...
-							if (!(keys instanceof Array)) {
-								if (keys.keys && keys.values && treatUniversal) {
-									values = values.values
-									keys = keys.keys
-								} else {
-									keys = Object(keys)
-									values = Object.values(keys)
-									keys = Object.keys(keys)
-								}
-							}
-							return {
-								keys: keys,
-								values: values,
-								index: 0,
-								class: this,
-								// ? Question: should this work like that? Should 'comparison' be an argument of .get or should it be one of the template layer???
-								// TODO: pray decide here, and for each individual case throughout the library...
-								// * Current decision: no, it should be templated pretty much everywhere (and everywhere -- independently)...
-								get(key, comparison = infinite.valueCompare, number = 1) {
-									const indexes = indexOfMult(
-										this.keys,
-										key,
-										comparison
-									)
-									if (indexes.length === 0) return this.class.notfound
-									return indexes
-										.slice(0, number)
-										.map((i) => this.values[i])
-								},
-								set(key, value, comparison = infinite.valueCompare) {
-									const index = indexOfMult(this.keys, key, comparison)
-									if (index.length !== 0) {
-										for (const _index of index)
-											this.values[_index] = value
-										return value
-									}
-									this.keys.push(key)
-									this.values.push(value)
-									return value
-								},
-								// TODO: define the [Symbol.iterator] for all the types of all objects;
-								// * Similarly, define 'forin'
-								// ^ Funny, that reminds oneself:
-								// Thorin
-								// Fili
-								// Kili
-								// Oin
-								// Gloin
-								// Forin
-								// Balin
-								// Dwalin
-								// Ori
-								// Dori
-								// Nori
-								// Bifur
-								// Bofur
-								// Bombur
-								// * Noticed anything different? :D
-								// * hahaha!
-								// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
-								[Symbol.iterator]: function* () {
-									for (
-										this.index = 0;
-										this.index < this.keys.length;
-										this.index++
-									)
-										yield this.get(this.keys[this.index])
-								},
-								forin(body) {
-									for (
-										this.index = 0;
-										this.index < this.keys.length;
-										this.index++
-									)
-										body(this.keys[this.index])
-								},
-
-								// ! This thing assumes that the conversion in question is, in fact, a valid one
-								// * Example: [if there are objects for keys -- it will convert them to the JSON string of the object in question]...
-								// ? Shouldn't one instead of giving some basic default safe-behaviour, give user the ability to choose/decide it? Also, one could create an .isValidObject() method for the class...
-								// * Current decision: yes, do that...
-								// TODO: provide the InfiniteMap with this thing too -- there will [too] be a thing -- it will only alow first 2 **
-								toObject() {
-									const a = {}
-									for (let i = 0; i < this.keys.length; i++)
-										a[
-											(!["symbol", "number"].includes(
-												typeof this.keys[i]
-											)
-												? JSON.stringify
-												: RESULT.id)(this.keys[i])
-										] = this.values[i]
-									return a
-								}
-							}
-						}
-					}
-				},
-
-				// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
-				// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
-				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
-				// TODO: extend this thing (add more stuff to it, create powerful extensions)
-				// ! rewrite using the repeatedApplication...
-				recursiveIndexation: function (object, fields) {
-					let res = object
-					for (const f of fields) res = res[f]
-					return res
-				},
-
-				recursiveSetting: function (object, fields, value) {
-					return (recursiveIndexation(
-						object,
-						fields.slice(0, fields.length - 1)
-					)[fields[fields.length - 1]] = value)
-				},
-
-				objInverse: function (notfound, treatUniversal = false) {
-					return {
-						template: { notfound, treatUniversal },
-						value: function (obj, treatUniversal = this.treatUniversal) {
-							return ((a) =>
-								((universal) => a(universal.values, universal.keys))(
-									a(obj, treatUniversal)
-								))(UniversalMap(this.notfound))
-						}
-					}
-				},
-
-				// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
-
-				obj: function (keys = [], values = []) {
-					let length = min([keys.length, values.length])
-					const returned = {}
-					for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
-					return returned
-				},
-
-				objMap: function (obj, keys, id = true) {
-					const newobj = {}
-					for (const key in keys) newobj[keys[key]] = obj[key]
-					if (id)
-						for (const key in obj)
-							if (!Object.values(keys).has(key)) newobj[key] = obj[key]
-					return newobj
-				},
-
-				objFmap: function (obj = {}, f = ID) {
-					const newobj = {}
-					for (const a in obj) newobj[a] = f(obj[a])
-					return newobj
-				},
-
-				objArr: function (obj = {}) {
-					return [Object.keys, Object.values].map((x) => x(obj))
-				},
-
-				objSwap: function (obj1, obj2) {
-					;((obj1Copy, obj2Copy) => {
-						objClear(obj1, obj1Copy)
-						objClear(obj2, obj2Copy)
-						objInherit(obj1, obj2Copy)
-						objInherit(obj2, obj1Copy)
-					})(...Array.from(arguments).map(flatCopy))
-				},
-
-				objClear: function (obj, objCopy = flatCopy(obj)) {
-					for (const dp in objCopy) delete obj[dp]
-				},
-
-				objInherit: function (obj, parObj) {
-					for (const ap in parObj) obj[ap] = parObj[ap]
-				},
-
-				propSwap: function (obj, prop1, prop2) {
-					const temp = obj[prop1]
-					obj[prop1] = obj[prop2]
-					obj[prop2] = temp
-				},
-
-				ismapped: function (...args) {
-					// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
-					while (args.length < 2) args.push({})
-					return RESULT.main.valueCompare().function(...args.map(Object.keys))
-				},
-
-				// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
-				Pointer: function (template = {}) {
-					return {
-						template: { label: "", ...template },
-						class: function (value) {
-							return { [this.template.label]: value }
-						}
-					}
 				}
+
+				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
 			classes: {
-				/**
-				 * This class represents an assembly of various statistics on the array of numeric data given.
-				 *
-				 * Useful when needing a lot of info about data in one place.
-				 */
-				Statistics: class {
-					static isNumeric(data) {
-						for (let i = 0; i < data.length; i++)
-							if (typeof data[i] !== "number") return false
-						return true
-					}
-					/**
-					 * Takes nums array and creates a Statistics object, containing statistic about the row of numeric data.
-					 * @param {number[]} nums An array of numbers passed to the function.
-					 * @param {boolean} forward Tells the constructor should, or should not array be structured in order from the least to the largest num or not in case if it is not structured.
-					 */
-					constructor(nums = [], forward = true, nullValue = "None") {
-						if (Statistics.isNumeric(nums)) {
-							this.min = min(nums)
-							this.max = max(nums)
-							this.sorted = sort(nums, forward)
-							this.range = range(nums)
-							this.interquartRange = range(nums, true)
-							this.median = median(nums)
-							this.average = average(nums)
-							this.truncatedAverage = average(nums, true)
-							this.deviations = deviations(nums)
-							this.populationVariance = dispersion(nums)
-							this.populationStandDev = standardDeviation(nums)
-							this.standardError = standardError(nums)
-						} else {
-							this.min = null
-							this.max = null
-							this.sorted = null
-							this.range = null
-							this.interquartRange = null
-							this.median = null
-							this.average = null
-							this.truncatedAverage = null
-							this.deviations = null
-							this.populationVariance = null
-							this.populationStandDev = null
-							this.standardError = null
-						}
-						this.mostPopular = mostPopular(nums, nullValue)
-						this.length = nums.length
-						this.dim = dim(nums)
-					}
-				},	
-
-				// TODO: look through this stuff; rename, refactor/shorten, generalize code where want to;
-				/**
-				 * This a class that contains various statistical tests.
-				 * It is a static class, i.e. it is supposed to be like this:
-				 * * Tests.testName();
-				 */
-				Tests: class {
-					constructor() {
-						throw new TypeError("Tests is not a constructor")
-					}
-					/**
-					 * Takes an array and a number and checks if the length of the given array equals the given number. If not, throws new Error. Otherwise returns void.
-					 * @param {any[]} arr An array, size of which is to be checked for being equal to size parameter.
-					 * @param {number} size A number, equality to which is checked.
-					 * @throws Error, if the length of given array is not equal to the size parameter.
-					 */
-					static sizecheck(arr, size) {
-						if (arr.length !== size)
-							throw new Error(
-								`Expected ${size} elements inside of the passed array, got ${arr.length}.`
-							)
-					}
-					/**
-					 * Takes a two-dimensional numeric array, containing two other arrays, and returns the number, representing the value of Student's t-test.
-					 * @param {number[]} rows Numeric array, containing two arrays, for which value of Student's t-test is to be found.
-					 */
-					static t_Students_test(...rows) {
-						Tests.sizecheck(rows, 2)
-						const averages = [average(rows[0]), average(rows[1])]
-						const errors = [
-							Math.pow(standardError(rows[0]), 2),
-							Math.pow(standardError(rows[1]), 2)
-						]
-						return floor(
-							exp(
-								[
-									Math.abs(exp([averages[0], averages[1]], "-")),
-									Math.sqrt(exp([errors[0], errors[1]], "+"))
-								],
-								"/"
-							),
-							globalPrecision
-						)
-					}
-					// ? question: should one keep the runtime checks if the compile-time check is already there?
-					// TODO: make a decision and change/keep correspondently;
-					// * CURRENT DECISION: nah, let it stay; one likes it, that is cute;
-					/**
-					 * Takes a two-dimensional array, containing two arrays, and a number and returns the numeric value of f-test for the equality of dispersions of two sub-arrays.
-					 * @param {number[]} rows Two one-dimensional arrays, the equality of dispersions of which shall be found.
-					 */
-					static F_test(...rows) {
-						Tests.sizecheck(rows, 2)
-						const dispersions = [
-							dispersion(rows[0], true),
-							dispersion(rows[1], true)
-						]
-						const biggerDispersionIndex =
-							dispersions[0] > dispersions[1] ? 0 : 1
-						const difference = exp(
-							[
-								dispersions[biggerDispersionIndex],
-								dispersions[Number(!biggerDispersionIndex)]
-							],
-							"/"
-						)
-						return floor(difference, globalPrecision)
-					}
-					/**
-					 * Takes a two-dimensional array of numbers and returns the number, representing the results of the Mann-Whitney U-test.
-					 * !NOTE: For now be careful, when using, because the method does not work with the arrays, that have repeating numbers in them.
-					 * @param {number[][]} rows Two one-dimensional arrays, using which the u-test is to be done.
-					 */
-					static U_test(...rows) {
-						Tests.sizecheck(rows, 2)
-						let firstSum = 0
-						let secondSum = 0
-						let tempNum = 0
-						const general = []
-						const ranks = []
-						;`${rows[0]},${rows[1]}`
-							.split(",")
-							.forEach((str) => general.push(Number(str)))
-						const final = sort(general)
-						final.forEach((num, index) => {
-							if (num != final[index - 1] && num != final[index + 1]) {
-								ranks.push(index + 1)
-								tempNum = 0
-							} else {
-								//! NOT WORKING! FIX!
-								if (num === final[index + 1]) {
-									ranks.push(index + 1.5) //! Reason is in this thing!
-									tempNum = index + 1.5 //! And in this one also. Instead of putting 1.5 here I need to somehow rank the repeating numbers the correct way (but how ???).
-								} else {
-									ranks.push(tempNum)
-								}
-							}
-						})
-						final.forEach((num, index) => {
-							if (rows[0].includes(num)) firstSum += ranks[index]
-							if (rows[1].includes(num)) secondSum += ranks[index]
-						})
-						const firstResult =
-							rows[0].length * rows[1].length +
-							(rows[0].length * (rows[0].length + 1)) / 2 -
-							firstSum
-						const secondResult =
-							rows[0].length * rows[1].length +
-							(rows[1].length * (rows[1].length + 1)) / 2 -
-							secondSum
-						return min([firstResult, secondResult])
-					}
-					/**
-					 * Takes a number and an array of numbers and returns the Z-score for the given number.
-					 * @param {number} testedNum A number for which the Z-score is to be found.
-					 * @param {number[]} numbers An array of numbers, required to calculate the Z-score for the given number.
-					 */
-					static Z_score(testedNum, numbers) {
-						return exp(
-							[testedNum - average(numbers), standardDeviation(numbers)],
-							"/"
-						)
-					}
-				},
-
 				// TODO: Add the runtime type-safety to all the data-keeping types...
 				// ? Suggestion: Add the runtime type-safety to all the things within the library...
 				/**
@@ -4707,8 +4789,9 @@ export function activate(transformation = ID) {
 				},
 
 				// TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
-				// * For this, maybe, look at the previous projects' prototype where those things had already been [more or less] done? 
+				// * For this, maybe, look at the previous projects' prototype where those things had already been [more or less] done?
 				// ! Also, Create the Complex class (for 'a + b*sqrt(-1)'-kindof thingies)...
+				// ! GENERALIZE THIS VIA 'TrueRatio'; 
 				/**
 				 * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
 				 */
@@ -4786,57 +4869,7 @@ export function activate(transformation = ID) {
 				 * i.e. it's supposed to be used like this:
 				 * * Algorithms.algorithmName(arg_1, ..., arg_n);
 				 */
-				Algorithms: class {
-					constructor() {
-						throw new TypeError("Algorithms is not a constructor")
-					}
-					static BinarySearch(array, number) {
-						// * For getting the middle index of the array.
-						const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
-						const copyArray = sort(array)
-						let index = middle(copyArray)
-						let copyArr = copy(copyArray)
-						let copyIndex = index
-						for (let i = 0; ; i++) {
-							if (number === copyArray[index]) return index
-							if (copyArr.length === 1) break
-							const isBigger = number > copyArray[index]
-							copyArr = isBigger
-								? copyArr.slice(copyIndex + 1, copyArr.length)
-								: copyArr.slice(0, copyIndex)
-							copyIndex = middle(copyArr)
-							index = isBigger ? index + copyIndex : index - copyIndex
-						}
-						return -1
-					}
-					/**
-					 * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
-					 * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
-					 * @param {Ratio} endRatio Ratio, that is used as an upper bound in the algorithm.
-					 * @param {number} iterations Number of iterations (integer).
-					 */
-					static Farey(startRatio, endRatio, iterations = 0) {
-						// ? add as an operation to the Ratio class?
-						function formNewRatio(first, second) {
-							return new Ratio(
-								first.numerator + second.numerator,
-								first.denomenator + second.denomenator
-							)
-						}
-						const gotten = [[startRatio, endRatio]]
-						for (let i = 0; i < iterations; i++) {
-							gotten.push([])
-							for (let j = 0; j < gotten[i].length; j++) {
-								gotten[i + 1].push(gotten[i][j])
-								if (j !== gotten[i].length - 1)
-									gotten[i + 1].push(
-										formNewRatio(gotten[i][j], gotten[i][j + 1])
-									)
-							}
-						}
-						return gotten
-					}
-				},
+
 				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
 				// * CURRENT IDEA FOR A NAME: NumberEquation...
 				/**
@@ -5167,42 +5200,6 @@ export function activate(transformation = ID) {
 						this.varmap.mappings.pop()
 						this.varmap.variables.pop()
 					}
-				},
-
-				// * For iteration over an array; this thing is index-free; handles them for the user;
-				// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-				// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
-				IterableSet: class {
-					curr() {
-						return Array.from(this.elements.values())[this.currindex]
-					}
-					updateIndex(change = 1) {
-						this.currindex = (this.currindex + change) % this.elements.size
-					}
-					prev() {
-						this.updateIndex(-1)
-						return this.curr()
-					}
-					next() {
-						this.updateIndex()
-						return this.curr()
-					}
-					add(x) {
-						return this.elements.add(x)
-					}
-					has(x) {
-						return this.elements.has(x)
-					}
-					get size() {
-						return this.elements.size
-					}
-					delete(x) {
-						return this.elements.delete(x)
-					}
-					constructor(elems = new Set([])) {
-						this.currindex = 0
-						this.elements = elems
-					}
 				}
 			},
 
@@ -5382,7 +5379,7 @@ export function activate(transformation = ID) {
 	// % 5. Stuff related to forming the particular picture of the library in question...
 
 	// TODO: replace all the functional implementations of functions with imperative ones; for: 1. they may run forever; 2 [of which 1 is a consequence, really]. they do not rely on JS stack;
-	// * The functional ones ought to be then commented out and left as some sort of 'memento' (probably best if put into a different file, one separate from the lib source code...);
+	// * The functional ones get to be kept as a memento within the Git repo's memory...
 
 	// TODO [very-very general; later-stage]: Pray conduct a thorough read-through of all the code, once the in-editor documentation has been written and the first sketches has been written;
 	// * Also, note - base the new GitHub Wiki-documentation on the in-editor documentation...
@@ -5479,7 +5476,7 @@ export function activate(transformation = ID) {
 // * This is the [temporary] place in the file, where the presently considered OLD CODE goes;
 
 // * A
-// ! Old code for the [incomplete] definition of the 'numberCounter'; The renewed code [in accordance with the general 'recursiveCounter' counter] is above;
+// ! Old code for the [incomplete] definition of the 'numberCounter' [later used for the recursiveCounter]; The renewed code [in accordance with the general 'recursiveCounter' counter] is above;
 // TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to; [Also, check correspondence with the newer version...]
 // // TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 // const A = {
