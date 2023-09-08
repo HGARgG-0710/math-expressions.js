@@ -3044,6 +3044,7 @@ export function activate(transformation = ID) {
 				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 
+				// ! Problem: what to do with the 'statistics' part of the API? [CONSIDER, PRAY...]
 				/**
 				 * Takes the number array and rerturns an average of it.
 				 * @param {number[]} nums An array of numbers passed to the function.
@@ -3333,10 +3334,9 @@ export function activate(transformation = ID) {
 				 * @param {number[]} nums An array to be truncated.
 				 * @param {number} percents A number, that is multiplied by two(if you passed 10, then it is 20) and represents count of percents of numbers to be deleted from the edges of the passed array.
 				 */
-				truncate: function (nums, percents = 10) {
+				truncate: function (nums = [], percents = 10) {
 					const shortened = sort(copy(nums))
-					const len = shortened.length
-					const toDelete = Number(Math.trunc((len / 100) * percents))
+					const toDelete = Number(Math.trunc((shortened.length / 100) * percents))
 					for (let i = 0; i < toDelete; i++) {
 						shortened.shift()
 						shortened.pop()
@@ -4222,95 +4222,7 @@ export function activate(transformation = ID) {
 						this.length = nums.length
 						this.dim = dim(nums)
 					}
-				},
-
-				// TODO: add the user interface to the window of the Surface.draw(), such that it would be possible to modify a surface given right there....
-				// TODO: get rid of the inLimits: let the thing be scalable: that is, if there is
-				/**
-				 * This class represents a geometric surface with dots, segments and lines on it.
-				 * They are represented via coordinates.
-				 */
-				// ! One rather wonders if this thing does not fall outside this library's set of covered items...
-				// * Yes. Create a separate JS library for this thing [it'd use Math-expressions.js as a dependency...]
-				Surface: class {
-					static n = 0
-					// TODO: add capability to have the initial Surface not being empty (unlike it is at the moment...)
-					// TODO: use the Tuple type from one's library for the [number...] arrays...
-					/**
-					 * Takes two objects(or just numeric arrays) with properties from 0 to 2 and creates a Surface object.
-					 *
-					 * !!! NOTE: Be careful, when choosing step in your limits objects(or arrays), because after Surface.x and Surface.y properties of your object are generated
-					 * you can work with this object, providing only dots' coordinates, that exist in these arrays, otherwise you get an error. !!!
-					 *
-					 * @param {object | number[]} xInit Object(or an array) containing number properties for the x axis of your surface. First number - the start position(the smallest number) of your surface's axis, second numder - the end position of your surafce's x axis and the third is that step, with which an array of numbers will be assembled.
-					 * @param {object | number[]} yInit The same as xLimits, but for y axis of your surface.
-					 */
-					constructor(xInit, yInit) {
-						this.n = 0
-						this.x = [...xInit]
-						this.y = [...yInit]
-						this.width = range(this.x)
-						this.height = range(this.y)
-						this.dots = []
-						this.lines = []
-						this.segments = []
-						this.n = ++Surface.n
-					}
-					// ? make the "line" have the same shape as a segment? This way, one could have lines that are "not full" in the middle...
-					// * CURRENT DECISION: sure, why not?
-					add(type, data) {
-						if (
-							indexOfMult(this[`${type}s`], data, infinite.valueCompare)
-								.length !== 0
-						)
-							return this[`${type}s`].length
-						const returned =
-							type === "segment"
-								? this.segments.push(data)
-								: this[`${type}s`].push(data)
-						const minIndex = indexOfMult(this.x, min(this.x))[0]
-						let maxIndex = indexOfMult(this.x, max(this.x))[0]
-						if (minIndex === maxIndex) maxIndex++
-						let minData = 0
-						let maxData = 0
-						if (type === "segment") {
-							const copy = gutInnerArrs([...data])
-							const maxs = []
-							const mins = []
-							for (let i = 0; i < copy.length; i++) {
-								maxs.push(max(copy[i]))
-								mins.push(min(copy[i]))
-							}
-							minData = min(mins)
-							maxData = max(maxs)
-						} else {
-							minData = min(data)
-							maxData = max(data)
-						}
-						this.x[minIndex] = min([minData, this.x[minIndex]])
-						this.x[maxIndex] = max([maxData, this.x[maxIndex]])
-						this.y[minIndex] = min([minData, this.y[minIndex]])
-						this.y[maxIndex] = max([maxData, this.y[maxIndex]])
-						return returned
-					}
-					// ? question: should the x and y automatically shrink with the deletion of border objects? Or no?
-					// * Current decision: no, let it stay...
-					delete(type, data) {
-						return (this[`${type}s`] =
-							indexOfMult(this[`${type}s`], data, infinite.valueCompare)
-								.length === 0
-								? this[`${type}s`]
-								: clearRepetitions(
-										this[`${type}s`],
-										data,
-										0,
-										infinite.valueCompare
-								  )).length
-					}
-					draw(width, height, title = `Surface ${this.n}`) {
-						// TODO: this is to be written ; the decision to use the "ntk" was scratched; an alternative solution is currently sought;
-					}
-				},
+				},	
 
 				// TODO: look through this stuff; rename, refactor/shorten, generalize code where want to;
 				/**
@@ -4794,8 +4706,9 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				// TODO (reminder): create the "True"(Infinite) Number types for the 'newapi'; Let they be based on InfiniteCounters and also there be: (True/Infinite)Natural (which turns into Integer), (True/Infinite)Integer (which flows into Ratio), (True/Infinite)Ratio, and InfiniteSum;
 				// TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
+				// * For this, maybe, look at the previous projects' prototype where those things had already been [more or less] done? 
+				// ! Also, Create the Complex class (for 'a + b*sqrt(-1)'-kindof thingies)...
 				/**
 				 * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
 				 */

@@ -77,12 +77,55 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 						Due to this, one will break up the reorganization of the 'finite' part of the library into two more steps: 
 							1. putting ALL OF THEM [reworked] into the 'aliases.native', then finding out which doth and which doth not one desire to be kept within the library in their current state; 
 							2. Then, generalizing one-by-one all of them, deleting the undesired finite versions... [with CommonArray, and other such generalized wrapper-types, one's able to have the PRECISE SAME behaviour as that of the non-general ones...]
+
+				FURTHER CONCLUSION: 
+					The process of original development of the early versions of the math-expressions.js used to have been separated onto distinct steps; 
+					This is why the current API is so very multi-directioned; 
+					One ought to consider each and every part of it and what to do with it: 
+
+						1. 'Statistics' part (Statistics and Tests classes and all the related number-theoretic/statistics functions) [in progress]: 
+							All this stuff gets generalized; 
+							The names for the functions get to remain as a 'finite' special case (as in 'number()'); 
+						2. 'Surface' part [done; take this out at the next commit]: 
+							Take out of the scope of the library; 
+							Make into a new (possibly, non-JS) library that's going to operate on these things...	
+						3. VarMapping and 'Equation' part:
+							Not sure about generalizing this thing; 
+							Problem is: it uses rational approximations for obtaining of solutions to given equations; 
+
+							One could easily use the generalized UnlimitedString for the equations; 
+							One could easily use the same thing for the varnames; 
+							One could easily generalize the substitutions procedure; 
+
+							The issue would be with the approximation. 
+							HOW WELL DOTH ONE DESIRE FOR TO APPROXIMATE? 
+							One could set a 'limit' to it...
+							Or to approximate in layers...
+
+							But then, comes the question of representation; 
+							How does one represent it in the same fashion? [One that is printable]; 
+							One'd want then the Printing class of some sorts; 
+							[One could just outline the interface, then create some library-examples for it, maybe?]
+
+							Yes, this is really-really nice...
+
+							DECISION: yes. Do this work on them, pray; 
+
+						4. Algorithms part [along with the 'Ratio' class]: 
+							'Algorithms' "static" class gets turned into an object structure for algorithms; 
+							'Ratio' (maybe?) gets 'deleted' and becomes a label for the special case of the TrueRatio (one that uses finite 'number()'); 
+						5. 'Linear' part [Matricies, Vectors]: 
+							Generalize; 
+							[Maybe] keep the names for those 'finite' versions as aliases; 
+						6. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
+							The functions stay as a part of the 'aliases.native'; 
+
 	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
 	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
 	2.2. Decide what to do with the merging of 'RESULT.constants' and 'RESULT.globals' and 'RESULT.defaults' into something like 'RESULT.variables'; Decide about the 'variables' structure;
-	2.3. Finish the work on the 'Surface' class; 
-	2.4. Finish all the great amount of 'small' TODOs written all over the source code file; 
-	2.5. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
-	2.6. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
+	2.3. Finish all the great amount of 'small' TODOs written all over the source code file; 
+	2.4. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
+	2.5. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
+	2.6. Fix the known bugs in advance; Look for them; 
