@@ -7,7 +7,7 @@
 // Space for the local constants... [used for semantics and simplification of development/code-reading];
 // ? Should one export them as well? If so, should one export them separately or as a part of 'activate'?
 
-const ID = (a) => a
+export const ID = (a) => a
 
 export const TYPED_VARIABLE =
 	(type = ID) =>
@@ -191,7 +191,7 @@ export function activate(transformation = ID) {
 							indexes = operators.map(RESULT.aliases._const(0))
 						) {
 							// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
-							return repeatedApplicationIndex(
+							return repeatedApplication(
 								(double, i) => {
 									let hasMet = false
 									return [
@@ -232,7 +232,7 @@ export function activate(transformation = ID) {
 							...template
 						},
 						function: function (args, indexes, roperator, repetitions = 1) {
-							return repeatedApplicationIndex(
+							return repeatedApplication(
 								(r, i) => {
 									let hasMet = false
 									return RESULT.aliases.native
@@ -528,6 +528,47 @@ export function activate(transformation = ID) {
 						this.currindex = 0
 						this.elements = elems
 					}
+				},
+
+				_multmap: function (a, fs) {
+					return multmap([a], fs)[0]
+				},
+
+				// * Finds use in Mr. Body's code all the time.
+				// ^ Note: The first index stays for the elements, the second one stays for the function...
+				multmap: function (a, fs) {
+					return a.map((el) => fs.map((f) => f(el)))
+				},
+
+				// TODO: optimize the library in places such as this - where the '.min/.max(.map(somefunc))' actually takes additional steps to check for a thing... Instead, break once having found some such a 'breaking point' (like here); Saves a lot of execution steps in some cases;
+				isSubset: function (template = {}) {
+					return {
+						template: {
+							comparison: RESULT.main.valueCompare,
+							defarr: [],
+							...template
+						},
+						function: function (arrsub, arr = this.template.defarr) {
+							for (const x of arrsub)
+								if (
+									!RESULT.max(
+										arr.map((y) => this.template.comparison(x, y))
+									)
+								)
+									return false
+							return true
+						}
+					}
+				},
+
+				strMap: function (str, symb = ID, isStrOut = false) {
+					return (isStrOut ? (x) => x.join("") : RESULT.aliases.id)(
+						str.split("").map(symb)
+					)
+				},
+
+				hasArrays: function (array = []) {
+					return !!max(array.map((a) => a instanceof Array))
 				}
 			},
 
@@ -696,6 +737,17 @@ export function activate(transformation = ID) {
 		main: {
 			// ! order the definitions...
 			// ! REMINDER: consistency check across the entire library... [GRAND CLEANUP...]
+
+			// TODO: create a version of this (printic) with a default 'this.interpret' for the InfiniteCounters to be distinguishable... [and other corresponding templates]
+			print(template = {}) {
+				return {
+					template: { pfun: console.log, interpret: ID, ...template },
+					function: function (x) {
+						return this.pfun(this.interpret(x))
+					}
+				}
+			},
+			// ! implement the 'printi' for generalarrays and ic-s; 
 
 			GeneralArray(template = {}) {
 				const B = {
@@ -2553,7 +2605,7 @@ export function activate(transformation = ID) {
 						object,
 						fields = this.template.genarrclass.static.empty()
 					) {
-						return RESULT.submodules.infinite.repeatedApplicationIndex({
+						return RESULT.main.repeatedApplication({
 							icclass: fields.this.class.template.icclass,
 							...this.template
 						})(
@@ -2569,29 +2621,7 @@ export function activate(transformation = ID) {
 
 			repeatedApplication(template = {}) {
 				return {
-					template: { ...template },
-					function: function (
-						f = this.template.f,
-						times = this.template.times,
-						initial = this.template.initial
-					) {
-						let r = initial
-						for (
-							let i = {
-								icclass: times.class,
-								...this.template
-							}.icclass.class();
-							!i.compare(times);
-							i = i.next()
-						)
-							r = f(r)
-						return r
-					}
-				}
-			},
-			repeatedApplicationIndex(template = {}) {
-				return {
-					template: { ...template },
+					template: { iter: (x) => x.next(), ...template },
 					function: function (
 						f = this.template.f,
 						times = this.template.times,
@@ -2602,7 +2632,7 @@ export function activate(transformation = ID) {
 						for (
 							let i = template.icclass.class();
 							!i.compare(times);
-							i = i.next()
+							i = this.template.iter(i)
 						)
 							r = f(r, i.difference(offset))
 						return r
@@ -3400,7 +3430,7 @@ export function activate(transformation = ID) {
 			},
 
 			// TODO: extend this thing - create new algorithms implementations for the library...
-			// ! Generalize this stuff, maybe?
+			// ! Generalize this; 
 			algorithms: {
 				BinarySearch(array, number) {
 					// * For getting the middle index of the array.
@@ -3428,7 +3458,7 @@ export function activate(transformation = ID) {
 				 * @param {number} iterations Number of iterations (integer).
 				 */
 				Farey(startRatio, endRatio, iterations = 0) {
-					// ? add as an operation to the Ratio class?
+					// ? Add a 'fareyAddition' general function? 
 					function formNewRatio(first, second) {
 						return new Ratio(
 							first.numerator + second.numerator,
@@ -3928,13 +3958,6 @@ export function activate(transformation = ID) {
 				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 
-				// ! Does one really want this thing? Pray consider...
-				whileFunctional: function (prop, body, endElem = null) {
-					return prop()
-						? [body(), whileFunctional(prop, body, endElem)]
-						: endElem
-				},
-
 				// ? Where does one put all this number-theoretic stuff? Along with 'statistics'? Or not? Does one want to have it separate somehow? Does one really want to generalize it?
 				/**
 				 * Factors out a passed number to the prime numbers. Works quite quickly.
@@ -3989,10 +4012,6 @@ export function activate(transformation = ID) {
 					}
 					// TODO: create a generalized map() function that would map to both functions, arrays and objects;
 					return coefficients.map((i) => alphabet[i]).join("")
-				},
-
-				strMap: function (str, symb) {
-					return str.split("").map(symb)
 				},
 
 				baseconvert: function (a, basebeg, baseend) {
@@ -4097,15 +4116,17 @@ export function activate(transformation = ID) {
 				 * This function calculates the factorial of a positive integer given.
 				 * @param {number} number A positive integer, factorial for which is to be calculated.
 				 */
-				factorial: function (number) {
+				factorial: function (number = 0) {
 					const numbers = []
-					// TODO: after having implemented the Gamma function for the old API (?maybe just extend this one?), pray do make this thing more general...
+
+					// ? Shall one extend this? [Think about it...]
 					if (number < 0)
 						throw new Error(
 							"factorial() function is not supposed to be used with the negative numbers. "
 						)
+					if (!number) return 1
+
 					for (let i = 1; i <= number; i++) numbers.push(i)
-					if (!numbers.length) return 1
 					return repeatedArithmetic(numbers.map(String), "*")
 				},
 
@@ -4144,6 +4165,8 @@ export function activate(transformation = ID) {
 					return [sum + fix, fix]
 				},
 
+				// ! Gets merged with the 'main.dim';
+				// * Consider the way they are compatible/incompatible and change the generalized version accordingly;
 				/**
 				 * This function takes in array and determines how nested it is (its dimensions).
 				 * If it is not array, dimension is 0.
@@ -4202,7 +4225,7 @@ export function activate(transformation = ID) {
 					return `${string.slice(0, ind)}${value}${string.slice(ind + 1)}`
 				},
 				stringReplaceIndexesDiff: function (string, inds, values) {
-					return repeatedApplicationIndex(
+					return repeatedApplication(
 						(val, i) => stringReplaceIndex(val, inds[i], values[i]),
 						Math.min(inds.length, values.length),
 						string
@@ -4229,15 +4252,11 @@ export function activate(transformation = ID) {
 				},
 				// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
 				replaceStrMany: function (string, x, y) {
-					return repeatedApplicationIndex(
+					return repeatedApplication(
 						(v, i) => replaceStr(v, x[i], y[i]),
 						Math.min(x.length, y.length),
 						string
 					)
-					// * Previous: before refactoring (check that they are, indeed, the same in functionality)
-					// let final = string
-					// for (let i = 0; i < x.length; i++) final = replaceStr(final, x[i], y[i])
-					// return final
 				},
 
 				// * Replaces values within an array and returns the obtained copy...
@@ -4250,6 +4269,8 @@ export function activate(transformation = ID) {
 					return resArray
 				},
 
+				// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
+				// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
 				countAppearences: function (
 					array,
 					element,
@@ -4319,10 +4340,6 @@ export function activate(transformation = ID) {
 					return array
 				},
 
-				hasArrays: function (array) {
-					return max(array.map((a) => Number(a instanceof Array))) === 1
-				},
-
 				// * "reverses" the gutInnerArrs (only once, at a given place)
 				// TODO: generalize; make a version of multiple encirclements;
 				// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
@@ -4389,14 +4406,7 @@ export function activate(transformation = ID) {
 					)
 				},
 
-				repeatedApplication: function (a, n, initial) {
-					n = BigInt(n)
-					let curr = initial
-					for (let i = 0n; i < n; i++) curr = a(curr)
-					return curr
-				},
-
-				repeatedApplicationIndex: function (a, n, initial, offset = 0n) {
+				repeatedApplication: function (a, n, initial, offset = 0n) {
 					n = BigInt(n)
 					let curr = initial
 					for (let i = 0n; i < n; i++) curr = a(curr, i + offset)
@@ -4412,20 +4422,6 @@ export function activate(transformation = ID) {
 					let curr = initial
 					while (property()) curr = function_(curr)
 					return curr
-				},
-
-				// TODO: create a repeatedApplicationFor...
-
-				// ? should this be kept? It is a special case of the function below....
-				// * Current decision: let it stay; it may be nice to just "get it"; without taking the first index...
-				_multmap: function (a, fs) {
-					return multmap([a], fs)[0]
-				},
-
-				// * Finds use in Mr. Body's code all the time.
-				// ^ Note: The first index stays for the elements, the second one stays for the function...
-				multmap: function (a, fs) {
-					return a.map((el) => fs.map((f) => f(el)))
 				}
 
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
@@ -4599,7 +4595,6 @@ export function activate(transformation = ID) {
 						return this._type
 					}
 					set type(newType) {
-						// TODO: create an isSubset array function; would check if one array is having all the elements of the other using some chosen 'comparison'; then, define isSuperset as its arguments' permutation...
 						// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
 						// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
 						// for (let i = 0; i < newType.length; i++)
@@ -4787,82 +4782,7 @@ export function activate(transformation = ID) {
 						)
 					}
 				},
-
-				// TODO (reminder): create all sorts of implementations of mathematical functions like log, exponent, roots and others that would employ these; (Equally, create stuff for arbitrary logical systems and also finite PowerSeries Ratio/Integer/Natural representations)
-				// * For this, maybe, look at the previous projects' prototype where those things had already been [more or less] done?
-				// ! Also, Create the Complex class (for 'a + b*sqrt(-1)'-kindof thingies)...
-				// ! GENERALIZE THIS VIA 'TrueRatio'; 
-				/**
-				 * This class represents a mathematical ratio of two rational numbers (as a special case - integers).
-				 */
-				Ratio: class {
-					constructor(numerator, denomenator) {
-						this.numerator = numerator
-						this.denomenator = denomenator
-					}
-					evaluate() {
-						return this.numerator / this.denomenator
-					}
-					add(ratio) {
-						return Ratio.simplify(
-							new Ratio(
-								this.numerator * ratio.denomenator +
-									ratio.numerator * this.denomenator,
-								this.denomenator * ratio.denomenator
-							)
-						)
-					}
-					static simplify(ratio) {
-						const len = Math.max(
-							allFactors(ratio.numerator).length,
-							allFactors(ratio.denomenator).length
-						)
-						let currDivisor
-						for (let i = 0; i < len; i++) {
-							currDivisor = leastCommonDivisor(
-								ratio.numerator,
-								ratio.denomenator
-							)
-							if (!currDivisor) break
-							ratio.numerator /= currDivisor
-							ratio.denomenator /= currDivisor
-						}
-						return ratio
-					}
-					array() {
-						return [this.numerator, this.denomenator]
-					}
-					divide(ratio) {
-						return this.multiply(ratio.multinverse())
-					}
-					multinverse() {
-						return new Ratio(this.denomenator, this.numerator)
-					}
-					addinverse() {
-						return new Ratio(-this.numerator, this.denomenator)
-					}
-					multiply(ratio) {
-						return Ratio.simplify(
-							new Ratio(
-								this.numerator * ratio.numerator,
-								this.denomenator * ratio.denomenator
-							)
-						)
-					}
-					subtract(ratio) {
-						return this.add(ratio.addinverse())
-					}
-					power(exponent) {
-						return new Ratio(
-							this.numerator ** exponent,
-							this.denomenator ** exponent
-						)
-					}
-					root(exponent) {
-						return this.power(1 / exponent)
-					}
-				},
-
+	
 				/**
 				 * This class has a bunch of useful algorithms.
 				 * This is one of the static classes, it contains only methods,

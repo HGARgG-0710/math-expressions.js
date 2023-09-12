@@ -84,14 +84,11 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 					One ought to consider each and every part of it and what to do with it: 
 
 						[THIS LIST SHOULD GET REVISED AFTER HAVING INTRODUCED THE STRUCTURAL CHANGES...]
-						1. 'Statistics' part (Statistics and Tests classes and all the related number-theoretic/statistics functions) [in progress]: 
+						1. 'Statistics' part (Statistics and Tests classes and all the related statistics functions) [in progress]: 
 							All this stuff gets generalized; 
 							The names for the functions get to remain as a 'finite' special case (as in 'number()'); 
-
 							It goes into the 'statistics' namespace; 
 
-							But what to do about the number-theoretic functions? Should they be considered a part of this thing? 
-							[No, one don't want to; They were developed largely independent of everything so one decides to consider them separate; Thus, they'll have their own namespace and a development punct...]
 						2. VarMapping and 'Equation' part:
 							Not sure about generalizing this thing; 
 							Problem is: it uses rational approximations for obtaining of solutions to given equations; 
@@ -114,17 +111,71 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 							DECISION: yes. Do this work on them, pray; 
 
-						3. Algorithms part [along with the 'Ratio' class]: 
-							'Algorithms' "static" class gets turned into an object structure for algorithms; 
-							'Ratio' (maybe?) gets 'deleted' and becomes a label for the special case of the TrueRatio (one that uses finite 'number()'); 
-								Only, first pray check for the functionality match between the two; If there is lack - finish the implementation of the corresponding algorithms on a more general level...
-							What about generalizing the 'Algorithms'? Does one want to? 
+						3. algorithms part: 
+							Generalize the Algorithms [in particular the 'Farey' sequence and the Ratio-TrueRatio replacement...]; 
 						4. 'Linear' part [Matricies, Vectors]: 
 							Generalize; 
 							[Maybe] keep the names for those 'finite' versions as aliases; 
 						5. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
 							The functions stay as a part of the 'aliases.native'; 
+							Re-look through them and decide if one wants to take any of them out...
+						6. Number-theoretic functions; 
 
+							Things such as 'factorOut', for instance; 
+							Should they be generalized? 
+							Might get them to: 
+
+								1. Use the GeneralArray [for the native-JS-Array-based functions]; 
+								2. Use the InfiniteCounter for the integer-based/integer-related functions;
+							
+							There's a slight difficulty with something else... 
+							The 'out-of-the-box' useage; One'd love it to be in place...
+
+							Example: 
+
+								With current 'factorOut', one goes ahead and and does 'console.log(factorOut(something))', with the corresponding array appearing in the output; 
+								One'd love some manner of a Printing function for these [to have it all nice, pretty and configurable (general), to the potential liking of the user]; 
+
+								Considerations for the 'Printing' API [Solved, largely]: 
+
+									It ought to be able to interpret certain objects, by means of replacing of them with certain symbols in the out-stream...
+									For instance, allow for a 'gate' function to be set on the way to a printing stream;
+									Then, the question of API-specificness comes up; 
+
+									One'd love this to work with BOTH the Deno and Node 'printing' APIs; 
+									SOLUTION: the 'pfun' funciton for the actual printing is by default equal to the 'console.log', which is supported by the both of them;
+									Then, in specific cicrumstances, one's able to replace it with something specific [for instance, in Node: process.stdout.write]; 
+
+									Now, all one'd love to add to this is some manner of a default for outputting specifically the InfiniteCounter(s) and GeneralArray(s); 
+									[With a 'printLimit' - the point at which'd one'd allow user to interject the process of printing [perhaps, for user input, or something else...]];
+
+							HOWEVER...
+							There is a further problem with this generalization's proceedings and that is - the non-integer part; 
+							How should they be handled? 
+							The problem becomes with the representation of things that get implemented: 
+
+								For instance, logarithms or roots; 
+								If they get defined, it should be in terms of corresponding power-functions; 
+								Yet, generally, they don't HAVE to be belonging to the already decided InfiniteCounter-like domain [example: log_2(3)]; 
+								So, what does one do about that? 
+
+								Even if one DOES create a general data-based representation, which'd allow for inversing of the wrappers signifying the difference between a 'log/root' or a non-'log/root' number, 
+								it'd still not help because one HAS NOT THE ACCESS TO THE INTERNAL REPRESENTATION; 
+								Because it's not defined by means of the internal representation...
+
+								One could delve into the infinite series;
+								They'd work, sure; But does one really want to?  
+								May it not be a more desireable thing for the user to do the implementation of all those technical subject-specific things? 
+
+								The stuff one outlines here is generally useful [and because of it, 'pretty' - truly beautiful] because of the Integer's model; 
+								An integer (here, InfiniteCounter) can correspond to very many things - an index, an amount, and so on... 
+								The operations between them may be useful as a mean of obtaining of information about the external objects, with additional beauty packed within the chosen InfiniteCounter functions [the format of the counter chosen]; 
+
+								The purely number-theoretic things lack that; 
+								They are in-themselves, not generally concerned with any pure programming tasks; 
+								CONCLUSION, thus, is such - they don't get added to the library [not in v1.0, at least, certainly not in it...]; 
+
+								One does generalize the integer-related number-theoretic functions and tries not to have any ones that are not integer-related...
 	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
