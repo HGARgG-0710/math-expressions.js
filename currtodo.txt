@@ -176,6 +176,11 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 								CONCLUSION, thus, is such - they don't get added to the library [not in v1.0, at least, certainly not in it...]; 
 
 								One does generalize the integer-related number-theoretic functions and tries not to have any ones that are not integer-related...
+
+						About the finite versions: 
+							Where do they go? 
+							Decision: they'll be in the 'aliases.native.integers' submodule, which'll have the finite 'aliases', after having finished the generalization procedures for them; 
+							Until then - the current originals...
 	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 

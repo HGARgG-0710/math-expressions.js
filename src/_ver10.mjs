@@ -32,7 +32,233 @@ export function activate(transformation = ID) {
 			// todo: work extensively on the precise list of aliases... Also, their names...
 
 			// ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
+			// TODO: separate onto sub-types here as well - '.integers', '.arrays', '.objects', '.strings' and so on... [Only first consider if it's 'integers' or 'integer']
 			native: {
+				integers: {
+					/**
+					 * Factors out a passed number to the prime numbers. Works quite quickly.
+					 * @param {number} num Number, to be factored out.
+					 * @returns {number[]} Prime factors array.
+					 */
+					factorOut: function (number) {
+						const factors = []
+						for (
+							let currDevisor = 2;
+							number !== 1;
+							currDevisor += currDevisor === 2 ? 1 : 2
+						) {
+							while (number % currDevisor === 0) {
+								factors.push(currDevisor)
+								number /= currDevisor
+							}
+						}
+						return factors
+					},
+
+					isPrime: function (x) {
+						return factorOut(x).length === 1
+					},
+
+					primesBefore: function (x) {
+						return generate(1, x).filter(isPrime)
+					},
+
+					// * Brings whatever is given within the given base to base 10;
+					// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
+					nbase: function (nstr, base, alphabet = defaultAlphabet) {
+						return repeatedArithmetic(
+							generate(0, nstr.length - 1).map(
+								(i) => alphabet.indexOf(nstr[i]) * base ** i
+							),
+							"+"
+						)
+					},
+
+					// * Brings whatever in base 10 to whatever in whatever base is given...
+					nbasereverse: function (n, base, alphabet = defaultAlphabet) {
+						const coefficients = []
+						// TODO: call this thing nrepresentation(), then use here...
+						// TODO: change this for either one's own implementation of log, or this, as an alias...
+						let i = Math.floor(Math.log(n) / Math.log(base))
+						while (n !== 0) {
+							// TODO: add an operator for that to the defaultTable...
+							n = (n - (n % base ** i)) / base
+							coefficients.push(n)
+							i--
+						}
+						// TODO: create a generalized map() function that would map to both functions, arrays and objects;
+						return coefficients.map((i) => alphabet[i]).join("")
+					},
+
+					baseconvert: function (a, basebeg, baseend) {
+						return nbasereverse(nbase(a, basebeg), baseend)
+					},
+
+					// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
+					// ? This thing don't include 0. Should it include 0?
+					multiples: function (n, range) {
+						return generate(1, range).map((a) => a * n)
+					},
+
+					// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
+					// ? That is, if that is desired... Is it? Pray think...
+					multiplesBefore: function (n, x) {
+						return multiples(n, floor(x / n))
+					},
+
+					// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
+					// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
+					/**
+					 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
+					 * @param {number} firstNum First number.
+					 * @param {number} secondNum Second number.
+					 */
+					leastCommonMultiple: function (...nums) {
+						if (nums.length === 0) return undefined
+						if (nums.length === 1) return nums[0]
+						if (nums.length === 2)
+							return min(
+								arrIntersections([
+									multiples(nums[0], nums[1]),
+									multiples(nums[1], nums[0])
+								])
+							)
+						return leastCommonMultiple(
+							nums[0],
+							leastCommonMultiple(...nums.slice(1))
+						)
+					},
+
+					commonMultiples: function (range, ...nums) {
+						if (nums.length === 0) return undefined
+						if (nums.length === 1) return nums[0]
+						if (nums.length === 2) {
+							const found = arrIntersections([
+								multiples(nums[0], range[range.length - 1]),
+								multiples(nums[1], nums[range[range.length - 2]])
+							])
+							range.pop()
+							range.pop()
+							return found
+						}
+						const rest = commonMultiples(range, ...nums.slice(1))
+						return arrIntersections([
+							multiples(nums[0], range[range.length - 1]),
+							rest
+						])
+					},
+
+					leastCommonDivisor: function (...nums) {
+						// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
+						return ((x) =>
+							typeof x === "number" || typeof x === "undefined"
+								? x
+								: min(x))(commonDivisors(...nums))
+					},
+
+					commonDivisors: function (...nums) {
+						if (nums.length === 0) return undefined
+						if (nums.length === 1) return nums[0]
+						if (nums.length === 2)
+							return arrIntersections([
+								factorOut(nums[0]),
+								factorOut(nums[1])
+							])
+						return arrIntersections([
+							factorOut(nums[0]),
+							commonDivisors(...nums.slice(1))
+						])
+					},
+
+					/**
+					 * Checks whether the number passed is perfect or not.
+					 * @param {number} number Number, perfectness of which is to be checked.
+					 */
+					isPerfect: function (number) {
+						return (
+							repeatedArithmetic(allFactors(number).map(String), "+") ===
+							number
+						)
+					},
+
+					/**
+					 * Takes one integer and returns all of its factors (not only primes, but others also).
+					 * @param {number} number An integer, factors for which are to be found.
+					 */
+					allFactors: function (number) {
+						const factors = [1]
+						for (let currFactor = 2; currFactor !== number; currFactor++)
+							if (number % currFactor === 0) factors.push(currFactor)
+						return factors
+					},
+
+					/**
+					 * This function calculates the factorial of a positive integer given.
+					 * @param {number} number A positive integer, factorial for which is to be calculated.
+					 */
+					factorial: function (number = 0) {
+						const numbers = []
+
+						// ? Shall one extend this? [Think about it...]
+						if (number < 0)
+							throw new Error(
+								"factorial() function is not supposed to be used with the negative numbers. "
+							)
+						if (!number) return 1
+
+						for (let i = 1; i <= number; i++) numbers.push(i)
+						return repeatedArithmetic(numbers.map(String), "*")
+					},
+
+					sumRepresentations: function (n, m, minval = 1) {
+						// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
+						const itered = generate(minval, n).map((x) =>
+							generate(minval, m).map((v, i) => (i == 0 ? x : minval))
+						)
+						while (itered.length < n ** m) {
+							for (let i = 0; i < itered.length; i++) {
+								const copied = flatCopy(itered[i])
+								for (let j = 0; j < m; j++) {
+									copied[j]++
+									if (indexOfMult(itered, copied).length) {
+										copied[j]--
+										continue
+									}
+									itered.push(copied)
+								}
+							}
+						}
+
+						return itered.filter((x) => repeatedArithmetic(x, "+") == n)
+					},
+
+					/**
+					 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
+					 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
+					 * @param {number} n First number (any rational number).
+					 * @param {number} k Second number (integer).
+					 */
+					binomial: function (n, k) {
+						if (
+							(typeof n !== "number" || typeof k !== "number") &&
+							(isNaN(Number(n)) || isNaN(Number(k)))
+						)
+							throw new Error(
+								"Input given to the choose function could not be converted to a number. "
+							)
+
+						// Rounding down just in case.
+						n = Number(n)
+						k = Number(k) | 0
+						return floor(
+							repeatedArithmetic(
+								generate(0, k - 1, 1).map((num) => n - num),
+								"*"
+							) / factorial(k)
+						)
+					}
+				},
+
 				ensureProperty: function (object, property, value) {
 					if (!object.hasOwnProperty(property)) object[property] = value
 				},
@@ -569,6 +795,153 @@ export function activate(transformation = ID) {
 
 				hasArrays: function (array = []) {
 					return !!max(array.map((a) => a instanceof Array))
+				},
+
+				// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
+				// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
+				countAppearences: function (
+					array,
+					element,
+					i = 0,
+					comparison = (a, b) => a === b
+				) {
+					return i < array.length
+						? Number(comparison(array[i], element)) +
+								countAppearences(array, element, i + 1, comparison)
+						: 0
+				},
+
+				indexOfMult: function (array, el, comparison = (a, b) => a === b) {
+					const indexes = []
+					for (let i = 0; i < array.length; i++)
+						if (comparison(array[i], el)) indexes.push(i)
+					return indexes
+				},
+
+				// * clears all but the first `tokeep` repetition of `el`
+				clearRepetitions: function (
+					arr,
+					el,
+					tokeep = 0,
+					comparison = (a, b) => a === b
+				) {
+					const firstMet = indexOfMult(arr, el, comparison)
+					return firstMet.length
+						? arr.filter(
+								(a, i) =>
+									firstMet.indexOf(i) < tokeep || !comparison(a, el)
+						  )
+						: [...arr]
+				},
+
+				splitArr: function (arr, el, comparison) {
+					const segments = []
+					let begInd = 0
+					let endInd = 0
+					for (let i = 0; i < arr.length; i++)
+						if (comparison(el, arr[i])) {
+							begInd = endInd + Number(Boolean(endInd))
+							endInd = i
+							segments.push([begInd, endInd])
+						}
+					return segments.map((seg) => arr.slice(...seg))
+				},
+
+				// * "guts" the first layer inner arrays into the current one...
+				gutInnerArrs: function (array) {
+					const returned = []
+					for (let i = 0; i < array.length; i++) {
+						if (array[i] instanceof Array) {
+							array[i].forEach(returned.push)
+							continue
+						}
+						returned.push(array[i])
+					}
+					return returned
+				}, 
+
+				// * Replaces values within an array and returns the obtained copy...
+				replaceArr: function (array, x, y, transformation = (a) => a) {
+					const resArray = [...array]
+					for (let i = 0; i < array.length; i++) {
+						const index = x.indexOf(array[i])
+						if (index !== -1) resArray[i] = transformation(y[index])
+					}
+					return resArray
+				},
+
+				// TODO: Optimize with the use of repeatedApplicationWhilst;
+				// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
+				// * Rewrite so that it returns a new one...
+				gutInnerArrsRecursive: function (array) {
+					while (hasArrays(array)) array = gutInnerArrs(array)
+					return array
+				},
+
+				// * "reverses" the gutInnerArrs (only once, at a given place)
+				// TODO: generalize; make a version of multiple encirclements;
+				// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
+				// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
+				arrEncircle: function (a, from = 0, to = a.length) {
+					const copied = []
+					for (let i = 0; i < a.length; i++) {
+						if (i >= from && i <= to) {
+							copied.push(a.slice(from, to + 1))
+							i = to
+							continue
+						}
+						copied.push(a[i])
+					}
+					return copied
+				},
+
+				// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
+				// * copies array's structure deeply without copying the elements
+				// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
+				// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
+				arrStructureCopy: function (thing) {
+					if (thing instanceof Array) return thing.map(arrStructureCopy)
+					return thing
+				},
+				// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
+				// TODO: the same way, write objEncircle; there'd also be an argument for the key;
+				// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
+				// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
+				// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
+				// * Same permutations for the InfiniteMap and UniversalMap...
+				// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
+				// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
+				// TODO: add more methods to UniversalMap and InfiniteMap;
+				// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
+
+				// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
+
+				// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
+				arrIntersections: function (arrs, comparison = (a, b) => a === b) {
+					if (arrs.length === 0) return []
+					if (arrs.length === 1) return arrs[1]
+					if (arrs.length === 2) {
+						const result = []
+						for (let i = 0; i < arrs[0].length; i++) {
+							for (let j = 0; j < arrs[1].length; j++) {
+								// TODO: change for the use of indexOfMult... the .includes thing...
+								if (
+									comparison(arrs[0][i], arrs[1][j]) &&
+									!result.includes(arrs[0][i])
+								) {
+									// ? Problem: this thing is not very useful (as in, general); It throws out the information concerning the arrs[1][j];
+									// * This is not good...
+									// TODO: fix; restructure it somehow...
+									result.push(arrs[0][i])
+								}
+							}
+						}
+						return result
+					}
+					return arrIntersections(
+						[arrs[0], arrIntersections(arrs.slice(1), comparison)],
+						comparison
+					)
 				}
 			},
 
@@ -747,7 +1120,7 @@ export function activate(transformation = ID) {
 					}
 				}
 			},
-			// ! implement the 'printi' for generalarrays and ic-s; 
+			// ! implement the 'printi' for generalarrays and ic-s;
 
 			GeneralArray(template = {}) {
 				const B = {
@@ -2552,6 +2925,7 @@ export function activate(transformation = ID) {
 				return !subcall ? copied : currvalue
 			},
 
+			// ! this thing is for finitely lengthed Arrays; [? Create a 'GeneralArray' version for it?]
 			dim(template = {}) {
 				return {
 					template: { ...template },
@@ -2638,6 +3012,18 @@ export function activate(transformation = ID) {
 						return r
 					}
 				}
+			},
+
+			// * This can create infinite loops...
+			// ! create a 'While' - same as 'Whilst' [naming conventions];
+			repeatedApplicationWhilst: function (
+				function_,
+				property,
+				initial = undefined
+			) {
+				let curr = initial
+				while (property()) curr = function_(curr)
+				return curr
 			},
 
 			InfiniteCounter(template = {}) {
@@ -3430,7 +3816,7 @@ export function activate(transformation = ID) {
 			},
 
 			// TODO: extend this thing - create new algorithms implementations for the library...
-			// ! Generalize this; 
+			// ! Generalize this;
 			algorithms: {
 				BinarySearch(array, number) {
 					// * For getting the middle index of the array.
@@ -3458,7 +3844,7 @@ export function activate(transformation = ID) {
 				 * @param {number} iterations Number of iterations (integer).
 				 */
 				Farey(startRatio, endRatio, iterations = 0) {
-					// ? Add a 'fareyAddition' general function? 
+					// ? Add a 'fareyAddition' general function?
 					function formNewRatio(first, second) {
 						return new Ratio(
 							first.numerator + second.numerator,
@@ -3958,200 +4344,9 @@ export function activate(transformation = ID) {
 				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 
-				// ? Where does one put all this number-theoretic stuff? Along with 'statistics'? Or not? Does one want to have it separate somehow? Does one really want to generalize it?
-				/**
-				 * Factors out a passed number to the prime numbers. Works quite quickly.
-				 * @param {number} num Number, to be factored out.
-				 * @returns {number[]} Prime factors array.
-				 */
-				factorOut: function (number) {
-					const factors = []
-					for (
-						let currDevisor = 2;
-						number !== 1;
-						currDevisor += currDevisor === 2 ? 1 : 2
-					) {
-						while (number % currDevisor === 0) {
-							factors.push(currDevisor)
-							number /= currDevisor
-						}
-					}
-					return factors
-				},
-
-				isPrime: function (x) {
-					return factorOut(x).length === 1
-				},
-
-				primesBefore: function (x) {
-					return generate(1, x).filter(isPrime)
-				},
-
-				// * Brings whatever is given within the given base to base 10;
-				// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-				nbase: function (nstr, base, alphabet = defaultAlphabet) {
-					return repeatedArithmetic(
-						generate(0, nstr.length - 1).map(
-							(i) => alphabet.indexOf(nstr[i]) * base ** i
-						),
-						"+"
-					)
-				},
-
-				// * Brings whatever in base 10 to whatever in whatever base is given...
-				nbasereverse: function (n, base, alphabet = defaultAlphabet) {
-					const coefficients = []
-					// TODO: call this thing nrepresentation(), then use here...
-					// TODO: change this for either one's own implementation of log, or this, as an alias...
-					let i = Math.floor(Math.log(n) / Math.log(base))
-					while (n !== 0) {
-						// TODO: add an operator for that to the defaultTable...
-						n = (n - (n % base ** i)) / base
-						coefficients.push(n)
-						i--
-					}
-					// TODO: create a generalized map() function that would map to both functions, arrays and objects;
-					return coefficients.map((i) => alphabet[i]).join("")
-				},
-
-				baseconvert: function (a, basebeg, baseend) {
-					return nbasereverse(nbase(a, basebeg), baseend)
-				},
-
-				// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
-				// ? This thing don't include 0. Should it include 0?
-				multiples: function (n, range) {
-					return generate(1, range).map((a) => a * n)
-				},
-
-				// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
-				// ? That is, if that is desired... Is it? Pray think...
-				multiplesBefore: function (n, x) {
-					return multiples(n, floor(x / n))
-				},
-
-				// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
-				// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-				/**
-				 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
-				 * @param {number} firstNum First number.
-				 * @param {number} secondNum Second number.
-				 */
-				leastCommonMultiple: function (...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2)
-						return min(
-							arrIntersections([
-								multiples(nums[0], nums[1]),
-								multiples(nums[1], nums[0])
-							])
-						)
-					return leastCommonMultiple(
-						nums[0],
-						leastCommonMultiple(...nums.slice(1))
-					)
-				},
-
-				commonMultiples: function (range, ...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2) {
-						const found = arrIntersections([
-							multiples(nums[0], range[range.length - 1]),
-							multiples(nums[1], nums[range[range.length - 2]])
-						])
-						range.pop()
-						range.pop()
-						return found
-					}
-					const rest = commonMultiples(range, ...nums.slice(1))
-					return arrIntersections([
-						multiples(nums[0], range[range.length - 1]),
-						rest
-					])
-				},
-
-				leastCommonDivisor: function (...nums) {
-					// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-					return ((x) =>
-						typeof x === "number" || typeof x === "undefined" ? x : min(x))(
-						commonDivisors(...nums)
-					)
-				},
-
-				commonDivisors: function (...nums) {
-					if (nums.length === 0) return undefined
-					if (nums.length === 1) return nums[0]
-					if (nums.length === 2)
-						return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
-					return arrIntersections([
-						factorOut(nums[0]),
-						commonDivisors(...nums.slice(1))
-					])
-				},
-
-				/**
-				 * Checks whether the number passed is perfect or not.
-				 * @param {number} number Number, perfectness of which is to be checked.
-				 */
-				isPerfect: function (number) {
-					return (
-						repeatedArithmetic(allFactors(number).map(String), "+") === number
-					)
-				},
-
-				/**
-				 * Takes one integer and returns all of its factors (not only primes, but others also).
-				 * @param {number} number An integer, factors for which are to be found.
-				 */
-				allFactors: function (number) {
-					const factors = [1]
-					for (let currFactor = 2; currFactor !== number; currFactor++)
-						if (number % currFactor === 0) factors.push(currFactor)
-					return factors
-				},
-
-				/**
-				 * This function calculates the factorial of a positive integer given.
-				 * @param {number} number A positive integer, factorial for which is to be calculated.
-				 */
-				factorial: function (number = 0) {
-					const numbers = []
-
-					// ? Shall one extend this? [Think about it...]
-					if (number < 0)
-						throw new Error(
-							"factorial() function is not supposed to be used with the negative numbers. "
-						)
-					if (!number) return 1
-
-					for (let i = 1; i <= number; i++) numbers.push(i)
-					return repeatedArithmetic(numbers.map(String), "*")
-				},
-
-				sumRepresentations: function (n, m, minval = 1) {
-					// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
-					const itered = generate(minval, n).map((x) =>
-						generate(minval, m).map((v, i) => (i == 0 ? x : minval))
-					)
-					while (itered.length < n ** m) {
-						for (let i = 0; i < itered.length; i++) {
-							const copied = flatCopy(itered[i])
-							for (let j = 0; j < m; j++) {
-								copied[j]++
-								if (indexOfMult(itered, copied).length) {
-									copied[j]--
-									continue
-								}
-								itered.push(copied)
-							}
-						}
-					}
-
-					return itered.filter((x) => repeatedArithmetic(x, "+") == n)
-				},
-
+				// ? Question: where does this stuff go to? Not 'integers', clearly; It is far more technical and implementation-specific; [Does one even want this to be a part of the library?]
+				// * Due to the fact that one's lately been going away from the purely technical aspects of programming, and instead focusing on the abstract and pure means of acomplishing one's goals, based more on creation of new ways rather than attempts to 'fix' or work with the already existing ones, it seems rather redundant.
+				// ! Pray make a decision...
 				/**
 				 * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
 				 * @param {number} float1 First number to be added.
@@ -4163,50 +4358,6 @@ export function activate(transformation = ID) {
 					const fixedB = sum - float1
 					const fix = float2 - fixedB
 					return [sum + fix, fix]
-				},
-
-				// ! Gets merged with the 'main.dim';
-				// * Consider the way they are compatible/incompatible and change the generalized version accordingly;
-				/**
-				 * This function takes in array and determines how nested it is (its dimensions).
-				 * If it is not array, dimension is 0.
-				 * If it is an empty array, then it's dimension is 1.
-				 * If it is an array only with an element which is not an array, then it's dim is 1.
-				 * If it is an array with only an array of dim n-1, then it's own dim is n.
-				 * If it is an array with a bunch of stuff with different dims, then it's dim is the highest of the ones of it's elements + 1.
-				 * This function is defined recursively.
-				 * @param {any[] | any} array An array with any data in it. It doesn't have to be an array, though.
-				 */
-				dim: function (array) {
-					if (array instanceof Array)
-						return 1 + (array.length === 0 ? 0 : max(array.map(dim)))
-					return 0
-				},
-
-				/**
-				 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
-				 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
-				 * @param {number} n First number (any rational number).
-				 * @param {number} k Second number (integer).
-				 */
-				binomial: function (n, k) {
-					if (
-						(typeof n !== "number" || typeof k !== "number") &&
-						(isNaN(Number(n)) || isNaN(Number(k)))
-					)
-						throw new Error(
-							"Input given to the choose function could not be converted to a number. "
-						)
-
-					// Rounding down just in case.
-					n = Number(n)
-					k = Number(k) | 0
-					return floor(
-						repeatedArithmetic(
-							generate(0, k - 1, 1).map((num) => n - num),
-							"*"
-						) / factorial(k)
-					)
 				},
 
 				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
@@ -4258,171 +4409,6 @@ export function activate(transformation = ID) {
 						string
 					)
 				},
-
-				// * Replaces values within an array and returns the obtained copy...
-				replaceArr: function (array, x, y, transformation = (a) => a) {
-					const resArray = [...array]
-					for (let i = 0; i < array.length; i++) {
-						const index = x.indexOf(array[i])
-						if (index !== -1) resArray[i] = transformation(y[index])
-					}
-					return resArray
-				},
-
-				// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
-				// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
-				countAppearences: function (
-					array,
-					element,
-					i = 0,
-					comparison = (a, b) => a === b
-				) {
-					return i < array.length
-						? Number(comparison(array[i], element)) +
-								countAppearences(array, element, i + 1, comparison)
-						: 0
-				},
-
-				indexOfMult: function (array, el, comparison = (a, b) => a === b) {
-					const indexes = []
-					for (let i = 0; i < array.length; i++)
-						if (comparison(array[i], el)) indexes.push(i)
-					return indexes
-				},
-
-				// * clears all but the first `tokeep` repetition of `el`
-				clearRepetitions: function (
-					arr,
-					el,
-					tokeep = 0,
-					comparison = (a, b) => a === b
-				) {
-					const firstMet = indexOfMult(arr, el, comparison)
-					return firstMet.length
-						? arr.filter(
-								(a, i) =>
-									firstMet.indexOf(i) < tokeep || !comparison(a, el)
-						  )
-						: [...arr]
-				},
-
-				splitArr: function (arr, el, comparison) {
-					const segments = []
-					let begInd = 0
-					let endInd = 0
-					for (let i = 0; i < arr.length; i++)
-						if (comparison(el, arr[i])) {
-							begInd = endInd + Number(Boolean(endInd))
-							endInd = i
-							segments.push([begInd, endInd])
-						}
-					return segments.map((seg) => arr.slice(...seg))
-				},
-
-				// * "guts" the first layer inner arrays into the current one...
-				gutInnerArrs: function (array) {
-					const returned = []
-					for (let i = 0; i < array.length; i++) {
-						if (array[i] instanceof Array) {
-							array[i].forEach(returned.push)
-							continue
-						}
-						returned.push(array[i])
-					}
-					return returned
-				},
-
-				// TODO: also -- repeatedApplication, code-rework...
-				// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
-				// * Rewrite so that it returns a new one...
-				gutInnerArrsRecursive: function (array) {
-					while (hasArrays(array)) array = gutInnerArrs(array)
-					return array
-				},
-
-				// * "reverses" the gutInnerArrs (only once, at a given place)
-				// TODO: generalize; make a version of multiple encirclements;
-				// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
-				// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
-				arrEncircle: function (a, from = 0, to = a.length) {
-					const copied = []
-					for (let i = 0; i < a.length; i++) {
-						if (i >= from && i <= to) {
-							copied.push(a.slice(from, to + 1))
-							i = to
-							continue
-						}
-						copied.push(a[i])
-					}
-					return copied
-				},
-
-				// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
-				// * copies array's structure deeply without copying the elements
-				// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
-				// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
-				arrStructureCopy: function (thing) {
-					if (thing instanceof Array) return thing.map(arrStructureCopy)
-					return thing
-				},
-				// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
-				// TODO: the same way, write objEncircle; there'd also be an argument for the key;
-				// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
-				// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
-				// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
-				// * Same permutations for the InfiniteMap and UniversalMap...
-				// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
-				// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
-				// TODO: add more methods to UniversalMap and InfiniteMap;
-				// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
-
-				// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
-
-				// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
-				arrIntersections: function (arrs, comparison = (a, b) => a === b) {
-					if (arrs.length === 0) return []
-					if (arrs.length === 1) return arrs[1]
-					if (arrs.length === 2) {
-						const result = []
-						for (let i = 0; i < arrs[0].length; i++) {
-							for (let j = 0; j < arrs[1].length; j++) {
-								// TODO: change for the use of indexOfMult... the .includes thing...
-								if (
-									comparison(arrs[0][i], arrs[1][j]) &&
-									!result.includes(arrs[0][i])
-								) {
-									// ? Problem: this thing is not very useful (as in, general); It throws out the information concerning the arrs[1][j];
-									// * This is not good...
-									// TODO: fix; restructure it somehow...
-									result.push(arrs[0][i])
-								}
-							}
-						}
-						return result
-					}
-					return arrIntersections(
-						[arrs[0], arrIntersections(arrs.slice(1), comparison)],
-						comparison
-					)
-				},
-
-				repeatedApplication: function (a, n, initial, offset = 0n) {
-					n = BigInt(n)
-					let curr = initial
-					for (let i = 0n; i < n; i++) curr = a(curr, i + offset)
-					return curr
-				},
-
-				// * This can create infinite loops...
-				repeatedApplicationWhilst: function (
-					function_,
-					property,
-					initial = undefined
-				) {
-					let curr = initial
-					while (property()) curr = function_(curr)
-					return curr
-				}
 
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
@@ -4782,7 +4768,7 @@ export function activate(transformation = ID) {
 						)
 					}
 				},
-	
+
 				/**
 				 * This class has a bunch of useful algorithms.
 				 * This is one of the static classes, it contains only methods,
