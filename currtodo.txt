@@ -84,12 +84,12 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 					One ought to consider each and every part of it and what to do with it: 
 
 						[THIS LIST SHOULD GET REVISED AFTER HAVING INTRODUCED THE STRUCTURAL CHANGES...]
-						1. 'Statistics' part (Statistics and Tests classes and all the related statistics functions) [in progress]: 
+						1. 'statistics' part (Statistics and Tests classes and all the related statistics functions) [in progress]: 
 							All this stuff gets generalized; 
 							The names for the functions get to remain as a 'finite' special case (as in 'number()'); 
 							It goes into the 'statistics' namespace; 
 
-						2. VarMapping and 'Equation' part:
+						2. 'Equation' part:
 							Not sure about generalizing this thing; 
 							Problem is: it uses rational approximations for obtaining of solutions to given equations; 
 
@@ -110,6 +110,8 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 							Yes, this is really-really nice...
 
 							DECISION: yes. Do this work on them, pray; 
+
+							The VarMapping gets replaced with the UnlimitedMap(s); 
 
 						3. algorithms part: 
 							Generalize the Algorithms [in particular the 'Farey' sequence and the Ratio-TrueRatio replacement...]; 
@@ -177,10 +179,10 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 								One does generalize the integer-related number-theoretic functions and tries not to have any ones that are not integer-related...
 
-						About the finite versions: 
-							Where do they go? 
-							Decision: they'll be in the 'aliases.native.integers' submodule, which'll have the finite 'aliases', after having finished the generalization procedures for them; 
-							Until then - the current originals...
+							About the finite versions: 
+								Where do they go? 
+								Decision: they'll be in the 'aliases.native.integers' submodule, which'll have the finite 'aliases', after having finished the generalization procedures for them; 
+								Until then - the current originals...
 	
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 

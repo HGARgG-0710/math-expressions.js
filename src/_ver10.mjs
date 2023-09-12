@@ -858,7 +858,7 @@ export function activate(transformation = ID) {
 						returned.push(array[i])
 					}
 					return returned
-				}, 
+				},
 
 				// * Replaces values within an array and returns the obtained copy...
 				replaceArr: function (array, x, y, transformation = (a) => a) {
@@ -3695,6 +3695,7 @@ export function activate(transformation = ID) {
 				}
 			},
 
+			// ? QUESTION: about the UniversalMap... Does it remain under the '.main'? Or does it instead travel to the '.aliases.native'? Should it be replaced by the UnlimitedMap or turned into a distinctly named special case of it?
 			UniversalMap: function (template = {}) {
 				return {
 					template: {
@@ -4339,26 +4340,231 @@ export function activate(transformation = ID) {
 				}
 			},
 
+			// ! problem: where does one want to put the 'GeneralVector'? 'linear', maybe? Or something like that? But it is rather general... Think about putting it into the 'linear' or keeping here, pray;
+			// ? Suggestion: Add the runtime type-safety to all [or some] of the things within the library...
+			// TODO: finish the generalization of this thing... [polish, fix references, get rid of bugs, make more desireable as of self...];
+			/**
+			 * This class represents a length-safe array with some nice stuff added to it.
+			 * It also may behave like a mathematical vector.
+			 */
+			GeneralVector: function (template = {}) {
+				const V = {
+					template: { ...template },
+					static: {
+						// TODO: there should be a "defaultReturn" function for the cases like these (what should be returned on the failing of the typecheck?);
+						typecheck: function (item, vector) {
+							if (!vector.typecheck(item)) {
+								if (!vector.transform) {
+									vector.typefail()
+									return
+								}
+								return vector.transform(item)
+							}
+							return item
+						},
+						type(array) {
+							if (!array.length) return ["any"]
+							// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
+							const type = [typeof array[0]]
+							for (const element of array)
+								if (!type.includes(typeof element))
+									type.push(typeof element)
+							return type
+						}
+					},
+					class: function (vectorargs = {}) {
+						const T = {
+							delete(index) {
+								const deleted = this._vector[index]
+								if (index < this._length - 1)
+									for (let i = index; i < this._length - 1; i++)
+										this._vector[i] = this._vector[i + 1]
+								this._length--
+								this._vector.pop()
+								return deleted
+							},
+							// TODO: make arbitrary indexes writeable...
+							add(item) {
+								if (!this.transform) Vector.typecheck(item, this)
+								this._length++
+								return (
+									this.vector.push(
+										this.transform ? this.transform(item) : item
+									) - 1
+								)
+							},
+							swap(index1, index2) {
+								if (
+									typeof index1 !== "number" ||
+									typeof index2 !== "number" ||
+									this._vector[index1] === undefined ||
+									this._vector[index2] === undefined
+								)
+									throw new Error("Invalid indexes passed. ")
+								const temp = this._vector[index1]
+								this._vector[index1] = this._vector[index2]
+								this._vector[index2] = temp
+							},
+							fill(item) {
+								Vector.typecheck(item, this)
+								this._vector.fill(item)
+								return this
+							},
+							// TODO: here, implement a beautiful construction way for arbitrary Vectors;
+							construct() {},
+							set(index, value) {
+								if (this._vector[index] === undefined)
+									throw new Error(
+										"Invalid index passed into the set function."
+									)
+								this._vector[index] = value
+							},
+							index(i) {
+								return this._vector[i]
+							},
+							slice(start, end = this.vector.length) {
+								const sliced = this._vector.slice(start, end)
+								return new Vector({
+									vectortypes: this._type,
+									typefunction: sliced.length,
+									type: sliced
+								})
+							},
+							indexof(element) {
+								return this._vector.indexOf(element)
+							},
+							indexes(element) {
+								const indexes = [this._vector.indexOf(element)]
+								if (indexes[0] >= 0)
+									for (let i = indexes[0] + 1; i < this._length; i++)
+										if (this._vector[i] === element) indexes.push(i)
+								return indexes
+							},
+							concat(vector) {
+								return this.vector.concat(vector.vector)
+							},
+							map(f = (x) => x, type = this.type) {
+								return new Vector({
+									vectortypes: type,
+									typefunction: this.vector.map(f)
+								})
+							},
+							byElement(vector, operation) {
+								const newVec = this.copy()
+								for (
+									let i = 0;
+									i < Math.min(vector.length, this.length);
+									i++
+								)
+									newVec.set(
+										i,
+										operation(this.vector[i], vector.vector[i])
+									)
+								return newVec
+							},
+							copy() {
+								return new Vector({
+									vectortypes: infinite.deepCopy(this.vectortypes),
+									typefunction: this.typefunction,
+									type: infinite.deepCopy(this.vector),
+									vector: copy(this.type),
+									defaultelement: this.default
+								})
+							},
+							get length() {
+								return this._length
+							},
+							get vector() {
+								return this._vector
+							},
+							get type() {
+								return this._type
+							},
+							set type(newType) {
+								// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
+								// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
+								// for (let i = 0; i < newType.length; i++)
+								//	if (!this.vectortypes.includes(newType[i]))
+								//		throw new Error(`Unknown vector type: ${newType}`)
+								// TODO: fix... Give the entire code a very good look-through once have fixed the TypeErrors...
+								// * Apply the generics where want to...
+								this._type = newType
+								this._vector = this.vector.map((a) =>
+									Vector.typecheck(a, this)
+								)
+							},
+							set length(newLength) {
+								if (newLength < 0)
+									throw new Error(
+										`Passed negative length: ${newLength}`
+									)
+								if (newLength < this._length)
+									for (let i = this._length; i > newLength; i--)
+										this._vector.pop()
+								if (newLength > this._length)
+									for (let i = this._length; i < newLength; i++)
+										this._vector[i] = this.default(this.type)
+								this._length = newLength
+							},
+							set vector(newVector) {
+								const type = Vector.type(newVector)
+								this._vector = newVector
+								this.length = newVector.length
+								if (!infinite.valueCompare(type, this.type))
+									this._type = type
+							}
+						}
+						ensureProperties(vectorargs, {
+							vector: [],
+							defaultelement: RESULT._const(null),
+							transform: null,
+							vectortypes: [
+								"number",
+								"string",
+								"boolean",
+								"function",
+								"object",
+								"bigint",
+								"any",
+								"undefined",
+								"symbol"
+							],
+							typefunction: (x) => typeof x,
+							type: ["any"],
+							typecheck: (item) => {
+								if (
+									!this.type.includes(typeof item) &&
+									!this.type.includes("any")
+								) {
+									if (this.transform) return this.transform(item)
+									throw new Error(
+										`Type of item ${item} is not equal to vector type: [${this.type
+											.map((a) => `"${a}"`)
+											.join(",")}]. Item type: ${typeof item}`
+									)
+								}
+							}
+						})
+						T._vector = vectorargs.vector
+						T._length = vectorargs.vector.length
+						T.type = vectorargs.type
+						T.default = vectorargs.defaultelement
+						T.transform = vectorargs.transform
+						T.vectortypes = vectorargs.vectortypes
+						T.typefunction = vectorargs.typefunction
+						T.typecheck = vectorargs.typecheck
+						T.typefail = vectorargs.typefail
+						return T
+					}
+				}
+				V.static.this = V
+				return V
+			},
+
 			// ! These 2 get 'poured out' into the 'main' field;
 			methods: {
 				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-
-				// ? Question: where does this stuff go to? Not 'integers', clearly; It is far more technical and implementation-specific; [Does one even want this to be a part of the library?]
-				// * Due to the fact that one's lately been going away from the purely technical aspects of programming, and instead focusing on the abstract and pure means of acomplishing one's goals, based more on creation of new ways rather than attempts to 'fix' or work with the already existing ones, it seems rather redundant.
-				// ! Pray make a decision...
-				/**
-				 * This function does a fixed addition of two numbers. It decreases error a tiny bit, but with large numbers it may be signigicant.
-				 * @param {number} float1 First number to be added.
-				 * @param {number} float2 Second number to be added.
-				 * @returns {[number, number]} a number with error much less than it would be with JavaScript addition.
-				 */
-				realAddition: function (float1, float2) {
-					const sum = float1 + float2
-					const fixedB = sum - float1
-					const fix = float2 - fixedB
-					return [sum + fix, fix]
-				},
 
 				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
 				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
@@ -4367,6 +4573,7 @@ export function activate(transformation = ID) {
 				// ? Does one want to be unifying those with the (equivalent) arrays methods [for doing so]?
 				// TODO [thing one hasn't done yet]: implement the replacement methods for arrays...
 				// ? Are there any manner of performance advantages in general separation of algorithms for native JS strings [don't seem to find anything on it... pray make one's own mini-research]?
+				// ^ SOLUTION: yes, one generalizes and then merges them; Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
 
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 
@@ -4408,207 +4615,13 @@ export function activate(transformation = ID) {
 						Math.min(x.length, y.length),
 						string
 					)
-				},
+				}
 
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
 			classes: {
-				// TODO: Add the runtime type-safety to all the data-keeping types...
-				// ? Suggestion: Add the runtime type-safety to all the things within the library...
-				/**
-				 * This class represents a length-safe array with some nice stuff added to it.
-				 * It also may behave like a mathematical vector.
-				 */
-				Vector: class {
-					// TODO: make this thing into a separate type or something... It is very big and clumsy (though, useful...)
-					constructor(vectorargs) {
-						// TODO: let there be way for user to give their own defaults for this thing...
-						ensureProperties(vectorargs, {
-							vector: [],
-							defaultelement: RESULT._const(null),
-							transform: null,
-							vectortypes: [
-								"number",
-								"string",
-								"boolean",
-								"function",
-								"object",
-								"bigint",
-								"any",
-								"undefined",
-								"symbol"
-							],
-							typefunction: (x) => typeof x,
-							type: ["any"],
-							typecheck: (item) => {
-								if (
-									!this.type.includes(typeof item) &&
-									!this.type.includes("any")
-								) {
-									if (this.transform) return this.transform(item)
-									throw new Error(
-										`Type of item ${item} is not equal to vector type: [${this.type
-											.map((a) => `"${a}"`)
-											.join(",")}]. Item type: ${typeof item}`
-									)
-								}
-							}
-						})
-						this._vector = vectorargs.vector
-						this._length = vectorargs.vector.length
-						this.type = vectorargs.type
-						this.default = vectorargs.defaultelement
-						this.transform = vectorargs.transform
-						this.vectortypes = vectorargs.vectortypes
-						this.typefunction = vectorargs.typefunction
-						this.typecheck = vectorargs.typecheck
-						this.typefail = vectorargs.typefail
-					}
-					// TODO: there should be a "defaultReturn" function for the cases like these (what should be returned on the failing of the typecheck?);
-					static typecheck(item, vector) {
-						if (!vector.typecheck(item)) {
-							if (!vector.transform) {
-								vector.typefail()
-								return
-							}
-							return vector.transform(item)
-						}
-						return item
-					}
-					delete(index) {
-						const deleted = this._vector[index]
-						if (index < this._length - 1)
-							for (let i = index; i < this._length - 1; i++)
-								this._vector[i] = this._vector[i + 1]
-						this._length--
-						this._vector.pop()
-						return deleted
-					}
-					// TODO: make arbitrary indexes writeable...
-					add(item) {
-						if (!this.transform) Vector.typecheck(item, this)
-						this._length++
-						return (
-							this.vector.push(
-								this.transform ? this.transform(item) : item
-							) - 1
-						)
-					}
-					swap(index1, index2) {
-						if (
-							typeof index1 !== "number" ||
-							typeof index2 !== "number" ||
-							this._vector[index1] === undefined ||
-							this._vector[index2] === undefined
-						)
-							throw new Error("Invalid indexes passed. ")
-						const temp = this._vector[index1]
-						this._vector[index1] = this._vector[index2]
-						this._vector[index2] = temp
-					}
-					fill(item) {
-						Vector.typecheck(item, this)
-						this._vector.fill(item)
-						return this
-					}
-					// TODO: here, implement a beautiful construction way for arbitrary Vectors;
-					construct() {}
-					set(index, value) {
-						if (this._vector[index] === undefined)
-							throw new Error("Invalid index passed into the set function.")
-						this._vector[index] = value
-					}
-					index(i) {
-						return this._vector[i]
-					}
-					slice(start, end = this.vector.length) {
-						const sliced = this._vector.slice(start, end)
-						return new Vector({
-							vectortypes: this._type,
-							typefunction: sliced.length,
-							type: sliced
-						})
-					}
-					indexof(element) {
-						return this._vector.indexOf(element)
-					}
-					indexes(element) {
-						const indexes = [this._vector.indexOf(element)]
-						if (indexes[0] >= 0)
-							for (let i = indexes[0] + 1; i < this._length; i++)
-								if (this._vector[i] === element) indexes.push(i)
-						return indexes
-					}
-					concat(vector) {
-						return this.vector.concat(vector.vector)
-					}
-					map(f = (x) => x, type = this.type) {
-						return new Vector({
-							vectortypes: type,
-							typefunction: this.vector.map(f)
-						})
-					}
-					byElement(vector, operation) {
-						const newVec = this.copy()
-						for (let i = 0; i < Math.min(vector.length, this.length); i++)
-							newVec.set(i, operation(this.vector[i], vector.vector[i]))
-						return newVec
-					}
-					copy() {
-						return new Vector({
-							vectortypes: infinite.deepCopy(this.vectortypes),
-							typefunction: this.typefunction,
-							type: infinite.deepCopy(this.vector),
-							vector: copy(this.type),
-							defaultelement: this.default
-						})
-					}
-					static type(array) {
-						if (!array.length) return ["any"]
-						// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
-						const type = [typeof array[0]]
-						for (const element of array)
-							if (!type.includes(typeof element)) type.push(typeof element)
-						return type
-					}
-					get length() {
-						return this._length
-					}
-					get vector() {
-						return this._vector
-					}
-					get type() {
-						return this._type
-					}
-					set type(newType) {
-						// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
-						// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
-						// for (let i = 0; i < newType.length; i++)
-						//	if (!this.vectortypes.includes(newType[i]))
-						//		throw new Error(`Unknown vector type: ${newType}`)
-						// TODO: fix... Give the entire code a very good look-through once have fixed the TypeErrors...
-						// * Apply the generics where want to...
-						this._type = newType
-						this._vector = this.vector.map((a) => Vector.typecheck(a, this))
-					}
-					set length(newLength) {
-						if (newLength < 0)
-							throw new Error(`Passed negative length: ${newLength}`)
-						if (newLength < this._length)
-							for (let i = this._length; i > newLength; i--)
-								this._vector.pop()
-						if (newLength > this._length)
-							for (let i = this._length; i < newLength; i++)
-								this._vector[i] = this.default(this.type)
-						this._length = newLength
-					}
-					set vector(newVector) {
-						const type = Vector.type(newVector)
-						this._vector = newVector
-						this.length = newVector.length
-						if (!infinite.valueCompare(type, this.type)) this._type = type
-					}
-				},
+				// ! Based of ('extending') a GeneralVector, these things will have predefined operations on 'Number-like' objects: Namely, TrueIntegers, TrueRatios, and so on...
+				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
 
 				// TODO: rewrite; finish...
 				// * Current idea for a list of features:
@@ -4666,7 +4679,6 @@ export function activate(transformation = ID) {
 				// * 3. Can have user-defined operations for doing certain things with numbers;
 				// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
 				NumberMatrix: class extends RESULT.Vector {},
-
 				// * Current idea for the list of features:
 				// * 1. Only numbers ;
 				// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
@@ -4720,7 +4732,6 @@ export function activate(transformation = ID) {
 							this.matrix.index(i).scalarMultiply(scalar)
 					}
 				},
-
 				// * Current idea for the list of features:
 				// * 1. Only numbers ;
 				// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
@@ -4769,15 +4780,8 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				/**
-				 * This class has a bunch of useful algorithms.
-				 * This is one of the static classes, it contains only methods,
-				 * i.e. it's supposed to be used like this:
-				 * * Algorithms.algorithmName(arg_1, ..., arg_n);
-				 */
-
 				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
-				// * CURRENT IDEA FOR A NAME: NumberEquation...
+				// * CURRENT IDEA FOR A NAME: NumberEquation... Or NumericEquation... Or something...
 				/**
 				 * This class's purpose is to represent a mathematical equation of multiple variables.
 				 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
@@ -5038,73 +5042,6 @@ export function activate(transformation = ID) {
 							differences.indexOf(min(differences)) *
 								floor(10 ** -precision, precision)
 						)
-					}
-				},
-				/**
-				 * This class represents a mapping of variables to numeric values.
-				 * It can be used separately or in combination with the Equation class.
-				 * (It's original purpose was the second)
-				 */
-				VarMapping: class {
-					/**
-					 * Constructs a new mapping based on the data inputted.
-					 * @param {string[]} vars Variable names in a mapping.
-					 * @param {number[]} maps Numerical values for them.
-					 */
-					constructor(vars = [], maps = []) {
-						this.varmap = { variables: [], mappings: [] }
-						function hasLetters(thing) {
-							return thing.toLowerCase() !== thing.toUpperCase()
-						}
-						// ? what is this? deal with this thing later... Seems to have been inteded to be different from that...
-						if (!(vars instanceof String) && !(maps instanceof Array))
-							if (vars.length !== maps.length)
-								throw new Error(
-									"Arrays of different lengths passed to VarMapping constructor. "
-								)
-						for (let i = 0; i < vars.length; i++) {
-							if (!hasLetters(vars[i]))
-								throw new Error(
-									`Varname without letters is being passed: ${vars[i]}`
-								)
-							for (let j = i + 1; j < vars.length; j++)
-								if (vars[j] === vars[i])
-									throw new Error(
-										"Given repeating variable maps in the VarMapping constructor. "
-									)
-						}
-						this.varmap.variables = vars
-						this.varmap.mappings = maps
-					}
-					/**
-					 * Adds a new pair of name-number to the mapping.
-					 * Useful when using some sort of numerical function in a big cycle.
-					 * @param {string} name Name of the new (or old) property.
-					 * @param {number} value Numerical value to be set to the name.
-					 */
-					add(name, value) {
-						if (typeof value !== "number")
-							throw new Error(
-								"Given non-numeric data as a value for mapping. "
-							)
-						this.varmap.variables.push(name)
-						this.varmap.mappings.push(value)
-					}
-					/**
-					 * Deletes a property from varmap by the given name.
-					 * @param {string} name Name to be used for deletion.
-					 */
-					delete(name) {
-						for (
-							let i = this.varmap.variables.indexOf(name);
-							i < this.varmap.variables.length;
-							i++
-						) {
-							this.varmap.variables[i] = this.varmap.variables[i + 1]
-							this.varmap.mappings[i] = this.varmap.mappings[i + 1]
-						}
-						this.varmap.mappings.pop()
-						this.varmap.variables.pop()
 					}
 				}
 			},
