@@ -1065,7 +1065,7 @@ export function activate(transformation = ID) {
 					template: { ...template },
 					function: function (x = this.template.start) {
 						return RESULT.main
-							.InfiniteCounter(RESULT.main.number())
+							.InfiniteCounter(RESULT.main.addnumber(this.template))
 							.class(x)
 							.map(this.template.icclass)
 					}
@@ -1121,6 +1121,48 @@ export function activate(transformation = ID) {
 				}
 			},
 			// ! implement the 'printi' for generalarrays and ic-s;
+			numeric: {
+				// here, various predefined string-functions for representations of numbers would go;
+				polystring(template = {}) {
+					return {
+						template: {
+							alphabet: RESULT.variables.defaultAlphabet.get,
+							separator: "",
+							...template
+						},
+						function: function (counter = this.template.icclass.class()) {
+							// TODO: finish rewriting with the exclusive use of infinite [unlimited, that is] types;
+
+							// ? Consider - does one really want these things to be saved into a variable...
+							const TIClass = TrueInteger(this.template.icclass).class
+							// ? Make this thing an 'alias'?
+							const iccmap = (x) => x.map(this.template.icclass)
+							const converted = TIClass(
+								iccmap(this.template.alphabet.length)
+							)
+
+							let copy = RESULT.main.deepCopy(counter)
+							let index = this.template.genarrclass.template.icclass()
+							const representation = this.template.genarrclass.class()
+							const copyZero = copy.class.class()
+
+							for (; copy.compare(copyZero); index = index.next()) {
+								const modulo = copy.modulo(
+									converted.power(TIClass(iccmap(index)))
+								)
+								representation.write(
+									index,
+									this.template.alphabet.read(modulo)
+								)
+								copy = copy.add(modulo.invadd())
+							}
+
+							// TODO: create a method for transforming a GeneralArray into a string [or better still, just make the thing in question a string that works just like a GeneralArray, then replace this];
+							return representation.join(this.template.separator)
+						}
+					}
+				}
+			},
 
 			GeneralArray(template = {}) {
 				const B = {
@@ -2147,7 +2189,7 @@ export function activate(transformation = ID) {
 								const ALIAS = (x) =>
 									RESULT.infinite
 										.InfiniteCounter(
-											RESULT.infinite.number({
+											RESULT.infinite.addnumber({
 												start: -1
 											})
 										)({ value: x })
@@ -2357,21 +2399,41 @@ export function activate(transformation = ID) {
 				return B
 			},
 
-			// TODO: give a better name to this thing... After having generalized the 'numberCounter', maybe call it that...
-			// ? Question: generalize for an arbitrary combination of 'range + conversion function'; here, they are native JS - namely '!isNaN + Number';
-			// * Pray think on it as well...
-			// todo: CHANGE THE USES OF THE fromNumber() TO 'InfiniteCounter(number())(thing).map(someothertemplate)';
 			number(template = {}) {
 				return {
 					template: { start: 0, ...template },
 					generator(x = this.template.start) {
-						return Number(x) + 1
+						return this.template.forward(Number(x))
 					},
 					inverse(x = this.template.start) {
-						return Number(x) - 1
+						return this.template.backward(Number(x))
 					},
 					range: RESULT.negate(isNaN)
 				}
+			},
+			addnumber(template = {}) {
+				return RESULT.main.number({
+					fdiff: 1,
+					bdiff: -1,
+					forward(x) {
+						return x + this.template.fdiff
+					},
+					backward(x) {
+						return Number(x) + this.template.bdiff
+					},
+					...template
+				})
+			},
+			multnumber(template = {}) {
+				return RESULT.main.number({
+					template: { fdiff: 1, bdiff: -1, ...template },
+					forward(x) {
+						return x * this.template.fdiff
+					},
+					backward(x) {
+						return Number(x) * this.template.bdiff
+					}
+				})
 			},
 
 			copy() {
@@ -2547,11 +2609,10 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// * The generalization of the 'numberCounter';
-			// TODO : later, pray rename it to something more liked by oneself...
+			// * A maximally efficient structurally counter based on array recursion and finite orders;
 			// ! Clean, re-look at; fix
 			recursiveCounter(template = {}) {
-				// ^ IDEA: generalizet this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences...
+				// ^ IDEA: generalize this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences... (as in 0-1-2-3-...-2^(whatever...)-[0]-...[2^(whatever)]-...)
 				// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
 				const returned = {
 					template: {
@@ -2926,6 +2987,9 @@ export function activate(transformation = ID) {
 			},
 
 			// ! this thing is for finitely lengthed Arrays; [? Create a 'GeneralArray' version for it?]
+			// * Slight problem with this whole 'separation' onto finite and infinite arrays;
+			// This is a general problem;
+			// ^ GENERAL SOLUTION: just use the General types, which'd include the Common types ('finite' ones in a wrapper) and the Unlimited types (things using recursion such as LastIndexArray);
 			dim(template = {}) {
 				return {
 					template: { ...template },
@@ -3231,6 +3295,21 @@ export function activate(transformation = ID) {
 								while (!leftovers.comparison(current, this))
 									alterCurrent = alterCurrent.next()
 								return alterCurrent
+							},
+							reverse() {
+								const zero = this.class.class()
+								// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
+								const dirfunc = (
+									(p) => (x) =>
+										x[p]
+								)(this.class.static.direction(this) ? "previous" : "next")
+								let a = this.class.class()
+								let copy = RESULT.main.deepCopy(this)
+								while (!this.class.template.comparison(zero, copy)) {
+									copy = copy.previous()
+									a = dirfunc(a)
+								}
+								return a
 							}
 						}
 					}
@@ -3403,8 +3482,8 @@ export function activate(transformation = ID) {
 						elem: function (arr) {
 							return arr.array[arr.currindex]
 						},
-						icclass: RESULT.submodules.infinite.InfiniteCounter(
-							RESULT.submodules.infinite.number({
+						icclass: RESULT.main.InfiniteCounter(
+							RESULT.main.addnumber({
 								start: this.template.offset
 							})
 						)
@@ -3457,50 +3536,29 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// TODO: implement UnlimitedString [arbitrarily-lengthed];
-			// * It'd be based off a GeneralArray-class, with implementation of String-like methods in the next fashion:
-			// ^ Pray create and decide on a structure for it to work...
-			// * Example 1:
-			// 		First off, [for addition of string characters] one'd work with the 'current' (InfiniteCounter-based)-indexed string until the moment that its length is overwhelming, when it'd create a new string position within the underlying class for GeneralArray;
-			// 		Then, [for deletion], when taking out a symbol from a single 'position' inside the string, one'd take it out from within the appropriate string, then move all the following strings down 1 symbol [Slow];
-			// 		Then, for reading and re-writing an already present value - one'd either use the already existent stuff from GeneralArray class passed, or use these 2 for
-			// * Example 2: make it a method-wrapper around an instance of the passed GeneralArray of 1-lengthed string characters [simple and (probably) faster, though far less memory efficient];
-			// ? Question: should this not be then the 'GeneralString' instead???
-			// * Suggestion: perhaps, create it as a 'multi-versioned' implementation? Namely, let one be oriented on the lesser memory-cost [1] and the other - lesser time-cost[2];
-			// ! though, how much difference there is, one ought to first find out... Perhaps, first implement the 2nd one, then the first and [after having compared their productivity], decide?
-			// One could compare memory usage and execution speed using the internal Node.js tools...
-			// TODO: for this implementation - accomplish some truly heavy generalizational works pray...
+			// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
+			// That's for the addition of things into the UnlimitedString;
+			// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
 			UnlimitedString(template = {}) {
 				return {
-					template: { ...template },
-					class(string) {
+					template: { empty: "", ...template },
+					class(string = this.template.empty) {
+						// ? What other methods does one desire within this one???
+						// * Ideally, it ought to have all the possibilities of the GeneralArray;
+						// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
+						// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
+						// Implemented below...; 
 						const X = {
 							this: {
-								string: this.template.genarrclass.static.empty(),
-								append(string = "") {
-									for (const x of string)
-										this.this.this.string.pushback(x)
-								},
-								slice(begin, end, leftovers = {}) {
-									return this.this.this.string.slice(
-										begin,
-										end,
-										leftovers
-									)
-								},
-								read(index, leftovers = {}) {
-									return this.this.this.string.read(index, leftovers)
-								},
-								index(index) {
-									return this.this.this.read(index)
-								}
-								// ? What other methods does one desire within this one???
-								// * Ideally, it ought to have all the possibilities of the GeneralArray;
-								// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
-								// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
+								string: this.template.genarrclass.static.empty()
 							}
 						}
 						X.this.this = X
+						// TODO: fix this thing to include only the desired keys; Generalize this (the partial object-instantiation); 
+						for (const x of Object.keys(X.this.string)) 
+							X.this[x] = function(...args) {
+								return this.this.this.string[x](...args)
+							}	
 						X.this.append(string)
 						return X
 					}
@@ -3530,6 +3588,19 @@ export function activate(transformation = ID) {
 									multiplied.value.class.template.icclass.class(),
 									multiplied,
 									(x) => x.add(this)
+								)
+							},
+							// * Raise 'this' to the integer power of 'x' (works with negatives too...);
+							power(x) {
+								if (!this.class.template.icclass.direction(x))
+									return TrueRatio(this.template.icclass).class([
+										this.class.template.icclass.class().next(),
+										this.power(x.reverse())
+									])
+								return repeatedApplication(
+									(y) => y.multiply(this),
+									x,
+									this
 								)
 							},
 							// ? This thing could definitely be optimized... [Though, this appears to be far more 'clean' (in this context, equivalent of 'abstracted' and 'pure') as an algorithm... Think on it...]
@@ -4342,11 +4413,7 @@ export function activate(transformation = ID) {
 
 			// ! problem: where does one want to put the 'GeneralVector'? 'linear', maybe? Or something like that? But it is rather general... Think about putting it into the 'linear' or keeping here, pray;
 			// ? Suggestion: Add the runtime type-safety to all [or some] of the things within the library...
-			// TODO: finish the generalization of this thing... [polish, fix references, get rid of bugs, make more desireable as of self...];
-			/**
-			 * This class represents a length-safe array with some nice stuff added to it.
-			 * It also may behave like a mathematical vector.
-			 */
+			// TODO: finish the generalization of this thing... [do the actual looking-writing, polish, fix references, get rid of bugs, make more desireable as of self...];
 			GeneralVector: function (template = {}) {
 				const V = {
 					template: { ...template },
@@ -4569,11 +4636,8 @@ export function activate(transformation = ID) {
 				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
 				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
 
-				// ! PROBLEM:
-				// ? Does one want to be unifying those with the (equivalent) arrays methods [for doing so]?
-				// TODO [thing one hasn't done yet]: implement the replacement methods for arrays...
-				// ? Are there any manner of performance advantages in general separation of algorithms for native JS strings [don't seem to find anything on it... pray make one's own mini-research]?
-				// ^ SOLUTION: yes, one generalizes and then merges them; Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
+				// TODO: generalizes and then merge those with the array methods; 
+				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
 
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 
@@ -4620,7 +4684,7 @@ export function activate(transformation = ID) {
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
 			classes: {
-				// ! Based of ('extending') a GeneralVector, these things will have predefined operations on 'Number-like' objects: Namely, TrueIntegers, TrueRatios, and so on...
+				// ! Based of ('extending'; define 'class' extension properly as a new library concept) a GeneralVector, these things will have predefined operations on 'Number-like' objects: Namely, TrueIntegers, TrueRatios, and so on...
 				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
 
 				// TODO: rewrite; finish...
