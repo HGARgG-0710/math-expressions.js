@@ -928,12 +928,8 @@ export function activate(transformation = ID) {
 								if (
 									comparison(arrs[0][i], arrs[1][j]) &&
 									!result.includes(arrs[0][i])
-								) {
-									// ? Problem: this thing is not very useful (as in, general); It throws out the information concerning the arrs[1][j];
-									// * This is not good...
-									// TODO: fix; restructure it somehow...
-									result.push(arrs[0][i])
-								}
+								)
+									result.push([i, j, arrs[0][i], arrs[1][j]])
 							}
 						}
 						return result
@@ -1058,8 +1054,6 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// ? Question: generalize for MultiInfiniteCounter?
-			// * Nope; 'number()' is only one mere counter; This kind of logic is complex enough for user to be able to do it easier and more directly than the library [from this one spot of approach, that is...];
 			fromNumber(template = {}) {
 				return {
 					template: { ...template },
@@ -1090,38 +1084,125 @@ export function activate(transformation = ID) {
 					function: function (garr) {
 						let most = garr.read(garr.init())
 						garr.loop()._full((t) => {
-							if (this.template.comparison(t.object.current, most))
-								most = t.object.current
+							if (this.template.comparison(t.object().current, most))
+								most = t.object().current
 						})
 						return most
 					}
 				}
 			},
 
-			// * just a convinient syntax...
+			// ? does one want to rename these two?
 			arrThisApply: function (f, arr, thisArg = null) {
 				return f.apply(thisArg, arr)
 			},
-
 			arrApply: function (f, arr) {
 				return f(...arr)
-			}
+			},
+
+			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
+			property: (p) => (x) => x[p]
 		},
 		main: {
 			// ! order the definitions...
 			// ! REMINDER: consistency check across the entire library... [GRAND CLEANUP...]
 
-			// TODO: create a version of this (printic) with a default 'this.interpret' for the InfiniteCounters to be distinguishable... [and other corresponding templates]
-			print(template = {}) {
-				return {
-					template: { pfun: console.log, interpret: ID, ...template },
-					function: function (x) {
-						return this.pfun(this.interpret(x))
+			// ! implement the 'printi' for generalarrays and ic-s;
+			printing: {
+				// TODO: create a version of this (printic) with a default 'this.interpret' for the InfiniteCounters to be distinguishable... [and other corresponding templates]
+				print(template = {}) {
+					return {
+						template: { pfun: console.log, interpret: ID, ...template },
+						function: function (x) {
+							return this.pfun(this.interpret(x))
+						}
 					}
+				},
+
+				// todo: create special cases for this stuff pray...
+				controlprint(template = {}) {
+					const T = {
+						template: {
+							pfun: console.log,
+							// TODO: make an alias for that thing...
+							limit: (x, appended) =>
+								x.length >= RESULT.MAX_STRING_LENGTH - appended.length,
+							// * By default, will finish the printing of the thing using the function chosen [REGARDLESS OF SIZE!];
+							control: function (current, loophandle) {
+								this.pfun(current)
+								return this.this
+									.function({ ishandle: true })
+									.function(loophandle)
+							},
+							...template
+						},
+						function: function (template = {}) {
+							const X = {
+								template: {
+									ishandle: false,
+									function: this,
+									...template
+								},
+								function: function (
+									toprint = this.template.function.defstr
+								) {
+									if (!this.template.ishandle) {
+										let final = ""
+										let broken = false
+										let handle = null
+										// ! PROBLEM [general] : how does one pass the general arrays around? Is it via the {this: ...(the actual array)} reference, or just the '...(the actual array)'; One would desire it greater had it been unified...;
+										// * Current decision: via the '...(the actual array)' part;
+										toprint.loop().full((x) => {
+											return RESULT.main
+												.CommonArray()
+												.class({ treatfinite: true })
+												.class([
+													(k) => {
+														if (
+															this.template.function.limit(
+																final,
+																x.object().current
+															)
+														) {
+															k.break()
+															broken = true
+															// * The 'full()' erases data regarding the current index from the handle in question;
+															handle =
+																RESULT.main.deepCopy(k)
+														}
+													},
+													(t) => (final += t.object().current)
+												]).this
+										})
+										if (broken)
+											return this.template.function.control(
+												final,
+												handle
+											)
+										return this.template.function.pfun(final)
+									}
+									this.template.ishandle = false
+									const r = this.template.this.function(
+										toprint.object().slice(toprint.counter.next())
+									)
+									this.template.ishandle = true
+									return r
+								}
+							}
+							X.template.this = X
+							return X
+						}
+					}
+
+					T.template.this = T
+					T.template.defstr = T.ustrclass("")
+					T.template = { ...T.template, ...template }
+
+					return T
 				}
 			},
-			// ! implement the 'printi' for generalarrays and ic-s;
 			numeric: {
+				// * Stuff related to number systems and alphabets;
 				// here, various predefined string-functions for representations of numbers would go;
 				polystring(template = {}) {
 					return {
@@ -1131,8 +1212,6 @@ export function activate(transformation = ID) {
 							...template
 						},
 						function: function (counter = this.template.icclass.class()) {
-							// TODO: finish rewriting with the exclusive use of infinite [unlimited, that is] types;
-
 							// ? Consider - does one really want these things to be saved into a variable...
 							const TIClass = TrueInteger(this.template.icclass).class
 							// ? Make this thing an 'alias'?
@@ -1142,8 +1221,8 @@ export function activate(transformation = ID) {
 							)
 
 							let copy = RESULT.main.deepCopy(counter)
-							let index = this.template.genarrclass.template.icclass()
-							const representation = this.template.genarrclass.class()
+							let index = this.template.ustrclass.template.icclass()
+							const representation = this.template.ustrclass.class()
 							const copyZero = copy.class.class()
 
 							for (; copy.compare(copyZero); index = index.next()) {
@@ -1157,7 +1236,7 @@ export function activate(transformation = ID) {
 								copy = copy.add(modulo.invadd())
 							}
 
-							// TODO: create a method for transforming a GeneralArray into a string [or better still, just make the thing in question a string that works just like a GeneralArray, then replace this];
+							// TODO: create a way to 'insert' the separator like so into the thing;
 							return representation.join(this.template.separator)
 						}
 					}
@@ -1169,6 +1248,7 @@ export function activate(transformation = ID) {
 					template: {
 						empty: [],
 						unfound: undefined,
+						treatfinite: false,
 						...template
 					},
 					static: {
@@ -1223,7 +1303,9 @@ export function activate(transformation = ID) {
 						// TODO: ensure that all the objects within the library possess this style [uniformity; so that it's more intuitive to work with (under certain particular interpretation of 'intuitive' + it has more features...)]; Allows for changing the 'this' dynamically easily [something that plain JS 'this' don't really allow];
 						const A = { class: this }
 						A.this = {
-							array: array,
+							array: this.template.treatfinite
+								? this.static.fromArray(array)
+								: array,
 							currindex: this.template.class.template.icclass.class(),
 							// ^ IDEA: naming-maps-defined methods!
 							// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
@@ -1256,7 +1338,7 @@ export function activate(transformation = ID) {
 							// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 							// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
 							loop(template = {}) {
-								// ? Generalize to a separate class???
+								// ? Generalize to a separate class maybe???
 								const a = {
 									template: {
 										indexiter: (x) => x.object().next(),
@@ -1271,20 +1353,17 @@ export function activate(transformation = ID) {
 									},
 									object: RESULT._const(this.this.this),
 									restart: function () {
-										// ? Question: does one desire it to be 'a.template.icclass.class()' or 'this.template.icclass.class()'???
-										// * pray consider...
-										this.counter = a.template.icclass.class()
+										this.counter = this.template.icclass.class()
 									},
 									yield: function (
 										_indexiter = this.template.indexiter,
 										end = this.template.end,
 										iter = true
 									) {
+										if (iter) _indexiter(this)
 										const isend = end(this)
-										if (!isend && iter) {
-											_indexiter(this)
+										if (!isend && iter)
 											this.counter = this.counter.next()
-										}
 										return isend
 									},
 									_full(
@@ -1312,7 +1391,7 @@ export function activate(transformation = ID) {
 										return r
 									},
 									// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
-									// TODO: work on their names...
+									// ? work on their names...
 									// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 									full(
 										each = this.template.each,
@@ -1327,13 +1406,13 @@ export function activate(transformation = ID) {
 										while (!is) {
 											const x = each(this)
 											let goOn = true
-											r = x.loop()._full(() => {
+											r = x.loop()._full((t) => {
 												if (goOn) {
 													if (this.broke || this.continued) {
 														goOn = false
 														return
 													}
-													return x.currelem()
+													return t.object().currelem(t)
 												}
 											})
 											is = this.yield(iter(), end())
@@ -1629,10 +1708,6 @@ export function activate(transformation = ID) {
 									}
 								}
 							},
-							// TODO: implement the sketches of the algorithms listed here...
-
-							// * The ones 'copying' methods, on the other hand, that are more naturally [minimalistically, id est] defined in this fashion [excellent example - .appendfront()], get to have their own identifiers...
-							// TODO: yes, ensure that;
 							appendfront(x, leftovers = {}) {
 								RESULT.ensureProperties(leftovers, {
 									fast: false,
@@ -1674,7 +1749,7 @@ export function activate(transformation = ID) {
 							// * The user would access the object by means of 'obj.this'; And from within - using 'this.this.this' [for the sake of ability to change the value of 'this.this.this']
 							// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
 							// ? Think on HOW to document it all... Ought to be general yet also representative of the possible uses such as to employ different combinations of separate elements of the library per a single one...
-							// TODO: spread this 'this.this.this' architecture throughout the project...
+							// TODO [general]: spread this 'this.this.this' architecture throughout the project...
 							pushback(value, leftovers = {}) {
 								RESULT.ensureProperties(leftovers, {
 									fast: false,
@@ -1733,6 +1808,7 @@ export function activate(transformation = ID) {
 								T.function = origin.function.bind(T)
 								return T
 							},
+							// TODO: allow for multiple arrays to concat the current one with... [perhaps, an array of arrays?]
 							concat(
 								// TODO: make the 'array' an '.empty()' by default in such and other similar cases...
 								array,
@@ -1839,6 +1915,10 @@ export function activate(transformation = ID) {
 								)
 									yield this.this.this.read(c, leftovers)
 							},
+							// TODO: rewrite by means of already create methods [refactor];
+							// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
+							// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
+							// ! later, pray review the integrity of the small things with this sketch...;
 							fillfrom(index, value, leftovers = {}) {
 								RESULT.ensureProperties(leftovers, {
 									range: this.this.this.this.class.template.icclass
@@ -1848,10 +1928,6 @@ export function activate(transformation = ID) {
 											.template.comparison
 								})
 								const indexsaved = this.this.this.currindex
-								// * This could be re-implement thing using '.project() + InfiniteCounter.difference() + Creating an empty GeneralArray...'
-								// ? Does one want to ??? Pray think on it...
-								// TODO: consider...
-								// ? This could also be rewritten far more handily using a .loop()._full()...
 								this.this.this.go(index, leftovers.range)
 								while (
 									!leftovers.comparison(
@@ -2061,13 +2137,12 @@ export function activate(transformation = ID) {
 								})
 								return indexes
 							},
-							// ? Question[1]: should one template all the methods of this class?
+
 							// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
 							// * Something like 'comparison = this.comparison || this.class.comparison'?
 							// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
 							// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
 							//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
-							// Pray consider and decide...
 
 							firstIndex(x, leftovers = {}) {
 								RESULT.ensureProperties(leftovers, {
@@ -2310,7 +2385,6 @@ export function activate(transformation = ID) {
 									)
 								}
 								function elem_sort(a) {
-									// * Here, define the 2-case, then through it, the 3-case. These two are the only cases that require handling...
 									function TWOCASE(a) {
 										const first = a.read(a.init(), leftovers)
 										const second = a.read(a.init().next(), leftovers)
@@ -2389,7 +2463,6 @@ export function activate(transformation = ID) {
 									this.this.this.sorted(predicate, leftovers)
 								)
 							}
-							// ? Add more? Consider [and also, what]...
 						}
 						A.this.this = A
 						return A
@@ -2451,8 +2524,8 @@ export function activate(transformation = ID) {
 
 			// TODO: generalize later with a _switch() from a different library of self's...
 			// ? Wonder if one want to put it into this one package instead???
-			// ! make a more general template...
-			// ! rename
+			// ! extend the template further...
+			// ? rename
 			copyFunction(template = {}) {
 				// TODO: do something about that inner one; shouldn't be there...
 				function typeTransform(x) {
@@ -2490,6 +2563,9 @@ export function activate(transformation = ID) {
 			// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))';
 			// ! All that'd be required is a JS parser...
 			// todo: having created the JSONF, for the 1.1 [or even the 1.2] release, pray add this there too...
+
+			// ! PROOOOOOOBLEEEEEEM!!! With recursive objects; They won't get handled properly, instead using out ALL THE STACK...
+			// TODO: pray fix;
 			valueCompare(template = {}) {
 				function TWOCASE(oneway = false) {
 					return (a, b) => {
@@ -2555,7 +2631,13 @@ export function activate(transformation = ID) {
 			// * Generalization of the thing above (arrayCounter)...
 			objCounter(template = {}) {
 				return {
-					template: { field: "", start: null, ...template },
+					template: {
+						field: "",
+						start: null,
+						// ? Does one desire the refCompare? Or valueCompare to be the default?
+						comparison: RESULT.aliases.refCompare,
+						...template
+					},
 					generator: function (a = this.template.start) {
 						if (!this.range(a)) this.template.start = a
 						return { [this.template.field]: a }
@@ -2564,9 +2646,8 @@ export function activate(transformation = ID) {
 						return a[this.template.field]
 					},
 					range: function (a) {
-						// ! PROBLEM : does one truly desire the 'refComparison' to be used here??? Mayhaps, use an arbitrary comparison here ['template it']???
 						return (
-							a === this.template.start ||
+							this.template.comparison(a, this.template.start) ||
 							(typeof a === "object" && this.range(this.inverse(a)))
 						)
 					}
@@ -2621,14 +2702,6 @@ export function activate(transformation = ID) {
 						type: RESULT.aliases._const(true),
 						...template
 					},
-					// TODO: generalize the construction(s) for the generator/inverse (their only actual difference is the 'true/false'); Otherwise, it's the same function...
-					// ! consider how to save the memory on these 'signedAdd/signedDelete' functions with this being in act... [one could just create another wrapper for this, one that'd choose the precalculated variables' values instead...]
-					generator(x) {
-						return generalgenerator(x, true, this)
-					},
-					inverse(x) {
-						return generalgenerator(x, false, this)
-					},
 					range(x) {
 						return (
 							x instanceof Array &&
@@ -2642,19 +2715,15 @@ export function activate(transformation = ID) {
 					}
 				}
 
-				// * Outline of the two functions' structure:
-				// 	1. have the template-variable for the counter's 'arrval-domain' consisting of values for the arrays and being separated into two by a 'sign' predicate;
-				// ? First off - the domain; What describes it fully?
-				// 	* List:
-				// 		1.(-1). The 'type' predicate (to 'ensure' that the thing in question is of the right 'type') [By default RESULT.aliases._const(true)];
-				// 		1.0. Sign predicate;
-				// 		1.1. Lower-bound [L is the 'lower bound' of the domain (one that don't belong to either signs)];
-				// 		1.2. Upper-bound [U is the 'upper bound' of the domain ('this.template.sign(U) = true')];
-				// 		1.3. Reverse-uppser-bound predicate [R is the 'reverse upper bound' of the domain (this.template.sign(R) = false)];
-				// 		1.4. 'Forward' function (F(x) will 'move' towards the lower bound [if !this.template.sign(x)] and [if this.template.sign(x)] upper bound);
-				// 		1.5. 'Backward' function (B(x) will 'move' towards the lower bound [if this.template.sign(x)] and [if !this.template.sign(x)] reverse-upper bound);
-				// * Corresponding elements are added into a recursive array structure...
-				//  2. have the two functions, both having their respective sign versions, that are used for the 'generator' and 'inverse'; These are generalizations of the 'numberCounter' stuff;
+				// TODO: generalize this operation to an outer-scope function;
+				const keys = ["inverse", "generator"]
+				keys.map(
+					(x, i) =>
+						(returned[x] = function (t) {
+							return generalgenerator(t, !!i, this)
+						})
+				)
+
 				function signedAdd(sign) {
 					return function (thisobject) {
 						return function (x) {
@@ -3116,15 +3185,9 @@ export function activate(transformation = ID) {
 								target
 							)
 						},
-						// ^ idea [for a solution of the 'leftover args' problem] : just tuch them all under the 'leftover' object, which is the last argument; then, give it a default value + reference all the stuff like 'leftovers.[something...]';
-						// TODO: ensure the use of theirs ['leftover' argument objects] across the library...
-						// ! PROBLEM: what's the actual bloody difference between the 'forloop' and 'whileloop'? They're the same bloody 'for'-loop. Pray reconsider the names...;
-						// ? Maybe, even replace one with another [less general with more general]? Or just add another one as an alias for a special case of the other ? Pray consider deeply;
-						// * This [InfiniteCounter.static-related stuff...] part of code is (currently) [generally] very very 'not' the way one wants it...
-						// ^ CONCLUSION: decided, only this:
-						// 	1. 'forloop' renamed to something else;
-						//  2. 'whileloop' renamed to 'forloop' or something else [to indicate that it is a loop PURELY between the indexes];
-						// ! they both also ought to be polished on the simple matter of correspondence with the newest changes in the API...
+						// TODO [general]: ensure the use of 'leftover' argument objects across the library...
+						// ! Problem: the 'forloop' and 'whileloop' are the same function; Get rid of one of them in favour of another, fix things, replace the chosen for deletion with the other one...
+						// * They differ very slightly; ought to be GENERALIZED to the same function;
 						whileloop(
 							start = this.this.class(),
 							end,
@@ -3315,7 +3378,7 @@ export function activate(transformation = ID) {
 					}
 				}
 
-				// TODO: that's how one does add a self-reference to the 'static' member of the class's object. Pray ensure that this is used and all the classes have their own 'static.this'
+				// TODO [GENERAL]: that's how one does add a self-reference to the 'static' member of the class's object. Pray ensure that this is used and all the classes have their own 'static.this'
 				A.static.this = A
 				return A
 			},
@@ -3486,7 +3549,8 @@ export function activate(transformation = ID) {
 							RESULT.main.addnumber({
 								start: this.template.offset
 							})
-						)
+						),
+						...template
 					})
 				}
 			},
@@ -3565,6 +3629,8 @@ export function activate(transformation = ID) {
 				}
 			},
 
+			// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
+			// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
 			TrueInteger(template = {}) {
 				return {
 					// * 'template' has the 'icclass';
@@ -5135,15 +5201,11 @@ export function activate(transformation = ID) {
 
 					// ? question: does one want to go implementing the 'InfiniteNumber' as well? [As a special case of the GeneralArray, perhaps?]
 
-					// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
-					// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
-
 					// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 				}
 			}
 		},
 		variables: {
-			// ? rename the 'default' vars?
 			// ? Add more stuff here? (This table was originally supposed to be like a small calculator for binary things...)
 			// TODO: change the architecture of these tables -- they should contain information concerning the Arity of the stuff that is within them...
 			// * That is one's solution to the problem of the "all functions that work with them currently support only binary operations..., et cetera"
@@ -5181,18 +5243,26 @@ export function activate(transformation = ID) {
 	}
 
 	// todo: generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
-	// ? Is one really happy with the way this is getting exported? 
+	// ? Is one really happy with the way this is getting exported?
 	// * Gorgeous. Just gorgeous...
 	RESULT.aliases.UTF16 = (p, l) =>
 		RESULT.main.generate(0, l).map((x) => String.fromCharCode(p + x))
-	
+
 	const UTF16 = RESULT.aliases.UTF16
 
 	// TODO: generalize even further - using the alias for '(p) => (x) => x[p]' + ".concat" + the repeatedApplication...;
-	// ! This one alias has been mentioned SEVERAL TIMES throughout the library; pray do it already...
+	const ccf = RESULT.aliases.property("concat")
+	const coorarrs = [
+		[97, 25],
+		[65, 25]
+	]
+	// TODO: create the alias for mapping arrays to functions as arguments' lists...;
 	RESULT.variables.defaultAlphabet = VARIABLE(
-		UTF16(48, 9).concat(UTF16(97, 25)).concat(UTF16(65, 25))
+		ccf(UTF16(48, 9))(coorarrs.map((a) => UTF16(...a)))
 	)
+
+	// ? Does one want to keep this as this sort of an alias, pray?
+	RESULT.variables.MAX_STRING_LENGTH = RESULT.variables.MAX_INT
 
 	// * Unfinished small PARTS OF THE OLD AGENDA:
 	// 1 [code re-styling, efficiency, minor bugfix, minor feature introduction]. Do the 'replace functional with imperative' todo, along the way fixing the stack and other problems [partially or fully...];
@@ -5216,7 +5286,7 @@ export function activate(transformation = ID) {
 
 	// TODO [general] : check the correspondence of use with the definition of the methods within the library...
 
-	// ! Clean-up later; 
+	// ! Clean-up later;
 	// [Parts of the Grand Cleanup]:
 	// % 1. (get rid of)/refactor the repeating notes;
 	// todo: work on the names for the objects in question [should this not be under the 'names' todo done before?]
@@ -5295,7 +5365,7 @@ export function activate(transformation = ID) {
 	// * Begin with small and simple stuff that's been mostly finished on conceptual level ; Things like copying functions, examplified...
 	// ^ IDEA: let each and every in-editor documentation bit possess a link to the definition of the thing in question [in GitHub repo, for instance???], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose [along with using full spectre of JSDoc notation, perhaps???];
 	// Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
-	// * The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though]; 
+	// * The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though];
 
 	// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
 	// * Would come in handy in one of one's projects...
