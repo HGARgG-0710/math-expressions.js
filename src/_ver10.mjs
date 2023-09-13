@@ -3547,18 +3547,18 @@ export function activate(transformation = ID) {
 						// * Ideally, it ought to have all the possibilities of the GeneralArray;
 						// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
 						// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
-						// Implemented below...; 
+						// Implemented below...;
 						const X = {
 							this: {
 								string: this.template.genarrclass.static.empty()
 							}
 						}
 						X.this.this = X
-						// TODO: fix this thing to include only the desired keys; Generalize this (the partial object-instantiation); 
-						for (const x of Object.keys(X.this.string)) 
-							X.this[x] = function(...args) {
+						// TODO: fix this thing to include only the desired keys; Generalize this (the partial object-instantiation);
+						for (const x of Object.keys(X.this.string))
+							X.this[x] = function (...args) {
 								return this.this.this.string[x](...args)
-							}	
+							}
 						X.this.append(string)
 						return X
 					}
@@ -4636,7 +4636,7 @@ export function activate(transformation = ID) {
 				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
 				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
 
-				// TODO: generalizes and then merge those with the array methods; 
+				// TODO: generalizes and then merge those with the array methods;
 				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
 
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
@@ -5143,9 +5143,8 @@ export function activate(transformation = ID) {
 			}
 		},
 		variables: {
-			// ! PREV. 'defaults';
-			// ! rename them;
-			// ? Add more stuff here? (This table is supposed to be like a small calculator for binary things...)
+			// ? rename the 'default' vars?
+			// ? Add more stuff here? (This table was originally supposed to be like a small calculator for binary things...)
 			// TODO: change the architecture of these tables -- they should contain information concerning the Arity of the stuff that is within them...
 			// * That is one's solution to the problem of the "all functions that work with them currently support only binary operations..., et cetera"
 			// TODO: use this thing as the default for the functions using these kinds of tables...
@@ -5165,70 +5164,7 @@ export function activate(transformation = ID) {
 				"&&": [(a, b) => a && b, 2],
 				"||": [(a, b) => a || b, 2]
 			}),
-			defaultAlphabet: VARIABLE([
-				"0",
-				"1",
-				"2",
-				"3",
-				"4",
-				"5",
-				"6",
-				"7",
-				"8",
-				"9",
-				"a",
-				"b",
-				"c",
-				"d",
-				"e",
-				"f",
-				"j",
-				"h",
-				"i",
-				"j",
-				"k",
-				"l",
-				"m",
-				"n",
-				"o",
-				"p",
-				"q",
-				"r",
-				"s",
-				"t",
-				"u",
-				"v",
-				"w",
-				"x",
-				"y",
-				"z",
-				"A",
-				"B",
-				"C",
-				"D",
-				"E",
-				"F",
-				"J",
-				"H",
-				"I",
-				"J",
-				"K",
-				"L",
-				"M",
-				"N",
-				"O",
-				"P",
-				"Q",
-				"R",
-				"S",
-				"T",
-				"U",
-				"V",
-				"W",
-				"X",
-				"Y",
-				"Z"
-			]),
+
 			/**
 			 *
 			 * * This variable characterizes how many fixed numbers are outputted.
@@ -5237,13 +5173,26 @@ export function activate(transformation = ID) {
 			// ? create various numeric constants within the library (besides, some of ones functions' definitions may use it;)...
 			// ! Make this thing more useful - when using unlimited types, use it to the full extent...
 			globalPrecision: VARIABLE(16),
-			// ! PREV. 'constants';
 			// TODO: create a function paramDecide(), that would wrap the function in question in the condition of certain kind, and if it is not fullfilled, call something else given instead...
 			// TODO: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 			MAX_ARRAY_LENGTH: VARIABLE(2 ** 32 - 1),
 			MAX_INT: VARIABLE(2 ** 53 - 1)
 		}
 	}
+
+	// todo: generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
+	// ? Is one really happy with the way this is getting exported? 
+	// * Gorgeous. Just gorgeous...
+	RESULT.aliases.UTF16 = (p, l) =>
+		RESULT.main.generate(0, l).map((x) => String.fromCharCode(p + x))
+	
+	const UTF16 = RESULT.aliases.UTF16
+
+	// TODO: generalize even further - using the alias for '(p) => (x) => x[p]' + ".concat" + the repeatedApplication...;
+	// ! This one alias has been mentioned SEVERAL TIMES throughout the library; pray do it already...
+	RESULT.variables.defaultAlphabet = VARIABLE(
+		UTF16(48, 9).concat(UTF16(97, 25)).concat(UTF16(65, 25))
+	)
 
 	// * Unfinished small PARTS OF THE OLD AGENDA:
 	// 1 [code re-styling, efficiency, minor bugfix, minor feature introduction]. Do the 'replace functional with imperative' todo, along the way fixing the stack and other problems [partially or fully...];
@@ -5263,27 +5212,19 @@ export function activate(transformation = ID) {
 
 	// TODO [general]: change the stuff like 'function A (a) {return B({...sometemplatehere})(a)}' to 'const A = B({...sometemplatehere})'; In other words, use aliases for pre-computation of the values for things...
 
-	// TODO: create the structure for setting values to the arbitrary elements of the library.....
-	// ^ IDEA: the library has one single big export of Module, which is an object; To it, a pre-transformation can be applied [so it can be used like so: 'import * as module from `math-expressions.js`; module.activate(transformation)'];
-	// * By default, 'transformation=id';
-
-	// todo [general]: make all the defaults for ALL the functions configurable useing the 'templates'...
+	// todo [general]: ensure that all the defaults for ALL the [templated] functions configurable useing the 'templates'...
 
 	// TODO [general] : check the correspondence of use with the definition of the methods within the library...
 
-	// ! That's all ('Grand Cleanup') rather vague now; quite some of these things have been fixed or partially so; Pray clean up later, when completely finished...
+	// ! Clean-up later; 
 	// [Parts of the Grand Cleanup]:
 	// % 1. (get rid of)/refactor the repeating notes;
-	// % 2. Form for the templates; All functions of the library have the same templates form; Example:
-	//		function X(template) {
-	//			return {tempalatelabelname: {...defaults, ...template} , thereturnedlabelname: ...}
-	//		}
 	// todo: work on the names for the objects in question [should this not be under the 'names' todo done before?]
 	// * That'd be the general structure of any templated method within the library...
-	// % 3. Notation/Conventions; [Currently - nigh the second biggest problem after not working code, one yet without a solution] Decide on notation and conventions - what should library use, where in particular;
-	// % 4. Generalization; Note completeion;
+	// % 2. Notation/Conventions; [Currently - nigh the second biggest problem after not working code, one yet without a solution] Decide on notation and conventions - what should library use, where in particular;
+	// % 3. Generalization; Note completeion;
 	// * One completes all the notes, related to 'generalize'/'fix'/'complete', and so on... All the unfinished stuff that is separate of all else ['modular'], gets completed;
-	// % 5. Stuff related to forming the particular picture of the library in question...
+	// % 4. Stuff related to forming the particular picture of the library in question...
 
 	// TODO: replace all the functional implementations of functions with imperative ones; for: 1. they may run forever; 2 [of which 1 is a consequence, really]. they do not rely on JS stack;
 	// * The functional ones get to be kept as a memento within the Git repo's memory...
@@ -5298,13 +5239,8 @@ export function activate(transformation = ID) {
 	// TODO: think about errors - which, where, when and how to throw; What error messages, whether it could be generalized instead in a fashion that one would within one's chosen interpretation consider favorable, and on and on...
 
 	// TODO [general]: where appropriate, replace the native API usage with the library API usage...
-	// TODO [general]: use the introduced notation/aliases/shorthand-methods everywhere where want to...
 
 	// todo [general]: work on the lists of static methods for classes; Make implementation for them all...
-
-	// TODO [general; later-stage]: re-work the 'defaults' system; allow for setting a function for the default value of a certain variable for a function;
-	// Used within the code like so: 'funcname(paramName=this.template.defaults.paramName())';
-	// * There will be default settings for those default-functions... For them, pray use the currently decided stuff...
 
 	// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
 	// TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
@@ -5316,8 +5252,6 @@ export function activate(transformation = ID) {
 	// TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
 
 	// TODO: do micro-optimizations; Spend some time on making the code generally more performant [without sacrificing any of the style or shortness/simlicity of it, of course];
-
-	// TODO: check that all the functions/classes/methods/definitions are exported properly; order stuff within the file to match the theme better; add micro-sections; make everything nicer, prettier, tidier...
 
 	// TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
 	// * Get rid of unwanted explicit type conversions...
@@ -5337,16 +5271,9 @@ export function activate(transformation = ID) {
 	// todo: new things to add:
 	// * 1. more beautiful in their simplicity number-theoretic functions...;
 
-	// TODO: things to do (generally):
-	// * 1. Pick out the "too specific" or "number-oriented" methods and rewrite them to be more general; then, add a version for numbers (for backward compatibility),
-	// *    or, just add the old alias (like in the case of sameOperator...)
-	// *    1.1. Special cases of it:
-	// *        1.1.1. repeatedArithmetic -- rename to repeated (add a ton of new possibilities of use for this...)
-	// * 2. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
-	// * 3. Make code more permissive (get rid of all the "safety" things, get rid of some of the Error throws -- replace them with special function values, where want to);
-	// * 4. Simplify and generalize function argument lists; get rid of booleans functions of which can be subsued by the default values of the other parameters without loss of generality... Add more arbitrary-length spread arguments;
-	// * 5. After having finished all else, pray do check that all the things that are being wanted to be exported are, in fact, being exported...
-	// * 6. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
+	// TODO: more things to do (generally; in a 'planned' order):
+	// * 1. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
+	// * 2. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
 
 	// * Copies an object/array deeply...
 	RESULT.main.deepCopy = RESULT.main.copyFunction({
@@ -5368,8 +5295,7 @@ export function activate(transformation = ID) {
 	// * Begin with small and simple stuff that's been mostly finished on conceptual level ; Things like copying functions, examplified...
 	// ^ IDEA: let each and every in-editor documentation bit possess a link to the definition of the thing in question [in GitHub repo, for instance???], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose [along with using full spectre of JSDoc notation, perhaps???];
 	// Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
-	// ? Question: what about aliases? Should one simply leave the 'REFER TO THAT...'-kind of messages for them, repeat the same information???
-	// * Current decision: no, do the 'refer'-thing instead; Cleaner;
+	// * The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though]; 
 
 	// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
 	// * Would come in handy in one of one's projects...
