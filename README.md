@@ -1,15 +1,11 @@
 # math-expressions.js
 
-THIS README IS A BIT OF A MESS. IS IN PROCESS OF BEING TIDIED AND COMPLETED...
-
 math-expressions.js is a JavaScript library with a vast variety of covered areas of interest.
 <!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
-Amongst those: very handy utilities, some basic statistics, 2D surfaces, collections, abstract objects, 
-multi-dimensional arrays, some simple linear algebra, parsing;
+Amongst those: very handy utilities, basic statistics, collections, abstract objects, 
+multi-dimensional arrays, some simple linear algebra, equation parsing, unlimited types;
 
-<!-- TODO: finish the documentation after having finished the main.ts; -->
-<!-- TODO: especially add about that each new version of the library is breaking compatibility with the previous one; also, that the library has the old api that won't go away for sentimental reasons; the new api, however, does NOT provide backward compatibility for any of the versions before or after 1.0; used versions of the package should be specified explicitly, updating can easily break something...-->
-
+<!-- * About the compatibility changes: -->
 <!-- * The compatibility is broken in 3 places: 1. the imports and 2. the default arguments of functions... 3. (sometimes) The precise argument lists and definitions of functions (though, the changes were always only generalizing, expansive and constructive...) -->
 <!-- * Also, some elements of the old API change entirely (this touches classes especially much...): certain things change names, disappear or (far more usually) get (immensely) generalized; -->
 
@@ -22,10 +18,10 @@ Install math-expressions.js using npm:
 
 ## Documentation 
 
-Currently unwritten. 
-
-(Supposedly, though this may change) When having been written will appear in [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki);  
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
+[Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki)
+
+The library also supports basic in-editor JSDoc documentation. 
 
 ## Source
 

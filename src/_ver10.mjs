@@ -2925,6 +2925,7 @@ export function activate(transformation = ID) {
 						)
 					},
 					// ? Should this not be replaced with !isNaN(x)? [this'd permit stuff like '[true]' to be recieved by the '.range()'; ]
+					// * Also, create an alias for that thing pray...
 					type: (x) => typeof x === "number" || x instanceof Number,
 					forward: (x) => x + 1,
 					backward: (x) => x - 1,
@@ -4479,7 +4480,9 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// * This thing will allow
+			// * This thing will allow to create function-based types on top of an Array;
+			// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
+			// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
 			TypedArray(template = {}) {
 				const C = {
 					template: {
@@ -4514,19 +4517,42 @@ export function activate(transformation = ID) {
 
 				// TODO: generalizes and then merge those with the array methods;
 				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
+				// * ANSWER - yes, why not.
+				// They'll either be:
+				// 		1. references to the array methods...
+				// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
 
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 
+				stoa(x) {
+					return x.split("")
+				},
+				atos(x) {
+					return x.join("")
+				},
+				// TODO: re-implement more prettily using 'wrapper';
+				strmethod(method) {
+					return function (x) {
+						return atos(method(stoa(x)))
+					}
+				},
+
+				// ! Needs generalizational work [getting rid of unwanted repeats..., working heavily with naming conventions... yada yada yada]
 				// * 1.
 				// * Replaces at 1 index;
-				stringReplaceIndex: function (string, ind, value) {
-					return `${string.slice(0, ind)}${value}${string.slice(ind + 1)}`
+				// stringReplaceIndex: function (string, ind, value) {
+				// 	return `${string.slice(0, ind)}${value}${string.slice(ind + 1)}`
+				// },
+				replaceIndex: function (arr, index, value) {
+					return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 				},
-				stringReplaceIndexesDiff: function (string, inds, values) {
+				// ! replacement of above [take out of the 'const RESULT']
+				sreplaceIndex: strmethod(replaceIndex), 
+				replaceIndexesMult: function (arr = [], inds = [], values = []) {
 					return repeatedApplication(
-						(val, i) => stringReplaceIndex(val, inds[i], values[i]),
+						(val, i) => replaceIndex(val, inds[i], values[i]),
 						Math.min(inds.length, values.length),
-						string
+						arr
 					)
 				},
 
@@ -4549,9 +4575,10 @@ export function activate(transformation = ID) {
 					return string.split(x).join(y)
 				},
 				// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
-				replaceStrMany: function (string, x, y) {
+				replaceStrMany: function (string, x, y) { 
+					// ! This thing ought to be generalized to a separate method...
 					return repeatedApplication(
-						(v, i) => replaceStr(v, x[i], y[i]),
+						(v, i) => stringReplace(v, x[i], y[i]),
 						Math.min(x.length, y.length),
 						string
 					)
@@ -4560,7 +4587,7 @@ export function activate(transformation = ID) {
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
 			classes: {
-				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead. 
+				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead.
 				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
 
 				// TODO: rewrite; finish...
@@ -5189,67 +5216,7 @@ export function activate(transformation = ID) {
 // TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to; [Also, check correspondence with the newer version...]
 // // TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 // const A = {
-// 	template: {
-// 		maxint: RESULT.constants.MAX_INT,
-// 		maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
-// 		...template
-// 	},
-// 	generator: function (a) {
-// 		if (!this.range(a)) return [0]
-
-// 		let resultIndexes = findDeepUnfilledNum(a)
-// 		const _result = infinite.deepCopy(a)
-// 		let result = _result
-
-// 		if (!resultIndexes) {
-// 			resultIndexes = findDeepUnfilledArr(a)
-// 			if (!resultIndexes) return [a]
-
-// 			// TODO [general]: consider carefully the arguments' format - does one desire the object-like ones? [Like here with 'recursiveIndexation' currently?]
-
-// 			result =
-// 				RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 					result,
-// 					resultIndexes
-// 				)
-// 			result = RESULT.submodules.infinite.repeatedApplication()(
-// 				(value) => {
-// 					value.push([])
-// 					return value[value.length - 1]
-// 				},
-// 				dim({
-// 					icclass: resultIndexes.this.class.template.icclass
-// 				})(a)
-// 					.difference(resultIndexes.length())
-// 					.previous(),
-// 				result
-// 			)
-// 			result.push(0)
-// 			return _result
-// 		}
-
-// 		result =
-// 			RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 				result,
-// 				resultIndexes.slice(
-// 					undefined,
-// 					resultIndexes.finish().previous()
-// 				)
-// 			)
-// 		// ? Does one desire further generalization on the GeneralArray usages front in non-GeneralArray [as of self] related pieces of the library???
-// 		// * Pray consider... [Current decision: no; one don't];
-// 		result[resultIndexes.read(resultIndexes.finish())]++
-// 		return _result
-// 	},
 // 	// TODO: finish the inverse
-// 	// * Supposed to be something like this:
-// 	//		1. numberCounterInverse(numberCounter(x)) = x; for all x: x != undefined
-// 	//		2. numberCounterInverse(numberCounter()) = [-1];
-// 	//		3. numberCounterInverse([x]) = [x - 1]; for all MIN_INT < x < MAX_INT;
-// 	//		4. numberCounterInverse([MAX_INT]) = [MAX_INT, -1]
-// 	//		...
-// 	// * And so on; Basically, same as the numberInverse, except the numbers are negative...
-// 	// todo: DECIDED; first - pray work on the inverse separately, then - see if they're really 'same enough'; Then, transform into something straightly generalizable, then generalize...
 // 	inverse: function (a) {
 // 		if (!this.range(a)) return [0]
 
@@ -5327,32 +5294,7 @@ export function activate(transformation = ID) {
 
 // 		return a
 
-// 		// ! problem [with this sketch] : it don't handle the negative numbers as well...
-// 		// ^ idea [for a solution] : let it handle them if passed '[0] (-> [-1])', or any of the results of passing '[0]'
-// 		// * Sketch [what next]:
-// 		// 	todo: implement the 'Alias := (p) => ((x) => x[p]())' alias, then one'd not have this 'recursiveReverse()' thing [it'd just be repeatedApplication() + Alias('reverse')];
-// 		// 	? Or maybe implement? Consider pray...
-
-// 		// * This thing corresponds to implementing the one part of 'inverse' which is the sign-inverse of the presently written 'general' part; HOWEVER, to this part of it, there must also be an inverse - the one which is the not-yet-implemented part of the 'generator()' ;
-// 		// ^ CONCLUSION: such is the structure of the counter and the most basic elements for the generalization [in their current form] have been created and implemented;
-// 		// 2 [TODO, the negative-constructive case...]: This is the one that's 'just like numberCounter().generator()', but all the numbers are negative and the comparison sign is all jacked up;
-// 		// 		2.1. Think about how to generalize this thing... After having generalized the sign for these two, one might
 // 	},
-// 	// ! NOTE [when generalizing the 'range']: pray use (x) => typeof x === "number" || x instanceof Number instead of just '(x) => typeof x === "number"'; Also, create the alias for the thing...
-// 	range: function (a) {
-// 		return (
-// 			a instanceof Array &&
-// 			a.length &&
-// 			!!RESULT.functions.min(
-// 				a.map(
-// 					(x) =>
-// 						typeof x === "number" ||
-// 						x instanceof Number ||
-// 						this.range(x)
-// 				)
-// 			)
-// 		)
-// 	}
 // }
 
 // // TODO: when putting out into the higher scope [RESULT.submodules.infinite], pray generalize - not just these general array types and counters [these'd get used in this particular version...];
