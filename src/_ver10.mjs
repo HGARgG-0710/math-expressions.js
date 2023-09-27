@@ -267,7 +267,7 @@ export function activate(transformation = ID) {
 					for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
 				},
 
-				// ? Should one also add one that is related to shape-things? (Consider)
+				// ? Should one also add one that is related to exotic-shape-things? (Consider)
 				Matrix: function (
 					vector,
 					typechecker,
@@ -603,18 +603,20 @@ export function activate(transformation = ID) {
 					return [result, foundTimes, foundIndexes]
 				},
 
-				permutations: function (array) {
+				// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
+				permutations: function (array = []) {
 					if (array.length < 2) return [[...array]]
 
 					const pprev = permutations(array.slice(0, array.length - 1))
+					const l = array[array.length - 1]
 					const pnext = []
 
 					for (let i = 0; i < array.length; i++)
 						for (let j = 0; j < pprev[i].length; j++)
 							pnext.push([
-								pprev[i].slice(0, i),
-								array[array.length - 1],
-								pprev[i].slice(i, pprev.length)
+								pprev[i].slice(0, j),
+								l,
+								pprev[i].slice(j, pprev.length)
 							])
 
 					return pnext
@@ -4477,221 +4479,29 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// ! problem: where does one want to put the 'GeneralVector'? 'linear', maybe? Or something like that? But it is rather general... Think about putting it into the 'linear' or keeping here, pray;
-			// ? Suggestion: Add the runtime type-safety to all [or some] of the things within the library...
-			// TODO: finish the generalization of this thing... [do the actual looking-writing, polish, fix references, get rid of bugs, make more desireable as of self...];
-			GeneralVector: function (template = {}) {
-				const V = {
-					template: { ...template },
-					static: {
-						// TODO: there should be a "defaultReturn" function for the cases like these (what should be returned on the failing of the typecheck?);
-						typecheck: function (item, vector) {
-							if (!vector.typecheck(item)) {
-								if (!vector.transform) {
-									vector.typefail()
-									return
-								}
-								return vector.transform(item)
-							}
-							return item
-						},
-						type(array) {
-							if (!array.length) return ["any"]
-							// TODO: create a function called uniqueValues (or uniqueMap) for getting all the unique values of a certain function for an array of values into a new array in an order of following...
-							const type = [typeof array[0]]
-							for (const element of array)
-								if (!type.includes(typeof element))
-									type.push(typeof element)
-							return type
-						}
-					},
-					class: function (vectorargs = {}) {
-						const T = {
-							delete(index) {
-								const deleted = this._vector[index]
-								if (index < this._length - 1)
-									for (let i = index; i < this._length - 1; i++)
-										this._vector[i] = this._vector[i + 1]
-								this._length--
-								this._vector.pop()
-								return deleted
-							},
-							// TODO: make arbitrary indexes writeable...
-							add(item) {
-								if (!this.transform) Vector.typecheck(item, this)
-								this._length++
-								return (
-									this.vector.push(
-										this.transform ? this.transform(item) : item
-									) - 1
-								)
-							},
-							swap(index1, index2) {
-								if (
-									typeof index1 !== "number" ||
-									typeof index2 !== "number" ||
-									this._vector[index1] === undefined ||
-									this._vector[index2] === undefined
-								)
-									throw new Error("Invalid indexes passed. ")
-								const temp = this._vector[index1]
-								this._vector[index1] = this._vector[index2]
-								this._vector[index2] = temp
-							},
-							fill(item) {
-								Vector.typecheck(item, this)
-								this._vector.fill(item)
-								return this
-							},
-							// TODO: here, implement a beautiful construction way for arbitrary Vectors;
-							construct() {},
-							set(index, value) {
-								if (this._vector[index] === undefined)
-									throw new Error(
-										"Invalid index passed into the set function."
-									)
-								this._vector[index] = value
-							},
-							index(i) {
-								return this._vector[i]
-							},
-							slice(start, end = this.vector.length) {
-								const sliced = this._vector.slice(start, end)
-								return new Vector({
-									vectortypes: this._type,
-									typefunction: sliced.length,
-									type: sliced
-								})
-							},
-							indexof(element) {
-								return this._vector.indexOf(element)
-							},
-							indexes(element) {
-								const indexes = [this._vector.indexOf(element)]
-								if (indexes[0] >= 0)
-									for (let i = indexes[0] + 1; i < this._length; i++)
-										if (this._vector[i] === element) indexes.push(i)
-								return indexes
-							},
-							concat(vector) {
-								return this.vector.concat(vector.vector)
-							},
-							map(f = (x) => x, type = this.type) {
-								return new Vector({
-									vectortypes: type,
-									typefunction: this.vector.map(f)
-								})
-							},
-							byElement(vector, operation) {
-								const newVec = this.copy()
-								for (
-									let i = 0;
-									i < Math.min(vector.length, this.length);
-									i++
-								)
-									newVec.set(
-										i,
-										operation(this.vector[i], vector.vector[i])
-									)
-								return newVec
-							},
-							copy() {
-								return new Vector({
-									vectortypes: infinite.deepCopy(this.vectortypes),
-									typefunction: this.typefunction,
-									type: infinite.deepCopy(this.vector),
-									vector: copy(this.type),
-									defaultelement: this.default
-								})
-							},
-							get length() {
-								return this._length
-							},
-							get vector() {
-								return this._vector
-							},
-							get type() {
-								return this._type
-							},
-							set type(newType) {
-								// TODO: the 'includes' don't work; change for something that is actually working generally (namely, add a 'comparison' type, use the library's new api stuff then...)...
-								// * Again, if the current design decision is to be implemented, types will be capable of being changed more or less freely (more or less, because if the typecheck is not appropriate, error would ocurr...)
-								// for (let i = 0; i < newType.length; i++)
-								//	if (!this.vectortypes.includes(newType[i]))
-								//		throw new Error(`Unknown vector type: ${newType}`)
-								// TODO: fix... Give the entire code a very good look-through once have fixed the TypeErrors...
-								// * Apply the generics where want to...
-								this._type = newType
-								this._vector = this.vector.map((a) =>
-									Vector.typecheck(a, this)
-								)
-							},
-							set length(newLength) {
-								if (newLength < 0)
-									throw new Error(
-										`Passed negative length: ${newLength}`
-									)
-								if (newLength < this._length)
-									for (let i = this._length; i > newLength; i--)
-										this._vector.pop()
-								if (newLength > this._length)
-									for (let i = this._length; i < newLength; i++)
-										this._vector[i] = this.default(this.type)
-								this._length = newLength
-							},
-							set vector(newVector) {
-								const type = Vector.type(newVector)
-								this._vector = newVector
-								this.length = newVector.length
-								if (!infinite.valueCompare(type, this.type))
-									this._type = type
-							}
-						}
-						ensureProperties(vectorargs, {
-							vector: [],
-							defaultelement: RESULT._const(null),
-							transform: null,
-							vectortypes: [
-								"number",
-								"string",
-								"boolean",
-								"function",
-								"object",
-								"bigint",
-								"any",
-								"undefined",
-								"symbol"
-							],
-							typefunction: (x) => typeof x,
-							type: ["any"],
-							typecheck: (item) => {
-								if (
-									!this.type.includes(typeof item) &&
-									!this.type.includes("any")
-								) {
-									if (this.transform) return this.transform(item)
-									throw new Error(
-										`Type of item ${item} is not equal to vector type: [${this.type
-											.map((a) => `"${a}"`)
-											.join(",")}]. Item type: ${typeof item}`
-									)
-								}
-							}
-						})
-						T._vector = vectorargs.vector
-						T._length = vectorargs.vector.length
-						T.type = vectorargs.type
-						T.default = vectorargs.defaultelement
-						T.transform = vectorargs.transform
-						T.vectortypes = vectorargs.vectortypes
-						T.typefunction = vectorargs.typefunction
-						T.typecheck = vectorargs.typecheck
-						T.typefail = vectorargs.typefail
-						return T
+			// * This thing will allow
+			TypedArray(template = {}) {
+				const C = {
+					template: {
+						empty: [],
+						typefunction: RESULT.aliases._const(true),
+						...template
 					}
 				}
-				V.static.this = V
-				return V
+
+				C.class = function (array = C.template.empty) {
+					return GeneralArray({
+						this: C,
+						...C.template,
+						newvalue: function (arr, val) {
+							if (this.this.template.typefunction(val))
+								return this.this.template.newval(arr, val)
+							return this.this.template.typefail(arr, val)
+						}
+					}).class(array)
+				}
+
+				return C
 			},
 
 			// ! These 2 get 'poured out' into the 'main' field;
@@ -4750,7 +4560,7 @@ export function activate(transformation = ID) {
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
 			},
 			classes: {
-				// ! Based of ('extending'; define 'class' extension properly as a new library concept) a GeneralVector, these things will have predefined operations on 'Number-like' objects: Namely, TrueIntegers, TrueRatios, and so on...
+				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead. 
 				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
 
 				// TODO: rewrite; finish...
@@ -5263,10 +5073,6 @@ export function activate(transformation = ID) {
 
 	// ? Does one want to keep this as this sort of an alias, pray?
 	RESULT.variables.MAX_STRING_LENGTH = RESULT.variables.MAX_INT
-
-	// * Unfinished small PARTS OF THE OLD AGENDA:
-	// 1 [code re-styling, efficiency, minor bugfix, minor feature introduction]. Do the 'replace functional with imperative' todo, along the way fixing the stack and other problems [partially or fully...];
-	// 2 [cleaning] (in work). Finish all the 'make a template' kinds of todos, generalize completely, add templates where desired...; Clean up the small things;
 
 	// ^ IDEA: class extensions;
 	// * These are just the same plain old classes, with the ability for user to arbitrarily extend them;
