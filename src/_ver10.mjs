@@ -32,241 +32,797 @@ export function activate(transformation = ID) {
 			// todo: work extensively on the precise list of aliases... Also, their names...
 
 			// ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
-			// TODO: separate onto sub-types here as well - '.integers', '.arrays', '.objects', '.strings' and so on... [Only first consider if it's 'integers' or 'integer']
+			// TODO [general] : work on the spacing - all the definition lines must have a 1-spacing between each other [for readability];
 			native: {
-				integers: {
-					/**
-					 * Factors out a passed number to the prime numbers. Works quite quickly.
-					 * @param {number} num Number, to be factored out.
-					 * @returns {number[]} Prime factors array.
-					 */
-					factorOut: function (number) {
-						const factors = []
-						for (
-							let currDevisor = 2;
-							number !== 1;
-							currDevisor += currDevisor === 2 ? 1 : 2
-						) {
-							while (number % currDevisor === 0) {
-								factors.push(currDevisor)
-								number /= currDevisor
+				number: {
+					numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
+
+					fromNumber(template = {}) {
+						return {
+							template: { ...template },
+							function: function (x = this.template.start) {
+								return RESULT.main
+									.InfiniteCounter(RESULT.main.addnumber(this.template))
+									.class(x)
+									.map(this.template.icclass)
 							}
 						}
-						return factors
 					},
 
-					isPrime: function (x) {
-						return factorOut(x).length === 1
-					},
-
-					primesBefore: function (x) {
-						return generate(1, x).filter(isPrime)
-					},
-
-					// * Brings whatever is given within the given base to base 10;
-					// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-					nbase: function (nstr, base, alphabet = defaultAlphabet) {
-						return repeatedArithmetic(
-							generate(0, nstr.length - 1).map(
-								(i) => alphabet.indexOf(nstr[i]) * base ** i
-							),
-							"+"
-						)
-					},
-
-					// * Brings whatever in base 10 to whatever in whatever base is given...
-					nbasereverse: function (n, base, alphabet = defaultAlphabet) {
-						const coefficients = []
-						// TODO: call this thing nrepresentation(), then use here...
-						// TODO: change this for either one's own implementation of log, or this, as an alias...
-						let i = Math.floor(Math.log(n) / Math.log(base))
-						while (n !== 0) {
-							// TODO: add an operator for that to the defaultTable...
-							n = (n - (n % base ** i)) / base
-							coefficients.push(n)
-							i--
+					// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
+					/**
+					 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
+					 * @param {number} num A number, from which to make a better-looking version of it.
+					 */
+					readable: function (num = 0) {
+						const arr = String(num).split("")
+						let changeStr = ""
+						while (arr.length % 3 > 0) {
+							changeStr += arr[0]
+							if ((arr.length - 1) % 3 === 0) changeStr += " "
+							arr.shift()
 						}
-						// TODO: create a generalized map() function that would map to both functions, arrays and objects;
-						return coefficients.map((i) => alphabet[i]).join("")
-					},
-
-					baseconvert: function (a, basebeg, baseend) {
-						return nbasereverse(nbase(a, basebeg), baseend)
-					},
-
-					// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
-					// ? This thing don't include 0. Should it include 0?
-					multiples: function (n, range) {
-						return generate(1, range).map((a) => a * n)
-					},
-
-					// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
-					// ? That is, if that is desired... Is it? Pray think...
-					multiplesBefore: function (n, x) {
-						return multiples(n, floor(x / n))
-					},
-
-					// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
-					// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-					/**
-					 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
-					 * @param {number} firstNum First number.
-					 * @param {number} secondNum Second number.
-					 */
-					leastCommonMultiple: function (...nums) {
-						if (nums.length === 0) return undefined
-						if (nums.length === 1) return nums[0]
-						if (nums.length === 2)
-							return min(
-								arrIntersections([
-									multiples(nums[0], nums[1]),
-									multiples(nums[1], nums[0])
-								])
-							)
-						return leastCommonMultiple(
-							nums[0],
-							leastCommonMultiple(...nums.slice(1))
-						)
-					},
-
-					commonMultiples: function (range, ...nums) {
-						if (nums.length === 0) return undefined
-						if (nums.length === 1) return nums[0]
-						if (nums.length === 2) {
-							const found = arrIntersections([
-								multiples(nums[0], range[range.length - 1]),
-								multiples(nums[1], nums[range[range.length - 2]])
-							])
-							range.pop()
-							range.pop()
-							return found
-						}
-						const rest = commonMultiples(range, ...nums.slice(1))
-						return arrIntersections([
-							multiples(nums[0], range[range.length - 1]),
-							rest
-						])
-					},
-
-					leastCommonDivisor: function (...nums) {
-						// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-						return ((x) =>
-							typeof x === "number" || typeof x === "undefined"
-								? x
-								: min(x))(commonDivisors(...nums))
-					},
-
-					commonDivisors: function (...nums) {
-						if (nums.length === 0) return undefined
-						if (nums.length === 1) return nums[0]
-						if (nums.length === 2)
-							return arrIntersections([
-								factorOut(nums[0]),
-								factorOut(nums[1])
-							])
-						return arrIntersections([
-							factorOut(nums[0]),
-							commonDivisors(...nums.slice(1))
-						])
+						arr.forEach((number, index) => {
+							index % 3 === 0 && index > 0
+								? (changeStr += ` ${number}`)
+								: (changeStr += `${number}`)
+						})
+						return changeStr
 					},
 
 					/**
-					 * Checks whether the number passed is perfect or not.
-					 * @param {number} number Number, perfectness of which is to be checked.
+					 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
+					 * @param {number} start Start number in array(it's supposed to be the least number in it)
+					 * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
+					 * @param {number} step Value, by which the count is incremented every iteration.
+					 * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
 					 */
-					isPerfect: function (number) {
-						return (
-							repeatedArithmetic(allFactors(number).map(String), "+") ===
-							number
-						)
+					generate: function (start, end, step = 1, precision = 1) {
+						const generated = []
+						// TODO [general]: GET RID OF 'realAddition'...
+						const upper = realAddition(
+							end,
+							(-1) ** step <
+								0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
+						)[0]
+						const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
+						for (let i = start; proposition(i); i += step)
+							generated.push(floor(i, precision))
+						return generated
 					},
 
+					// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
+					// TODO: write such a function as well for both old api and new api!
+					// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
 					/**
-					 * Takes one integer and returns all of its factors (not only primes, but others also).
-					 * @param {number} number An integer, factors for which are to be found.
+					 * Floors the given number to the needed level of precision.
+					 * @param {number} number Number to be floored.
+					 * @param {number} afterDot How many positions after dot should there be.
+					 * @returns {number}
 					 */
-					allFactors: function (number) {
-						const factors = [1]
-						for (let currFactor = 2; currFactor !== number; currFactor++)
-							if (number % currFactor === 0) factors.push(currFactor)
-						return factors
+					floor: function (number, afterDot = globalPrecision) {
+						return Number(number.toFixed(afterDot))
 					},
 
-					/**
-					 * This function calculates the factorial of a positive integer given.
-					 * @param {number} number A positive integer, factorial for which is to be calculated.
-					 */
-					factorial: function (number = 0) {
-						const numbers = []
-
-						// ? Shall one extend this? [Think about it...]
-						if (number < 0)
-							throw new Error(
-								"factorial() function is not supposed to be used with the negative numbers. "
-							)
-						if (!number) return 1
-
-						for (let i = 1; i <= number; i++) numbers.push(i)
-						return repeatedArithmetic(numbers.map(String), "*")
-					},
-
-					sumRepresentations: function (n, m, minval = 1) {
-						// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
-						const itered = generate(minval, n).map((x) =>
-							generate(minval, m).map((v, i) => (i == 0 ? x : minval))
-						)
-						while (itered.length < n ** m) {
-							for (let i = 0; i < itered.length; i++) {
-								const copied = flatCopy(itered[i])
-								for (let j = 0; j < m; j++) {
-									copied[j]++
-									if (indexOfMult(itered, copied).length) {
-										copied[j]--
-										continue
-									}
-									itered.push(copied)
+					integer: {
+						/**
+						 * Factors out a passed number to the prime numbers. Works quite quickly.
+						 * @param {number} num Number, to be factored out.
+						 * @returns {number[]} Prime factors array.
+						 */
+						factorOut: function (number) {
+							const factors = []
+							for (
+								let currDevisor = 2;
+								number !== 1;
+								currDevisor += currDevisor === 2 ? 1 : 2
+							) {
+								while (number % currDevisor === 0) {
+									factors.push(currDevisor)
+									number /= currDevisor
 								}
 							}
-						}
+							return factors
+						},
 
-						return itered.filter((x) => repeatedArithmetic(x, "+") == n)
-					},
+						isPrime: function (x) {
+							return factorOut(x).length === 1
+						},
 
-					/**
-					 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
-					 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
-					 * @param {number} n First number (any rational number).
-					 * @param {number} k Second number (integer).
-					 */
-					binomial: function (n, k) {
-						if (
-							(typeof n !== "number" || typeof k !== "number") &&
-							(isNaN(Number(n)) || isNaN(Number(k)))
-						)
-							throw new Error(
-								"Input given to the choose function could not be converted to a number. "
+						primesBefore: function (x) {
+							return generate(1, x).filter(isPrime)
+						},
+
+						// * Brings whatever is given within the given base to base 10;
+						// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
+						nbase: function (nstr, base, alphabet = defaultAlphabet) {
+							return repeatedArithmetic(
+								generate(0, nstr.length - 1).map(
+									(i) => alphabet.indexOf(nstr[i]) * base ** i
+								),
+								"+"
 							)
+						},
 
-						// Rounding down just in case.
-						n = Number(n)
-						k = Number(k) | 0
-						return floor(
-							repeatedArithmetic(
-								generate(0, k - 1, 1).map((num) => n - num),
-								"*"
-							) / factorial(k)
+						// * Brings whatever in base 10 to whatever in whatever base is given...
+						nbasereverse: function (n, base, alphabet = defaultAlphabet) {
+							const coefficients = []
+							// TODO: call this thing nrepresentation(), then use here...
+							// TODO: change this for either one's own implementation of log, or this, as an alias...
+							let i = Math.floor(Math.log(n) / Math.log(base))
+							while (n !== 0) {
+								// TODO: add an operator for that to the defaultTable...
+								n = (n - (n % base ** i)) / base
+								coefficients.push(n)
+								i--
+							}
+							// TODO: create a generalized map() function that would map to both functions, arrays and objects;
+							return coefficients.map((i) => alphabet[i]).join("")
+						},
+
+						baseconvert: function (a, basebeg, baseend) {
+							return nbasereverse(nbase(a, basebeg), baseend)
+						},
+
+						// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
+						// ? This thing don't include 0. Should it include 0?
+						multiples: function (n, range) {
+							return generate(1, range).map((a) => a * n)
+						},
+
+						// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
+						// ? That is, if that is desired... Is it? Pray think...
+						multiplesBefore: function (n, x) {
+							return multiples(n, floor(x / n))
+						},
+
+						// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
+						// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
+						/**
+						 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
+						 * @param {number} firstNum First number.
+						 * @param {number} secondNum Second number.
+						 */
+						leastCommonMultiple: function (...nums) {
+							if (nums.length === 0) return undefined
+							if (nums.length === 1) return nums[0]
+							if (nums.length === 2)
+								return min(
+									arrIntersections([
+										multiples(nums[0], nums[1]),
+										multiples(nums[1], nums[0])
+									])
+								)
+							return leastCommonMultiple(
+								nums[0],
+								leastCommonMultiple(...nums.slice(1))
+							)
+						},
+
+						commonMultiples: function (range, ...nums) {
+							if (nums.length === 0) return undefined
+							if (nums.length === 1) return nums[0]
+							if (nums.length === 2) {
+								const found = arrIntersections([
+									multiples(nums[0], range[range.length - 1]),
+									multiples(nums[1], nums[range[range.length - 2]])
+								])
+								range.pop()
+								range.pop()
+								return found
+							}
+							const rest = commonMultiples(range, ...nums.slice(1))
+							return arrIntersections([
+								multiples(nums[0], range[range.length - 1]),
+								rest
+							])
+						},
+
+						leastCommonDivisor: function (...nums) {
+							// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
+							return ((x) =>
+								typeof x === "number" || typeof x === "undefined"
+									? x
+									: min(x))(commonDivisors(...nums))
+						},
+
+						commonDivisors: function (...nums) {
+							if (nums.length === 0) return undefined
+							if (nums.length === 1) return nums[0]
+							if (nums.length === 2)
+								return arrIntersections([
+									factorOut(nums[0]),
+									factorOut(nums[1])
+								])
+							return arrIntersections([
+								factorOut(nums[0]),
+								commonDivisors(...nums.slice(1))
+							])
+						},
+
+						/**
+						 * Checks whether the number passed is perfect or not.
+						 * @param {number} number Number, perfectness of which is to be checked.
+						 */
+						isPerfect: function (number) {
+							return (
+								repeatedArithmetic(
+									allFactors(number).map(String),
+									"+"
+								) === number
+							)
+						},
+
+						/**
+						 * Takes one integer and returns all of its factors (not only primes, but others also).
+						 * @param {number} number An integer, factors for which are to be found.
+						 */
+						allFactors: function (number) {
+							const factors = [1]
+							for (let currFactor = 2; currFactor !== number; currFactor++)
+								if (number % currFactor === 0) factors.push(currFactor)
+							return factors
+						},
+
+						/**
+						 * This function calculates the factorial of a positive integer given.
+						 * @param {number} number A positive integer, factorial for which is to be calculated.
+						 */
+						factorial: function (number = 0) {
+							const numbers = []
+
+							// ? Shall one extend this? [Think about it...]
+							if (number < 0)
+								throw new Error(
+									"factorial() function is not supposed to be used with the negative numbers. "
+								)
+							if (!number) return 1
+
+							for (let i = 1; i <= number; i++) numbers.push(i)
+							return repeatedArithmetic(numbers.map(String), "*")
+						},
+
+						sumRepresentations: function (n, m, minval = 1) {
+							// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
+							const itered = generate(minval, n).map((x) =>
+								generate(minval, m).map((v, i) => (i == 0 ? x : minval))
+							)
+							while (itered.length < n ** m) {
+								for (let i = 0; i < itered.length; i++) {
+									const copied = flatCopy(itered[i])
+									for (let j = 0; j < m; j++) {
+										copied[j]++
+										if (indexOfMult(itered, copied).length) {
+											copied[j]--
+											continue
+										}
+										itered.push(copied)
+									}
+								}
+							}
+
+							return itered.filter((x) => repeatedArithmetic(x, "+") == n)
+						},
+
+						/**
+						 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
+						 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
+						 * @param {number} n First number (any rational number).
+						 * @param {number} k Second number (integer).
+						 */
+						binomial: function (n, k) {
+							if (
+								(typeof n !== "number" || typeof k !== "number") &&
+								(isNaN(Number(n)) || isNaN(Number(k)))
+							)
+								throw new Error(
+									"Input given to the choose function could not be converted to a number. "
+								)
+
+							// Rounding down just in case.
+							n = Number(n)
+							k = Number(k) | 0
+							return floor(
+								repeatedArithmetic(
+									generate(0, k - 1, 1).map((num) => n - num),
+									"*"
+								) / factorial(k)
+							)
+						}
+					}
+				},
+
+				string: {
+					stoa(x = "") {
+						return x.split("")
+					},
+					atos(x = []) {
+						return x.join("")
+					},
+					fcc: String.fromCharCode,
+					strMap: function (str, symb = ID, isStrOut = false) {
+						return (isStrOut ? (x) => x.join("") : RESULT.aliases.id)(
+							str.split("").map(symb)
 						)
 					}
 				},
 
-				ensureProperty: function (object, property, value) {
-					if (!object.hasOwnProperty(property)) object[property] = value
-				},
-				// * A convinient general-version...
-				ensureProperties: function (object, defaultobj) {
-					for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
+				array: {
+					// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
+					last: (arr, obj, comparison = valueCompare) => {
+						return max(indexOfMult(arr, obj, comparison))
+					},
+					first: (arr, obj, comparison = valueCompare) => {
+						return min(indexOfMult(arr, obj, comparison))
+					},
+					_last: (arr) => arr[arr.length - 1],
+					_first: (arr) => arr[0],
+					insert: (arr, index, values) =>
+						arr.slice(0, index).concat(values).concat(arr.slice(index)),
+					_insert: (arr, index, val) => insert(arr, index, [val]),
+					remove: (arr, start, end) =>
+						arr.slice(0, start).concat(arr.slice(end + 1)),
+					_remove: (arr, index) => remove(arr, index, index),
+					minlen: (...arrs) => flen(min, ...arrs),
+					maxlen: (...arrs) => flen(max, ...arrs),
+					flen: (f, ...arrs) => {
+						return f(arrs.map((a) => a.length))
+					},
+					flenarrs: (f, ...arrs) => {
+						const _f = f(...arrs)
+						return arrs.filter((a) => a.length === _f)
+					},
+					minlenarrs: (...arrs) => flenarrs(minlen, ...arrs),
+					maxlenarrs: (...arrs) => flenarrs(maxlen, ...arrs),
+					propertymap: (prop) => (objs) => objs.map((a) => a[prop]),
+
+					// ? does one want to rename these two?
+					arrThisApply: function (f, arr, thisArg = null) {
+						return f.apply(thisArg, arr)
+					},
+					arrApply: function (f, arr) {
+						return f(...arr)
+					},
+
+					// ? What about the default comparison? Again, the lower 'todo'...
+					// TODO [general] : template-defaults; Look into them carefully for each and every single thing in the library... [Here, in particular - the default 'comparison']
+					mostf(template = {}) {
+						return {
+							template: { ...template },
+							function: function (farr = []) {
+								let most = farr[0]
+								for (const x of farr)
+									if (this.template.comparison(x, most)) most = x
+								return most
+							}
+						}
+					},
+
+					replaceIndex: function (arr, index, value) {
+						return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
+					},
+					// ! stuff from 'methods:' goes here...
+
+					hasArrays: function (array = []) {
+						return !!max(array.map((a) => a instanceof Array))
+					},
+
+					// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
+					// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
+					countAppearences: function (
+						array,
+						element,
+						i = 0,
+						comparison = (a, b) => a === b
+					) {
+						return i < array.length
+							? Number(comparison(array[i], element)) +
+									countAppearences(array, element, i + 1, comparison)
+							: 0
+					},
+
+					indexOfMult: function (array, el, comparison = (a, b) => a === b) {
+						const indexes = []
+						for (let i = 0; i < array.length; i++)
+							if (comparison(array[i], el)) indexes.push(i)
+						return indexes
+					},
+
+					// * clears all but the first `tokeep` repetition of `el`
+					clearRepetitions: function (
+						arr,
+						el,
+						tokeep = 0,
+						comparison = (a, b) => a === b
+					) {
+						const firstMet = indexOfMult(arr, el, comparison)
+						return firstMet.length
+							? arr.filter(
+									(a, i) =>
+										firstMet.indexOf(i) < tokeep || !comparison(a, el)
+							  )
+							: [...arr]
+					},
+
+					splitArr: function (arr, el, comparison) {
+						const segments = []
+						let begInd = 0
+						let endInd = 0
+						for (let i = 0; i < arr.length; i++)
+							if (comparison(el, arr[i])) {
+								begInd = endInd + Number(Boolean(endInd))
+								endInd = i
+								segments.push([begInd, endInd])
+							}
+						return segments.map((seg) => arr.slice(...seg))
+					},
+
+					// * "guts" the first layer inner arrays into the current one...
+					gutInnerArrs: function (array) {
+						const returned = []
+						for (let i = 0; i < array.length; i++) {
+							if (array[i] instanceof Array) {
+								array[i].forEach(returned.push)
+								continue
+							}
+							returned.push(array[i])
+						}
+						return returned
+					},
+
+					// * Replaces values within an array and returns the obtained copy...
+					replaceArr: function (array, x, y, transformation = (a) => a) {
+						const resArray = [...array]
+						for (let i = 0; i < array.length; i++) {
+							const index = x.indexOf(array[i])
+							if (index !== -1) resArray[i] = transformation(y[index])
+						}
+						return resArray
+					},
+
+					// TODO: Optimize with the use of repeatedApplicationWhilst;
+					// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
+					// * Rewrite so that it returns a new one...
+					gutInnerArrsRecursive: function (array) {
+						while (hasArrays(array)) array = gutInnerArrs(array)
+						return array
+					},
+
+					// * "reverses" the gutInnerArrs (only once, at a given place)
+					// TODO: generalize; make a version of multiple encirclements;
+					// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
+					// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
+					arrEncircle: function (a, from = 0, to = a.length) {
+						const copied = []
+						for (let i = 0; i < a.length; i++) {
+							if (i >= from && i <= to) {
+								copied.push(a.slice(from, to + 1))
+								i = to
+								continue
+							}
+							copied.push(a[i])
+						}
+						return copied
+					},
+
+					// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
+					// * copies array's structure deeply without copying the elements
+					// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
+					// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
+					arrStructureCopy: function (thing) {
+						if (thing instanceof Array) return thing.map(arrStructureCopy)
+						return thing
+					},
+					// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
+					// TODO: the same way, write objEncircle; there'd also be an argument for the key;
+					// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
+					// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
+					// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
+					// * Same permutations for the InfiniteMap and UniversalMap...
+					// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
+					// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
+					// TODO: add more methods to UniversalMap and InfiniteMap;
+					// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
+
+					// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
+
+					// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
+					arrIntersections: function (arrs, comparison = (a, b) => a === b) {
+						if (arrs.length === 0) return []
+						if (arrs.length === 1) return arrs[1]
+						if (arrs.length === 2) {
+							const result = []
+							for (let i = 0; i < arrs[0].length; i++) {
+								for (let j = 0; j < arrs[1].length; j++) {
+									// TODO: change for the use of indexOfMult... the .includes thing...
+									if (
+										comparison(arrs[0][i], arrs[1][j]) &&
+										!result.includes(arrs[0][i])
+									)
+										result.push([i, j, arrs[0][i], arrs[1][j]])
+								}
+							}
+							return result
+						}
+						return arrIntersections(
+							[arrs[0], arrIntersections(arrs.slice(1), comparison)],
+							comparison
+						)
+					},
+
+					// * Counts all non-array elements within a multidimensional array passed... [recursively so]
+					nonArrElems: function (array) {
+						return array instanceof Array
+							? repeatedArithmetic(array.map(nonArrElems), "+")
+							: 1
+					},
+
+					// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+					totalElems: function (array) {
+						return array instanceof Array
+							? array.length +
+									repeatedArithmetic(array.map(totalElems), "+")
+							: 0
+					},
+
+					_multmap: function (a, fs) {
+						return multmap([a], fs)[0]
+					},
+
+					// * Finds use in one's code all the time.
+					// ^ Note: The first index stays for the elements, the second one stays for the function...
+					multmap: function (a, fs) {
+						return a.map((el) => fs.map((f) => f(el)))
+					},
+
+					// TODO: optimize the library in places such as this - where the '.min/.max(.map(somefunc))' actually takes additional steps to check for a thing... Instead, break once having found some such a 'breaking point' (like here); Saves a lot of execution steps in some cases;
+					isSubset: function (template = {}) {
+						return {
+							template: {
+								comparison: RESULT.main.valueCompare,
+								defarr: [],
+								...template
+							},
+							function: function (arrsub, arr = this.template.defarr) {
+								for (const x of arrsub)
+									if (
+										!RESULT.max(
+											arr.map((y) => this.template.comparison(x, y))
+										)
+									)
+										return false
+								return true
+							}
+						}
+					},
+
+					// TODO: this should also separate onto findValue and findReference;
+					// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
+					// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
+					// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
+					/**
+					 * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
+					 * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
+					 * @param {number | number[] | string} searchVal Searched value.
+					 * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
+					 */
+					find: function (searchArr, searchVal) {
+						let result = false
+						let foundTimes = 0
+						const foundIndexes = []
+						if (searchVal instanceof Array && searchArr instanceof Array)
+							searchVal.forEach((value) =>
+								searchArr.forEach((arr, index) =>
+									arr.forEach((obj) => {
+										if (value === obj) {
+											result = true
+											foundTimes++
+											if (!foundIndexes.includes(index))
+												foundIndexes.push(index)
+										}
+									})
+								)
+							)
+						else
+							for (let i = 0; i < searchArr.length; i++)
+								searchArr[i] === searchVal
+									? ((result = true),
+									  foundTimes++,
+									  foundIndexes.push(i))
+									: null
+						return [result, foundTimes, foundIndexes]
+					},
+
+					// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
+					permutations: function (array = []) {
+						if (array.length < 2) return [[...array]]
+
+						const pprev = permutations(array.slice(0, array.length - 1))
+						const l = array[array.length - 1]
+						const pnext = []
+
+						for (let i = 0; i < array.length; i++)
+							for (let j = 0; j < pprev[i].length; j++)
+								pnext.push([
+									...pprev[i].slice(0, j),
+									l,
+									...pprev[i].slice(j, pprev.length)
+								])
+
+						return pnext
+					}
 				},
 
+				function: {
+					/**
+					 * * Returns a constant-function based on the argument;
+					 *
+					 * DEFINITION:
+					 *
+					 * WIKI:
+					 */
+					_const: (c) => () => c,
+
+					// * The 'do nothing' function; useful as a placeholder in places requiring a function argument;
+					void: () => {},
+
+					bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
+
+					// ! this is for generalized use, not like 'wrapper', which is for alias-like-use
+					/**
+					 * Finds the composition of given functions array on each other;
+					 * TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
+					 */
+					compose: (fs = []) => {
+						if (!fs.length) return undefined
+						return fs[fs.length - 1](
+							RESULT.compose(fs.slice(0, fs.length - 1))
+						)
+					},
+					wrapper: (template = {}) => {
+						return {
+							template: {
+								in: RESULT.aliases.id,
+								out: RESULT.aliases.id,
+								deff: RESULT.aliases.id,
+								...template
+							},
+							function: function (f = this.template.deff) {
+								return (x) => this.template.out(f(this.template.in(x)))
+							}
+						}
+					}
+				},
+
+				object: {
+					// ! PROBLEM [?is it though? - general]: decide what to do about the default values of functions in cases like these;
+					ensureProperty: function (object, property, value) {
+						if (!object.hasOwnProperty(property)) object[property] = value
+					},
+					// * A convinient general-version...
+					ensureProperties: function (object, defaultobj) {
+						for (const x in defaultobj)
+							ensureProperty(object, x, defaultobj[x])
+					},
+
+					// ! PROBLEM [1]: won't work in the recursive case (exampli gratia: 'const a = {x : a}') [or, namely, will work indefinitely] - fix!
+					subobjects(object = {}, prev = []) {
+						let returned = []
+						if (object instanceof Object && !prev.includes(object)) {
+							for (const a in object)
+								if (object[a] instanceof Object) {
+									returned.push(object[a])
+									prev.push(object)
+									returned = returned.concat(
+										this.subobjects(object[a], prev)
+									)
+								}
+						}
+						return returned
+					},
+					subobjectsFlat(object = {}) {
+						return Object.values(object)
+							.filter((x) => x instanceof Object)
+							.map(
+								(x) =>
+									object[
+										Object.keys(object)[
+											Object.values(object).indexOf(x)
+										]
+									]
+							)
+					},
+
+					// ! PROBLEM: this thing [subobjectsFlat]
+					// * Checks if a certain object contains a recursive reference;
+					isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
+						if (!(object instanceof Object)) return false
+						return max(
+							Object.keys(object).map(
+								(x) =>
+									prevobjsarr.includes(object[x]) ||
+									this.isRecursive(object[x], prevobjsarr)
+							)
+						)
+					},
+
+					objInverse: function (notfound, treatUniversal = false) {
+						return {
+							template: { notfound, treatUniversal },
+							value: function (obj, treatUniversal = this.treatUniversal) {
+								return ((a) =>
+									((universal) => a(universal.values, universal.keys))(
+										a(obj, treatUniversal)
+									))(UniversalMap(this.notfound))
+							}
+						}
+					},
+
+					// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
+
+					obj: function (keys = [], values = []) {
+						let length = min([keys.length, values.length])
+						const returned = {}
+						for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
+						return returned
+					},
+
+					objMap: function (obj, keys, id = true) {
+						const newobj = {}
+						for (const key in keys) newobj[keys[key]] = obj[key]
+						if (id)
+							for (const key in obj)
+								if (!Object.values(keys).has(key)) newobj[key] = obj[key]
+						return newobj
+					},
+
+					objFmap: function (obj = {}, f = ID) {
+						const newobj = {}
+						for (const a in obj) newobj[a] = f(obj[a])
+						return newobj
+					},
+
+					objArr: function (obj = {}) {
+						return [Object.keys, Object.values].map((x) => x(obj))
+					},
+
+					objSwap: function (obj1, obj2) {
+						;((obj1Copy, obj2Copy) => {
+							objClear(obj1, obj1Copy)
+							objClear(obj2, obj2Copy)
+							objInherit(obj1, obj2Copy)
+							objInherit(obj2, obj1Copy)
+						})(...Array.from(arguments).map(flatCopy))
+					},
+
+					objClear: function (obj, objCopy = flatCopy(obj)) {
+						for (const dp in objCopy) delete obj[dp]
+					},
+
+					objInherit: function (obj, parObj) {
+						for (const ap in parObj) obj[ap] = parObj[ap]
+					},
+
+					propSwap: function (obj, prop1, prop2) {
+						const temp = obj[prop1]
+						obj[prop1] = obj[prop2]
+						obj[prop2] = temp
+					},
+
+					ismapped: function (...args) {
+						// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
+						while (args.length < 2) args.push({})
+						return RESULT.main
+							.valueCompare()
+							.function(...args.map(Object.keys))
+					}
+				},
+
+				boolean: {
+					n: (x) => !x
+				},
+
+				// ! What to do with these two? The 'Vector' has been [at large] destroyed; Work with this thing [mostly] corresponds to the further work on 'Vectors and Matricies' part of the libary...
 				// ? Should one also add one that is related to exotic-shape-things? (Consider)
 				Matrix: function (
 					vector,
@@ -316,20 +872,7 @@ export function activate(transformation = ID) {
 					})
 				},
 
-				// * Counts all non-array elements within a multidimensional array passed... [recursively so]
-				nonArrElems: function (array) {
-					return array instanceof Array
-						? repeatedArithmetic(array.map(nonArrElems), "+")
-						: 1
-				},
-
-				// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-				totalElems: function (array) {
-					return array instanceof Array
-						? array.length + repeatedArithmetic(array.map(totalElems), "+")
-						: 0
-				},
-
+				// ? Where does that go [all the old Expression(s) API generalized]?
 				// * Creates a function for execution of operations based on the given operations table...;
 				op: function (template = {}) {
 					return {
@@ -484,29 +1027,6 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				subobjects(object) {
-					const returned = []
-					if (object instanceof Object)
-						for (const a in object)
-							if (object[a] instanceof Object) {
-								returned.push(object[a])
-								returned.concat(this.subobjects(object[a]))
-							}
-					return returned
-				},
-
-				// * Checks if a certain object contains a recursive reference;
-				isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
-					if (!(object instanceof Object)) return false
-					return max(
-						Object.keys(object).map(
-							(x) =>
-								prevobjsarr.includes(object[x]) ||
-								this.isRecursive(object[x], prevobjsarr)
-						)
-					)
-				},
-
 				repeatedOperation: function (template = {}) {
 					return {
 						template: {
@@ -528,113 +1048,6 @@ export function activate(transformation = ID) {
 					}
 				},
 
-				// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
-				/**
-				 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
-				 * @param {number} num A number, from which to make a better-looking version of it.
-				 */
-				readable: function (num) {
-					const arr = String(num).split("")
-					let changeStr = ""
-					while (arr.length % 3 > 0) {
-						changeStr += arr[0]
-						if ((arr.length - 1) % 3 === 0) changeStr += " "
-						arr.shift()
-					}
-					arr.forEach((number, index) => {
-						index % 3 === 0 && index > 0
-							? (changeStr += ` ${number}`)
-							: (changeStr += `${number}`)
-					})
-					return changeStr
-				},
-
-				/**
-				 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
-				 * @param {number} start Start number in array(it's supposed to be the least number in it)
-				 * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
-				 * @param {number} step Value, by which the count is incremented every iteration.
-				 * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
-				 */
-				generate: function (start, end, step = 1, precision = 1) {
-					const generated = []
-					const upper = realAddition(
-						end,
-						(-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
-					)[0]
-					const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-					for (let i = start; proposition(i); i += step)
-						generated.push(floor(i, precision))
-					return generated
-				},
-
-				// TODO: this should also separate onto findValue and findReference;
-				// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
-				// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
-				// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
-				/**
-				 * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
-				 * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
-				 * @param {number | number[] | string} searchVal Searched value.
-				 * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
-				 */
-				find: function (searchArr, searchVal) {
-					let result = false
-					let foundTimes = 0
-					const foundIndexes = []
-					if (searchVal instanceof Array && searchArr instanceof Array)
-						searchVal.forEach((value) =>
-							searchArr.forEach((arr, index) =>
-								arr.forEach((obj) => {
-									if (value === obj) {
-										result = true
-										foundTimes++
-										if (!foundIndexes.includes(index))
-											foundIndexes.push(index)
-									}
-								})
-							)
-						)
-					else
-						for (let i = 0; i < searchArr.length; i++)
-							searchArr[i] === searchVal
-								? ((result = true), foundTimes++, foundIndexes.push(i))
-								: null
-					return [result, foundTimes, foundIndexes]
-				},
-
-				// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
-				permutations: function (array = []) {
-					if (array.length < 2) return [[...array]]
-
-					const pprev = permutations(array.slice(0, array.length - 1))
-					const l = array[array.length - 1]
-					const pnext = []
-
-					for (let i = 0; i < array.length; i++)
-						for (let j = 0; j < pprev[i].length; j++)
-							pnext.push([
-								pprev[i].slice(0, j),
-								l,
-								pprev[i].slice(j, pprev.length)
-							])
-
-					return pnext
-				},
-
-				// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
-				// TODO: write such a function as well for both old api and new api!
-				// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
-				/**
-				 * Floors the given number to the needed level of precision.
-				 * @param {number} number Number to be floored.
-				 * @param {number} afterDot How many positions after dot should there be.
-				 * @returns {number}
-				 */
-				floor: function (number, afterDot = globalPrecision) {
-					return Number(number.toFixed(afterDot))
-				},
-
 				// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
 				// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
 				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
@@ -651,75 +1064,6 @@ export function activate(transformation = ID) {
 						object,
 						fields.slice(0, fields.length - 1)
 					)[fields[fields.length - 1]] = value)
-				},
-
-				objInverse: function (notfound, treatUniversal = false) {
-					return {
-						template: { notfound, treatUniversal },
-						value: function (obj, treatUniversal = this.treatUniversal) {
-							return ((a) =>
-								((universal) => a(universal.values, universal.keys))(
-									a(obj, treatUniversal)
-								))(UniversalMap(this.notfound))
-						}
-					}
-				},
-
-				// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
-
-				obj: function (keys = [], values = []) {
-					let length = min([keys.length, values.length])
-					const returned = {}
-					for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
-					return returned
-				},
-
-				objMap: function (obj, keys, id = true) {
-					const newobj = {}
-					for (const key in keys) newobj[keys[key]] = obj[key]
-					if (id)
-						for (const key in obj)
-							if (!Object.values(keys).has(key)) newobj[key] = obj[key]
-					return newobj
-				},
-
-				objFmap: function (obj = {}, f = ID) {
-					const newobj = {}
-					for (const a in obj) newobj[a] = f(obj[a])
-					return newobj
-				},
-
-				objArr: function (obj = {}) {
-					return [Object.keys, Object.values].map((x) => x(obj))
-				},
-
-				objSwap: function (obj1, obj2) {
-					;((obj1Copy, obj2Copy) => {
-						objClear(obj1, obj1Copy)
-						objClear(obj2, obj2Copy)
-						objInherit(obj1, obj2Copy)
-						objInherit(obj2, obj1Copy)
-					})(...Array.from(arguments).map(flatCopy))
-				},
-
-				objClear: function (obj, objCopy = flatCopy(obj)) {
-					for (const dp in objCopy) delete obj[dp]
-				},
-
-				objInherit: function (obj, parObj) {
-					for (const ap in parObj) obj[ap] = parObj[ap]
-				},
-
-				propSwap: function (obj, prop1, prop2) {
-					const temp = obj[prop1]
-					obj[prop1] = obj[prop2]
-					obj[prop2] = temp
-				},
-
-				ismapped: function (...args) {
-					// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
-					while (args.length < 2) args.push({})
-					return RESULT.main.valueCompare().function(...args.map(Object.keys))
 				},
 
 				// * For iteration over an array; this thing is index-free; handles them for the user;
@@ -756,249 +1100,8 @@ export function activate(transformation = ID) {
 						this.currindex = 0
 						this.elements = elems
 					}
-				},
-
-				_multmap: function (a, fs) {
-					return multmap([a], fs)[0]
-				},
-
-				// * Finds use in Mr. Body's code all the time.
-				// ^ Note: The first index stays for the elements, the second one stays for the function...
-				multmap: function (a, fs) {
-					return a.map((el) => fs.map((f) => f(el)))
-				},
-
-				// TODO: optimize the library in places such as this - where the '.min/.max(.map(somefunc))' actually takes additional steps to check for a thing... Instead, break once having found some such a 'breaking point' (like here); Saves a lot of execution steps in some cases;
-				isSubset: function (template = {}) {
-					return {
-						template: {
-							comparison: RESULT.main.valueCompare,
-							defarr: [],
-							...template
-						},
-						function: function (arrsub, arr = this.template.defarr) {
-							for (const x of arrsub)
-								if (
-									!RESULT.max(
-										arr.map((y) => this.template.comparison(x, y))
-									)
-								)
-									return false
-							return true
-						}
-					}
-				},
-
-				strMap: function (str, symb = ID, isStrOut = false) {
-					return (isStrOut ? (x) => x.join("") : RESULT.aliases.id)(
-						str.split("").map(symb)
-					)
-				},
-
-				hasArrays: function (array = []) {
-					return !!max(array.map((a) => a instanceof Array))
-				},
-
-				// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
-				// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
-				countAppearences: function (
-					array,
-					element,
-					i = 0,
-					comparison = (a, b) => a === b
-				) {
-					return i < array.length
-						? Number(comparison(array[i], element)) +
-								countAppearences(array, element, i + 1, comparison)
-						: 0
-				},
-
-				indexOfMult: function (array, el, comparison = (a, b) => a === b) {
-					const indexes = []
-					for (let i = 0; i < array.length; i++)
-						if (comparison(array[i], el)) indexes.push(i)
-					return indexes
-				},
-
-				// * clears all but the first `tokeep` repetition of `el`
-				clearRepetitions: function (
-					arr,
-					el,
-					tokeep = 0,
-					comparison = (a, b) => a === b
-				) {
-					const firstMet = indexOfMult(arr, el, comparison)
-					return firstMet.length
-						? arr.filter(
-								(a, i) =>
-									firstMet.indexOf(i) < tokeep || !comparison(a, el)
-						  )
-						: [...arr]
-				},
-
-				splitArr: function (arr, el, comparison) {
-					const segments = []
-					let begInd = 0
-					let endInd = 0
-					for (let i = 0; i < arr.length; i++)
-						if (comparison(el, arr[i])) {
-							begInd = endInd + Number(Boolean(endInd))
-							endInd = i
-							segments.push([begInd, endInd])
-						}
-					return segments.map((seg) => arr.slice(...seg))
-				},
-
-				// * "guts" the first layer inner arrays into the current one...
-				gutInnerArrs: function (array) {
-					const returned = []
-					for (let i = 0; i < array.length; i++) {
-						if (array[i] instanceof Array) {
-							array[i].forEach(returned.push)
-							continue
-						}
-						returned.push(array[i])
-					}
-					return returned
-				},
-
-				// * Replaces values within an array and returns the obtained copy...
-				replaceArr: function (array, x, y, transformation = (a) => a) {
-					const resArray = [...array]
-					for (let i = 0; i < array.length; i++) {
-						const index = x.indexOf(array[i])
-						if (index !== -1) resArray[i] = transformation(y[index])
-					}
-					return resArray
-				},
-
-				// TODO: Optimize with the use of repeatedApplicationWhilst;
-				// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
-				// * Rewrite so that it returns a new one...
-				gutInnerArrsRecursive: function (array) {
-					while (hasArrays(array)) array = gutInnerArrs(array)
-					return array
-				},
-
-				// * "reverses" the gutInnerArrs (only once, at a given place)
-				// TODO: generalize; make a version of multiple encirclements;
-				// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
-				// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
-				arrEncircle: function (a, from = 0, to = a.length) {
-					const copied = []
-					for (let i = 0; i < a.length; i++) {
-						if (i >= from && i <= to) {
-							copied.push(a.slice(from, to + 1))
-							i = to
-							continue
-						}
-						copied.push(a[i])
-					}
-					return copied
-				},
-
-				// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
-				// * copies array's structure deeply without copying the elements
-				// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
-				// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
-				arrStructureCopy: function (thing) {
-					if (thing instanceof Array) return thing.map(arrStructureCopy)
-					return thing
-				},
-				// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
-				// TODO: the same way, write objEncircle; there'd also be an argument for the key;
-				// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
-				// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
-				// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
-				// * Same permutations for the InfiniteMap and UniversalMap...
-				// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
-				// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
-				// TODO: add more methods to UniversalMap and InfiniteMap;
-				// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
-
-				// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
-
-				// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
-				arrIntersections: function (arrs, comparison = (a, b) => a === b) {
-					if (arrs.length === 0) return []
-					if (arrs.length === 1) return arrs[1]
-					if (arrs.length === 2) {
-						const result = []
-						for (let i = 0; i < arrs[0].length; i++) {
-							for (let j = 0; j < arrs[1].length; j++) {
-								// TODO: change for the use of indexOfMult... the .includes thing...
-								if (
-									comparison(arrs[0][i], arrs[1][j]) &&
-									!result.includes(arrs[0][i])
-								)
-									result.push([i, j, arrs[0][i], arrs[1][j]])
-							}
-						}
-						return result
-					}
-					return arrIntersections(
-						[arrs[0], arrIntersections(arrs.slice(1), comparison)],
-						comparison
-					)
 				}
 			},
-
-			exp: op,
-			repeatedArithmetic: repeatedOperation,
-			sameOperator: repeatedArithmetic,
-			mostPopularElem: mostPopular,
-			mostPopularNum: mostPopular,
-			repeatedApplicationWhile: repeatedApplicationWhilst,
-
-			bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
-			// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
-			last: (arr, obj, comparison = valueCompare) => {
-				return max(indexOfMult(arr, obj, comparison))
-			},
-			first: (arr, obj, comparison = valueCompare) => {
-				return min(indexOfMult(arr, obj, comparison))
-			},
-			_last: (arr) => arr[arr.length - 1],
-			_first: (arr) => arr[0],
-			insert: (arr, index, values) =>
-				arr.slice(0, index).concat(values).concat(arr.slice(index)),
-			_insert: (arr, index, val) => insert(arr, index, [val]),
-			remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
-			_remove: (arr, index) => remove(arr, index, index),
-			minlen: (...arrs) => flen(min, ...arrs),
-			maxlen: (...arrs) => flen(max, ...arrs),
-			flen: (f, ...arrs) => {
-				return f(arrs.map((a) => a.length))
-			},
-			flenarrs: (f, ...arrs) => {
-				const _f = f(...arrs)
-				return arrs.filter((a) => a.length === _f)
-			},
-			minlenarrs: (...arrs) => flenarrs(minlen, ...arrs),
-			maxlenarrs: (...arrs) => flenarrs(maxlen, ...arrs),
-			propertymap: (prop) => (objs) => objs.map((a) => a[prop]),
-			refCompare: (a, b) => a === b,
-
-			numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
-
-			/**
-			 * * Returns a constant-function based on the argument;
-			 *
-			 * DEFINITION:
-			 *
-			 * WIKI:
-			 */
-			_const: (c) => () => c,
-
-			// * The 'do nothing' function; useful as a placeholder in places requiring a function argument;
-			void: () => {},
-
-			/**
-			 * * An alias for the 'infinite.flatCopy' function;
-			 *
-			 * REFER TO THAT...
-			 */
-			copy: infinite.flatCopy,
 
 			// * Identity map (just a nice piece of notation, that's all);
 			/**
@@ -1010,20 +1113,16 @@ export function activate(transformation = ID) {
 			 */
 			id: ID,
 
-			/**
-			 * * Returns the function returning the logical negation of the output of the function passed relative to the input of the newly passed argument;
-			 *
-			 * In short, performs logical negation of a function;
-			 *
-			 * DEFINITION:
-			 *
-			 * WIKI:
-			 */
-			// TODO [general] : perform hardcore alias-reusage procedure, thus shortening and simplifying code using newly/previously introduced aliases...
-			// * in this case, rewrite this via a wrapper...
-			negate: (f) => (x) => !f(x),
+			// ? Old; Keep or not?
+			exp: op,
+			mostPopularElem: mostPopular,
+			repeatedApplicationWhile: repeatedApplicationWhilst,
 
-			n: (x) => !x,
+			refCompare: (a, b) => a === b,
+
+			// TODO [general] : work very carefully on the precise list of the aliases for the 'main' functions... Ignore the stuff from previous versions; Clean up the unwanted ones...
+
+			// TODO [general] : perform hardcore alias-reusage ['alias-relinkage'] procedure, thus shortening and simplifying code using newly/previously introduced aliases...
 
 			bool: Boolean,
 			str: String,
@@ -1033,53 +1132,12 @@ export function activate(transformation = ID) {
 			udef: undefined,
 			set: Set,
 			arr: Array,
-			// ? Maybe, 'fn' instead?
+			// ? Maybe, 'fn' instead? Or both?
 			fun: Function,
 			bi: BigInt,
 
-			// ! this is for generalized use, not like 'wrapper', which is for alias-like-use
-			/**
-			 * Finds the composition of given functions array on each other;
-			 * TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
-			 */
-			compose: (fs = []) => {
-				if (!fs.length) return undefined
-				return fs[fs.length - 1](RESULT.compose(fs.slice(0, fs.length - 1)))
-			},
-			wrapper: (template = {}) => {
-				return {
-					template: {
-						in: template.in || RESULT.aliases.id,
-						out: template.out || RESULT.aliases.id
-					},
-					function: (f) => (x) => this.template.out(f(this.template.in(x)))
-				}
-			},
-
-			fromNumber(template = {}) {
-				return {
-					template: { ...template },
-					function: function (x = this.template.start) {
-						return RESULT.main
-							.InfiniteCounter(RESULT.main.addnumber(this.template))
-							.class(x)
-							.map(this.template.icclass)
-					}
-				}
-			},
-
-			mostf(template = {}) {
-				return {
-					template: { ...template },
-					function: function (farr) {
-						let most = farr[0]
-						for (const x of farr)
-							if (this.template.comparison(x, most)) most = x
-						return most
-					}
-				}
-			},
-
+			// ? Put it where?
+			// * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
 			mostg(template = {}) {
 				return {
 					template: { ...template },
@@ -1092,14 +1150,6 @@ export function activate(transformation = ID) {
 						return most
 					}
 				}
-			},
-
-			// ? does one want to rename these two?
-			arrThisApply: function (f, arr, thisArg = null) {
-				return f.apply(thisArg, arr)
-			},
-			arrApply: function (f, arr) {
-				return f(...arr)
 			},
 
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
@@ -2494,7 +2544,7 @@ export function activate(transformation = ID) {
 						return x + this.template.fdiff
 					},
 					backward(x) {
-						return Number(x) + this.template.bdiff
+						return x + this.template.bdiff
 					},
 					...template
 				})
@@ -2506,7 +2556,7 @@ export function activate(transformation = ID) {
 						return x * this.template.fdiff
 					},
 					backward(x) {
-						return Number(x) * this.template.bdiff
+						return x * this.template.bdiff
 					}
 				})
 			},
@@ -2693,7 +2743,8 @@ export function activate(transformation = ID) {
 			},
 
 			// * A maximally efficient structurally counter based on array recursion and finite orders;
-			// ! Clean, re-look at; fix
+			// ! Clean, review again later; fix	problems
+			// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
 			recursiveCounter(template = {}) {
 				// ^ IDEA: generalize this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences... (as in 0-1-2-3-...-2^(whatever...)-[0]-...[2^(whatever)]-...)
 				// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
@@ -2787,6 +2838,8 @@ export function activate(transformation = ID) {
 							let lastIndexes = findDeepLast(a)
 							const finind = lastIndexes.final()
 							const ffinind = finind.previous()
+							// * Note: the one underneath here is an old note;
+							// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
 							let ppointer =
 								RESULT.submodules.infinite.recursiveIndexationInfFields()(
 									x,
@@ -4524,30 +4577,12 @@ export function activate(transformation = ID) {
 
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 
-				stoa(x) {
-					return x.split("")
-				},
-				atos(x) {
-					return x.join("")
-				},
-				// TODO: re-implement more prettily using 'wrapper';
-				strmethod(method) {
-					return function (x) {
-						return atos(method(stoa(x)))
-					}
-				},
+				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
 
 				// ! Needs generalizational work [getting rid of unwanted repeats..., working heavily with naming conventions... yada yada yada]
 				// * 1.
 				// * Replaces at 1 index;
-				// stringReplaceIndex: function (string, ind, value) {
-				// 	return `${string.slice(0, ind)}${value}${string.slice(ind + 1)}`
-				// },
-				replaceIndex: function (arr, index, value) {
-					return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
-				},
-				// ! replacement of above [take out of the 'const RESULT']
-				sreplaceIndex: strmethod(replaceIndex), 
+				// ! Generalize!
 				replaceIndexesMult: function (arr = [], inds = [], values = []) {
 					return repeatedApplication(
 						(val, i) => replaceIndex(val, inds[i], values[i]),
@@ -4575,7 +4610,7 @@ export function activate(transformation = ID) {
 					return string.split(x).join(y)
 				},
 				// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
-				replaceStrMany: function (string, x, y) { 
+				replaceStrMany: function (string, x, y) {
 					// ! This thing ought to be generalized to a separate method...
 					return repeatedApplication(
 						(v, i) => stringReplace(v, x[i], y[i]),
@@ -4589,6 +4624,11 @@ export function activate(transformation = ID) {
 			classes: {
 				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead.
 				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
+				// ! Plus, these things get changed radically :
+				// 	1. They now are far more configurable with user defaults...
+				// 	2. The actual vector/matrix algorithms are __separate__ from the things that are the wrappers [the named functions], they also get their own space;
+				// 	3. Fixes, fixes, fixes! [Fix the problems with the old code]:
+				// 	4. Heavy aliases usage requested;
 
 				// TODO: rewrite; finish...
 				// * Current idea for a list of features:
@@ -5082,10 +5122,10 @@ export function activate(transformation = ID) {
 	// todo: generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
 	// ? Is one really happy with the way this is getting exported?
 	// * Gorgeous. Just gorgeous...
-	RESULT.aliases.UTF16 = (p, l) =>
-		RESULT.main.generate(0, l).map((x) => String.fromCharCode(p + x))
+	RESULT.aliases.native.string.UTF16 = (p, l) =>
+		RESULT.main.generate(0, l).map((x) => RESULT.native.string.fcc(p + x))
 
-	const UTF16 = RESULT.aliases.UTF16
+	const UTF16 = RESULT.aliases.native.string.UTF16
 
 	// TODO: generalize even further - using the alias for '(p) => (x) => x[p]' + ".concat" + the repeatedApplication...;
 	const ccf = RESULT.aliases.property("concat")
@@ -5094,6 +5134,7 @@ export function activate(transformation = ID) {
 		[65, 25]
 	]
 	// TODO: create the alias for mapping arrays to functions as arguments' lists...;
+	// * alias sketch [alias-re-link pray...]: (f) => (a) => f(...a);
 	RESULT.variables.defaultAlphabet = VARIABLE(
 		ccf(UTF16(48, 9))(coorarrs.map((a) => UTF16(...a)))
 	)
@@ -5101,82 +5142,28 @@ export function activate(transformation = ID) {
 	// ? Does one want to keep this as this sort of an alias, pray?
 	RESULT.variables.MAX_STRING_LENGTH = RESULT.variables.MAX_INT
 
-	// ^ IDEA: class extensions;
-	// * These are just the same plain old classes, with the ability for user to arbitrarily extend them;
-	// * Everything - the defaults list, the methods list, can be changed, extended;
-	// todo: pray create a general structure for them and then re-do everything appropriate in a manner allowing for this particular kind of thing;
-	// ? Mayhaps, merge with the idea for inheritances-extensions of stuff like 'infinite'? [Been a todo there somewhere, pray find...]
+	RESULT.aliases.string.strmethod = RESULT.aliases.function.wrapper({
+		in: RESULT.aliases.string.stoa,
+		out: RESULT.string.atos
+	}).function
 
-	// TODO: later, consider deeply the use of each and every type of abstraction/notation; Think through how things are affected by it...
-	// * Example: use of '() => {}' (arrow-functions), or 'function () {}' (plain anonymous functions); Or, use of 'class' or 'function'; Degree and cases of use of native JS 'this' variable...
-	//  And some such stuff... Pray consider
+	/**
+	 * * Returns the function returning the logical negation of the output of the function passed relative to the input of the newly passed argument;
+	 *
+	 * In short, performs logical negation of a function;
+	 *
+	 * DEFINITION:
+	 *
+	 * WIKI:
+	 */
+	// * in this case, rewrite this via a wrapper...
+	RESULT.aliases.negate = RESULT.aliases.native.function.wrapper({
+		out: RESULT.aliases.n
+	}).function
 
-	// TODO: work extensively on the general possibilities of each and every method/class within the library... make it possible to easily create most exotic manner of things with it...
-
-	// TODO [general]: change the stuff like 'function A (a) {return B({...sometemplatehere})(a)}' to 'const A = B({...sometemplatehere})'; In other words, use aliases for pre-computation of the values for things...
-
-	// todo [general]: ensure that all the defaults for ALL the [templated] functions configurable useing the 'templates'...
-
-	// TODO [general] : check the correspondence of use with the definition of the methods within the library...
-
-	// ! Clean-up later;
-	// [Parts of the Grand Cleanup]:
-	// % 1. (get rid of)/refactor the repeating notes;
-	// todo: work on the names for the objects in question [should this not be under the 'names' todo done before?]
-	// * That'd be the general structure of any templated method within the library...
-	// % 2. Notation/Conventions; [Currently - nigh the second biggest problem after not working code, one yet without a solution] Decide on notation and conventions - what should library use, where in particular;
-	// % 3. Generalization; Note completeion;
-	// * One completes all the notes, related to 'generalize'/'fix'/'complete', and so on... All the unfinished stuff that is separate of all else ['modular'], gets completed;
-	// % 4. Stuff related to forming the particular picture of the library in question...
-
-	// TODO: replace all the functional implementations of functions with imperative ones; for: 1. they may run forever; 2 [of which 1 is a consequence, really]. they do not rely on JS stack;
-	// * The functional ones get to be kept as a memento within the Git repo's memory...
-
-	// TODO [very-very general; later-stage]: Pray conduct a thorough read-through of all the code, once the in-editor documentation has been written and the first sketches has been written;
-	// * Also, note - base the new GitHub Wiki-documentation on the in-editor documentation...
-
-	// TODO [cleaning up]: create short-hands for things [where possible; stuff like 'this.this.this.this.class.template.class.template.icclass.comparison' don't get to be shortened (functional concerns)]...
-
-	// TODO: during the generalization procedures a lot of stuff have become terminally broken. Make another such "round" through the code, fixing anything that's broken due to generalizaiton [as always, probably won't fix all the cases, but some/most];
-
-	// TODO: think about errors - which, where, when and how to throw; What error messages, whether it could be generalized instead in a fashion that one would within one's chosen interpretation consider favorable, and on and on...
-
-	// TODO [general]: where appropriate, replace the native API usage with the library API usage...
-
-	// todo [general]: work on the lists of static methods for classes; Make implementation for them all...
-
-	// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
-	// TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
-
-	// TODO: work on the names a lot; make it sound plausible to oneself...
-	// TODO: work on the error messages...
-
-	// TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
-	// TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
-
-	// TODO: do micro-optimizations; Spend some time on making the code generally more performant [without sacrificing any of the style or shortness/simlicity of it, of course];
-
-	// TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
-	// * Get rid of unwanted explicit type conversions...
-	// * Get rid of unwanted "const"'s
-	// * Get rid of 'let's that can become 'const's [and one wants them to]
-	// * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
-	// * Generalize the code [along with making it more compact], simplify constructs...
-
-	// * Make good use of stack; [Id est, try to save it; use elementary tools not relying upon it; This will allow to make better use of the methods, whose 'power/usefulness' relies upon the stack...]
-
-	// * Some general independant ideas to add to the project...
-	// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
-
-	// TODO: after having finished most everything within the first prototype, pray create all manner of crazy beautiful ideas and scenarios of use to support for methods in question;
-	// * Generalize the stuff heavily; [ESPECIALLY] if the use of the methods/functions/classes/objects/structures/whatever in question within the library itself does not require it...
-
-	// todo: new things to add:
-	// * 1. more beautiful in their simplicity number-theoretic functions...;
-
-	// TODO: more things to do (generally; in a 'planned' order):
-	// * 1. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
-	// * 2. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
+	REUSLT.aliases.native.string.sreplaceIndex = RESULT.aliases.native.string.strmethod(
+		RESULT.aliases.native.array.replaceIndex
+	)
 
 	// * Copies an object/array deeply...
 	RESULT.main.deepCopy = RESULT.main.copyFunction({
@@ -5214,89 +5201,6 @@ export function activate(transformation = ID) {
 // * A
 // ! Old code for the [incomplete] definition of the 'numberCounter' [later used for the recursiveCounter]; The renewed code [in accordance with the general 'recursiveCounter' counter] is above;
 // TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to; [Also, check correspondence with the newer version...]
-// // TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
-// const A = {
-// 	// TODO: finish the inverse
-// 	inverse: function (a) {
-// 		if (!this.range(a)) return [0]
-
-// 		// ? Use a different identifier for the copy of orginal 'a'? Pray consider...
-// 		a = RESULT.submodules.infinite.deepCopy(a)
-
-// 		if (RESULT.submodules.infinite.valueCompare(a, [0])) {
-// 			// todo: the '2' in the sketch...
-// 			// ! NOTE [essential...]: The 'generator' must work as an inverse for 'inverse' TOO! Thus, CONCLUSION: the entire thing consists of 2 general functions that both 'generator' and 'inverse' use with their only difference of theirs being the sign;
-// 		}
-
-// 		if (
-// 			!findDeepUnfilledNum(a) &&
-// 			findDeepUnfilledArr(a) &&
-// 			a.length === 1
-// 		)
-// 			return a[0]
-
-// 		// TODO [general]: use the 'recursiveSetting' where appropriate; Create an infinite version for it as well...
-// 		let lastNumIndexes = findDeepLastNum(a)
-// 		const finind = lastNumIndexes.final()
-// 		const ffinind = finind.previous()
-// 		// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-// 		let ppointer =
-// 			RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 				a,
-// 				lastNumIndexes.slice(undefined, ffinind.previous())
-// 			)
-// 		let pointer =
-// 			RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 				a,
-// 				lastNumIndexes.slice(undefined, ffinind)
-// 			)
-// 		const llindex = lastNumIndexes.read(ffinind)
-// 		const lindex = lastNumIndexes.read(finind)
-
-// 		if (pointer[lindex] > 0) {
-// 			pointer[lindex]--
-// 			return a
-// 		}
-
-// 		ppointer[llindex] = RESULT.aliases._remove(
-// 			ppointer[llindex],
-// 			lindex
-// 		)
-// 		pointer = ppointer[llindex]
-
-// 		let index = lindex
-// 		let hlindex = llindex
-
-// 		// TODO [local refactoring]: the pre-while-loop piece of code is nigh exactly the same as that within the loop; Pray re-organize to make this stuff shorter and more concise... [for instance, separate declarations from definitions and on and on...]
-// 		while (!pointer.length) {
-// 			// TODO: now, this is a RECURSIVE step, so, for instance, one accomplishes this same one procedure not just for 'pointer', but for the 'ppointer' and all the other ones such as well...
-// 			// * Consider carefully how to do this precisely...
-// 			// ? These things do tend to re-appear quite some number of times here... Generalize?
-// 			index = index.previous()
-// 			ppointer =
-// 				RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 					a,
-// 					lastNumIndexes.slice(
-// 						undefined,
-// 						(hlindex = hlindex.previous())
-// 					)
-// 				)
-// 			ppointer[hlindex] = RESULT.aliases._remove(
-// 				ppointer[hlindex],
-// 				index
-// 			)
-// 			pointer =
-// 				RESULT.submodules.infinite.recursiveIndexationInfFields()(
-// 					a,
-// 					lastNumIndexes.slice(undefined, index)
-// 				)
-// 		}
-
-// 		return a
-
-// 	},
-// }
-
 // // TODO: when putting out into the higher scope [RESULT.submodules.infinite], pray generalize - not just these general array types and counters [these'd get used in this particular version...];
 // // ? Keep these 2 as a part of 'submodules.infinite'?
 // // * Decided: yes! Add them, here [when generalizing], pray replace with the general constructions for this stuff...
@@ -5329,4 +5233,84 @@ export function activate(transformation = ID) {
 // 	reversed: true
 // }).function
 
-// return A
+// ! OLD GENERAL NOTES [previously within the 'activate' function...]:
+
+// ^ IDEA: class extensions;
+// * These are just the same plain old classes, with the ability for user to arbitrarily extend them;
+// * Everything - the defaults list, the methods list, can be changed, extended;
+// todo: pray create a general structure for them and then re-do everything appropriate in a manner allowing for this particular kind of thing;
+// ? Mayhaps, merge with the idea for inheritances-extensions of stuff like 'infinite'? [Been a todo there somewhere, pray find...]
+
+// TODO: later, consider deeply the use of each and every type of abstraction/notation; Think through how things are affected by it...
+// * Example: use of '() => {}' (arrow-functions), or 'function () {}' (plain anonymous functions); Or, use of 'class' or 'function'; Degree and cases of use of native JS 'this' variable...
+//  And some such stuff... Pray consider
+
+// TODO: work extensively on the general possibilities of each and every method/class within the library... make it possible to easily create most exotic manner of things with it...
+
+// TODO [general]: change the stuff like 'function A (a) {return B({...sometemplatehere})(a)}' to 'const A = B({...sometemplatehere})'; In other words, use aliases for pre-computation of the values for things...
+
+// todo [general]: ensure that all the defaults for ALL the [templated] functions configurable useing the 'templates'...
+
+// TODO [general] : check the correspondence of use with the definition of the methods within the library...
+
+// ! Clean-up later;
+// [Parts of the Grand Cleanup]:
+// % 1. (get rid of)/refactor the repeating notes;
+// todo: work on the names for the objects in question [should this not be under the 'names' todo done before?]
+// * That'd be the general structure of any templated method within the library...
+// % 2. Notation/Conventions; [Currently - nigh the second biggest problem after not working code, one yet without a solution] Decide on notation and conventions - what should library use, where in particular;
+// % 3. Generalization; Note completeion;
+// * One completes all the notes, related to 'generalize'/'fix'/'complete', and so on... All the unfinished stuff that is separate of all else ['modular'], gets completed;
+// % 4. Stuff related to forming the particular picture of the library in question...
+
+// TODO: replace all the functional implementations of functions with imperative ones; for: 1. they may run forever; 2 [of which 1 is a consequence, really]. they do not rely on JS stack;
+// * The functional ones get to be kept as a memento within the Git repo's memory...
+
+// TODO [very-very general; later-stage]: Pray conduct a thorough read-through of all the code, once the in-editor documentation has been written and the first sketches has been written;
+// * Also, note - base the new GitHub Wiki-documentation on the in-editor documentation...
+
+// TODO [cleaning up]: create short-hands for things [where possible; stuff like 'this.this.this.this.class.template.class.template.icclass.comparison' don't get to be shortened (functional concerns)]...
+
+// TODO: during the generalization procedures a lot of stuff have become terminally broken. Make another such "round" through the code, fixing anything that's broken due to generalizaiton [as always, probably won't fix all the cases, but some/most];
+
+// TODO: think about errors - which, where, when and how to throw; What error messages, whether it could be generalized instead in a fashion that one would within one's chosen interpretation consider favorable, and on and on...
+
+// TODO [general]: where appropriate, replace the native API usage with the library API usage...
+
+// todo [general]: work on the lists of static methods for classes; Make implementation for them all...
+
+// TODO: restore the old order of following within the library -- aliases, constants, classes, functions, one big export; Currently, it's a mess...
+// TODO: compare the final '_ver10.mjs' file with the previous version 'math-expressions.js' file; make it a complete superset [if ever anything got completely thrown out - revive as a generalized version with an archaic special-case alias]
+
+// TODO: work on the names a lot; make it sound plausible to oneself...
+// TODO: work on the error messages...
+
+// TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
+// TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
+
+// TODO: do micro-optimizations; Spend some time on making the code generally more performant [without sacrificing any of the style or shortness/simlicity of it, of course];
+
+// TODO: read all the library's code all over and make it such as to be to one's liking -- utter and complete;
+// * Get rid of unwanted explicit type conversions...
+// * Get rid of unwanted "const"'s
+// * Get rid of 'let's that can become 'const's [and one wants them to]
+// * Get rid of 'const's that can become results of doing ((c1, ...) => {...[code]})(...arrOfPrevConsts);
+// * Generalize the code [along with making it more compact], simplify constructs...
+
+// * Make good use of stack; [Id est, try to save it; use elementary tools not relying upon it; This will allow to make better use of the methods, whose 'power/usefulness' relies upon the stack...]
+
+// * Some general independant ideas to add to the project...
+// ^ IDEA: perhaps, add a way of setting which methods should and which should not appear within a class???; thing like {[x: string]: [b: 0 | 1]}; if 0, delete, if 1 keep;
+
+// TODO: after having finished most everything within the first prototype, pray create all manner of crazy beautiful ideas and scenarios of use to support for methods in question;
+// * Generalize the stuff heavily; [ESPECIALLY] if the use of the methods/functions/classes/objects/structures/whatever in question within the library itself does not require it...
+
+// todo: new things to add:
+// * 1. more beautiful in their simplicity number-theoretic functions...;
+
+// TODO: more things to do (generally; in a 'planned' order):
+// * 1. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
+// * 2. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
+
+// TODO [general] : order things within the 'activate' function and the 'RESULT' definition in particularly;
+// TODO [general] : pray fix all the names issues [take all the old names and replace them with new ones - same with the old methods definitions - renew, renew, renew!];

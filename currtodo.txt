@@ -185,6 +185,38 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 								Until then - the current originals...
 	
 
+1.1. THE OUTLINE OF THE LIBRARY STRUCTURE [compilation]: 
+
+	As a result of comprehension that the previous 1.0 note was slightly too confused now, one's redoing it as a single note... 
+
+		RESULT: {
+			main: {
+				// 'Main' stuff - functions and classes, categorized by general objects sometimes
+			}, 
+			variables: {
+				// 'Get-set'-type object-variables go here...
+			}, 
+			aliases: {
+				// ? question: rename to 'types' instead? 
+				native: {
+					// Stuff related to native types aliases
+					// Separates onto : 
+
+						string: {}, 
+						array: {}, 
+						object: {}, 
+						number: {
+							integer: {
+								// Subset of '.number' related to simple yet powerful number-theoretic integer-related stuff...
+							}
+						},
+						function: {}, 
+						boolean: {}
+				}
+				// Stuff that is pure aliases to 'main', or very things general like 'id' or 'refCompare', which don't fit in with the '.types' (.native) field...
+			}
+		}
+
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
 	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
 	2.2. Decide what to do with the merging of 'RESULT.constants' and 'RESULT.globals' and 'RESULT.defaults' into something like 'RESULT.variables'; Decide about the 'variables' structure;
