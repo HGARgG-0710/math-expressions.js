@@ -24,6 +24,7 @@ export const VARIABLE = TYPED_VARIABLE()
 
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'activate' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
+// ? Maybe name this thign somehow differently? [For example - 'instance' is good, no?]
 export function activate(transformation = ID) {
 	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
 	const RESULT = {
@@ -32,7 +33,7 @@ export function activate(transformation = ID) {
 			// todo: work extensively on the precise list of aliases... Also, their names...
 
 			// ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
-			// TODO [general] : work on the spacing - all the definition lines must have a 1-spacing between each other [for readability];
+			// TODO [general] : work on the spacing - all the definition lines must have a 1-spacing between each other [for readability]; The non-definition lines ('a:b' - pure aliases) ought to be 'grouped' without such a spacing;
 			native: {
 				number: {
 					numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
@@ -336,14 +337,22 @@ export function activate(transformation = ID) {
 					stoa(x = "") {
 						return x.split("")
 					},
+
 					atos(x = []) {
 						return x.join("")
 					},
+
 					fcc: String.fromCharCode,
+
 					strMap: function (str, symb = ID, isStrOut = false) {
 						return (isStrOut ? (x) => x.join("") : RESULT.aliases.id)(
 							str.split("").map(symb)
 						)
+					},
+
+					// * Replace the first occurence of a given value within a string...
+					sreplaceFirst: function (string, x, y) {
+						return RESULT.aliases.native.string.sreplaceIndexes(string, x, y)
 					}
 				},
 
@@ -401,9 +410,30 @@ export function activate(transformation = ID) {
 					replaceIndex: function (arr, index, value) {
 						return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 					},
-					// ! stuff from 'methods:' goes here...
+
+					// TODO: write a generalization for multiple values and index-positions...
+					replaceIndexes: function (arr, x, y, indexes = [0]) {
+						// TODO [here, and generally]: use the 'comparison' properly in 'aliases';
+						return RESULT.aliases.native.array
+							.splitArr(arr, x)
+							.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
+							.flat()
+					},
+
+					// * Replaces all occurences of 'x' with 'y';
+					replace: function (arr, x, y) {
+						return RESULT.aliases.native.array.replaceIndexes(
+							arr,
+							x,
+							y,
+							generate(1, arr.length)
+						)
+					},
+					// ! array stuff from 'methods:' goes here...
 
 					hasArrays: function (array = []) {
+						// TODO: create an alias for such 'common' type expressions [like 'isarr(x) := x instanceof Array'];
+						// * Would also to avoid working with some funny parts of JS [like 'typeof [] == "object"', typeof not being sufficient for determination of certain aspects of the objects' nature];
 						return !!max(array.map((a) => a instanceof Array))
 					},
 
@@ -444,17 +474,26 @@ export function activate(transformation = ID) {
 							: [...arr]
 					},
 
-					splitArr: function (arr, el, comparison) {
+					// TODO: make the 'refCompare' a default comparison in cases like this (lonely utility methods);
+					splitArr: function (arr, el, comparison = RESULT.aliases.refCompare) {
 						const segments = []
 						let begInd = 0
 						let endInd = 0
 						for (let i = 0; i < arr.length; i++)
 							if (comparison(el, arr[i])) {
-								begInd = endInd + Number(Boolean(endInd))
+								begInd = endInd + (endInd > 0)
 								endInd = i
 								segments.push([begInd, endInd])
 							}
 						return segments.map((seg) => arr.slice(...seg))
+					},
+
+					// ? rewrite via repeatedApplication?
+					// TODO [general]: decide where and for what to use methods 'f(...) {...}', where functions-properties 'f: function(...) {...}' and where arrow-function-parameters 'f: (...) => {...}';
+					joinArrs(arrs = [], separator = null) {
+						let final = []
+						for (const arr of arrs) final = final.concat([...arr, separator])
+						return final
 					},
 
 					// * "guts" the first layer inner arrays into the current one...
@@ -650,6 +689,43 @@ export function activate(transformation = ID) {
 								])
 
 						return pnext
+					},
+
+					// * For iteration over an array; this thing is index-free; handles them for the user;
+					// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
+					// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
+					IterableSet: class {
+						curr() {
+							return Array.from(this.elements.values())[this.currindex]
+						}
+						updateIndex(change = 1) {
+							this.currindex =
+								(this.currindex + change) % this.elements.size
+						}
+						prev() {
+							this.updateIndex(-1)
+							return this.curr()
+						}
+						next() {
+							this.updateIndex()
+							return this.curr()
+						}
+						add(x) {
+							return this.elements.add(x)
+						}
+						has(x) {
+							return this.elements.has(x)
+						}
+						get size() {
+							return this.elements.size
+						}
+						delete(x) {
+							return this.elements.delete(x)
+						}
+						constructor(elems = new Set([])) {
+							this.currindex = 0
+							this.elements = elems
+						}
 					}
 				},
 
@@ -689,6 +765,203 @@ export function activate(transformation = ID) {
 							},
 							function: function (f = this.template.deff) {
 								return (x) => this.template.out(f(this.template.in(x)))
+							}
+						}
+					},
+
+					expression: {
+						// ? Where does that go [all the old Expression(s) API generalized]?
+						// * Creates a function for execution of operations based on the given operations table...;
+						op: function (template = {}) {
+							return {
+								template: {
+									defop: undefined,
+									defobjs: [],
+									optable: RESULT.variables.defaultTable.get,
+									...template
+								},
+								function: function (
+									operator = this.template.defop,
+									objects = this.template.defobjs
+								) {
+									// ? Create some kind of a shortcut (alias) for this thing?
+									return Object.values(this.template.optable)
+										.map((x) => x[0])
+										[
+											Object.keys(this.template.optable).indexOf(
+												operator
+											)
+										](...objects)
+								}
+							}
+						},
+
+						/**
+						 * This class represents a mathematical arithmetic expression.
+						 *
+						 * It can also come in helpful when evaluating the same expression various number of times.
+						 */
+						Expression: function (template = {}) {
+							return {
+								template: {
+									optable: RESULT.variables.defaultTable.get,
+									...template
+								},
+								class: function (
+									objects = [],
+									operators = [],
+									indexes = operators.map(RESULT.aliases._const(0))
+								) {
+									return {
+										this: this,
+										objects: objects,
+										operators: operators,
+										indexes: indexes,
+										/**
+										 * Just a wrapper for fullExp() function. Watch documentation for it.
+										 */
+										execute() {
+											return fullExp(this.this.template).function(
+												this.operators,
+												this.objects,
+												this.indexes
+											)
+										},
+										// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
+										// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
+										/**
+										 * Wrapper for repeatExp() function. Watch documentation for it.
+										 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
+										 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
+										 */
+										repeat(operator, times = 1) {
+											return repeatExp(this, operator, times)
+										},
+										// ! Problem: how does one handle different-table merges? What about naming conflicts? How should they be resolved [if at all?];
+										merge(expression) {
+											for (const x of [
+												"operators",
+												"objects",
+												"indexes"
+											])
+												this[x] = this[x].concat(expression[x])
+										}
+									}
+								}
+							}
+						},
+
+						// Executes an expression;
+						fullExp: function (template = {}) {
+							return {
+								template: {
+									optable: RESULT.variables.defaultTable.get,
+									...template
+								},
+								function: function (
+									operators = [],
+									objects = [],
+									indexes = operators.map(RESULT.aliases._const(0))
+								) {
+									// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
+									return repeatedApplication(
+										(double, i) => {
+											let hasMet = false
+											return [
+												// ? Should it use 'this.template' for 'exp' here instead?;
+												// * Consider more generally on the library-scale...
+
+												// ! Write an alias for this 'argument-compilation' procedure from the 'fullExpr'...
+												exp({
+													optable: this.template.optable
+												}).function(
+													operators[i],
+													generate(
+														0,
+														this.template.optable[
+															operators[i]
+														][1] - 1
+													).map((j) => {
+														if (j == indexes[i]) {
+															hasMet = i > 0
+															return double[0]
+														}
+														return objects[
+															double[1] + j - hasMet
+														]
+													})
+												),
+												double[1] +
+													this.template.optable[
+														operators[i]
+													][1] -
+													1
+											]
+										},
+										operators.length,
+										[objects[0], 1]
+									)[0]
+								}
+							}
+						},
+
+						// ? Consider refactoring [couldn't it be rewritten via fullExp];
+						repeatExp: function (template = {}) {
+							return {
+								template: {
+									optable: RESULT.variables.defaultTable.get,
+									...template
+								},
+								function: function (
+									args,
+									indexes,
+									roperator,
+									repetitions = 1
+								) {
+									return repeatedApplication(
+										(r, i) => {
+											let hasMet = false
+											return RESULT.aliases.native
+												.op(this.template)
+												.function(
+													roperator,
+													generate(
+														0,
+														this.optable[roperator][1] - 1
+													).map((x) => {
+														if (x == indexes[i]) {
+															hasMet = i > 0
+															return r
+														}
+														return otherargs[i][x - hasMet]
+													})
+												)
+										},
+										repetitions,
+										args[0][0]
+									)
+								}
+							}
+						},
+
+						repeatedOperation: function (template = {}) {
+							return {
+								template: {
+									optable: RESULT.variables.defaultTable.get,
+									...template
+								},
+								function: function (
+									operator,
+									objects = [],
+									indexes = objects.map(RESULT.aliases._const(0))
+								) {
+									return Expression(this.template)
+										.class(
+											objects,
+											objects.map(RESULT._const(operator), indexes)
+										)
+										.execute()
+								}
 							}
 						}
 					}
@@ -815,6 +1088,24 @@ export function activate(transformation = ID) {
 						return RESULT.main
 							.valueCompare()
 							.function(...args.map(Object.keys))
+					},
+
+					// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
+					// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
+					// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
+					// TODO: extend this thing (add more stuff to it, create powerful extensions)
+					// ! rewrite using the repeatedApplication...
+					recursiveIndexation: function (object = {}, fields = []) {
+						let res = object
+						for (const f of fields) res = res[f]
+						return res
+					},
+
+					recursiveSetting: function (object = {}, fields = [], value = null) {
+						return (recursiveIndexation(
+							object,
+							fields.slice(0, fields.length - 1)
+						)[fields[fields.length - 1]] = value)
 					}
 				},
 
@@ -823,6 +1114,7 @@ export function activate(transformation = ID) {
 				},
 
 				// ! What to do with these two? The 'Vector' has been [at large] destroyed; Work with this thing [mostly] corresponds to the further work on 'Vectors and Matricies' part of the libary...
+				// ^ CONCLUSION: return here only after having worked on the '.classes' leftovers (the stuff regarding the 'linear' part of the library...);
 				// ? Should one also add one that is related to exotic-shape-things? (Consider)
 				Matrix: function (
 					vector,
@@ -870,236 +1162,6 @@ export function activate(transformation = ID) {
 						type: defaultElems[0],
 						transform: transform[0]
 					})
-				},
-
-				// ? Where does that go [all the old Expression(s) API generalized]?
-				// * Creates a function for execution of operations based on the given operations table...;
-				op: function (template = {}) {
-					return {
-						template: {
-							defop: undefined,
-							defobjs: [],
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (
-							operator = this.template.defop,
-							objects = this.template.defobjs
-						) {
-							// ? Create some kind of a shortcut (alias) for this thing?
-							return Object.values(this.template.optable)
-								.map((x) => x[0])
-								[Object.keys(this.template.optable).indexOf(operator)](
-									...objects
-								)
-						}
-					}
-				},
-
-				/**
-				 * This class represents a mathematical arithmetic expression.
-				 *
-				 * It can also come in helpful when evaluating the same expression various number of times.
-				 */
-				Expression: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						class: function (
-							objects = [],
-							operators = [],
-							indexes = operators.map(RESULT.aliases._const(0))
-						) {
-							return {
-								this: this,
-								objects: objects,
-								operators: operators,
-								indexes: indexes,
-								/**
-								 * Just a wrapper for fullExp() function. Watch documentation for it.
-								 */
-								execute() {
-									return fullExp(this.this.template).function(
-										this.operators,
-										this.objects,
-										this.indexes
-									)
-								},
-								// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
-								// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
-								/**
-								 * Wrapper for repeatExp() function. Watch documentation for it.
-								 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
-								 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
-								 */
-								repeat(operator, times = 1) {
-									return repeatExp(this, operator, times)
-								},
-								// ! Problem: how does one handle different-table merges? What about naming conflicts? How should they be resolved [if at all?];
-								merge(expression) {
-									for (const x of ["operators", "objects", "indexes"])
-										this[x] = this[x].concat(expression[x])
-								}
-							}
-						}
-					}
-				},
-
-				// Executes an expression;
-				fullExp: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (
-							operators = [],
-							objects = [],
-							indexes = operators.map(RESULT.aliases._const(0))
-						) {
-							// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
-							return repeatedApplication(
-								(double, i) => {
-									let hasMet = false
-									return [
-										// ? Should it use 'this.template' for 'exp' here instead?;
-										// * Consider more generally on the library-scale...
-
-										// ! Write an alias for this 'argument-compilation' procedure from the 'fullExpr'...
-										exp({ optable: this.template.optable }).function(
-											operators[i],
-											generate(
-												0,
-												this.template.optable[operators[i]][1] - 1
-											).map((j) => {
-												if (j == indexes[i]) {
-													hasMet = i > 0
-													return double[0]
-												}
-												return objects[double[1] + j - hasMet]
-											})
-										),
-										double[1] +
-											this.template.optable[operators[i]][1] -
-											1
-									]
-								},
-								operators.length,
-								[objects[0], 1]
-							)[0]
-						}
-					}
-				},
-
-				// ? Consider refactoring [couldn't it be rewritten via fullExp];
-				repeatExp: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (args, indexes, roperator, repetitions = 1) {
-							return repeatedApplication(
-								(r, i) => {
-									let hasMet = false
-									return RESULT.aliases.native
-										.op(this.template)
-										.function(
-											roperator,
-											generate(
-												0,
-												this.optable[roperator][1] - 1
-											).map((x) => {
-												if (x == indexes[i]) {
-													hasMet = i > 0
-													return r
-												}
-												return otherargs[i][x - hasMet]
-											})
-										)
-								},
-								repetitions,
-								args[0][0]
-							)
-						}
-					}
-				},
-
-				repeatedOperation: function (template = {}) {
-					return {
-						template: {
-							optable: RESULT.variables.defaultTable.get,
-							...template
-						},
-						function: function (
-							operator,
-							objects = [],
-							indexes = objects.map(RESULT.aliases._const(0))
-						) {
-							return Expression(this.template)
-								.class(
-									objects,
-									objects.map(RESULT._const(operator), indexes)
-								)
-								.execute()
-						}
-					}
-				},
-
-				// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
-				// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
-				// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
-				// TODO: extend this thing (add more stuff to it, create powerful extensions)
-				// ! rewrite using the repeatedApplication...
-				recursiveIndexation: function (object, fields) {
-					let res = object
-					for (const f of fields) res = res[f]
-					return res
-				},
-
-				recursiveSetting: function (object, fields, value) {
-					return (recursiveIndexation(
-						object,
-						fields.slice(0, fields.length - 1)
-					)[fields[fields.length - 1]] = value)
-				},
-
-				// * For iteration over an array; this thing is index-free; handles them for the user;
-				// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-				// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
-				IterableSet: class {
-					curr() {
-						return Array.from(this.elements.values())[this.currindex]
-					}
-					updateIndex(change = 1) {
-						this.currindex = (this.currindex + change) % this.elements.size
-					}
-					prev() {
-						this.updateIndex(-1)
-						return this.curr()
-					}
-					next() {
-						this.updateIndex()
-						return this.curr()
-					}
-					add(x) {
-						return this.elements.add(x)
-					}
-					has(x) {
-						return this.elements.has(x)
-					}
-					get size() {
-						return this.elements.size
-					}
-					delete(x) {
-						return this.elements.delete(x)
-					}
-					constructor(elems = new Set([])) {
-						this.currindex = 0
-						this.elements = elems
-					}
 				}
 			},
 
@@ -3668,9 +3730,23 @@ export function activate(transformation = ID) {
 						// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
 						// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
 						// Implemented below...;
+						// TODO: work further on the proper 'UnlimitedString' instance structure - how does one want it exactly...
+						// * Namely - [There must be a way to copy it]; Generally, consider the copying procedures for the objects of the library in question... [Decide a good general way for copying things;]
 						const X = {
+							class: this,
 							this: {
-								string: this.template.genarrclass.static.empty()
+								string: this.template.genarrclass.static.empty(),
+								join(separator = this.this.class.template.empty) {
+									// TODO: implement a general algorithm for 'merging' the arrays - 'combining' them in precisely this fashion; Then, reimplement this thing via it...
+									let renewed =
+										this.this.class.template.genarrclass.static.empty()
+									this.this.this.loop()._full((x) => {
+										renewed.pushback(x.object().current)
+										renewed.pushback(separator)
+									})
+									this.this.this.string = renewed
+									return
+								}
 							}
 						}
 						X.this.this = X
@@ -4560,9 +4636,10 @@ export function activate(transformation = ID) {
 				return C
 			},
 
-			// ! These 2 get 'poured out' into the 'main' field;
+			// ! These 2 get 'poured out' into the 'main' and other fields of the 'RESULT';
 			methods: {
-				// ^ DECISION: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+				// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+				// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
 				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
 
 				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
@@ -4592,23 +4669,6 @@ export function activate(transformation = ID) {
 				},
 
 				// * 2.
-				// * Replace the first occurence of a given value within a string...
-				stringReplaceFirst: function (string, x, y) {
-					return stringReplaceIndexes(string, x, y)
-				},
-				// * replaces occurences of a value within a string at the given posiitons...
-				// TODO: write a generalization for multiple values and index-positions...
-				stringReplaceIndexes: function (string, x, y, indexes = [0]) {
-					return string
-						.split(x)
-						.map((a, i) => [a, indexes.includes(i) ? y : x])
-						.flat()
-						.join("")
-				},
-				// * Replaces all occurences of 'x' with 'y';
-				stringReplace: function (string, x, y) {
-					return string.split(x).join(y)
-				},
 				// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
 				replaceStrMany: function (string, x, y) {
 					// ! This thing ought to be generalized to a separate method...
@@ -5142,10 +5202,18 @@ export function activate(transformation = ID) {
 	// ? Does one want to keep this as this sort of an alias, pray?
 	RESULT.variables.MAX_STRING_LENGTH = RESULT.variables.MAX_INT
 
-	RESULT.aliases.string.strmethod = RESULT.aliases.function.wrapper({
+	RESULT.aliases.native.string.strmethod = RESULT.aliases.function.wrapper({
 		in: RESULT.aliases.string.stoa,
 		out: RESULT.string.atos
 	}).function
+
+	RESULT.aliases.native.string.sreplaceIndexes = RESULT.aliases.native.string.strmethod(
+		RESULT.aliases.native.array.replaceIndexes
+	)
+
+	RESULT.aliases.native.string.sreplace = RESULT.aliases.native.string.strmethod(
+		RESULT.aliases.native.array.replace
+	)
 
 	/**
 	 * * Returns the function returning the logical negation of the output of the function passed relative to the input of the newly passed argument;
@@ -5179,18 +5247,6 @@ export function activate(transformation = ID) {
 	RESULT.main.flatCopy = RESULT.main.copyFunction({
 		list: ["arrayFlat", "objectFlat", "function", "symbol"]
 	})
-
-	// TODO: rewrite the docs...
-	// ! Start by deleting the old docs [those that are completely off what the thing in question is about now...]; the rest - pray rewrite [either on-the-spot, or a tad later...]
-	// * Begin with small and simple stuff that's been mostly finished on conceptual level ; Things like copying functions, examplified...
-	// ^ IDEA: let each and every in-editor documentation bit possess a link to the definition of the thing in question [in GitHub repo, for instance???], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose [along with using full spectre of JSDoc notation, perhaps???];
-	// Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
-	// * The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though];
-
-	// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
-	// * Would come in handy in one of one's projects...
-
-	// TODO: generalize further (f, obj, depth) => ... [would with depth 'depth', map 'f' to keys/values of an object...]
 
 	// * Module Export
 	return transformation(RESULT)
@@ -5314,3 +5370,15 @@ export function activate(transformation = ID) {
 
 // TODO [general] : order things within the 'activate' function and the 'RESULT' definition in particularly;
 // TODO [general] : pray fix all the names issues [take all the old names and replace them with new ones - same with the old methods definitions - renew, renew, renew!];
+
+// TODO: rewrite the docs...
+// ! Start by deleting the old docs [those that are completely off what the thing in question is about now...]; the rest - pray rewrite [either on-the-spot, or a tad later...]
+// * Begin with small and simple stuff that's been mostly finished on conceptual level ; Things like copying functions, examplified...
+// ^ IDEA: let each and every in-editor documentation bit possess a link to the definition of the thing in question [in GitHub repo, for instance???], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose [along with using full spectre of JSDoc notation, perhaps???];
+// Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
+// * The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though];
+
+// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
+// * Would come in handy in one of one's projects...
+
+// TODO: generalize further (f, obj, depth) => ... [would with depth 'depth', map 'f' to keys/values of an object...]
