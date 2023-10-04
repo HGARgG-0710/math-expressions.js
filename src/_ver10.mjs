@@ -429,7 +429,33 @@ export function activate(transformation = ID) {
 							generate(1, arr.length)
 						)
 					},
-					// ! array stuff from 'methods:' goes here...
+
+					multArrsRepApp(template = {}) {
+						return {
+							template: { n: 1, default: null, ...template },
+							function: function (x = this.template.default) {
+								const args = Array.from(arguments).slice(
+									1,
+									this.template.n + 1
+								)
+								// TODO: generalize this construction pray...
+								const defobj = {}
+								for (
+									let i = arguments.length;
+									i < this.template.n + 1;
+									i++
+								)
+									defobj[i] = []
+								ensureProperties(args, defobj)
+								return repeatedApplication(
+									(v, i) =>
+										this.template.f(v, ...args.map((x) => x[i])),
+									Math.min(...args.map((a) => a.length)),
+									x
+								)
+							}
+						}
+					},
 
 					hasArrays: function (array = []) {
 						// TODO: create an alias for such 'common' type expressions [like 'isarr(x) := x instanceof Array'];
@@ -4636,51 +4662,7 @@ export function activate(transformation = ID) {
 				return C
 			},
 
-			// ! These 2 get 'poured out' into the 'main' and other fields of the 'RESULT';
-			methods: {
-				// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
-				// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
-				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-
-				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
-				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
-
-				// TODO: generalizes and then merge those with the array methods;
-				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
-				// * ANSWER - yes, why not.
-				// They'll either be:
-				// 		1. references to the array methods...
-				// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
-
-				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
-
-				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
-
-				// ! Needs generalizational work [getting rid of unwanted repeats..., working heavily with naming conventions... yada yada yada]
-				// * 1.
-				// * Replaces at 1 index;
-				// ! Generalize!
-				replaceIndexesMult: function (arr = [], inds = [], values = []) {
-					return repeatedApplication(
-						(val, i) => replaceIndex(val, inds[i], values[i]),
-						Math.min(inds.length, values.length),
-						arr
-					)
-				},
-
-				// * 2.
-				// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
-				replaceStrMany: function (string, x, y) {
-					// ! This thing ought to be generalized to a separate method...
-					return repeatedApplication(
-						(v, i) => stringReplace(v, x[i], y[i]),
-						Math.min(x.length, y.length),
-						string
-					)
-				}
-
-				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
-			},
+			// ! This one get 'poured out' into the 'main' and other fields of the 'RESULT';
 			classes: {
 				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead.
 				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
@@ -5113,7 +5095,7 @@ export function activate(transformation = ID) {
 				}
 			},
 
-			// ! Finish the todos + stuff listed in here, then 'pour out' the rest; Otherwise, finished [first ever sketch...]
+			// ! Finish the todos + stuff listed in these two, then 'pour out' the rest (what isn't finished, otherwise nothing to pour out); Otherwise, finished [first ever sketch...]
 			submodules: {
 				infinite: {
 					// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
@@ -5140,7 +5122,23 @@ export function activate(transformation = ID) {
 
 					// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 				}
-			}
+			}, 	
+			methods: {
+				// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+				// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
+				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
+				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
+				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
+				// TODO: generalizes and then merge those with the array methods;
+				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
+				// * ANSWER - yes, why not.
+				// They'll either be:
+				// 		1. references to the array methods...
+				// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
+				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
+				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
+				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
+			},
 		},
 		variables: {
 			// ? Add more stuff here? (This table was originally supposed to be like a small calculator for binary things...)
@@ -5231,6 +5229,31 @@ export function activate(transformation = ID) {
 
 	REUSLT.aliases.native.string.sreplaceIndex = RESULT.aliases.native.string.strmethod(
 		RESULT.aliases.native.array.replaceIndex
+	)
+
+	// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
+	// * 1.
+	// * Replaces at 1 index;
+	RESULT.aliases.native.array.replaceIndexesMult =
+		RESULT.aliases.native.array.multArrsRepApp({
+			n: 2,
+			f: RESULT.aliases.native.array.replaceIndex,
+			default: []
+		}).function
+	RESULT.aliases.native.string.sreplaceIndexesMult =
+		RESULT.aliases.native.string.strmethod(
+			RESULT.aliases.native.array.repalceIndexesMult
+		)
+
+	// * 2.
+	// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
+	RESULT.aliases.native.array.replaceMany = RESULT.aliases.native.array.multArrsRepApp({
+		n: 2,
+		f: RESULT.aliases.native.array.replace,
+		default: []
+	}).function
+	RESULT.aliases.native.string.sreplaceMany = RESULT.aliases.native.string.strmethod(
+		RESULT.aliases.native.array.replaceMany
 	)
 
 	// * Copies an object/array deeply...

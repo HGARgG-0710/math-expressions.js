@@ -217,6 +217,9 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 			}
 		}
 
+	The outline of the library's structure's almost finished!
+	Now, all that's left is the linear part, hardcore alias-relinkage, small polishing and code-brushing, and testing-fixing! 
+
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
 	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
 	2.2. Decide what to do with the merging of 'RESULT.constants' and 'RESULT.globals' and 'RESULT.defaults' into something like 'RESULT.variables'; Decide about the 'variables' structure;
