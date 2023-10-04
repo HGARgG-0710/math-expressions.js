@@ -5,7 +5,6 @@
  */
 
 // Space for the local constants... [used for semantics and simplification of development/code-reading];
-// ? Should one export them as well? If so, should one export them separately or as a part of 'activate'?
 
 export const ID = (a) => a
 
@@ -22,10 +21,22 @@ export const TYPED_VARIABLE =
 
 export const VARIABLE = TYPED_VARIABLE()
 
-// TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'activate' function;
+// ? Created this idea for the '.class' structure; Does one want to have it within the libarary? [Could be used extensively across it...];
+// * Allows to do things like:
+// X: CLASS({...}, function (...) {... (here, 'this' refers to the class object)})
+// * It's good; Yes, one might keep it and use it;
+// ! If keep, use actively across the entire library...
+export const CLASS = function (defaults = {}, C = ID) {
+	return function (template = {}) {
+		const _class = { template: { ...defaults, ...template } }
+		_class.class = C.bind(_class)
+		return _class
+	}
+}
+
+// TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
-// ? Maybe name this thign somehow differently? [For example - 'instance' is good, no?]
-export function activate(transformation = ID) {
+export function instance(transformation = ID) {
 	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
 	const RESULT = {
 		// ? Should 'aliases' get renamed into 'semantic'? Or something else? Think, pray...
@@ -71,6 +82,9 @@ export function activate(transformation = ID) {
 						return changeStr
 					},
 
+					// TODO: generalize this HEAVILY - instead of just numbers [as in addnumber], pray make it possible to do this thing with ANY generator -
+					// * Id est, getting an array of [f(s), f(f(s)), f(f(f(s))), ...] and so on forever; Generalize to a GeneralArray (so that one could have arbitrarily long sequences of generators like so);
+					// [Maybe] Keep this thing as a nice special case util of that new generalized version;
 					/**
 					 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
 					 * @param {number} start Start number in array(it's supposed to be the least number in it)
@@ -438,7 +452,7 @@ export function activate(transformation = ID) {
 									1,
 									this.template.n + 1
 								)
-								// TODO: generalize this construction pray...
+								// TODO: generalize this construction somehow conviniently pray...
 								const defobj = {}
 								for (
 									let i = arguments.length;
@@ -592,6 +606,7 @@ export function activate(transformation = ID) {
 					// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
 
 					// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
+					// ! Rewrite the structure of that thing capitally - comparison, a templated variable, whilst 'arrs' becomes '...arrs';
 					arrIntersections: function (arrs, comparison = (a, b) => a === b) {
 						if (arrs.length === 0) return []
 						if (arrs.length === 1) return arrs[1]
@@ -3780,7 +3795,7 @@ export function activate(transformation = ID) {
 						for (const x of Object.keys(X.this.string))
 							X.this[x] = function (...args) {
 								return this.this.this.string[x](...args)
-							}
+							}.bind(X)
 						X.this.append(string)
 						return X
 					}
@@ -4672,6 +4687,54 @@ export function activate(transformation = ID) {
 				// 	3. Fixes, fixes, fixes! [Fix the problems with the old code]:
 				// 	4. Heavy aliases usage requested;
 
+				// * For this thing, one requires [in the first place], a general model for extension of templated classes with new methods by means of wrappers;
+				// The exact same thing as with the UnlimitedString;
+				// One requires a general system;
+				// ? How about ['extension']: 
+				// * Good; 
+				// ! Think about what to do with the 'this.this.this' architecture - it's so wonderful; 
+				extension(template = {}) {
+					return {
+						template: {
+							name: "proto",
+							methods: {},
+							defaults: { constructor: [], methods: {} },
+							toextend: [],
+							...template
+						},
+						class: function (...args) {
+							if (this.class.template.defaults.constructor)
+								ensureProperties(
+									args,
+									this.class.template.defaults.constructor
+								)
+								
+							const X = {
+								class: this,
+								[this.template.name]: this.template.class.class(...args),
+								...methods
+							}
+
+							const extkeys = RESULT.aliases.native.array.arrIntersections(
+								Object.keys(X[this.template.name]),
+								this.template.toextend
+							)
+							for (const x of extkeys)
+								X[x] = function (...args) {
+									if (this.class.template.defaults.methods[x])
+										ensureProperties(
+											args,
+											this.class.template.defaults.methods[x]
+										)
+
+									return this[this.class.template.name][x](...args)
+								}.bind(X)
+
+							return X
+						}
+					}
+				},
+
 				// TODO: rewrite; finish...
 				// * Current idea for a list of features:
 				// * 1. All number-related methods and features;
@@ -5122,7 +5185,7 @@ export function activate(transformation = ID) {
 
 					// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 				}
-			}, 	
+			},
 			methods: {
 				// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
 				// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
@@ -5138,7 +5201,7 @@ export function activate(transformation = ID) {
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
 				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
-			},
+			}
 		},
 		variables: {
 			// ? Add more stuff here? (This table was originally supposed to be like a small calculator for binary things...)
@@ -5312,7 +5375,7 @@ export function activate(transformation = ID) {
 // 	reversed: true
 // }).function
 
-// ! OLD GENERAL NOTES [previously within the 'activate' function...]:
+// ! OLD GENERAL NOTES [previously within the 'instance' function...]:
 
 // ^ IDEA: class extensions;
 // * These are just the same plain old classes, with the ability for user to arbitrarily extend them;
@@ -5391,7 +5454,7 @@ export function activate(transformation = ID) {
 // * 1. Write the in-editor JSDoc documentation (most would, probably, be done from scratch...)...
 // * 2. tidy up [round after round of read-through+change, with new notes and ideas, until one is happy enough to proceed further...] and, finally, test [implement the proper testing system for the user to have locally after having gotten the package...];
 
-// TODO [general] : order things within the 'activate' function and the 'RESULT' definition in particularly;
+// TODO [general] : order things within the 'instance' function and the 'RESULT' definition in particularly;
 // TODO [general] : pray fix all the names issues [take all the old names and replace them with new ones - same with the old methods definitions - renew, renew, renew!];
 
 // TODO: rewrite the docs...
