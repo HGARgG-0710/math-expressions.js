@@ -4693,6 +4693,7 @@ export function instance(transformation = ID) {
 				// ? How about ['extension']: 
 				// * Good; 
 				// ! Think about what to do with the 'this.this.this' architecture - it's so wonderful; 
+				// ? Where to even put it, by the way? 
 				extension(template = {}) {
 					return {
 						template: {
@@ -4735,165 +4736,25 @@ export function instance(transformation = ID) {
 					}
 				},
 
-				// TODO: rewrite; finish...
-				// * Current idea for a list of features:
-				// * 1. All number-related methods and features;
-				// * 2. Based on number-version of the Vector
-				NumberVector: class extends RESULT.Vector {
-					vectorScalarMultiply(vector) {
-						const main =
-							Math.max(this.length, vector.length) == vector.length
-								? vector
-								: this
-						const other = main.vector == vector.vector ? this : vector
-						return repeatedArithmetic(
-							other.vector.map((el, i) => el * main.vector[i]),
-							"+"
-						)
-					}
-					crossProduct(vector) {
-						if (this.length != 3 && this.length != 7)
-							throw new Error(
-								"Cross product is not defined for vectors, which lengths aren't 3 or 7. "
-							)
-						if (this.length != vector.length)
-							throw new Error(
-								"Trying to cross product vectors with different lengths. "
-							)
-						if (vector.length === 3)
-							return new Vector({
-								vectortypes: ["number"],
-								typefunction: 3,
-								type: [
-									this.vector[1] * vector.vector[2] -
-										vector.vector[1] * this.vector[2],
-									vector.vector[0] * this.vector[2] -
-										this.vector[0] * vector.vector[2],
-									this.vector[0] * vector.vector[1] -
-										this.vector[1] * vector.vector[0]
-								]
-							})
-						// TODO: Use the RectMatrix product formula on wikipedia page.
-					}
-					scalarMultiply(scalar) {
-						for (let i = 0; i < this._vector.length; i++)
-							this._vector[i] *= scalar
-					}
-					scalarAdd(scalar) {
-						for (let i = 0; i < this._vector.length; i++)
-							this._vector[i] += scalar
-					}
-					// TODO: add vector addition...
-				},
-				// * Current idea for the list of features:
-				// * 1. Arbitrarily shaped;
-				// * 2. Full of numbers;
-				// * 3. Can have user-defined operations for doing certain things with numbers;
-				// TODO: finish work on the number-related matricies... Fix the errors... Adapt the old code...
-				NumberMatrix: class extends RESULT.Vector {},
-				// * Current idea for the list of features:
-				// * 1. Only numbers ;
-				// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
-				// * 3. Rectangular-shaped;
-				RectNumberMatrix: class extends RESULT.NumberMatrix {
-					matrixMultiply(matrix) {
-						if (this.sidelen[0] !== matrix.sidelen[1])
-							throw new Error(
-								`Trying to multiply rectangular matrices with different values for width and height ${this.sidelen[0]} and ${matrix.sidelen[1]} correspondently. They must be equal.`
-							)
-						const copy = this.toArray()
-						const matrixCopy = matrix.toArray()
-						const result = copy.map(
-							RESULT._const(matrixCopy[0].map(RESULT._const(0)))
-						)
-						for (let i = 0; i < this.sidelen[1]; i++)
-							for (let j = 0; j < matrix.sidelen[0]; j++)
-								for (let k = 0; k < this.sidelen[0]; k++)
-									result[i][j] += copy[i][k] * matrix[k][j]
-						return new RectMatrix(
-							[matrix.sidelen[0], this.sidelen[1]],
-							result
-						)
-					}
-					// ! does one not want this to become a more generalized thing, like matrixOperator for example (one could attach this to op, then)?
-					addMatrix(matrix) {
-						// ! This should be thrown out, for user to implement...
-						// * The library should have 2 different "kinds" matricies -- generalized generic ones and those for Numbers (based on the first ones);
-						// * As an example: NumberRectMatrix and RectMatrix; NumberRectMatrix extends RectMatrix;
-						if (!arrayEquality(matrix.sidelen, this.sidelen))
-							throw new Error(
-								"Trying to add matrices with different lengths. "
-							)
-						// ! This here should be replaced with copying the thing (Question: should this be achieved via the constructor or via the deepCopy?)
-						// ? funny, this oughtn't have worked before... Is it another one of those bugs that didn't get fixed in math-expressions.js 0.8?
-						// * Current decision: use a deepCopy; That is because the constructor also checks for validity of a thing and one don't really care for that all that much...
-						// * Current decision: do not copy (ignore the previous one :D); This thing (general version) should simply run the 'op' with corresponding operator definitions table, operator and also Matricies;
-						// ! Considering the current development of things... Is it not best one gets rid of the old 'op' thing for good? As in... It all just comes down to getting a thing from a table
-						// * No, let it stay; one will do the next: try to change the operators tables definitions to (TODO: refactor this with other libraries later) {[a: string | symbol | number]: <anything extends any[], type = any>(x: anything) => type}
-						const thisCopy = new RectMatrix(this.sidelen, this.dimentions)
-						for (let i = 0; i < matrix.sidelen[0]; i++)
-							thisCopy.matrix[i].addVector(matrix.matrix[i])
-						return thisCopy
-					}
-					scalarAdd(scalar) {
-						for (let i = 0; i < this.sidelen[0]; i++)
-							this.matrix.index(i).scalarAdd(scalar)
-					}
-					scalarMultiply(scalar) {
-						for (let i = 0; i < this.sidelen[0]; i++)
-							this.matrix.index(i).scalarMultiply(scalar)
-					}
-				},
-				// * Current idea for the list of features:
-				// * 1. Only numbers ;
-				// * 2. Number-related methods present (they are classically defined by default, can be re-defined by the user...);
-				// * 3. Square-shaped;
-				SquareNumberMatrix: class extends RESULT.RectNumberMatrix {
-					/**
-					 * Finds the determinant of a square matrix it's invoked onto.
-					 */
-					determinant() {
-						function findAdditional(matrix, i, j) {
-							const final = matrix.matrix
-								.slice(1)
-								.vector.map(RESULT._const([]))
-							for (let index = 0; index < matrix.sidelen; index++)
-								for (let jndex = 0; jndex < matrix.sidelen; jndex++)
-									if (index !== i && jndex !== j)
-										final[index > i ? index - 1 : index].push(
-											matrix.toArray()[index][jndex]
-										)
-							return new SquareMatrix(final.length, final).determinant()
-						}
-						if (this.sidelen[0] < 2) {
-							if (this.sidelen[0] === 1) return this.navigate([0, 0])
-							return 0
-						}
-						if (this.sidelen[0] > 2) {
-							if (this.sidelen[0] === 1)
-								return this.matrix.index(0).index(0)
-							const matricesDeterminants = {}
-							let n = 0
-							let finale = 0
-							for (let j = 0; j < this.sidelen[0]; j++)
-								matricesDeterminants[this.navigate([0, j])] =
-									findAdditional(this, 0, j)
-							for (const pair in matricesDeterminants) {
-								finale +=
-									matricesDeterminants[pair] * Number(pair) * (-1) ** n
-								n++
-							}
-							return finale
-						}
-						return (
-							this.navigate([0, 0]) * this.navigate([1, 1]) -
-							this.navigate([1, 0]) * this.navigate([0, 1])
-						)
-					}
-				},
+				// Okay, assuming even one does have such a system - what algorithms exactly does one want to have within the 'linear' part of the library? 
+				// [One starts to seriously doubt the desire to actually do this at all]
+				// ! DOUBTS ABOUT THE LINEAR PART OF THE LIBRARY: 
+				// 	1. It's trivial; Really, this stuff'd be nothing more than just an empty wrapper-extension of the GeneralArray with various algorithms based off 'True' numbers of the library, that could easily have been implemented in any context at all; 
+				//  2 [addition to 1]. The domain; Intersects with previous one; The library is supposed to serve as a provider of a general domain for abstractions; This stuff is just... Far too specific; It's far more fit for a wider, more powerful library of a more specific-technical direction than this - the general-structuro-abstract one; 
+				//  3 [defense]. However, the 'matrix' [and generally - n-dimensional GeneralArray(s)] structures are very handy in representations of various complex multilayer abstract structures; 
+				// ? Question : delete it? 
+				// ^ CONCLUSION: the 'Vector' part of it certainly goes south; The Matricies get generalized to an NArray (multidimensional GeneralArrays' API), which'll also rewritten; 
+				// * But what about the 'number' stuff - shall one have specifically the cases of Matricies for those? 
+				// Pray consider...
+				// CURRENT DECISION: no, one shan't; They're very simple to implement within a context desired; Don't want to bother with it, plus it's (a bit) outside the library's context (if done at a sufficient degree of length into the subject)
+
+				// TODO: do the NArrays' API; 
+				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';  	
 
 				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
 				// * CURRENT IDEA FOR A NAME: NumberEquation... Or NumericEquation... Or something...
+				// ^ Generalize for arbitrary operators; Not just the '["+", "*", "/", "-", "^"]'; Let it be more general; Allow for predefinitions of operators and notations; 
+				// * One could use the operator-table concept for this thing [connecting the function calls with the notation with the operators...] 
 				/**
 				 * This class's purpose is to represent a mathematical equation of multiple variables.
 				 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
