@@ -115,13 +115,10 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 						3. algorithms part: 
 							Generalize the Algorithms [in particular the 'Farey' sequence and the Ratio-TrueRatio replacement...]; 
-						4. 'Linear' part [Matricies, Vectors]: 
-							Generalize; 
-							[Maybe] keep the names for those 'finite' versions as aliases; 
-						5. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
+						4. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
 							The functions stay as a part of the 'aliases.native'; 
 							Re-look through them and decide if one wants to take any of them out...
-						6. Number-theoretic functions; 
+						5. Number-theoretic functions; 
 
 							Things such as 'factorOut', for instance; 
 							Should they be generalized? 

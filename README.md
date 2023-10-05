@@ -3,7 +3,7 @@
 math-expressions.js is a JavaScript library with a vast variety of covered areas of interest.
 <!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
 Amongst those: very handy utilities, basic statistics, collections, abstract objects, 
-multi-dimensional arrays, some simple linear algebra, equation parsing, unlimited types;
+multi-dimensional arrays, equation parsing, unlimited types;
 
 <!-- * About the compatibility changes: -->
 <!-- * The compatibility is broken in 3 places: 1. the imports and 2. the default arguments of functions... 3. (sometimes) The precise argument lists and definitions of functions (though, the changes were always only generalizing, expansive and constructive...) -->

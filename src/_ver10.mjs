@@ -34,6 +34,59 @@ export const CLASS = function (defaults = {}, C = ID) {
 	}
 }
 
+// * This function shall be used by:
+// 	1. InfiniteMap (extends GeneralArray);
+//  2. UnlimitedString (extends GeneralArray);
+//  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
+export const EXTENSION = function (template = {}) {
+	return {
+		template: {
+			name: {
+				classrefname: "class",
+				instname: "proto",
+				selfname: "this"
+			},
+			methods: {},
+			defaults: { constructor: [], methods: {}, template: {} },
+			toextend: [],
+			...template
+		},
+		function: function (...args) {
+			if (this.class.template.defaults.constructor)
+				ensureProperties(args, this.class.template.defaults.constructor)
+
+			let X = {
+				template: this.template.defaults.template,
+				[this.template.name.classrefname]: this,
+				[this.template.name.instname]: this.template.class.class(...args)
+			}
+
+			// How to 'turn it off'
+			if (this.template.name.selfname != null) {
+				X[this.template.name.instname][this.template.name.selfname] = X
+
+				for (const method in this.template.methods) {
+					X[method] = this.template.methods[method](this)
+				}
+			} else X = { ...X, ...this.template.methods }
+
+			const extkeys = RESULT.aliases.native.array.arrIntersections(
+				Object.keys(X[this.template.name.instname]),
+				this.template.toextend
+			)
+			for (const x of extkeys)
+				X[x] = function (...args) {
+					if (this.class.template.defaults.methods[x])
+						ensureProperties(args, this.class.template.defaults.methods[x])
+
+					return this[this.class.template.name][x](...args)
+				}.bind(X)
+
+			return X
+		}
+	}
+}
+
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 export function instance(transformation = ID) {
@@ -4679,82 +4732,14 @@ export function instance(transformation = ID) {
 
 			// ! This one get 'poured out' into the 'main' and other fields of the 'RESULT';
 			classes: {
-				// ! Originally intended to extend GeneralVector, these things will now extend the TypedArray, because GeneralVector ended up being just a copypast of the GeneralArray; Fixed that. Now there's just a single one tidy templated wrapper instead.
-				// * For this, one ought to consider more carefully the generalized 'number' API part of the library... [namely, the interface used for these things...];
-				// ! Plus, these things get changed radically :
-				// 	1. They now are far more configurable with user defaults...
-				// 	2. The actual vector/matrix algorithms are __separate__ from the things that are the wrappers [the named functions], they also get their own space;
-				// 	3. Fixes, fixes, fixes! [Fix the problems with the old code]:
-				// 	4. Heavy aliases usage requested;
-
-				// * For this thing, one requires [in the first place], a general model for extension of templated classes with new methods by means of wrappers;
-				// The exact same thing as with the UnlimitedString;
-				// One requires a general system;
-				// ? How about ['extension']: 
-				// * Good; 
-				// ! Think about what to do with the 'this.this.this' architecture - it's so wonderful; 
-				// ? Where to even put it, by the way? 
-				extension(template = {}) {
-					return {
-						template: {
-							name: "proto",
-							methods: {},
-							defaults: { constructor: [], methods: {} },
-							toextend: [],
-							...template
-						},
-						class: function (...args) {
-							if (this.class.template.defaults.constructor)
-								ensureProperties(
-									args,
-									this.class.template.defaults.constructor
-								)
-								
-							const X = {
-								class: this,
-								[this.template.name]: this.template.class.class(...args),
-								...methods
-							}
-
-							const extkeys = RESULT.aliases.native.array.arrIntersections(
-								Object.keys(X[this.template.name]),
-								this.template.toextend
-							)
-							for (const x of extkeys)
-								X[x] = function (...args) {
-									if (this.class.template.defaults.methods[x])
-										ensureProperties(
-											args,
-											this.class.template.defaults.methods[x]
-										)
-
-									return this[this.class.template.name][x](...args)
-								}.bind(X)
-
-							return X
-						}
-					}
-				},
-
-				// Okay, assuming even one does have such a system - what algorithms exactly does one want to have within the 'linear' part of the library? 
-				// [One starts to seriously doubt the desire to actually do this at all]
-				// ! DOUBTS ABOUT THE LINEAR PART OF THE LIBRARY: 
-				// 	1. It's trivial; Really, this stuff'd be nothing more than just an empty wrapper-extension of the GeneralArray with various algorithms based off 'True' numbers of the library, that could easily have been implemented in any context at all; 
-				//  2 [addition to 1]. The domain; Intersects with previous one; The library is supposed to serve as a provider of a general domain for abstractions; This stuff is just... Far too specific; It's far more fit for a wider, more powerful library of a more specific-technical direction than this - the general-structuro-abstract one; 
-				//  3 [defense]. However, the 'matrix' [and generally - n-dimensional GeneralArray(s)] structures are very handy in representations of various complex multilayer abstract structures; 
-				// ? Question : delete it? 
-				// ^ CONCLUSION: the 'Vector' part of it certainly goes south; The Matricies get generalized to an NArray (multidimensional GeneralArrays' API), which'll also rewritten; 
-				// * But what about the 'number' stuff - shall one have specifically the cases of Matricies for those? 
-				// Pray consider...
-				// CURRENT DECISION: no, one shan't; They're very simple to implement within a context desired; Don't want to bother with it, plus it's (a bit) outside the library's context (if done at a sufficient degree of length into the subject)
-
-				// TODO: do the NArrays' API; 
-				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';  	
+				// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
+				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
 
 				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
 				// * CURRENT IDEA FOR A NAME: NumberEquation... Or NumericEquation... Or something...
-				// ^ Generalize for arbitrary operators; Not just the '["+", "*", "/", "-", "^"]'; Let it be more general; Allow for predefinitions of operators and notations; 
-				// * One could use the operator-table concept for this thing [connecting the function calls with the notation with the operators...] 
+				// ^ Generalize for arbitrary operators; Not just the '["+", "*", "/", "-", "^"]'; Let it be more general; Allow for predefinitions of operators and notations;
+				// * One could use the operator-table concept for this thing [connecting the function calls with the notation with the operators...]
+				// ! Also - this could use some code-brushing [in particular the 'default' computation 'method', which's really just the same thing, except the precomputed results are used]; 
 				/**
 				 * This class's purpose is to represent a mathematical equation of multiple variables.
 				 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
@@ -4900,6 +4885,7 @@ export function instance(transformation = ID) {
 								)
 						return parsed
 					}
+					// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations; 
 					/**
 					 * Difference in between the right and left sides of the equation with mappings for different variables.
 					 * @param {VarMapping} mappings Mapping of variables to their values.
