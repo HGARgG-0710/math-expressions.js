@@ -21,71 +21,98 @@ export const TYPED_VARIABLE =
 
 export const VARIABLE = TYPED_VARIABLE()
 
-// ? Created this idea for the '.class' structure; Does one want to have it within the libarary? [Could be used extensively across it...];
-// * Allows to do things like:
-// X: CLASS({...}, function (...) {... (here, 'this' refers to the class object)})
-// * It's good; Yes, one might keep it and use it;
-// ! If keep, use actively across the entire library...
-export const CLASS = function (defaults = {}, C = ID) {
-	return function (template = {}) {
-		const _class = { template: { ...defaults, ...template } }
-		_class.class = C.bind(_class)
-		return _class
+// * Allows to define templated classes and functions more non-conventionally;
+// ! use actively across the entire library...
+// TODO: replace with a template [give names to those things...]
+export const TEMPLATE = function (
+	C = ID,
+	defaults = {},
+	word = "class",
+	deftemplate = {},
+	rest = {},
+	transform = ID,
+	isthis = false,
+	_this = null
+) {
+	return function (template = deftemplate) {
+		const _class = {
+			template: { ...(isthis ? defaults(_this) : defaults), ...template },
+			...rest
+		}
+		_class[word] = (isthis ? C(_this) : C).bind(_class)
+		return transform(_class, template)
 	}
+}
+
+export const HIERARCHY = function (hierarr = []) {
+	const final = { a: {} }
+	let present = final
+	let label = "a"
+	for (const x of hierarr) {
+		present[label] = {}
+		present[label].template = {
+			...(x.isthis ? x.defaults(present[label]) : x.defaults),
+			...x.template
+		}
+		// todo: alias... 
+		for (const a in x.rest) 
+			present[label][a] = x.rest[a]	
+		present[label][x.word] = (x.isthis ? x.C(present[label]) : x.C).bind(present[label])
+		present = present[label]
+		label = x.word
+	}
+	return final
 }
 
 // * This function shall be used by:
 // 	1. InfiniteMap (extends GeneralArray);
 //  2. UnlimitedString (extends GeneralArray);
 //  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
-export const EXTENSION = function (template = {}) {
-	return {
-		template: {
-			name: {
-				classrefname: "class",
-				instname: "proto",
-				selfname: "this"
-			},
-			methods: {},
-			defaults: { constructor: [], methods: {}, template: {} },
-			toextend: [],
-			...template
-		},
-		function: function (...args) {
-			if (this.class.template.defaults.constructor)
-				ensureProperties(args, this.class.template.defaults.constructor)
+export const EXTENSION = TEMPLATE(
+	function (...args) {
+		if (this.template.defaults.constructor)
+			ensureProperties(args, this.template.defaults.constructor)
 
-			let X = {
-				template: this.template.defaults.template,
-				[this.template.name.classrefname]: this,
-				[this.template.name.instname]: this.template.class.class(...args)
-			}
-
-			// How to 'turn it off'
-			if (this.template.name.selfname != null) {
-				X[this.template.name.instname][this.template.name.selfname] = X
-
-				for (const method in this.template.methods) {
-					X[method] = this.template.methods[method](this)
-				}
-			} else X = { ...X, ...this.template.methods }
-
-			const extkeys = RESULT.aliases.native.array.arrIntersections(
-				Object.keys(X[this.template.name.instname]),
-				this.template.toextend
-			)
-			for (const x of extkeys)
-				X[x] = function (...args) {
-					if (this.class.template.defaults.methods[x])
-						ensureProperties(args, this.class.template.defaults.methods[x])
-
-					return this[this.class.template.name][x](...args)
-				}.bind(X)
-
-			return X
+		let X = {
+			template: this.template.defaults.template,
+			[this.template.name.classrefname]: this,
+			[this.template.name.instname]: this.template.class.class(...args)
 		}
-	}
-}
+
+		// How to 'turn it off'
+		if (this.template.name.selfname != null) {
+			X[this.template.name.instname][this.template.name.selfname] = X
+
+			for (const method in this.template.methods) {
+				X[method] = this.template.methods[method](this)
+			}
+		} else X = { ...X, ...this.template.methods }
+
+		const extkeys = RESULT.aliases.native.array.arrIntersections(
+			Object.keys(X[this.template.name.instname]),
+			this.template.toextend
+		)
+		for (const x of extkeys)
+			X[x] = function (...args) {
+				if (this.class.template.defaults.methods[x])
+					ensureProperties(args, this.class.template.defaults.methods[x])
+				return this[this.class.template.name][x](...args)
+			}.bind(X)
+
+		return X
+	},
+	{
+		name: {
+			classrefname: "class",
+			instname: "proto",
+			selfname: "this"
+		},
+		methods: {},
+		defaults: { constructor: [], methods: {}, template: {} },
+		toextend: []
+	},
+	"function"
+)
 
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
@@ -102,17 +129,16 @@ export function instance(transformation = ID) {
 				number: {
 					numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
 
-					fromNumber(template = {}) {
-						return {
-							template: { ...template },
-							function: function (x = this.template.start) {
-								return RESULT.main
-									.InfiniteCounter(RESULT.main.addnumber(this.template))
-									.class(x)
-									.map(this.template.icclass)
-							}
-						}
-					},
+					fromNumber: TEMPLATE(
+						function (x = this.template.start) {
+							return RESULT.main
+								.InfiniteCounter(RESULT.main.addnumber(this.template))
+								.class(x)
+								.map(this.template.icclass)
+						},
+						{},
+						"function"
+					),
 
 					// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
 					/**
@@ -462,17 +488,16 @@ export function instance(transformation = ID) {
 
 					// ? What about the default comparison? Again, the lower 'todo'...
 					// TODO [general] : template-defaults; Look into them carefully for each and every single thing in the library... [Here, in particular - the default 'comparison']
-					mostf(template = {}) {
-						return {
-							template: { ...template },
-							function: function (farr = []) {
-								let most = farr[0]
-								for (const x of farr)
-									if (this.template.comparison(x, most)) most = x
-								return most
-							}
-						}
-					},
+					mostf: TEMPLATE(
+						function (farr = []) {
+							let most = farr[0]
+							for (const x of farr)
+								if (this.template.comparison(x, most)) most = x
+							return most
+						},
+						{},
+						"function"
+					),
 
 					replaceIndex: function (arr, index, value) {
 						return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
@@ -497,32 +522,26 @@ export function instance(transformation = ID) {
 						)
 					},
 
-					multArrsRepApp(template = {}) {
-						return {
-							template: { n: 1, default: null, ...template },
-							function: function (x = this.template.default) {
-								const args = Array.from(arguments).slice(
-									1,
-									this.template.n + 1
-								)
-								// TODO: generalize this construction somehow conviniently pray...
-								const defobj = {}
-								for (
-									let i = arguments.length;
-									i < this.template.n + 1;
-									i++
-								)
-									defobj[i] = []
-								ensureProperties(args, defobj)
-								return repeatedApplication(
-									(v, i) =>
-										this.template.f(v, ...args.map((x) => x[i])),
-									Math.min(...args.map((a) => a.length)),
-									x
-								)
-							}
-						}
-					},
+					multArrsRepApp: TEMPLATE(
+						function (x = this.template.default) {
+							const args = Array.from(arguments).slice(
+								1,
+								this.template.n + 1
+							)
+							// TODO: generalize this construction somehow conviniently pray...
+							const defobj = {}
+							for (let i = arguments.length; i < this.template.n + 1; i++)
+								defobj[i] = []
+							ensureProperties(args, defobj)
+							return repeatedApplication(
+								(v, i) => this.template.f(v, ...args.map((x) => x[i])),
+								Math.min(...args.map((a) => a.length)),
+								x
+							)
+						},
+						{ n: 1, default: null },
+						"function"
+					),
 
 					hasArrays: function (array = []) {
 						// TODO: create an alias for such 'common' type expressions [like 'isarr(x) := x instanceof Array'];
@@ -709,25 +728,23 @@ export function instance(transformation = ID) {
 					},
 
 					// TODO: optimize the library in places such as this - where the '.min/.max(.map(somefunc))' actually takes additional steps to check for a thing... Instead, break once having found some such a 'breaking point' (like here); Saves a lot of execution steps in some cases;
-					isSubset: function (template = {}) {
-						return {
-							template: {
-								comparison: RESULT.main.valueCompare,
-								defarr: [],
-								...template
-							},
-							function: function (arrsub, arr = this.template.defarr) {
-								for (const x of arrsub)
-									if (
-										!RESULT.max(
-											arr.map((y) => this.template.comparison(x, y))
-										)
+					isSubset: TEMPLATE(
+						function (arrsub, arr = this.template.defarr) {
+							for (const x of arrsub)
+								if (
+									!RESULT.max(
+										arr.map((y) => this.template.comparison(x, y))
 									)
-										return false
-								return true
-							}
-						}
-					},
+								)
+									return false
+							return true
+						},
+						{
+							comparison: RESULT.main.valueCompare,
+							defarr: []
+						},
+						"function"
+					),
 
 					// TODO: this should also separate onto findValue and findReference;
 					// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
@@ -787,7 +804,7 @@ export function instance(transformation = ID) {
 
 					// * For iteration over an array; this thing is index-free; handles them for the user;
 					// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-					// ! This thing isn't infinite though. For infinite version, InfiniteArray could be used instead...
+					// ! This thing isn't infinite though. For infinite version, GeneralArray could be used instead...
 					IterableSet: class {
 						curr() {
 							return Array.from(this.elements.values())[this.currindex]
@@ -849,221 +866,200 @@ export function instance(transformation = ID) {
 							RESULT.compose(fs.slice(0, fs.length - 1))
 						)
 					},
-					wrapper: (template = {}) => {
-						return {
-							template: {
-								in: RESULT.aliases.id,
-								out: RESULT.aliases.id,
-								deff: RESULT.aliases.id,
-								...template
-							},
-							function: function (f = this.template.deff) {
-								return (x) => this.template.out(f(this.template.in(x)))
-							}
-						}
-					},
+
+					wrapper: TEMPLATE(
+						function (f = this.template.deff) {
+							return (x) => this.template.out(f(this.template.in(x)))
+						},
+						{
+							in: RESULT.aliases.id,
+							out: RESULT.aliases.id,
+							deff: RESULT.aliases.id,
+							...template
+						},
+						"function"
+					),
 
 					expression: {
-						// ? Where does that go [all the old Expression(s) API generalized]?
 						// * Creates a function for execution of operations based on the given operations table...;
-						op: function (template = {}) {
-							return {
-								template: {
-									defop: undefined,
-									defobjs: [],
-									optable: RESULT.variables.defaultTable.get,
-									...template
-								},
-								function: function (
-									operator = this.template.defop,
-									objects = this.template.defobjs
-								) {
-									// ? Create some kind of a shortcut (alias) for this thing?
-									return Object.values(this.template.optable)
-										.map((x) => x[0])
-										[
-											Object.keys(this.template.optable).indexOf(
-												operator
-											)
-										](...objects)
-								}
-							}
-						},
+						op: TEMPLATE(
+							function (
+								operator = this.template.defop,
+								objects = this.template.defobjs
+							) {
+								// ? Create some kind of a shortcut (alias) for this thing?
+								return Object.values(this.template.optable)
+									.map((x) => x[0])
+									[
+										Object.keys(this.template.optable).indexOf(
+											operator
+										)
+									](...objects)
+							},
+							{
+								defop: undefined,
+								defobjs: [],
+								optable: RESULT.variables.defaultTable.get
+							},
+							"function"
+						),
 
 						/**
 						 * This class represents a mathematical arithmetic expression.
 						 *
 						 * It can also come in helpful when evaluating the same expression various number of times.
 						 */
-						Expression: function (template = {}) {
-							return {
-								template: {
-									optable: RESULT.variables.defaultTable.get,
-									...template
-								},
-								class: function (
-									objects = [],
-									operators = [],
-									indexes = operators.map(RESULT.aliases._const(0))
-								) {
-									return {
-										this: this,
-										objects: objects,
-										operators: operators,
-										indexes: indexes,
-										/**
-										 * Just a wrapper for fullExp() function. Watch documentation for it.
-										 */
-										execute() {
-											return fullExp(this.this.template).function(
-												this.operators,
-												this.objects,
-												this.indexes
-											)
-										},
-										// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
-										// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
-										/**
-										 * Wrapper for repeatExp() function. Watch documentation for it.
-										 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
-										 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
-										 */
-										repeat(operator, times = 1) {
-											return repeatExp(this, operator, times)
-										},
-										// ! Problem: how does one handle different-table merges? What about naming conflicts? How should they be resolved [if at all?];
-										merge(expression) {
-											for (const x of [
-												"operators",
-												"objects",
-												"indexes"
-											])
-												this[x] = this[x].concat(expression[x])
-										}
+						Expression: TEMPLATE(
+							function (
+								objects = [],
+								operators = [],
+								indexes = operators.map(RESULT.aliases._const(0))
+							) {
+								return {
+									this: this,
+									objects: objects,
+									operators: operators,
+									indexes: indexes,
+									/**
+									 * Just a wrapper for fullExp() function. Watch documentation for it.
+									 */
+									execute() {
+										return fullExp(this.this.template).function(
+											this.operators,
+											this.objects,
+											this.indexes
+										)
+									},
+									// TODO: create a new kind of "repeat": repeat (just repeat) and repeatCompose (the current repeat), also make the repeatCompose take an array of arguments for an operator;
+									// TODO: then, add the repeatComposeSame as the current repeat (special case of the repeatCompose)...
+									/**
+									 * Wrapper for repeatExp() function. Watch documentation for it.
+									 * @param {number} times A number, representing how many times should current expression be repeated (By default 1).
+									 * @param {string} operator A string, representing the operator, with which ariphmetic operation upon the expression result will be done a several times.
+									 */
+									repeat(operator, times = 1) {
+										return repeatExp(this, operator, times)
+									},
+									// ! Problem: how does one handle different-table merges? What about naming conflicts? How should they be resolved [if at all?];
+									merge(expression) {
+										for (const x of [
+											"operators",
+											"objects",
+											"indexes"
+										])
+											this[x] = this[x].concat(expression[x])
 									}
 								}
+							},
+							{
+								optable: RESULT.variables.defaultTable.get
 							}
-						},
+						),
 
 						// Executes an expression;
-						fullExp: function (template = {}) {
-							return {
-								template: {
-									optable: RESULT.variables.defaultTable.get,
-									...template
-								},
-								function: function (
-									operators = [],
-									objects = [],
-									indexes = operators.map(RESULT.aliases._const(0))
-								) {
-									// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
-									return repeatedApplication(
-										(double, i) => {
-											let hasMet = false
-											return [
-												// ? Should it use 'this.template' for 'exp' here instead?;
-												// * Consider more generally on the library-scale...
+						fullExp: TEMPLATE(
+							function (
+								operators = [],
+								objects = [],
+								indexes = operators.map(RESULT.aliases._const(0))
+							) {
+								// TODO [general; a known runtime bug]: the BigInt usage across the library will cause problems with the Number- and Boolean-based indexation; Pray convert;
+								return repeatedApplication(
+									(double, i) => {
+										let hasMet = false
+										return [
+											// ? Should it use 'this.template' for 'exp' here instead?;
+											// * Consider more generally on the library-scale...
 
-												// ! Write an alias for this 'argument-compilation' procedure from the 'fullExpr'...
-												exp({
-													optable: this.template.optable
-												}).function(
-													operators[i],
-													generate(
-														0,
-														this.template.optable[
-															operators[i]
-														][1] - 1
-													).map((j) => {
-														if (j == indexes[i]) {
-															hasMet = i > 0
-															return double[0]
-														}
-														return objects[
-															double[1] + j - hasMet
-														]
-													})
-												),
-												double[1] +
+											// ! Write an alias for this 'argument-compilation' procedure from the 'fullExpr'...
+											exp({
+												optable: this.template.optable
+											}).function(
+												operators[i],
+												generate(
+													0,
 													this.template.optable[
 														operators[i]
-													][1] -
-													1
-											]
-										},
-										operators.length,
-										[objects[0], 1]
-									)[0]
-								}
-							}
-						},
+													][1] - 1
+												).map((j) => {
+													if (j == indexes[i]) {
+														hasMet = i > 0
+														return double[0]
+													}
+													return objects[double[1] + j - hasMet]
+												})
+											),
+											double[1] +
+												this.template.optable[operators[i]][1] -
+												1
+										]
+									},
+									operators.length,
+									[objects[0], 1]
+								)[0]
+							},
+							{
+								optable: RESULT.variables.defaultTable.get
+							},
+							"function"
+						),
 
 						// ? Consider refactoring [couldn't it be rewritten via fullExp];
-						repeatExp: function (template = {}) {
-							return {
-								template: {
-									optable: RESULT.variables.defaultTable.get,
-									...template
-								},
-								function: function (
-									args,
-									indexes,
-									roperator,
-									repetitions = 1
-								) {
-									return repeatedApplication(
-										(r, i) => {
-											let hasMet = false
-											return RESULT.aliases.native
-												.op(this.template)
-												.function(
-													roperator,
-													generate(
-														0,
-														this.optable[roperator][1] - 1
-													).map((x) => {
-														if (x == indexes[i]) {
-															hasMet = i > 0
-															return r
-														}
-														return otherargs[i][x - hasMet]
-													})
-												)
-										},
-										repetitions,
-										args[0][0]
-									)
-								}
-							}
-						},
+						repeatExp: TEMPLATE(
+							function (args, indexes, roperator, repetitions = 1) {
+								return repeatedApplication(
+									(r, i) => {
+										let hasMet = false
+										return RESULT.aliases.native
+											.op(this.template)
+											.function(
+												roperator,
+												generate(
+													0,
+													this.optable[roperator][1] - 1
+												).map((x) => {
+													if (x == indexes[i]) {
+														hasMet = i > 0
+														return r
+													}
+													return otherargs[i][x - hasMet]
+												})
+											)
+									},
+									repetitions,
+									args[0][0]
+								)
+							},
+							{
+								optable: RESULT.variables.defaultTable.get
+							},
+							"function"
+						),
 
-						repeatedOperation: function (template = {}) {
-							return {
-								template: {
-									optable: RESULT.variables.defaultTable.get,
-									...template
-								},
-								function: function (
-									operator,
-									objects = [],
-									indexes = objects.map(RESULT.aliases._const(0))
-								) {
-									return Expression(this.template)
-										.class(
-											objects,
-											objects.map(RESULT._const(operator), indexes)
-										)
-										.execute()
-								}
-							}
-						}
+						repeatedOperation: TEMPLATE(
+							function (
+								operator,
+								objects = [],
+								indexes = objects.map(RESULT.aliases._const(0))
+							) {
+								return Expression(this.template)
+									.class(
+										objects,
+										objects.map(RESULT._const(operator), indexes)
+									)
+									.execute()
+							},
+							{
+								optable: RESULT.variables.defaultTable.get
+							},
+							"function"
+						)
 					}
 				},
 
 				object: {
 					// ! PROBLEM [?is it though? - general]: decide what to do about the default values of functions in cases like these;
-					ensureProperty: function (object, property, value) {
+					ensureProperty: function (object, property, value = undefined) {
 						if (!object.hasOwnProperty(property)) object[property] = value
 					},
 					// * A convinient general-version...
@@ -1113,17 +1109,19 @@ export function instance(transformation = ID) {
 						)
 					},
 
-					objInverse: function (notfound, treatUniversal = false) {
-						return {
-							template: { notfound, treatUniversal },
-							value: function (obj, treatUniversal = this.treatUniversal) {
-								return ((a) =>
-									((universal) => a(universal.values, universal.keys))(
-										a(obj, treatUniversal)
-									))(UniversalMap(this.notfound))
-							}
-						}
-					},
+					objInverse: TEMPLATE(
+						function (obj, treatUniversal = this.template.treatUniversal) {
+							return ((a) =>
+								((universal) => a(universal.values, universal.keys))(
+									a(obj, treatUniversal)
+								))(UniversalMap(this.template.notfound))
+						},
+						{
+							notfound: undefined,
+							treatUniversal: false
+						},
+						"function"
+					),
 
 					// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
 
@@ -1294,19 +1292,18 @@ export function instance(transformation = ID) {
 
 			// ? Put it where?
 			// * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
-			mostg(template = {}) {
-				return {
-					template: { ...template },
-					function: function (garr) {
-						let most = garr.read(garr.init())
-						garr.loop()._full((t) => {
-							if (this.template.comparison(t.object().current, most))
-								most = t.object().current
-						})
-						return most
-					}
-				}
-			},
+			mostg: TEMPLATE(
+				function (garr = this.template.genarrclass.static.empty()) {
+					let most = garr.read(garr.init())
+					garr.loop()._full((t) => {
+						if (this.template.comparison(t.object().current, most))
+							most = t.object().current
+					})
+					return most
+				},
+				{},
+				"function"
+			),
 
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
 			property: (p) => (x) => x[p]
@@ -1318,42 +1315,26 @@ export function instance(transformation = ID) {
 			// ! implement the 'printi' for generalarrays and ic-s;
 			printing: {
 				// TODO: create a version of this (printic) with a default 'this.interpret' for the InfiniteCounters to be distinguishable... [and other corresponding templates]
-				print(template = {}) {
-					return {
-						template: { pfun: console.log, interpret: ID, ...template },
-						function: function (x) {
-							return this.pfun(this.interpret(x))
-						}
-					}
-				},
+				print: TEMPLATE(
+					function (x = this.template.defaultS) {
+						return this.template.pfun(this.template.interpret(x))
+					},
+					{ pfun: console.log, interpret: ID, defaultS: "" },
+					"function"
+				),
 
 				// todo: create special cases for this stuff pray...
-				controlprint(template = {}) {
-					const T = {
-						template: {
-							pfun: console.log,
-							// TODO: make an alias for that thing...
-							limit: (x, appended) =>
-								x.length >= RESULT.MAX_STRING_LENGTH - appended.length,
-							// * By default, will finish the printing of the thing using the function chosen [REGARDLESS OF SIZE!];
-							control: function (current, loophandle) {
-								this.pfun(current)
-								return this.this
-									.function({ ishandle: true })
-									.function(loophandle)
-							},
-							...template
-						},
-						function: function (template = {}) {
-							const X = {
-								template: {
-									ishandle: false,
-									function: this,
-									...template
-								},
-								function: function (
-									toprint = this.template.function.defstr
-								) {
+
+				// ! PROBLEM [with the 'TEMPLATE' macro idea] : how to handle cases like these 'function: this'?
+				// * Not doable directly; One could wrap this whole construction into another function [which'd essentially get the 'this' from the user (and make it skippable)];
+				// This way one'd create recursive template hierarchies;
+				// ! PROBLEM : further - this macro's too damn small, unfit for the task; Requires a different one - HIERARCHY...
+				// ^ SOLVED [supposedly] - written the HIERARCHY macro;  
+				constrolprint: () => {
+					TEMPLATE(
+						TEMPLATE(
+							() =>
+								function (toprint = this.template.function.defstr) {
 									if (!this.template.ishandle) {
 										let final = ""
 										let broken = false
@@ -1395,18 +1376,44 @@ export function instance(transformation = ID) {
 									)
 									this.template.ishandle = true
 									return r
-								}
+								},
+							(_this) => ({
+								ishandle: false,
+								function: _this
+							}),
+							"function",
+							{},
+							{},
+							// TODO: make an alias for that one (it's used quite frequently...);
+							(templated, template) => {
+								templated.template.this = templated
+							},
+							true
+							// ! PROBLEM : what to do with this argument ??? How does one reference it like so?
+						),
+						{
+							pfun: console.log,
+							// TODO: make an alias for that thing...
+							limit: (x, appended) =>
+								x.length >= RESULT.MAX_STRING_LENGTH - appended.length,
+							// * By default, will finish the printing of the thing using the function chosen [REGARDLESS OF SIZE!];
+							control: function (current, loophandle) {
+								this.pfun(current)
+								return this.this
+									.function({ ishandle: true })
+									.function(loophandle)
 							}
-							X.template.this = X
-							return X
+						},
+						"function",
+						{},
+						{},
+						(templated, template) => {
+							templated.template.this = templated
+							templated.template.defstr = templated.template.ustrclass("")
+							templated.template = { ...templated, ...template }
+							return templated
 						}
-					}
-
-					T.template.this = T
-					T.template.defstr = T.ustrclass("")
-					T.template = { ...T.template, ...template }
-
-					return T
+					)
 				}
 			},
 			numeric: {
@@ -4735,11 +4742,13 @@ export function instance(transformation = ID) {
 				// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
 				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
 
+				NumberEquation: function () {},
+
 				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
 				// * CURRENT IDEA FOR A NAME: NumberEquation... Or NumericEquation... Or something...
 				// ^ Generalize for arbitrary operators; Not just the '["+", "*", "/", "-", "^"]'; Let it be more general; Allow for predefinitions of operators and notations;
 				// * One could use the operator-table concept for this thing [connecting the function calls with the notation with the operators...]
-				// ! Also - this could use some code-brushing [in particular the 'default' computation 'method', which's really just the same thing, except the precomputed results are used]; 
+				// ! Also - this could use some code-brushing [in particular the 'default' computation 'method', which's really just the same thing, except the precomputed results are used];
 				/**
 				 * This class's purpose is to represent a mathematical equation of multiple variables.
 				 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
@@ -4885,7 +4894,7 @@ export function instance(transformation = ID) {
 								)
 						return parsed
 					}
-					// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations; 
+					// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations;
 					/**
 					 * Difference in between the right and left sides of the equation with mappings for different variables.
 					 * @param {VarMapping} mappings Mapping of variables to their values.
@@ -5012,15 +5021,11 @@ export function instance(transformation = ID) {
 					// TODO: think deeply on the matter of copying/referencing of 'class-template-static' objects within the instances objects... Review each and every method within each and every class, make it plausible to oneself, most general;
 
 					// TODO: create a very general class of infinite arrays called DeepArray [most modifiable, works based on recursion];
-					// ! [as a followup to the note about GeneralArray]; Then, the InfiniteArray would simply be the 'combiner class' [which contains all the algorithms, generalized, without reference to the actual inside-definitions...];
-
-					// TODO: decide which particular definitions from the 'infinite' are to be defined post-createm for it...
-					// What one meaans is 'const infinite = {.., def: ..., ....}' -> 'const infinite = {.., ....}; infinite.def = ...';s
 
 					// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 
-					// TODO: add the circular counters (too, an infiniteCounter, just one that is looped);
-					// * They are just special cases of InfiniteCounters; Based off array-orders [takes in an array and then loops over it...];
+					// TODO: add examples of the circular counters (too, an infiniteCounter, just one that is looped);
+					// * A case of InfiniteCounters; Based off array-orders [iteration over an ordering or an array];
 
 					// TODO: implement InfiniteString [the *truly* infinite one, that is...]
 					InfiniteString() {},
@@ -5028,7 +5033,7 @@ export function instance(transformation = ID) {
 					// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
 					InfiniteArray() {}
 
-					// ? question: does one want to go implementing the 'InfiniteNumber' as well? [As a special case of the GeneralArray, perhaps?]
+					// ? question: does one want to go implementing the 'InfiniteNumber' as well?
 
 					// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 				}
@@ -5315,3 +5320,6 @@ export function instance(transformation = ID) {
 // * Would come in handy in one of one's projects...
 
 // TODO: generalize further (f, obj, depth) => ... [would with depth 'depth', map 'f' to keys/values of an object...]
+
+// TODO [general]: normalization of recurring name themes;
+// * Similar to 'template:' label, normalize the names for the same things (like 'defstr' and 'defaultS' - let the library use one single convention in each such trivial case, to make it simpler);
