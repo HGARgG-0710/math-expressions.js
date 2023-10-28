@@ -4,7 +4,7 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
-// Space for the local constants... [used for semantics and simplification of development/code-reading];
+// Space for macros and local constants... [used for semantics and simplification of development/code-reading];
 
 export const ID = (a) => a
 
@@ -24,6 +24,8 @@ export const VARIABLE = TYPED_VARIABLE()
 // * Allows to define templated classes and functions more non-conventionally;
 // ! use actively across the entire library...
 // TODO: replace with a template [give names to those things...]
+// TODO: optimize the macros; [re-implement them more desireably...];
+// TODO: use the 'template' within TEMPLATES hardcorely...;
 export const TEMPLATE = function (
 	C = ID,
 	defaults = {},
@@ -34,34 +36,107 @@ export const TEMPLATE = function (
 	isthis = false,
 	_this = null
 ) {
-	return function (template = deftemplate) {
-		const _class = {
-			template: { ...(isthis ? defaults(_this) : defaults), ...template },
-			...rest
+	return {
+		template: { _this: _this },
+		f: function (template = deftemplate) {
+			const _class = {
+				template: {
+					...(isthis ? defaults(this.template._this) : defaults),
+					...template
+				},
+				...rest
+			}
+			_class[word] = (isthis ? C(this.template._this) : C).bind(_class)
+			return transform(_class, template)
 		}
-		_class[word] = (isthis ? C(_this) : C).bind(_class)
-		return transform(_class, template)
 	}
 }
 
-export const HIERARCHY = function (hierarr = []) {
-	const final = { a: {} }
-	let present = final
-	let label = "a"
-	for (const x of hierarr) {
-		present[label] = {}
-		present[label].template = {
-			...(x.isthis ? x.defaults(present[label]) : x.defaults),
-			...x.template
+export const INHERIT = function (x, X) {
+	return {
+		template: {},
+		f: function () {
+			const _class = {
+				template: {
+					...x.defaults(this.template._this)
+				},
+				...x.rest
+			}
+			X.template._this = _class
+			_class[x.word] = X.f
+			return X.transform(_class)
 		}
-		// todo: alias... 
-		for (const a in x.rest) 
-			present[label][a] = x.rest[a]	
-		present[label][x.word] = (x.isthis ? x.C(present[label]) : x.C).bind(present[label])
-		present = present[label]
-		label = x.word
 	}
-	return final
+}
+
+// ! WORKS WRONGLY... [unfinished] Pray think further about it...
+// * The problem with just using TEMPLATES is such:
+// 		1. The context which relies upon information of 'C' (the function) lies WITHIN a function returned by TEMPLATE;
+// 			1.1. Due to this, it's IMPOSSIBLE, to modify it
+// ^ SOLUTION [1]: use templates within TEMPLATEs...
+// Then, the next issue arises... How does one treat those template-templates?
+// One now possesses the tool to create a pointer to the space desired;
+// So, one can do something like:
+//
+// 	const X = TEMPLATE(elementary, ...)
+// 	[mean of generation] function (X) {
+//		... [all the stuff related to _class]
+//		X.template._this = _class
+// 		_class[x.word] = X.f
+// 		return x.transform(_class)
+// }
+// * Except, it's recursively templated...
+// ! pray implement... [combine this code for generation of new layers of templates with the second attempt for implementation of HIERARCHY]
+// TODO: update the previous usages of TEMPLATES in accordance with the new 'templated' templates...
+// ^ SOLUTION [further]: one wants a function INHERIT, to create a connection of one TEMPLATE with another (hierarchy-like)...
+export const HIERARCHY = function (hierarr = []) {
+	// ! Old code; Attempt 2 [failure]
+	// let result = {}
+	// let label = ""
+	// ! Problem: with this approach;
+	// * Because this is a template, the thing in question just CANNOT work like so - it has got to create the objects to first abstract them...
+	// for (const x of hierarr.reverse()) {
+	// 	// TODO: fix the '...x' thing - names are supposed to be different
+	// 	result = Object.keys(result).length
+	// 		? {
+	// 				[x.word]: function (template = x.deftemplate) {
+	// 					return x.transform(result)
+	// 				}
+	// 		  }
+	// 		: { ...x }
+	// 	label = x.word
+	// }
+	// return result
+	// ! Old code [re-use, had some usable bits too]; Attempt 1 [failure]
+	// const final = { a: {} }
+	// let present = final
+	// let label = "a"
+	// for (const x of hierarr) {
+	// 	// TOdo: use the ensureProperties
+	// 	x.rest = x.rest || {}
+	// 	x.word = x.word || "class"
+	// 	x.C = x.C || ID
+	// 	x.defaults = x.defaults || RESULT.aliases._const({})
+	// 	x.transform = x.transform || ID
+	// 	present[label] = {}
+	// 	// ? How better would one do this? 'defaults(present[label])' or 'defaults.bind(present[label])()'? The latter requires no usage of additional arguments from the user;
+	// 	present[label].template = {
+	// 		...x.defaults(present[label])
+	// 	}
+	// 	// todo: alias...
+	// 	for (const a in x.rest) present[label][a] = x.rest[a]
+	// 	// ! PROBLEM: that's not how the thing's BUILT!
+	// 	// ? solution? Consider;
+	// 	// * One has a function returning a template (f1);, which is wrapped in another template returned by another function (f2);
+	// 	// The question is thus transformed in: how does one generally build that kind of a thing?
+	// 	// ^ ANSWER: from the other side;
+	// 	// ^ CONCLUSION: this thing has got to be rewritten from nil...
+	// 	present[label][x.word] = x.C.bind(present[label])
+	// 	x.transform(present[label], x.template)
+	// 	present = present[label]
+	// 	label = x.word
+	// }
+	// return final.a
 }
 
 // * This function shall be used by:
@@ -874,8 +949,7 @@ export function instance(transformation = ID) {
 						{
 							in: RESULT.aliases.id,
 							out: RESULT.aliases.id,
-							deff: RESULT.aliases.id,
-							...template
+							deff: RESULT.aliases.id
 						},
 						"function"
 					),
@@ -1329,9 +1403,10 @@ export function instance(transformation = ID) {
 				// * Not doable directly; One could wrap this whole construction into another function [which'd essentially get the 'this' from the user (and make it skippable)];
 				// This way one'd create recursive template hierarchies;
 				// ! PROBLEM : further - this macro's too damn small, unfit for the task; Requires a different one - HIERARCHY...
-				// ^ SOLVED [supposedly] - written the HIERARCHY macro;  
+				// ^ SOLVED [supposedly] - written the HIERARCHY macro;
+				// TODO [current agenda]: use it;
 				constrolprint: () => {
-					TEMPLATE(
+					const T = TEMPLATE(
 						TEMPLATE(
 							() =>
 								function (toprint = this.template.function.defstr) {
