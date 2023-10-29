@@ -25,118 +25,67 @@ export const VARIABLE = TYPED_VARIABLE()
 // ! use actively across the entire library...
 // TODO: replace with a template [give names to those things...]
 // TODO: optimize the macros; [re-implement them more desireably...];
-// TODO: use the 'template' within TEMPLATES hardcorely...;
-export const TEMPLATE = function (
-	C = ID,
-	defaults = {},
-	word = "class",
-	deftemplate = {},
-	rest = {},
-	transform = ID,
-	isthis = false,
-	_this = null
-) {
+export const TEMPLATE = function (template = {}) {
 	return {
-		template: { _this: _this },
-		f: function (template = deftemplate) {
+		template: {
+			_this: null,
+			C: ID,
+			defaults: {},
+			word: "class",
+			deftemplate: {},
+			rest: {},
+			transform: ID,
+			isthis: false,
+			...template
+		},
+		f: function (template = this.template.deftemplate) {
 			const _class = {
 				template: {
-					...(isthis ? defaults(this.template._this) : defaults),
+					...(this.template.isthis
+						? defaults(this.template._this)
+						: this.template.defaults),
 					...template
 				},
-				...rest
+				...this.template.rest
 			}
-			_class[word] = (isthis ? C(this.template._this) : C).bind(_class)
-			return transform(_class, template)
+			_class[this.template.word] = (
+				this.template.isthis
+					? this.template.C(this.template._this)
+					: this.template.C
+			).bind(_class)
+			return this.template.transform(_class, template)
 		}
 	}
 }
 
 export const INHERIT = function (x, X) {
 	return {
-		template: {},
-		f: function () {
+		template: {
+			inherited: X,
+			defchild: x
+		},
+		f: function (target = this.template.defchild) {
 			const _class = {
 				template: {
-					...x.defaults(this.template._this)
+					...target.defaults(this.template._this)
 				},
-				...x.rest
+				...target.rest
 			}
-			X.template._this = _class
-			_class[x.word] = X.f
-			return X.transform(_class)
+			this.template.inherited.template._this = _class
+			_class[target.word] = this.template.inherited.f
+			return x.transform(_class)
 		}
 	}
 }
 
-// ! WORKS WRONGLY... [unfinished] Pray think further about it...
-// * The problem with just using TEMPLATES is such:
-// 		1. The context which relies upon information of 'C' (the function) lies WITHIN a function returned by TEMPLATE;
-// 			1.1. Due to this, it's IMPOSSIBLE, to modify it
-// ^ SOLUTION [1]: use templates within TEMPLATEs...
-// Then, the next issue arises... How does one treat those template-templates?
-// One now possesses the tool to create a pointer to the space desired;
-// So, one can do something like:
-//
-// 	const X = TEMPLATE(elementary, ...)
-// 	[mean of generation] function (X) {
-//		... [all the stuff related to _class]
-//		X.template._this = _class
-// 		_class[x.word] = X.f
-// 		return x.transform(_class)
-// }
-// * Except, it's recursively templated...
-// ! pray implement... [combine this code for generation of new layers of templates with the second attempt for implementation of HIERARCHY]
 // TODO: update the previous usages of TEMPLATES in accordance with the new 'templated' templates...
-// ^ SOLUTION [further]: one wants a function INHERIT, to create a connection of one TEMPLATE with another (hierarchy-like)...
 export const HIERARCHY = function (hierarr = []) {
-	// ! Old code; Attempt 2 [failure]
-	// let result = {}
-	// let label = ""
-	// ! Problem: with this approach;
-	// * Because this is a template, the thing in question just CANNOT work like so - it has got to create the objects to first abstract them...
-	// for (const x of hierarr.reverse()) {
-	// 	// TODO: fix the '...x' thing - names are supposed to be different
-	// 	result = Object.keys(result).length
-	// 		? {
-	// 				[x.word]: function (template = x.deftemplate) {
-	// 					return x.transform(result)
-	// 				}
-	// 		  }
-	// 		: { ...x }
-	// 	label = x.word
-	// }
-	// return result
-	// ! Old code [re-use, had some usable bits too]; Attempt 1 [failure]
-	// const final = { a: {} }
-	// let present = final
-	// let label = "a"
-	// for (const x of hierarr) {
-	// 	// TOdo: use the ensureProperties
-	// 	x.rest = x.rest || {}
-	// 	x.word = x.word || "class"
-	// 	x.C = x.C || ID
-	// 	x.defaults = x.defaults || RESULT.aliases._const({})
-	// 	x.transform = x.transform || ID
-	// 	present[label] = {}
-	// 	// ? How better would one do this? 'defaults(present[label])' or 'defaults.bind(present[label])()'? The latter requires no usage of additional arguments from the user;
-	// 	present[label].template = {
-	// 		...x.defaults(present[label])
-	// 	}
-	// 	// todo: alias...
-	// 	for (const a in x.rest) present[label][a] = x.rest[a]
-	// 	// ! PROBLEM: that's not how the thing's BUILT!
-	// 	// ? solution? Consider;
-	// 	// * One has a function returning a template (f1);, which is wrapped in another template returned by another function (f2);
-	// 	// The question is thus transformed in: how does one generally build that kind of a thing?
-	// 	// ^ ANSWER: from the other side;
-	// 	// ^ CONCLUSION: this thing has got to be rewritten from nil...
-	// 	present[label][x.word] = x.C.bind(present[label])
-	// 	x.transform(present[label], x.template)
-	// 	present = present[label]
-	// 	label = x.word
-	// }
-	// return final.a
+	// ? rewrite using the repeatedApplication?
+	// * Add the infinite types version [as a macro - this'll do, for now...];
+	let final = TEMPLATE(hierarr[hierarr.length - i])
+	for (let i = 1; i <= hierarr.length; i++)
+		final = INHERIT(hierarr[hierarr.length - i], final)
+	return final
 }
 
 // * This function shall be used by:
