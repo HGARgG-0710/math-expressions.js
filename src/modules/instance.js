@@ -1,6 +1,8 @@
 // ! PROBLEM: generally with the usage of TEMPLATE - does one desire for to keep the the access to the 'template-templates', or instead just keep it as-is?
 // * The things would be extremely useful for the redefinition procedures by the user...
 // ^ CURRENT DECISION: yes, keep the '.f'; Consider [maybe], changing it to '.function' within the TEMPLATE definition...;
+
+// ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR } from "./macros.js"
 
 export function instance(transformation = ID) {
@@ -2268,7 +2270,7 @@ export function instance(transformation = ID) {
 							const ALIAS = (x) =>
 								RESULT.infinite
 									.InfiniteCounter(
-										RESULT.infinite.addnumber({
+										RESULT.RESULT.main.addnumber({
 											start: -1
 										})
 									)({ value: x })
@@ -2551,187 +2553,199 @@ export function instance(transformation = ID) {
 				})
 			},
 
-			copy() {
-				return {
-					array: (a, method = RESULT.id) => a.map(method),
-					object: (a, method = RESULT.id) => objFmap(a, method),
-					function: (a, context = {}) => a.bind(context),
-					symbol: (a) =>
-						Symbol(RESULT.aliases.trim(RESULT.aliases.str(a).slice(7))),
-					arrayFlat: (a) => [...a],
-					objectFlat: (a) => ({ ...a })
-				}
-			},
-
-			// * CURRENT AGENDA: continue from here on... [flesh is tired again...]
-
-			// TODO: generalize later with a _switch() from a different library of self's...
-			// ? Wonder if one want to put it into this one package instead???
-			// ! extend the template further...
-			// ? rename
-			copyFunction(template = {}) {
-				// TODO: do something about that inner one; shouldn't be there...
-				function typeTransform(x) {
-					if (x === "array" || x === "arrayFlat")
-						return (p) => p instanceof Array
-					if (x === "objectFlat") return (p) => typeof p === "object"
-					return (p) => typeof p === x
-				}
-				return {
-					template: template,
-					function(a) {
-						for (const x of this.template.list)
-							if (typeTransform(x).function(a))
-								return RESULT.infinite.copy()[x](a, this.function)
-						return a
+			// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
+			copy: TEMPLATE({
+				defaults: {
+					objdefmeth: ID,
+					arrdefmeth: ID,
+					// TODO: make an alias for this...
+					defcontext: () => ({})
+				},
+				function: function (
+					arrmeth = this.template.arrdefmeth,
+					ometh = this.template.objdefmeth,
+					dcontext = this.template.defcontext
+				) {
+					return {
+						array: (a, method = arrmeth) => a.map(method),
+						object: (a, method = objmeth) => objFmap(a, method),
+						function: (a, context = dcontext()) => a.bind(context),
+						symbol: (a) =>
+							Symbol(RESULT.aliases.trim(RESULT.aliases.str(a).slice(7))),
+						arrayFlat: (a) => [...a],
+						objectFlat: (a) => ({ ...a })
 					}
-				}
-			},
+				},
+				word: "function"
+			}),
+
+			// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
+			copyFunction: TEMPLATE({
+				defaults: { list: [] },
+				function: function (a) {
+					// TODO: do something about that inner one; shouldn't be there...
+					// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
+					function typeTransform(x) {
+						if (x === "array" || x === "arrayFlat")
+							return (p) => p instanceof Array
+						if (x === "objectFlat") return (p) => typeof p === "object"
+						return (p) => typeof p === x
+					}
+					for (const x of this.template.list)
+						if (typeTransform(x)(a))
+							return RESULT.main.copy().function()[x](a, this.function)
+					return a
+				},
+				word: "function"
+			}),
+
+			// ! [1]
+			// ! Old notes:
+			// _? GENERAL QUESTION [over the 'infinite' object - for each and every method referencing it, pray decide...]: should one use "this" instead of "infinite"? This'd allow for some neat object-related stuff...
+			// _* [Previous] Current decision: yes, why not; works by itself + allows user to instantiate this structure partially for their own purposes conviniently... So, one'd just make it 'this' everywhere! Or not?
+			// _! On the other hand - if there are dependencies of certain methods and user does decide to instantiate something, then they'd have to instantiate dependencies as well...
+			// _^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
+			// _^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
+			// ? QUESTION: pray consider the matter of preference of usage of 'this' over 'RESULT[...]', and [even smore generally throughout the library] - relative references [values of which are affectable by the user] VS. absolute [cannot be affected?] to those parts of the library that are independent from the ones that reference them;
+			// * Current decision: let they be non-affectable, but the values for them be changeable;
 
 			// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
-			// ? GENERAL QUESTION [over the 'infinite' object - for each and every method referencing it, pray decide...]: should one use "this" instead of "infinite"? This'd allow for some neat object-related stuff...
-			// * [Previous] Current decision: yes, why not; works by itself + allows user to instantiate this structure partially for their own purposes conviniently... So, one'd just make it 'this' everywhere! Or not?
-			// ! On the other hand - if there are dependencies of certain methods and user does decide to instantiate something, then they'd have to instantiate dependencies as well...
-			// ^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
-			// ^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
 			//
-			// ! PROBLEM: with the currently chosen solution for the handling of the funciton arguments;
-			// * List of 'problems' (1. and 3. especially; the 2. is more curious);
-			//		1. Function Size [the 'String' won't work with large enough functions' code...];
-			//		2. Notation [stuff like (a) => {return a} and (b) => {return b}; won't be considered "the same"];
-			//		3. Formatting [stuff like (a) => {return a} and (a   ) => {   return   a;  }; won't be considered "the same"];
-			// * This does work for stuff like template classes and methods of different objects that have the exactly same code;
-			// TODO [about the 1.]: after having created the InfiniteString, pray allow for a function/String to be transformed into it; The function - to get all of its code...
-			// ? About the formatting [3.] stuff [and, possbily notation, 2.], one ideally ought to parse functions, then compoare their ASTs; For that sort of stuff, one'd do
-			// ? something like 'Parser(InfiniteString(a)) === Parser(InfiniteString(b))';
-			// ! All that'd be required is a JS parser...
-			// todo: having created the JSONF, for the 1.1 [or even the 1.2] release, pray add this there too...
+			// ! [2]: with the currently chosen solution for the handling of the funciton arguments;
+			// * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
+			// TODO: once having implemented the JSON library for the 1.1 or 1.2 release of the library, pray
+			// TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
 
-			// ! PROOOOOOOBLEEEEEEM!!! With recursive objects; They won't get handled properly, instead using out ALL THE STACK...
-			// TODO: pray fix;
-			valueCompare(template = {}) {
-				function TWOCASE(oneway = false) {
-					return (a, b) => {
-						if (typeof a !== typeof b) return false
-						switch (typeof a) {
-							case "object":
-								for (const a_ in a)
-									if (!TWOCASE()(b[a_], a[a_])) return false
-								if (!oneway) return TWOCASE(true)(b, a)
-								return true
-							case "function":
-								return String(a) === String(b)
-							case "symbol":
-								return a.toString() === b.toString()
-							default:
-								return a === b
+			// ? Seemingly fixing the problem regarding the infinitely recursive (self-referential) objects?
+			// * [pray check for it additionally later...];
+			valueCompare: TEMPLATE({
+				defaults: {
+					oneway: false
+				},
+				function: function (...args) {
+					function TWOCASE(oneway = false, objs = []) {
+						return (a, b) => {
+							if (typeof a !== typeof b) return false
+							switch (typeof a) {
+								case "object":
+									if (
+										!RESULT.max(
+											objs.map(
+												// TODO: create a nice function-alias for 'f(...) && g(...)'; [so that it may be used with the other ones]
+												(x) =>
+													x[0].includes(a) && x[0].includes(b)
+											)
+										)
+									) {
+										objs.push([a, b])
+										for (const a_ in a)
+											if (!TWOCASE(false, objs)(b[a_], a[a_]))
+												return false
+										if (!oneway) return TWOCASE(true)(b, a)
+									}
+									return true
+								case "function":
+									return String(a) === String(b)
+								case "symbol":
+									return a.toString() === b.toString()
+								default:
+									return a === b
+							}
 						}
 					}
-				}
-				return {
-					template: {
-						oneway: false,
-						...template
-					},
-					function: function (...args) {
-						return !!RESULT.aliases.native.min(
-							args
-								.slice(0, args.length - 1)
-								.map((x, i) =>
-									TWOCASE(this.template.oneway)(x, args[i + 1])
-								)
-						)
-					}
-				}
-			},
+					return !!RESULT.aliases.native.min(
+						args
+							.slice(0, args.length - 1)
+							.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
+					)
+				},
+				word: "function"
+			}),
 
 			// TODO [GENERAL] : add the ability for certain methods to take arbitrary number of arguments from the user... Let it use the '...something' operator for Arguments-to-Array conversion...
 			// Like the way one's done recently with the valueCompare...
 
-			// * Probably the simplest infinite counter one would have in JS;
-			arrayCounter(template = {}) {
-				return {
-					template: {
-						start: null,
-						...template
-					},
-					generator(a = this.template.start) {
-						if (!this.range(a)) this.template.start = a
-						return [a]
-					},
-					inverse: function (a) {
-						return a[0]
-					},
-					range: function (a) {
-						return (
-							a === this.template.start ||
-							(a instanceof Array && this.range(this.inverse(a)))
-						)
-					}
+			// * Probably the "simplest" infinite counter one would have in JS is based off this generator;
+			arrayCounter: GENERATOR({
+				defaults: {
+					start: null
+				},
+				generator(a = this.template.start) {
+					if (!this.range(a)) this.template.start = a
+					return [a]
+				},
+				// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
+				inverse: function (a) {
+					return a[0]
+				},
+				range: function (a) {
+					return (
+						a === this.template.start ||
+						(a instanceof Array && this.range(this.inverse(a)))
+					)
 				}
-			},
+			}),
 
 			// * Generalization of the thing above (arrayCounter)...
-			objCounter(template = {}) {
-				return {
-					template: {
-						field: "",
-						start: null,
-						// ? Does one desire the refCompare? Or valueCompare to be the default?
-						comparison: RESULT.aliases.refCompare,
-						...template
-					},
-					generator: function (a = this.template.start) {
-						if (!this.range(a)) this.template.start = a
-						return { [this.template.field]: a }
-					},
-					inverse: function (a) {
-						return a[this.template.field]
-					},
-					range: function (a) {
-						return (
-							this.template.comparison(a, this.template.start) ||
-							(typeof a === "object" && this.range(this.inverse(a)))
-						)
-					}
+			objCounter: GENERATOR({
+				defaults: {
+					field: "",
+					start: null,
+					// ? Does one desire the refCompare? Or valueCompare to be the default?
+					comparison: RESULT.aliases.refCompare
+				},
+				generator: function (a = this.template.start) {
+					if (!this.range(a)) this.template.start = a
+					return { [this.template.field]: a }
+				},
+				inverse: function (a) {
+					return a[this.template.field]
+				},
+				range: function (a) {
+					return (
+						this.template.comparison(a, this.template.start) ||
+						(typeof a === "object" && this.range(this.inverse(a)))
+					)
 				}
-			},
+			}),
 
 			// * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
-			generalSearch(template = {}) {
-				return {
-					template: { self: false, reversed: false, ...template },
-					function: function (
-						arrrec = [],
-						prevArr = this.template.genarrclass.static.empty(),
-						self = this.template.self,
-						reversed = this.template.reversed
-					) {
-						const i = prevArr.copy()
-						if (self && this.template.soughtProp(arrrec)) return i
+			generalSearch: TEMPLATE({
+				defaults: {
+					self: false,
+					reversed: false
+				},
+				function: function (
+					arrrec = [],
+					prevArr = this.template.genarrclass.static.empty(),
+					self = this.template.self,
+					reversed = this.template.reversed
+				) {
+					const i = prevArr.copy()
+					if (self && this.template.soughtProp(arrrec)) return i
 
-						const boundprop = reversed
-							? (x) => x >= 0
-							: (x) => x < arrrec.length
-						i.pushback(reversed ? arrrec.length - 1 : 0)
-						i.end()
-						for (; boundprop(i.currelem); i.currelem += (-1) ** reversed) {
-							if (this.template.soughtProp(arrrec[i.currelem])) return i
-							if (arrec[i.currelem] instanceof Array) {
-								const r = this.function(
-									arrrec[i.currelem],
-									i,
-									false,
-									reversed
-								)
-								if (!r) continue
-								return r
-							}
+					const boundprop = reversed ? (x) => x >= 0 : (x) => x < arrrec.length
+					i.pushback(reversed ? arrrec.length - 1 : 0)
+					i.end()
+					for (; boundprop(i.currelem); i.currelem += (-1) ** reversed) {
+						if (this.template.soughtProp(arrrec[i.currelem])) return i
+						if (arrec[i.currelem] instanceof Array) {
+							const r = this.function(
+								arrrec[i.currelem],
+								i,
+								false,
+								reversed
+							)
+							if (!r) continue
+							return r
 						}
-						return false
 					}
-				}
-			},
+					return false
+				},
+				word: "function"
+			}),
+
+			// * CURRENT AGENDA [continue the templatization from here on, pray...]; 
 
 			// * A maximally efficient structurally counter based on array recursion and finite orders;
 			// ! Clean, review again later; fix	problems
@@ -2778,15 +2792,14 @@ export function instance(transformation = ID) {
 								indexes = findDeepUnfilledArr(x)
 								if (!indexes) return [x]
 
-								result =
-									RESULT.submodules.infinite.recursiveIndexationInfFields()(
-										result,
-										indexes
-									)
+								result = RESULT.main.recursiveIndexationInfFields()(
+									result,
+									indexes
+								)
 
 								// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
 								// * Including the infinite versions of them...
-								result = RESULT.submodules.infinite.repeatedApplication()(
+								result = RESULT.main.repeatedApplication()(
 									(value) => {
 										value.push([])
 										return value[value.length - 1]
@@ -2802,11 +2815,10 @@ export function instance(transformation = ID) {
 								return x
 							}
 
-							result =
-								RESULT.submodules.infinite.recursiveIndexationInfFields()(
-									result,
-									indexes.slice(undefined, indexes.finish().previous())
-								)
+							result = RESULT.main.recursiveIndexationInfFields()(
+								result,
+								indexes.slice(undefined, indexes.finish().previous())
+							)
 							const endind = indexes.read(indexes.finish())
 							result[endind] = thisobject.template[
 								sign ? "forward" : "backward"
@@ -2831,16 +2843,14 @@ export function instance(transformation = ID) {
 							const ffinind = finind.previous()
 							// * Note: the one underneath here is an old note;
 							// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-							let ppointer =
-								RESULT.submodules.infinite.recursiveIndexationInfFields()(
-									x,
-									lastIndexes.slice(undefined, ffinind.previous())
-								)
-							let pointer =
-								RESULT.submodules.infinite.recursiveIndexationInfFields()(
-									x,
-									lastIndexes.slice(undefined, ffinind)
-								)
+							let ppointer = RESULT.main.recursiveIndexationInfFields()(
+								x,
+								lastIndexes.slice(undefined, ffinind.previous())
+							)
+							let pointer = RESULT.main.recursiveIndexationInfFields()(
+								x,
+								lastIndexes.slice(undefined, ffinind)
+							)
 							const llindex = lastIndexes.read(ffinind)
 							const lindex = lastIndexes.read(finind)
 
@@ -2866,23 +2876,21 @@ export function instance(transformation = ID) {
 								// * Consider carefully how to do this precisely...
 								// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
 								index = index.previous()
-								ppointer =
-									RESULT.submodules.infinite.recursiveIndexationInfFields()(
-										x,
-										lastIndexes.slice(
-											undefined,
-											(hlindex = hlindex.previous())
-										)
+								ppointer = RESULT.main.recursiveIndexationInfFields()(
+									x,
+									lastIndexes.slice(
+										undefined,
+										(hlindex = hlindex.previous())
 									)
+								)
 								ppointer[hlindex] = RESULT.aliases._remove(
 									ppointer[hlindex],
 									index
 								)
-								pointer =
-									RESULT.submodules.infinite.recursiveIndexationInfFields()(
-										x,
-										lastIndexes.slice(undefined, index)
-									)
+								pointer = RESULT.main.recursiveIndexationInfFields()(
+									x,
+									lastIndexes.slice(undefined, index)
+								)
 							}
 
 							return x
@@ -2901,7 +2909,7 @@ export function instance(transformation = ID) {
 
 				function generalgenerator(x, bool, thisobj) {
 					if (!thisobj.range(x)) return [thisobj.template.lower]
-					let r = RESULT.submodules.infinite.deepCopy(x)
+					let r = RESULT.main.deepCopy(x)
 					return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(
 						r
 					)
@@ -2910,12 +2918,12 @@ export function instance(transformation = ID) {
 				// ! PROBLEM [same - with the re-creation of different methods for the purpose of running this thing...];
 				// TODO: DO THE SAME THERE...
 				// TODO: generalize the 'LastIndexArray + arrayCounter()' part...
-				// ? What about putting these things out into the 'submodules.infinite.' or some other more global scope?
+				// ? What about putting these things out into the 'submodules.RESULT.main.' or some other more global scope?
 				const findDeepUnfilled = (t = true) => {
-					RESULT.submodules.infinite.generalSearch({
-						genarrclass: RESULT.submodules.infinite.LastIndexArray({
-							icclass: RESULT.submodules.infinite.InfiniteCounter(
-								RESULT.submodules.infinite.arrayCounter()
+					RESULT.main.generalSearch({
+						genarrclass: RESULT.main.LastIndexArray({
+							icclass: RESULT.main.InfiniteCounter(
+								RESULT.main.arrayCounter()
 							)
 						}),
 						soughtProp: (x) =>
@@ -2929,21 +2937,17 @@ export function instance(transformation = ID) {
 							)
 					}).function
 				}
-				const findDeepUnfilledArr = RESULT.submodules.infinite.generalSearch({
-					genarrclass: RESULT.submodules.infinite.LastIndexArray({
-						icclass: RESULT.submodules.infinite.InfiniteCounter(
-							RESULT.submodules.infinite.arrayCounter()
-						)
+				const findDeepUnfilledArr = RESULT.main.generalSearch({
+					genarrclass: RESULT.main.LastIndexArray({
+						icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
 					}),
 					soughtProp: (x) =>
 						x instanceof Array && x.length < returned.template.maxarrlen,
 					self: true
 				}).functions
-				const findDeepLast = RESULT.submodules.infinite.generalSearch({
-					genarrclass: RESULT.submodules.infinite.LastIndexArray({
-						icclass: RESULT.submodules.infinite.InfiniteCounter(
-							RESULT.submodules.infinite.arrayCounter()
-						)
+				const findDeepLast = RESULT.main.generalSearch({
+					genarrclass: RESULT.main.LastIndexArray({
+						icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
 					}),
 					soughtProp: returned.template.type,
 					reversed: true
@@ -2957,7 +2961,7 @@ export function instance(transformation = ID) {
 			// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 			// note: creates new objects after having been called;
 			numberCounter(template = {}) {
-				return RESULT.submodules.infinite.recursiveCounter({
+				return RESULT.main.recursiveCounter({
 					upper: RESULT.variables.MAX_INT.get,
 					lower: 0,
 					rupper: -RESULT.variables.MAX_INT.get,
@@ -3115,9 +3119,7 @@ export function instance(transformation = ID) {
 								.class()
 								.next()
 								.jumpDirection(
-									RESULT.submodules.infinite.maxfinite(
-										recarr.map(this.function)
-									)
+									RESULT.main.maxfinite(recarr.map(this.function))
 								)
 						return template.icclass.class()
 					}
@@ -3242,7 +3244,7 @@ export function instance(transformation = ID) {
 							iter = (x) => x.next(),
 							comparison = this.this.template.comparison
 						) {
-							let curr = infinite.deepCopy(start)
+							let curr = RESULT.main.deepCopy(start)
 							while (!comparison(curr, end)) {
 								each(curr)
 								curr = iter(curr)
@@ -3251,7 +3253,7 @@ export function instance(transformation = ID) {
 						}
 					},
 					template: {
-						comparison: infinite.valueCompare,
+						comparison: RESULT.main.valueCompare,
 						unfound: null,
 						...template
 					},
@@ -3333,7 +3335,7 @@ export function instance(transformation = ID) {
 								// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
 								// TODO: above *;
 								this.class.static.whileloop(
-									infinite.deepCopy(this),
+									RESULT.main.deepCopy(this),
 									ic,
 									() => {
 										current = next(current)
@@ -3373,10 +3375,10 @@ export function instance(transformation = ID) {
 								return this.class.static.forloop(
 									{
 										// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
-										...infinite.deepCopy(this),
+										...RESULT.main.deepCopy(this),
 										class: this.this
 									},
-									infinite.InfiniteCounter(leftovers.counterclass)(),
+									RESULT.main.InfiniteCounter(leftovers.counterclass)(),
 									x,
 									jumping,
 									leftovers.comparison
@@ -3485,9 +3487,7 @@ export function instance(transformation = ID) {
 			LastIndexArray(template = {}) {
 				const A = {
 					template: {
-						icclass: RESULT.submodules.infinite.InfiniteCounter(
-							RESULT.submodules.infinite.numberCounter()
-						),
+						icclass: RESULT.main.InfiniteCounter(RESULT.main.numberCounter()),
 						maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
 						filling: null,
 						...template,
@@ -3573,9 +3573,9 @@ export function instance(transformation = ID) {
 				// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
 				return {
 					template: {
-						icclass: RESULT.submodules.infinite.numberCounter()
+						icclass: RESULT.main.numberCounter()
 					},
-					class: RESULT.submodules.infinite.GeneralArray({
+					class: RESULT.main.GeneralArray({
 						newvalue: function (array, value) {},
 						elem(array) {},
 						icclass: this.template.icclass
@@ -3585,7 +3585,7 @@ export function instance(transformation = ID) {
 			CommonArray(template = {}) {
 				return {
 					template: { offset: -1, ...template },
-					class: RESULT.submodules.infinite.GeneralArray({
+					class: RESULT.main.GeneralArray({
 						newvalue: function (arr, value) {
 							return (arr.array[arr.currindex] = value)
 						},

@@ -19,7 +19,6 @@ export const VARIABLE = TYPED_VARIABLE()
 
 // * Allows to define templated classes and functions more non-conventionally;
 // ! use actively across the entire library...
-// TODO: replace with a template [give names to those things...]
 // TODO: optimize the macros; [re-implement them more desireably...];
 export const TEMPLATE = function (template = {}) {
 	return {
