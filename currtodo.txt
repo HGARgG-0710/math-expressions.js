@@ -53,43 +53,20 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 			This'd lead to a tremendous simplification of many of the library's aspects with simultaneuous concentration on the functional concerns rather than the possibilities of purely time/memory-cost nature...
 			QUESTION IS: WOULD ONE LOVE THAT? 
 			ANSWER IS: sure; So, the newly created conclusion, thus, is that: 
-				1. All the contents of 'RESULT.classes' get to be generalized and turned into templated 'function-classes' (object-returning functions); 
-				2. 'Result.clases' and 'Results.submodules.infinite' gets merged with 'Results.methods' into 'Results.main'; 
-					The currently decided cretaed description of the merge procedure goes here... 
 
-						The stuff from 'results.submodules.infinite' gets to generalize all the stuff from the 'finite' versions [thus, 'replaceing' and 'covering' them at the same time in the '.main' field]; 
-						Each and every abstraction from 'native JS' used by the library gets generalized within the new 'results.submodules.infinite'; 
+				About the reorganization procedures; 
+					The distinction between which of the functions one desires to keep as native types insofar have been one, whose resolution is that of rather cloudy nature...
+					Due to this, one will break up the reorganization of the 'finite' part of the library into two more steps: 
+						1. putting ALL OF THEM [reworked] into the 'aliases.native', then finding out which doth and which doth not one desire to be kept within the library in their current state; 
+						2. Then, generalizing one-by-one all of them, deleting the undesired finite versions... [with CommonArray, and other such generalized wrapper-types, one's able to have the PRECISE SAME behaviour as that of the non-general ones...]
 
-						[What about things like 'ensureProperty?'; They're extremely useful in both their variants (finite AND infinite) and the finite version gets used througout the library's code a lot...]; 
-						For the cases, where one'd love to keep both the 'finite' and 'infinite' versions... 
-						Let's consider various ways to implement this kind of 'localized' distinction: 	
-
-							1. prefixes [nope; would be too many + too ugly + code repetition]; 
-							2. separate structures [clumsy RESULT object; don't like it...]; 
-							
-						The problem comes down to identifying which particular *types* of functions are those that are desired to be kept in this particular fashion...
-						CONCLUSION: all such functions are, in effect, really just aliases working with native types; 
-						So, for instance, one could store those finite versions under 'RESULT.aliases.native'; 
-						This way, there'd be 2 kinds of 'ensureProperty' [and other similarly defined functions] for both the native JS object type and a templated general InfiniteMap; 
-
-					FURTHER CONCLUSION: about the reorganization procedures; 
-						The distinction between which of the functions one desires to keep as native types insofar have been one, whose resolution is that of rather cloudy nature...
-						Due to this, one will break up the reorganization of the 'finite' part of the library into two more steps: 
-							1. putting ALL OF THEM [reworked] into the 'aliases.native', then finding out which doth and which doth not one desire to be kept within the library in their current state; 
-							2. Then, generalizing one-by-one all of them, deleting the undesired finite versions... [with CommonArray, and other such generalized wrapper-types, one's able to have the PRECISE SAME behaviour as that of the non-general ones...]
-
-				FURTHER CONCLUSION: 
+				About the generalization specifics (plans): 
 					The process of original development of the early versions of the math-expressions.js used to have been separated onto distinct steps; 
 					This is why the current API is so very multi-directioned; 
 					One ought to consider each and every part of it and what to do with it: 
 
 						[THIS LIST SHOULD GET REVISED AFTER HAVING INTRODUCED THE STRUCTURAL CHANGES...]
-						1. 'statistics' part (Statistics and Tests classes and all the related statistics functions) [in progress]: 
-							All this stuff gets generalized; 
-							The names for the functions get to remain as a 'finite' special case (as in 'number()'); 
-							It goes into the 'statistics' namespace; 
-
-						2. 'Equation' part:
+						1. 'Equation' part:
 							Not sure about generalizing this thing; 
 							Problem is: it uses rational approximations for obtaining of solutions to given equations; 
 
@@ -113,14 +90,12 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 							The VarMapping gets replaced with the UnlimitedMap(s); 
 
-						3. algorithms part: 
-							Generalize the Algorithms [in particular the 'Farey' sequence and the Ratio-TrueRatio replacement...]; 
-						4. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
+						2. Abstract Native Structures [stuff like 'IterableSet' and object(and other native types')-related functions]: 
 							The functions stay as a part of the 'aliases.native'; 
 							Re-look through them and decide if one wants to take any of them out...
-						5. Number-theoretic functions; 
+						3. Number-theoretic functions; 
 
-							Things such as 'factorOut', for instance; 
+							Things such as 'factorOut' or 'primes', for instance; 
 							Should they be generalized? 
 							Might get them to: 
 
@@ -180,47 +155,12 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 								Where do they go? 
 								Decision: they'll be in the 'aliases.native.integers' submodule, which'll have the finite 'aliases', after having finished the generalization procedures for them; 
 								Until then - the current originals...
-	
 
-1.1. THE OUTLINE OF THE LIBRARY STRUCTURE [compilation]: 
-
-	As a result of comprehension that the previous 1.0 note was slightly too confused now, one's redoing it as a single note... 
-
-		RESULT: {
-			main: {
-				// 'Main' stuff - functions and classes, categorized by general objects sometimes
-			}, 
-			variables: {
-				// 'Get-set'-type object-variables go here...
-			}, 
-			aliases: {
-				// ? question: rename to 'types' instead? 
-				native: {
-					// Stuff related to native types aliases
-					// Separates onto : 
-
-						string: {}, 
-						array: {}, 
-						object: {}, 
-						number: {
-							integer: {
-								// Subset of '.number' related to simple yet powerful number-theoretic integer-related stuff...
-							}
-						},
-						function: {}, 
-						boolean: {}
-				}
-				// Stuff that is pure aliases to 'main', or very things general like 'id' or 'refCompare', which don't fit in with the '.types' (.native) field...
-			}
-		}
-
-	The outline of the library's structure's almost finished!
+	The outline of the current library version's structure's nigh finished!
 	Now, all that's left is the linear part, hardcore alias-relinkage, small polishing and code-brushing, and testing-fixing! 
 
 2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
-	2.1. Decide what to do with the 'RESULT.classes' [should they get generalized or ought they be kept more or less the same way as before?]; 
-	2.2. Decide what to do with the merging of 'RESULT.constants' and 'RESULT.globals' and 'RESULT.defaults' into something like 'RESULT.variables'; Decide about the 'variables' structure;
-	2.3. Finish all the great amount of 'small' TODOs written all over the source code file; 
-	2.4. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
-	2.5. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
-	2.6. Fix the known bugs in advance; Look for them; 
+	2.1. Finish all the great amount of 'small' TODOs written all over the source code file; 
+	2.2. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
+	2.3. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
+	2.4. Fix the known bugs in advance; Look for them; 

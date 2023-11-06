@@ -2745,7 +2745,7 @@ export function instance(transformation = ID) {
 				word: "function"
 			}),
 
-			// * CURRENT AGENDA [continue the templatization from here on, pray...]; 
+			// TODO: template the 'recursiveCounter' (slightly more curious than the rest the cases insofar - namely, one desires for powerful generalization of the constructs used to assemble the final 'returned'); Work on the thing in question greatly...
 
 			// * A maximally efficient structurally counter based on array recursion and finite orders;
 			// ! Clean, review again later; fix	problems
@@ -3010,101 +3010,53 @@ export function instance(transformation = ID) {
 				})
 			},
 
-			// * It checks for the same array structure... That being, if array are precisely isomorphic in a certain given sense...
-			isSameArrStructure(arr1, arr2, comparison = RESULT.aliases.refCompare) {
-				// ? create an alias for the 'instanceof' instruction? [idea: 'is', example: is(obj, ObjClass)]
-				if (arr1 instanceof Array != arr2 instanceof Array)
-					return comparison(arr1, arr2)
+			// TODO: pray finish the sketch for the 'Structure' API... (used for extended work with native JS object/array-forms...)
+			structure: {
+				objStructure(template = {}) {
+					return {
+						template: {
+							form: (x) => x instanceof Object,
+							compequiv: ID,
+							...template
+						},
+						function(obj = {}) {
+							return {
+								template: {
+									template: this.template,
+									compequiv: this.template.compequiv,
+									form: this.template.form
+								},
+								// ^ note: with this function one has [largely], overdone the entire problem with the 
+								// ^ 'form-representation': Anything that can be done with a native JS object can be done with a form! 
+								// The only issues now are - the EXTENSIVENESS of the present version [it's a sketch, incomplete, requires more thought...] 
+								// * for form(structure)-copying
+								equivalent: function () {
+									const o = {}
+									// ? Just what arguments instead of 'this.template.template' does one desire for the objStructure in this one case, pray tell?
+									for (const x in obj)
+										o[x] = this.template.form(obj[x])
+											? objStructure(this.template.template)
+													.function(obj[x])
+													.equivalent()
+											: this.template.compequiv(obj[x])
+									return o
+								}, 
 
-				return !!RESULT.main.min(
-					RESULT.main
-						.generate(1, max([arr1, arr2].map((a) => a.length)))
-						.map((i) => !!this.isSameArrStructure(arr1[i], arr2[i]))
-				)
-			},
-
-			// * Object-Generalization of the isSameArrStructure...
-			isSameObjStructure(obj1, obj2, comparison = RESULT.aliases.refCompare) {
-				if (obj1 instanceof Object != obj2 instanceof Object)
-					return comparison(obj1, obj2)
-				const x = RESULT.main.valueCompare(Object.keys(obj1), Object.keys(obj2))
-				const vals1 = Object.values(obj1)
-				const vals2 = Object.values(obj2)
-				return !x
-					? false
-					: RESULT.main.min(
-							vals1.map((t, i) =>
-								RESULT.main.isSameObjStructure(t, vals2[i])
-							)
-					  )
-			},
-
-			// ? QUESTION [general]: should such inter-call arguments required to pass the intermidiate execution values between the two recursive calls be available to user? Or does one want them to be obstructed via additional function context instead???
-			// TODO: pray think in each individual case on this stuff, make it correspondent...
-			// ! PROBLEM [same as with the isSameStructure]: there is no distinction between whether something is an element or an object!
-			// ^ IDEA: introduce a specialized function for this stuff - 'form'; it'd take the array and map [in accordance with the decided form], whether it's an element or a part of the structure; continuation is a second element;
-			// * Example (for some 'form'): form([a, [b, [c, d, e]]]) = [[0], [1, [0, 0]]];
-			// * Then, the isSameStructure would just compare forms;
-			// ^ IDEA: create a 'ArrayForm', which would be the array embedded with this sturcture...
-			// ! isSameStructure performs forms comparison. sameStructure performs form-copying; The only functions really missing are ones for fast form-creation;
-			// * Three elements of an object-system:
-			// 	1. Creation [emerging of elements of the object-system from nothing];
-			// 	2. Relation [non-affecting (non-mutating, that is) processes that can take place between them, described by elementary pieces of 'relations'];
-			// 	3. Transformation [ways of transforming one into the other on-the-go...];
-			// ! Write this down somewhere [about the 3 elements]. It's good. Really good...
-			// * copies the array structure in question precisely;
-			sameStructureArr(
-				array,
-				generator,
-				currval = undefined,
-				copy = true,
-				subcall = false
-			) {
-				const copied = copy ? RESULT.main.deepCopy(array) : array
-				for (let i = 0; i < copied.length; i++) {
-					if (copied[i] instanceof Array) {
-						currval = sameStructureArr(
-							copied[i],
-							generator,
-							currval,
-							false,
-							true
-						)
-						continue
+							}
+						}
 					}
-					// * Found out that in JS, 'a(undefined) = a()';
-					currval = generator(currval)
-					copied[i] = currval
-				}
-				return !subcall ? currval : copied
+				},
+
+				arrStructure(template = {}) {
+					return this.objStructure({
+						form: (x) => x instanceof Array, 
+						...template
+					})
+				},	
 			},
 
-			// * Generalization of the sameStructureArr...
-			sameStructureObj(
-				object,
-				generator,
-				initval = undefined,
-				copy = true,
-				subcall = false
-			) {
-				let currvalue = initval
-				let copied = copy ? RESULT.main.deepCopy(object) : object
-				for (const x of object) {
-					if (copied[x] instanceof Object) {
-						currvalue = RESULT.main.sameStructureObj(
-							copied[x],
-							generator,
-							currvalue,
-							false,
-							true
-						)
-						continue
-					}
-					currvalue = generator(currvalue)
-					copied[x] = currvalue
-				}
-				return !subcall ? copied : currvalue
-			},
+			// ! CURRENT AGENDA: from here on - continue working on the code [more than mere 'macrofication' of templates...];
+			// * Finally, get on with the generalization of finite types... (Still not quite sure what to do about it, though... Want to consult the old notes a tad further first); 
 
 			// ! this thing is for finitely lengthed Arrays; [? Create a 'GeneralArray' version for it?]
 			// * Slight problem with this whole 'separation' onto finite and infinite arrays;
@@ -4015,7 +3967,7 @@ export function instance(transformation = ID) {
 			},
 
 			// TODO: extend this thing - create new algorithms implementations for the library...
-			// ! Generalize this;
+			// ! Generalize this [use General types...];
 			algorithms: {
 				BinarySearch(array, number) {
 					// * For getting the middle index of the array.
@@ -4065,6 +4017,7 @@ export function instance(transformation = ID) {
 				}
 			},
 
+			// ? Does one want to generalize this?
 			statistics: {
 				// ! Problem: what to do with the 'statistics' part of the API? [CONSIDER, PRAY...]
 				/**
@@ -4880,7 +4833,7 @@ export function instance(transformation = ID) {
 				// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
 				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
 				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
-				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js]
+				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js, instance.js and macros.js]
 			}
 		},
 		variables: {

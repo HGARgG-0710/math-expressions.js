@@ -5,7 +5,7 @@
 	"main": "src/math-expressions.mjs",
 	"type": "module",
 	"scripts": {
-		"test": "node src/examples.mjs"
+		"test": "node src/examples.js"
 	},
 	"repository": {
 		"type": "git",
