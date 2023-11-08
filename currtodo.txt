@@ -164,3 +164,31 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 	2.2. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
 	2.3. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
 	2.4. Fix the known bugs in advance; Look for them; 
+
+3. DIRECTIONS: project is slowly entering a halting phase of development (again); 
+	And again, due to lack of direction; 
+
+		SOLUTION: one ought to be concentrating on TODOS in a methodological order. 
+			Thus, one decides to do so - gather the list of all the presently pursued todos [not the 'todos.txt' kind], then work on each and every one of them; 
+			One therefore must take some time to look through the old notes [again, make a list of todos for completion, do some little bit more of cleaning...]
+		
+	LIST OF CURRENTLY PURSUED TODOS: 
+		[First off - the method of choice; The ones considered presently will all be of finishing/reparing/patching/fixing/generalizing/templatizing nature]
+		1. Rewrite the Equation via NumberEquation; 	
+			1.1. First, simply re-read, understand the old method of work, clean up, basic refactor, reconstruct it anew (with newly decided code practices); 
+				1.1.1. The gist of it has been such - given a string being a sentence in a given language, the langauge is parsed and then converted to a two-side equation. 
+						Then, one finds the difference of two sides and finds the values for variables that cause the difference to equal zero; 
+						NOTE [1]: the thing works only with 1 variable - fix it? 
+						The search is numerical purely and is done via manual substitution and decimal approximation; 
+						NOTE [2]: this can only be limitedly useful and accurate. One ought to create and implement a class for unlimited decimals and decimal arithmetic; 
+						After having computed an array of desired depth of accuracy and found the point of greatest accuracy, it is returned as an approximation for a solution; 
+						NOTE [3]: doesn't seem to be taking account of the case of multiple possible answers; [If the case is that there are 2 or more equal smallest differences]
+							So instead, return the array of them instaed;  
+						NOTE [4]: two sides of the equation; 
+							Approximation is currently taken via 'indexof(min|r-l|)'; 
+							This strips the method of some degree of accuracy; 
+							QUESTION: Make it so that it is possible to calulate it for both the sides [that is - there is the *signed* difference], or not? 
+							ANSWER: currently - no; It doesn't give new information in regards of the minimal difference sought;  
+						NOTE [5]: It appears to be using eval; Let it use library's 'op' API instead...
+
+			1.2. Then, generalize; 
