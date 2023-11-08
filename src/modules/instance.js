@@ -4483,314 +4483,217 @@ export function instance(transformation = ID) {
 				return C
 			},
 
-			// ! This one get 'poured out' into the 'main' and other fields of the 'RESULT';
-			classes: {
-				// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
-				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
-
-				NumberEquation: function (template = {}) {
-					const X = {
-						template: {
-							operators: ["+", "*", "/", "-", "^"],
-							brackets: ["[", "]", "(", ")", "{", "}"],
-							digits: [
-								"0",
-								"1",
-								"2",
-								"3",
-								"4",
-								"5",
-								"6",
-								"7",
-								"8",
-								"9",
-								"."
-							],
-							...template
+			NumberEquation: function (template = {}) {
+				const X = {
+					template: {
+						operators: RESULT.variables.defaultAlphabet,
+						brackets: [
+							["[", "]"],
+							["{", "}"]
+						],
+						...template
+					},
+					static: {
+						/**
+						 * A static method for parsing an equation with various mappings applied.
+						 * @param {string} equationLine A line, containing an equation.
+						 * @param {VarMapping} mappings A mapping of variables to their values.
+						 * @param {string[]} variables Additional variable names.
+						 */
+						ParseEquation(equationLine, origmappings) {
+							const brackets = this.this.template.brackets
+							equationLine = RESULT.aliases.native.string.sreplace(
+								equationLine,
+								" ",
+								""
+							)
+							// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
+							// ? Question: allow for multiple parts of the equation, not just left-right?
+							// * CURRENT DECISION: YES, although present code [for now] will still assume the working with the two. Then, after having patched it up and refactored, will generalize...
+							equationLine = equationLine.split("=")
+							// ? QUESTION: enable arbitrary user-defined syntaxes?
+							function parse(sides) {
+								for (let i = 0; i < sides.length; i++) {
+									for (const v of origmappings)
+										sides[i] = this.this.plug(
+											sides[i],
+											v,
+											origmappings[v]
+										)
+									for (const b of brackets) {
+										// ? Refactor? [generalize...]
+										sides[i] = RESULT.aliases.native.string.sreplace(
+											sides[i],
+											b[0],
+											"("
+										)
+										sides[i] = RESULT.aliases.native.string.sreplace(
+											sides[i],
+											b[1],
+											")"
+										)
+									}
+								}
+							}
+							return parse(equationLine)
 						},
-						static: {
-							/**
-							 * A static method for parsing an equation with various mappings applied.
-							 * @param {string} equationLine A line, containing an equation.
-							 * @param {VarMapping} mappings A mapping of variables to their values.
-							 * @param {string[]} variables Additional variable names.
-							 */
-							ParseEquation(equationLine, origmappings, variables) {
-								const operators = this.this.template.operators
-								const brackets = this.this.template.brackets
-								const digits = this.this.template.digits
-								let metEquality = false
-								const mappings = origmappings.varmap
-								function eliminateSpaces() {
-									return equationLine.split(" ").join("")
-								}
-								function parse(line) {
-									const result = { right: "", left: "" }
-									for (let i = 0; i < line.length; i++) {
-										switch (line[i]) {
-											case "=":
-												if (metEquality)
-													throw new Error(
-														"Met equality sign in the parsed string already!"
-													)
-												metEquality = true
-												break
-											default:
-												if (line[i] === "^") {
-													line = Equation.replaceIndex(
-														line,
-														i,
-														"**"
-													)
-													continue
-												}
-												if (
-													mappings.variables.includes(line[i])
-												) {
-													line = Equation.replaceIndex(
-														line,
-														i,
-														mappings.mappings[
-															mappings.variables.indexOf(
-																line[i]
-															)
-														]
-													)
-													continue
-												}
-												if (brackets.includes(line[i])) {
-													line = Equation.replaceIndex(
-														line,
-														i,
-														brackets.indexOf(line[i]) % 2 ===
-															0
-															? "("
-															: ")"
-													)
-													continue
-												}
-												if (
-													operators.includes(line[i]) ||
-													digits.includes(line[i]) ||
-													variables.includes(line[i])
-												)
-													continue
-												throw new Error(
-													`Unknown symbol detected: ${line[i]}`
-												)
-										}
-									}
-									for (let i = 0; i < line.length; i++) {
-										if (line[i] === "=") {
-											result.right = line.slice(0, i)
-											result.left = line.slice(i + 1)
-											break
-										}
-									}
-									return result
-								}
-								return parse(eliminateSpaces())
-							},
-							/**
-							 * This static method replaces a given index in a given string by a given value and returns the result.
-							 * Note: Original string is NOT mutated.
-							 *
-							 * @param {string} string String, index in which is to be changed.
-							 * @param {number} index Index.
-							 * @param {number | string | boolean} val Value to be inserted on a place of index "index", thereby replacing it.
-							 */
-							replaceIndex(string, index, val) {
-								return (
-									string.substring(0, index) +
-									val +
-									string.substring(index + 1)
+						// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
+						plug(origparsed, varname, varvalue) {
+							const parsed = [...origparsed]
+							for (const pparsed of parsed)
+								for (let i = 0; i < pparsed.length; i++)
+									if (pparsed[i] === varname)
+										pparsed =
+											RESULT.aliases.native.string.sreplaceIndex(
+												pparsed,
+												i,
+												varvalue
+											)
+							return parsed
+						}
+					},
+					// ^ IDEA: the result of a class instance here could ALSO be a template - to allow for a more "natural" usage of the defaults [and to do none of that repetition...];
+					class: function (equationText = "", vars = {}) {
+						return {
+							class: this,
+							equation: equationText || "",
+							variables: vars || {},
+							parse(mappings = this.variables) {
+								return this.class.static.ParseEquation(
+									this.equation,
+									mappings
 								)
 							},
-							// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
-							plug(origparsed, varname, varvalue) {
-								const parsed = { ...origparsed } // Making a copy.
-								for (let i = 0; i < parsed.right.length; i++)
-									if (parsed.right[i] === varname)
-										parsed.right = Equation.replaceIndex(
-											parsed.right,
-											i,
-											varvalue
-										)
-								for (let i = 0; i < parsed.left.length; i++)
-									if (parsed.left[i] === varname)
-										parsed.left = Equation.replaceIndex(
-											parsed.left,
-											i,
-											varvalue
-										)
-								return parsed
-							}
-						},
-						class: function () {
-							return {
-								/**
-								 * Parses an equation, that it's invoked onto.
-								 * @param {VarMapping} mappings Various mappings for variables.
-								 */
-								parse(mappings) {
-									return Equation.ParseEquation(
-										this.equation,
-										mappings,
-										this.variables
-									)
-								},
-								// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations;
-								/**
-								 * Difference in between the right and left sides of the equation with mappings for different variables.
-								 * @param {VarMapping} mappings Mapping of variables to their values.
-								 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm.
-								 * @param {number} varvalue Addtional value.
-								 */
-								differRightLeft(mappings, varname, varvalue) {
-									if (typeof varname !== "string")
-										throw new Error(
-											`Expected string as an input of variable name, got ${typeof varname}}`
-										)
-									const plugged = Equation.plug(
-										this.parse(mappings),
-										varname,
-										varvalue
-									)
-									return eval(plugged.right) - eval(plugged.left)
-								},
-								/**
-								 * This method searches for the solution of an equation it's invoked onto.
-								 *
-								 * ! WARNING 1 !
-								 *
-								 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-								 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
-								 * (However, if the root is rational, then it could even be exactly it.)
-								 *
-								 * ! WARNING 2 !
-								 *
-								 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-								 *
-								 * PARAMETRES
-								 *
-								 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
-								 * @param {string} varname Name of the variable for which search is invoked.
-								 * @param {number} startvalue Value, from which search is invoked.
-								 * @param {number} pathlength The length of the search path.
-								 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
-								 */
-								searchSolution(
-									mappings,
+							// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations;
+							// ? What to do with this now? [The thing has mutiple sides of the equation...];
+							// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
+							/**
+							 * Difference in between the right and left sides of the equation with mappings for different variables.
+							 * @param {VarMapping} mappings Mapping of variables to their values.
+							 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm.
+							 * @param {number} varvalue Addtional value.
+							 */
+							differRightLeft(mappings, varname, varvalue) {
+								const plugged = Equation.plug(
+									this.parse(mappings),
 									varname,
+									varvalue
+								)
+								return eval(plugged.right) - eval(plugged.left)
+							},
+							/**
+							 * This method searches for the solution of an equation it's invoked onto.
+							 *
+							 * ! WARNING 1 !
+							 *
+							 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+							 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+							 * (However, if the root is rational, then it could even be exactly it.)
+							 *
+							 * ! WARNING 2 !
+							 *
+							 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+							 *
+							 * PARAMETRES
+							 *
+							 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
+							 * @param {string} varname Name of the variable for which search is invoked.
+							 * @param {number} startvalue Value, from which search is invoked.
+							 * @param {number} pathlength The length of the search path.
+							 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+							 */
+							searchSolution(
+								mappings,
+								varname,
+								startvalue,
+								pathlength,
+								precision = 4
+							) {
+								const differences = generate(
 									startvalue,
-									pathlength,
-									precision = 4
-								) {
-									const differences = generate(
-										startvalue,
-										startvalue + pathlength,
-										floor(10 ** -precision, precision),
-										precision
-									).map((i) => {
-										return Math.abs(
-											this.differRightLeft(mappings, varname, i)
-										)
-									})
-									return (
-										startvalue +
-										differences.indexOf(min(differences)) *
-											floor(10 ** -precision, precision)
-									)
-								},
-								defaultDifferRightLeft(index, varname, varvalue) {
-									if (typeof varname !== "string")
-										throw new Error(
-											`Expected string as an input of variable name, got ${typeof varname}}`
-										)
-									const plugged = Equation.plug(
-										this.defaultParsed[index],
-										varname,
-										varvalue
-									)
-									return eval(plugged.right) - eval(plugged.left)
-								},
-								/**
-								 * This method searches for the solution of an equation it's invoked onto using default mappings.
-								 * It's technically supposed to be much faster because of the data preparation.
-								 *
-								 * ! WARNING 1 !
-								 *
-								 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-								 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
-								 * (However, if the root is rational, then it could even be exactly it.)
-								 *
-								 * ! WARNING 2 !
-								 *
-								 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-								 *
-								 * PARAMETRES
-								 * @param {number} index Index of the default mapping to be used.
-								 * @param {string} varname Name of the variable for which search is invoked.
-								 * @param {number} startvalue Value, from which search is invoked.
-								 * @param {number} pathlength The length of the search path.
-								 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
-								 */
-								defaultSearchSolution(
-									index,
-									varname,
-									startvalue,
-									pathlength,
+									startvalue + pathlength,
+									floor(10 ** -precision, precision),
 									precision
-								) {
-									const differences = generate(
-										startvalue,
-										startvalue + pathlength,
-										floor(10 ** -precision, precision),
-										precision
-									).map((i) => {
-										return Math.abs(
-											this.defaultDifferRightLeft(index, varname, i)
-										)
-									})
-									return (
-										startvalue +
-										differences.indexOf(min(differences)) *
-											floor(10 ** -precision, precision)
+								).map((i) => {
+									return Math.abs(
+										this.differRightLeft(mappings, varname, i)
 									)
-								}
+								})
+								return (
+									startvalue +
+									differences.indexOf(min(differences)) *
+										floor(10 ** -precision, precision)
+								)
+							},
+							defaultDifferRightLeft(index, varname, varvalue) {
+								if (typeof varname !== "string")
+									throw new Error(
+										`Expected string as an input of variable name, got ${typeof varname}}`
+									)
+								const plugged = Equation.plug(
+									this.defaultParsed[index],
+									varname,
+									varvalue
+								)
+								return eval(plugged.right) - eval(plugged.left)
+							},
+							/**
+							 * This method searches for the solution of an equation it's invoked onto using default mappings.
+							 * It's technically supposed to be much faster because of the data preparation.
+							 *
+							 * ! WARNING 1 !
+							 *
+							 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+							 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+							 * (However, if the root is rational, then it could even be exactly it.)
+							 *
+							 * ! WARNING 2 !
+							 *
+							 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+							 *
+							 * PARAMETRES
+							 * @param {number} index Index of the default mapping to be used.
+							 * @param {string} varname Name of the variable for which search is invoked.
+							 * @param {number} startvalue Value, from which search is invoked.
+							 * @param {number} pathlength The length of the search path.
+							 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+							 */
+							defaultSearchSolution(
+								index,
+								varname,
+								startvalue,
+								pathlength,
+								precision
+							) {
+								const differences = generate(
+									startvalue,
+									startvalue + pathlength,
+									floor(10 ** -precision, precision),
+									precision
+								).map((i) => {
+									return Math.abs(
+										this.defaultDifferRightLeft(index, varname, i)
+									)
+								})
+								return (
+									startvalue +
+									differences.indexOf(min(differences)) *
+										floor(10 ** -precision, precision)
+								)
 							}
 						}
 					}
-					X.static.this = X
-					return X
-				},
-
-				// ! Rename this thing; it's pretty general (so not Polynomial, for instance), but it's not JUST an equation; it's one involving numbers
-				// * CURRENT IDEA FOR A NAME: NumberEquation... Or NumericEquation... Or something...
-				// ^ Generalize for arbitrary operators; Not just the '["+", "*", "/", "-", "^"]'; Let it be more general; Allow for predefinitions of operators and notations;
-				// * One could use the operator-table concept for this thing [connecting the function calls with the notation with the operators...]
-				// ! Also - this could use some code-brushing [in particular the 'default' computation 'method', which's really just the same thing, except the precomputed results are used];
-				/**
-				 * This class's purpose is to represent a mathematical equation of multiple variables.
-				 * * Temporary note: for now it can be used only with simplest arithmetical operators (+, -, ^(exponentiation), /, *).
-				 */
-				Equation: class {
-					constructor(equationText = "", vars = ["x"], defaultMappings = []) {
-						this.variables = []
-						this.equation = ""
-						this.defaultParsed = null
-						this.defaultMappings = null
-						this.variables = vars
-						this.equation = equationText
-						this.defaultMappings = defaultMappings
-						this.defaultParsed = []
-						for (let i = 0; i < defaultMappings.length; i++)
-							this.defaultParsed.push(this.parse(defaultMappings[i]))
-					}
 				}
+				X.static.this = X
+				return X
 			},
 
 			// ! Finish the todos + stuff listed in these two, then 'pour out' the rest (what isn't finished, otherwise nothing to pour out); Otherwise, finished [first ever sketch...]
+			// ! PRAY GET RID OF THESE UGLY LABELS, reposition them somewhere...
+			classes: {
+				// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
+				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
+			},
 			submodules: {
 				infinite: {
 					// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]

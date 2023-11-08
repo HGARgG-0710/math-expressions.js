@@ -175,10 +175,10 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 	LIST OF CURRENTLY PURSUED TODOS: 
 		[First off - the method of choice; The ones considered presently will all be of finishing/reparing/patching/fixing/generalizing/templatizing nature]
 		1. Rewrite the Equation via NumberEquation; 	
-			1.1. First, simply re-read, understand the old method of work, clean up, basic refactor, reconstruct it anew (with newly decided code practices); 
+			1.1. First, simply understand the old method of work in detail, clean up, basic refactor, reconstruct it anew (with newly decided code practices); 
 				1.1.1. The gist of it has been such - given a string being a sentence in a given language, the langauge is parsed and then converted to a two-side equation. 
 						Then, one finds the difference of two sides and finds the values for variables that cause the difference to equal zero; 
-						NOTE [1]: the thing works only with 1 variable - fix it? 
+						NOTE [1]: the thing works only with 1 sought variable - fix it? 
 						The search is numerical purely and is done via manual substitution and decimal approximation; 
 						NOTE [2]: this can only be limitedly useful and accurate. One ought to create and implement a class for unlimited decimals and decimal arithmetic; 
 						After having computed an array of desired depth of accuracy and found the point of greatest accuracy, it is returned as an approximation for a solution; 
@@ -190,5 +190,9 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 							QUESTION: Make it so that it is possible to calulate it for both the sides [that is - there is the *signed* difference], or not? 
 							ANSWER: currently - no; It doesn't give new information in regards of the minimal difference sought;  
 						NOTE [5]: It appears to be using eval; Let it use library's 'op' API instead...
+
+						Note [6]: When flesh wrote the code for this thing, it must have been half-asleep!
+
+						NOTE [7]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray; 				
 
 			1.2. Then, generalize; 
