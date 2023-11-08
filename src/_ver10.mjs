@@ -48,6 +48,26 @@ export * from "./modules/instance.js"
 // 	reversed: true
 // }).function
 
+// * B 
+
+// ! NOTE: olden code; Rewrite those as aliases of the min/max (previously (min/max)general)
+// // * NOTE: for now assumes that all the elements of the 'finarr' have the same 'icclass'
+// // TODO: create an 'arrIcclassSame' functions (aliases) for: 1. identyfying if it is [indeed] the same icclass; 2. making it the same [regardless of the results of 1.];
+// maxfinite(finarr = []) {
+// 	return RESULT.aliases
+// 		.mostf({ comparison: (chosen, current) => !current.compare(chosen) })
+// 		.function(finarr)
+// },
+// // ? One could just implement it as the 'maxfinite()' of the reversed icclass [there was a todo for making this a separate operation]... instead of manually reversing it like here;
+// // ? Should one not just rewrite the (min/max)finite via (min/max)general? In fact, even leave them out from the library (or keep, but only as aliases)?
+// // * Pray consider...
+// minfinite(finarr = []) {
+// 	return RESULT.aliases
+// 		.mostf({ comparison: (chosen, current) => !chosen.compare(current) })
+// 		.function(finarr)
+// },
+
+
 // ! OLD GENERAL NOTES [previously within the 'instance' function...]:
 
 // ^ IDEA: class extensions;

@@ -5,6 +5,7 @@
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR } from "./macros.js"
 
+// ? Make a template itself?
 export function instance(transformation = ID) {
 	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
 	const RESULT = {
@@ -373,18 +374,6 @@ export function instance(transformation = ID) {
 					arrApply: function (f, arr) {
 						return f(...arr)
 					},
-
-					// ? What about the default comparison? Again, the lower 'todo'...
-					// TODO [general] : template-defaults; Look into them carefully for each and every single thing in the library... [Here, in particular - the default 'comparison']
-					mostf: TEMPLATE({
-						function: function (farr = []) {
-							let most = farr[0]
-							for (const x of farr)
-								if (this.template.comparison(x, most)) most = x
-							return most
-						},
-						word: "function"
-					}),
 
 					replaceIndex: function (arr, index, value) {
 						return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
@@ -1186,7 +1175,7 @@ export function instance(transformation = ID) {
 
 			// ? Put it where?
 			// * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
-			mostg: TEMPLATE({
+			most: TEMPLATE({
 				function: function (garr = this.template.genarrclass.static.empty()) {
 					let most = garr.read(garr.init())
 					garr.loop()._full((t) => {
@@ -2459,7 +2448,6 @@ export function instance(transformation = ID) {
 					A.this.this = A
 					return A
 				},
-
 				transform: (templated, template) => {
 					templated.static.this = templated
 				},
@@ -3026,9 +3014,9 @@ export function instance(transformation = ID) {
 									compequiv: this.template.compequiv,
 									form: this.template.form
 								},
-								// ^ note: with this function one has [largely], overdone the entire problem with the 
-								// ^ 'form-representation': Anything that can be done with a native JS object can be done with a form! 
-								// The only issues now are - the EXTENSIVENESS of the present version [it's a sketch, incomplete, requires more thought...] 
+								// ^ note: with this function one has [largely], overdone the entire problem with the
+								// ^ 'form-representation': Anything that can be done with a native JS object can be done with a form!
+								// The only issues now are - the EXTENSIVENESS of the present version [it's a sketch, incomplete, requires more thought...]
 								// * for form(structure)-copying
 								equivalent: function () {
 									const o = {}
@@ -3040,8 +3028,7 @@ export function instance(transformation = ID) {
 													.equivalent()
 											: this.template.compequiv(obj[x])
 									return o
-								}, 
-
+								}
 							}
 						}
 					}
@@ -3049,107 +3036,86 @@ export function instance(transformation = ID) {
 
 				arrStructure(template = {}) {
 					return this.objStructure({
-						form: (x) => x instanceof Array, 
+						form: (x) => x instanceof Array,
 						...template
 					})
-				},	
-			},
-
-			// ! CURRENT AGENDA: from here on - continue working on the code [more than mere 'macrofication' of templates...];
-			// * Finally, get on with the generalization of finite types... (Still not quite sure what to do about it, though... Want to consult the old notes a tad further first); 
-
-			// ! this thing is for finitely lengthed Arrays; [? Create a 'GeneralArray' version for it?]
-			// * Slight problem with this whole 'separation' onto finite and infinite arrays;
-			// This is a general problem;
-			// ^ GENERAL SOLUTION: just use the General types, which'd include the Common types ('finite' ones in a wrapper) and the Unlimited types (things using recursion such as LastIndexArray);
-			dim(template = {}) {
-				return {
-					template: { ...template },
-					function: function (recarr = []) {
-						if (recarr instanceof Array)
-							return template.icclass
-								.class()
-								.next()
-								.jumpDirection(
-									RESULT.main.maxfinite(recarr.map(this.function))
-								)
-						return template.icclass.class()
-					}
 				}
 			},
 
-			// * NOTE: for now assumes that all the elements of the 'finarr' have the same 'icclass'
-			// TODO: create an 'arrIcclassSame' functions (aliases) for: 1. identyfying if it is [indeed] the same icclass; 2. making it the same [regardless of the results of 1.];
-			maxfinite(finarr = []) {
-				return RESULT.aliases
-					.mostf({ comparison: (chosen, current) => !current.compare(chosen) })
-					.function(finarr)
-			},
-			// ? One could just implement it as the 'maxfinite()' of the reversed icclass [there was a todo for making this a separate operation]... instead of manually reversing it like here;
-			// * Pray consider...
-			minfinite(finarr = []) {
-				return RESULT.aliases
-					.mostf({ comparison: (chosen, current) => !chosen.compare(current) })
-					.function(finarr)
-			},
-			// * Same as above, but with the 'GeneralArray' instead...
-			// ? Should one be doing any of the template + defaulting-to-empty() stuff?
-			mingeneral(genarr) {
+			dim: TEMPLATE({
+				defaults: { comparison: RESULT.aliases.refCompare },
+				function: function (recarr = this.template.genarrclass.static.empty()) {
+					if (this.template.comparison(recarr.class, this.template.genarrclass))
+						return this.template.icclass
+							.class()
+							.next()
+							.jumpDirection(
+								RESULT.main.maxgeneral(recarr.map(this.function))
+							)
+					return this.template.icclass.class()
+				},
+				word: "function"
+			}),
+
+			// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
+			min: function (template = {}) {
 				// ! Make aliases for these 'chosen/current' functions...
-				return RESULT.aliases
-					.mostg({ comparison: (chosen, current) => !chosen.compare(current) })
-					.function(genarr)
+				return RESULT.aliases.mostg({
+					comparison: (chosen, current) => !chosen.compare(current),
+					...template
+				})
 			},
-			maxgeneral(genarr) {
-				return RESULT.aliases
-					.mostg({ comparison: (chosen, current) => !current.compare(chosen) })
-					.function(genarr)
-			},
-
-			recursiveIndexationInfFields(template = {}) {
-				return {
-					template: { ...template },
-					function: function (
-						object,
-						fields = this.template.genarrclass.static.empty()
-					) {
-						return RESULT.main.repeatedApplication({
-							icclass: fields.this.class.template.icclass,
-							...this.template
-						})(
-							(x, i) => {
-								return x[fields.read(i)]
-							},
-							fields.length(),
-							object
-						)
-					}
-				}
+			max: function (template = {}) {
+				// ! Make aliases for these 'chosen/current' functions...
+				return RESULT.aliases.mostg({
+					comparison: (chosen, current) => !current.compare(chosen),
+					...template
+				})
 			},
 
-			repeatedApplication(template = {}) {
-				return {
-					template: { iter: (x) => x.next(), ...template },
-					function: function (
-						f = this.template.f,
-						times = this.template.times,
-						initial = this.template.initial,
-						offset = this.template.icclass.class()
-					) {
-						let r = initial
-						for (
-							let i = template.icclass.class();
-							!i.compare(times);
-							i = this.template.iter(i)
-						)
-							r = f(r, i.difference(offset))
-						return r
-					}
-				}
-			},
+			recursiveIndexationInfFields: TEMPLATE({
+				function: function (
+					object,
+					fields = this.template.genarrclass.static.empty()
+				) {
+					return RESULT.main.repeatedApplication({
+						icclass: fields.this.class.template.icclass,
+						...this.template
+					})(
+						(x, i) => {
+							return x[fields.read(i)]
+						},
+						fields.length(),
+						object
+					)
+				},
+				word: "function"
+			}),
+
+			repeatedApplication: TEMPLATE({
+				defaults: { iter: (x) => x.next() },
+				function: function (		
+					initial = this.template.initial,
+					times = this.template.times,
+					f = this.template.f,
+					offset = this.template.icclass.class(), 
+					iter = this.template.iter
+				) {
+					let r = initial
+					for (
+						let i = template.icclass.class();
+						!i.compare(times);
+						i = iter(i)
+					)
+						r = f(r, i.difference(offset))
+					return r
+				},
+				word: "function"
+			}),
 
 			// * This can create infinite loops...
 			// ! create a 'While' - same as 'Whilst' [naming conventions];
+			// ? Template? 
 			repeatedApplicationWhilst: function (
 				function_,
 				property,
@@ -3159,6 +3125,10 @@ export function instance(transformation = ID) {
 				while (property()) curr = function_(curr)
 				return curr
 			},
+			
+
+			// ! CURRENT AGENDA: from here on - continue working on the code [more than mere 'macrofication' of templates...];
+			// * Finally, get on with the generalization of finite types... (Still not quite sure what to do about it, though... Want to consult the old notes a tad further first);
 
 			InfiniteCounter(template = {}) {
 				const A = {
@@ -4881,7 +4851,7 @@ export function instance(transformation = ID) {
 
 	const UTF16 = RESULT.aliases.native.string.UTF16
 
-	// TODO: generalize even further - using the alias for '(p) => (x) => x[p]' + ".concat" + the repeatedApplication...;
+	// TODO: generalize even further - using the repeatedApplication...;
 	const ccf = RESULT.aliases.property("concat")
 	const coorarrs = [
 		[97, 25],
