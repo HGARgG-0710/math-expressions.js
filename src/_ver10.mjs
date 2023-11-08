@@ -10,7 +10,6 @@ export * from "./modules/instance.js"
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 
-
 // * This is the [temporary] place in the file, where the presently considered OLD CODE goes;
 
 // * A
@@ -48,7 +47,7 @@ export * from "./modules/instance.js"
 // 	reversed: true
 // }).function
 
-// * B 
+// * B
 
 // ! NOTE: olden code; Rewrite those as aliases of the min/max (previously (min/max)general)
 // // * NOTE: for now assumes that all the elements of the 'finarr' have the same 'icclass'
@@ -66,7 +65,6 @@ export * from "./modules/instance.js"
 // 		.mostf({ comparison: (chosen, current) => !chosen.compare(current) })
 // 		.function(finarr)
 // },
-
 
 // ! OLD GENERAL NOTES [previously within the 'instance' function...]:
 
@@ -164,3 +162,18 @@ export * from "./modules/instance.js"
 
 // TODO [general]: normalization of recurring name themes;
 // * Similar to 'template:' label, normalize the names for the same things (like 'defstr' and 'defaultS' - let the library use one single convention in each such trivial case, to make it simpler);
+
+// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
+// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
+// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
+// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
+// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
+// TODO: generalizes and then merge those with the array methods;
+// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
+// * ANSWER - yes, why not.
+// They'll either be:
+// 		1. references to the array methods...
+// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
+// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
+// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
+// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js, instance.js and macros.js]

@@ -4515,7 +4515,7 @@ export function instance(transformation = ID) {
 							function parse(sides) {
 								for (let i = 0; i < sides.length; i++) {
 									for (const v of origmappings)
-										sides[i] = this.this.plug(
+										sides[i] = this.plug(
 											sides[i],
 											v,
 											origmappings[v]
@@ -4552,7 +4552,6 @@ export function instance(transformation = ID) {
 							return parsed
 						}
 					},
-					// ^ IDEA: the result of a class instance here could ALSO be a template - to allow for a more "natural" usage of the defaults [and to do none of that repetition...];
 					class: function (equationText = "", vars = {}) {
 						return {
 							class: this,
@@ -4563,23 +4562,6 @@ export function instance(transformation = ID) {
 									this.equation,
 									mappings
 								)
-							},
-							// TODO: approximate from both sides! This way, if it's not the solution, then one has the best 'rtl (right-to-left)' and 'ltr' approximations;
-							// ? What to do with this now? [The thing has mutiple sides of the equation...];
-							// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
-							/**
-							 * Difference in between the right and left sides of the equation with mappings for different variables.
-							 * @param {VarMapping} mappings Mapping of variables to their values.
-							 * @param {string} varname Additional mapping, can be used with a variable, that is being searched for in an algorithm.
-							 * @param {number} varvalue Addtional value.
-							 */
-							differRightLeft(mappings, varname, varvalue) {
-								const plugged = Equation.plug(
-									this.parse(mappings),
-									varname,
-									varvalue
-								)
-								return eval(plugged.right) - eval(plugged.left)
 							},
 							/**
 							 * This method searches for the solution of an equation it's invoked onto.
@@ -4609,6 +4591,20 @@ export function instance(transformation = ID) {
 								pathlength,
 								precision = 4
 							) {
+								// ? What to do with this now? [The thing has mutiple sides of the equation...];
+								// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
+								// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data]; 
+								function diffs(mappings, varname, varvalue) {
+									// ! PROBLEM: not thought through well enough; 
+									// * Now, the present process shall be such: 
+									// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN]
+									// 	2. Plugging in [on a number-by-number basis...]; 
+									// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation]; 
+									// 	4. Returning the list; 
+									// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user]; 
+									// const plugged = this.parse(mappings)
+									// return plugged
+								}
 								const differences = generate(
 									startvalue,
 									startvalue + pathlength,
@@ -4616,63 +4612,7 @@ export function instance(transformation = ID) {
 									precision
 								).map((i) => {
 									return Math.abs(
-										this.differRightLeft(mappings, varname, i)
-									)
-								})
-								return (
-									startvalue +
-									differences.indexOf(min(differences)) *
-										floor(10 ** -precision, precision)
-								)
-							},
-							defaultDifferRightLeft(index, varname, varvalue) {
-								if (typeof varname !== "string")
-									throw new Error(
-										`Expected string as an input of variable name, got ${typeof varname}}`
-									)
-								const plugged = Equation.plug(
-									this.defaultParsed[index],
-									varname,
-									varvalue
-								)
-								return eval(plugged.right) - eval(plugged.left)
-							},
-							/**
-							 * This method searches for the solution of an equation it's invoked onto using default mappings.
-							 * It's technically supposed to be much faster because of the data preparation.
-							 *
-							 * ! WARNING 1 !
-							 *
-							 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-							 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
-							 * (However, if the root is rational, then it could even be exactly it.)
-							 *
-							 * ! WARNING 2 !
-							 *
-							 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-							 *
-							 * PARAMETRES
-							 * @param {number} index Index of the default mapping to be used.
-							 * @param {string} varname Name of the variable for which search is invoked.
-							 * @param {number} startvalue Value, from which search is invoked.
-							 * @param {number} pathlength The length of the search path.
-							 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
-							 */
-							defaultSearchSolution(
-								index,
-								varname,
-								startvalue,
-								pathlength,
-								precision
-							) {
-								const differences = generate(
-									startvalue,
-									startvalue + pathlength,
-									floor(10 ** -precision, precision),
-									precision
-								).map((i) => {
-									return Math.abs(
-										this.defaultDifferRightLeft(index, varname, i)
+										diffs(mappings, varname, i)
 									)
 								})
 								return (
@@ -4688,51 +4628,28 @@ export function instance(transformation = ID) {
 				return X
 			},
 
-			// ! Finish the todos + stuff listed in these two, then 'pour out' the rest (what isn't finished, otherwise nothing to pour out); Otherwise, finished [first ever sketch...]
-			// ! PRAY GET RID OF THESE UGLY LABELS, reposition them somewhere...
-			classes: {
-				// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
-				// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
-			},
-			submodules: {
-				infinite: {
-					// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
-					// TODO: think deeply on the matter of copying/referencing of 'class-template-static' objects within the instances objects... Review each and every method within each and every class, make it plausible to oneself, most general;
+			// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
+			// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
 
-					// TODO: create a very general class of infinite arrays called DeepArray [most modifiable, works based on recursion];
+			// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
+			// TODO: think deeply on the matter of copying/referencing of 'class-template-static' objects within the instances objects... Review each and every method within each and every class, make it plausible to oneself, most general;
 
-					// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
+			// TODO: create a very general class of infinite arrays called DeepArray [most modifiable, works based on recursion];
 
-					// TODO: add examples of the circular counters (too, an infiniteCounter, just one that is looped);
-					// * A case of InfiniteCounters; Based off array-orders [iteration over an ordering or an array];
+			// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 
-					// TODO: implement InfiniteString [the *truly* infinite one, that is...]
-					InfiniteString() {},
+			// TODO: add examples of the circular counters (too, an infiniteCounter, just one that is looped);
+			// * A case of InfiniteCounters; Based off array-orders [iteration over an ordering or an array];
 
-					// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
-					InfiniteArray() {}
+			// TODO: implement InfiniteString [the *truly* infinite one, that is...]
+			InfiniteString() {},
 
-					// ? question: does one want to go implementing the 'InfiniteNumber' as well?
+			// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
+			InfiniteArray() {}
 
-					// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
-				}
-			},
-			methods: {
-				// ^ DECISION [1]: this library shall use 'undefined' as the defuault 'unknown' value; Pray represent within it correspondently...
-				// ^ DECISION [2]: however, 'null' shall be used as a default 'placeholder' value;
-				// * Let this agree with the way other of self's libraries agree with this -- achieve the synonymity of style...
-				// TODO [general] : get rid of obsolete finite methods that are already in possession of generalizations across the entire library... Review the system carefully...
-				// * Example of one such was the arrayEquality (or something like that...); compared an array of arrays with one another. Was planned for generalization; Now the 'valueCompare' does the exact same thing but on a broader types' set;
-				// TODO: generalizes and then merge those with the array methods;
-				// ! Next question is strucural - does one add the '.string' methods to the '.aliases.native' for this or not?
-				// * ANSWER - yes, why not.
-				// They'll either be:
-				// 		1. references to the array methods...
-				// 		2. conversion from-str-to-arr to which the corresponding method's been concatenated...
-				// % LOCAL AGENDA: these two issues would get addressed in the order of original writing...
-				// ? Make more 'public'? Consider deeply the general question of publicity of various methods in question...
-				// * [For good memory...]: before replacing the old 'math-expressions.js' file, pray compare it to the current one [_ver10.js, instance.js and macros.js]
-			}
+			// ? question: does one want to go implementing the 'InfiniteNumber' as well?
+
+			// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 		},
 		variables: {
 			// ? Add more stuff here? (This table was originally supposed to be like a small calculator for binary things...)
