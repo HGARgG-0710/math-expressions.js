@@ -21,12 +21,13 @@ export const VARIABLE = TYPED_VARIABLE()
 // * Allows to define templated classes and functions more non-conventionally;
 // ! use actively across the entire library...
 // TODO: optimize the macros; [re-implement them more desireably...];
+// ! The default keyword is now 'function' and not '.class';
 export const TEMPLATE = function (template = {}) {
 	return {
 		template: {
 			deftemplate: {},
 			defaults: {},
-			word: "class",
+			word: "function",
 			function: ID,
 			isthis: false,
 			this: null,
@@ -119,7 +120,7 @@ export const EXTENSION = TEMPLATE(
 		// ! PROBLEM: with the way that the 'this.template.toextend' works like;
 		// * Pray consider a more general [id est, convinient] design for it...
 		for (const x in RESULT.aliases.native.array.arrIntersections([
-			Object.keys(X[this.template.name.instname]),
+			Object.keys(this.template.parentclass.methods),
 			this.template.toextend
 		]))
 			X[this.template.name.instname][x] = function (...args) {
@@ -145,16 +146,20 @@ export const EXTENSION = TEMPLATE(
 	"function"
 )
 
+export const GENERATOR = NOREST(["generator", "inverse", "range"])
+export const CLASS = NOREST(["methods", "static"])
+
 // ! PROBLEM: the way that this thing ties with other functions - namely, the 'nominal' (in reality, missing) "[template.word]: ID" property from the TEMPLATE definiton;
 // Consider it more carefully, pray...
-export const GENERATOR = function (template = {}) {
-	return TEMPLATE({
-		...template,
-		rest: {
-			generator: template.generator,
-			inverse: template.inverse,
-			range: template.range,
-			...template.rest
+export const NOREST = function (labels = []) {
+	return function (template = {}) {
+		const X = {
+			...template,
+			rest: {}
 		}
-	})
+		// ! refactor!
+		for (const l of labels) X.rest[l] = template[l]
+		X.rest = { ...X.rest, ...template.rest }
+		return TEMPLATE(X)
+	}
 }
