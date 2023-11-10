@@ -4,6 +4,7 @@
 
 export const ID = (a) => a
 
+// ? Make a template? [namely, allow the user to define the default type of the TYPED_VARIABLE?]
 export const TYPED_VARIABLE =
 	(type = ID) =>
 	(x) => {
@@ -33,7 +34,7 @@ export const TEMPLATE = function (template = {}) {
 			transform: ID,
 			...template
 		},
-		f: function (template = this.template.deftemplate) {
+		function: function (template = this.template.deftemplate) {
 			const _class = {
 				template: {
 					...(this.template.isthis
@@ -88,34 +89,43 @@ export const HIERARCHY = function (hierarr = []) {
 // 	1. InfiniteMap (extends GeneralArray);
 //  2. UnlimitedString (extends GeneralArray);
 //  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
+// ! PROBLEM [1]: must have a different 'X' structure; [Look at UnlimitedString, for an example];
+// ! PROBLEM [2]: missing a layer - what is must return is the new *CLASS* based off another class (one that's capable of producing an instance itself), not an instance of that another class;
 export const EXTENSION = TEMPLATE(
 	function (...args) {
-		if (this.template.defaults.constructor)
-			ensureProperties(args, this.template.defaults.constructor)
+		ensureProperties(args, this.template.defaults.constructor)
 
-		let X = {
-			template: this.template.defaults.template,
-			[this.template.name.classrefname]: this,
-			[this.template.name.instname]: this.template.class.class(...args)
-		}
+		const s = this.template.name.selfname === null
+		const X = s
+			? {
+					[this.template.name.instname]: this.template.parentclass.class(
+						...args
+					),
+					...this.template.methods
+			  }
+			: {}
 
 		// How to 'turn it off'
-		if (this.template.name.selfname != null) {
+		if (!s) {
 			X[this.template.name.instname][this.template.name.selfname] = X
-
-			for (const method in this.template.methods) {
+			X[this.template.name.instname][this.template.name.subinstancename] =
+				this.template.parentclass.class(...args)
+			for (const method in this.template.methods)
 				X[method] = this.template.methods[method](this)
-			}
-		} else X = { ...X, ...this.template.methods }
+		}
 
-		const extkeys = RESULT.aliases.native.array.arrIntersections(
+		X[this.template.name.classrefname] = this
+
+		// ! PROBLEM: with the way that the 'this.template.toextend' works like;
+		// * Pray consider a more general [id est, convinient] design for it...
+		for (const x in RESULT.aliases.native.array.arrIntersections([
 			Object.keys(X[this.template.name.instname]),
 			this.template.toextend
-		)
-		for (const x of extkeys)
-			X[x] = function (...args) {
+		]))
+			X[this.template.name.instname][x] = function (...args) {
 				if (this.class.template.defaults.methods[x])
 					ensureProperties(args, this.class.template.defaults.methods[x])
+				// ? Is this correct, pray?
 				return this[this.class.template.name][x](...args)
 			}.bind(X)
 
@@ -125,7 +135,8 @@ export const EXTENSION = TEMPLATE(
 		name: {
 			classrefname: "class",
 			instname: "proto",
-			selfname: "this"
+			selfname: "this",
+			subinstancename: "sub"
 		},
 		methods: {},
 		defaults: { constructor: [], methods: {}, template: {} },
@@ -134,7 +145,8 @@ export const EXTENSION = TEMPLATE(
 	"function"
 )
 
-// ! PROBLEM: the way that this thing ties with other functions - namely, the 'nominal' "[template.word]: ID" property; Consider it more carefully, pray...
+// ! PROBLEM: the way that this thing ties with other functions - namely, the 'nominal' (in reality, missing) "[template.word]: ID" property from the TEMPLATE definiton;
+// Consider it more carefully, pray...
 export const GENERATOR = function (template = {}) {
 	return TEMPLATE({
 		...template,

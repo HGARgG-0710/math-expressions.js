@@ -5,6 +5,16 @@
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR } from "./macros.js"
 
+// ! GENERAL NOTE [1]: as to the way that the classes are built;
+// * They DO NOT ALLOW THE DIRECT ACCESS to the methods from outside the INSTANCE OF THE CLASS!!!
+// This is no good; One has to have an instance of the class to bind the methods of the class to something else...
+// ? Pray consider it...
+// ^ IDEA: share the methods of the instance with the class [id est, "gut it"];
+// * While this DOES solve the problem of [1], there is a further issue:
+// % [2] The user is not able to meaningfully call the function within the question upon the class in question;
+// Namely, if the methods have been designed in such a way so as to be called upon a class instance, putting it in some 'classname.methods' will cause the 'methods' to be *useable* as a class instance;
+// ^ conclusion: so, while this is definitely decided to be a thing to do [presently with the GeneralArray, generally - with all the classes created and defined within the library], one ought additionally consider this 'cleaning up' issue;
+
 // ? Make a template itself?
 export function instance(transformation = ID) {
 	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
@@ -555,6 +565,7 @@ export function instance(transformation = ID) {
 
 					// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
 					// ! Rewrite the structure of that thing capitally - comparison, a templated variable, whilst 'arrs' becomes '...arrs';
+					// TODO: rewrite as a templated GeneralArray algorihtm - intersection(...arrs)
 					arrIntersections: function (arrs, comparison = (a, b) => a === b) {
 						if (arrs.length === 0) return []
 						if (arrs.length === 1) return arrs[1]
@@ -1325,6 +1336,13 @@ export function instance(transformation = ID) {
 				})
 			},
 
+			// ^ IDEA: naming-maps-defined methods!
+			// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
+			// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
+			// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
+			// One could even generalize to the 'args' passed to the function, doing it like so:
+			//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
+			// * with the 'value' getting changed in the 'switch'
 			GeneralArray: TEMPLATE({
 				defaults: {
 					empty: [],
@@ -1339,13 +1357,67 @@ export function instance(transformation = ID) {
 							? this.static.fromArray(array)
 							: array,
 						currindex: this.template.class.template.icclass.class(),
-						// ^ IDEA: naming-maps-defined methods!
-						// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
-						// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
-						// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
-						// One could even generalize to the 'args' passed to the function, doing it like so:
-						//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
-						// * with the 'value' getting changed in the 'switch'
+						this: A
+					}
+					// TODO: generalize this thing [A MACRO] - will be used by classes (a lot, probably all the classes); Additionally - put the '.static' and the '.methods' in it as well...
+					// ! CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...); 
+					for (const x in this.methods) 
+						A[x] = this.methods[x].bind(A.this)	
+					return A
+				},
+				transform: (templated, template) => {
+					templated.static.this = templated
+				},
+				rest: {
+					static: {
+						empty(template = this.this.template) {
+							return this.this.class(template).class()
+						},
+						pushbackLoop(template = {}) {
+							return {
+								template: {
+									arguments: [],
+									transform: RESULT.id,
+									...template
+								},
+								function(b) {
+									return this.template.target.pushback(
+										this.template.transform(b.object().currelem),
+										...this.template.arguments
+									)
+								}
+							}
+						},
+						// * This is pretty much THE SAME code as above for the 'pushbackLoop';
+						// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
+						pushfrontLoop(template = {}) {
+							return {
+								template: {
+									arguments: [],
+									transform: RESULT.id,
+									...template
+								},
+								function(b) {
+									return this.template.target.pushfront(
+										this.template.transform(b.object().currelem),
+										...this.template.arguments
+									)
+								}
+							}
+						},
+						// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
+						fromArray(arr, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.template.icclass.template.range,
+								comparison: this.this.template.icclass.template.comparison
+							})
+							const generalized = this.empty()
+							for (const a of arr) generalized.pushback(a, leftovers)
+							return generalized
+						}
+					},
+					methods: {
 						next() {
 							return (this.this.this.currindex =
 								this.this.this.currindex.next())
@@ -2445,61 +2517,6 @@ export function instance(transformation = ID) {
 							)
 						}
 					}
-					A.this.this = A
-					return A
-				},
-				transform: (templated, template) => {
-					templated.static.this = templated
-				},
-				rest: {
-					static: {
-						empty(template = this.this.template) {
-							return this.this.class(template).class()
-						},
-						pushbackLoop(template = {}) {
-							return {
-								template: {
-									arguments: [],
-									transform: RESULT.id,
-									...template
-								},
-								function(b) {
-									return this.template.target.pushback(
-										this.template.transform(b.object().currelem),
-										...this.template.arguments
-									)
-								}
-							}
-						},
-						// * This is pretty much THE SAME code as above for the 'pushbackLoop';
-						// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
-						pushfrontLoop(template = {}) {
-							return {
-								template: {
-									arguments: [],
-									transform: RESULT.id,
-									...template
-								},
-								function(b) {
-									return this.template.target.pushfront(
-										this.template.transform(b.object().currelem),
-										...this.template.arguments
-									)
-								}
-							}
-						},
-						// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
-						fromArray(arr, leftovers = {}) {
-							RESULT.ensureProperties(leftovers, {
-								fast: false,
-								range: this.this.template.icclass.template.range,
-								comparison: this.this.template.icclass.template.comparison
-							})
-							const generalized = this.empty()
-							for (const a of arr) generalized.pushback(a, leftovers)
-							return generalized
-						}
-					}
 				}
 			}),
 
@@ -3592,15 +3609,20 @@ export function instance(transformation = ID) {
 									})
 									this.this.this.string = renewed
 									return
-								}
+								},
+								// ! This function is DIFFERENT FROM THE GENERALARRAY'S VERSION!
+								// TODO: create a GeneralArray's function 'split', which would do the same thing as 'splitArr()' alias currently does...
+								split() {}
 							}
 						}
 						X.this.this = X
-						// TODO: fix this thing to include only the desired keys; Generalize this (the partial object-instantiation);
-						for (const x of Object.keys(X.this.string))
-							X.this[x] = function (...args) {
-								return this.this.this.string[x](...args)
-							}.bind(X)
+						// TODO: create a way to use this together with EXTENSION's '.toextend';
+						for (const x of Object.keys(X.this.string)) {
+							if (!X.this.hasOwnProperty(x))
+								X.this[x] = function (...args) {
+									return this.this.this.string[x](...args)
+								}.bind(X.this)
+						}
 						X.this.append(string)
 						return X
 					}
@@ -4483,10 +4505,20 @@ export function instance(transformation = ID) {
 				return C
 			},
 
+			// ^ CONCLUSION: the NumberEquation requires a more general construct to be implemented in the first place to be operable within the chosen path of development.
+			// * One ought to implement the EquationParser, which would be a very configurable function, purpose of which would be to interpret UnlimitedString(s), then
+			// 	return the Expression executable via the 'Expression' API (or fullExp function);
+			// % The UnlimitedString wihtin the question is governed by the EquationForm object class
+			// ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
+			// * Tasks list before continuing with the NumberEquation:
+			// 		1. Finish the UnlimitedString implementation;
+			// 		2. Create the EquationForm;
+			// 		3. Create the EquationParser (based off EquationForm);
+
 			NumberEquation: function (template = {}) {
 				const X = {
 					template: {
-						operators: RESULT.variables.defaultAlphabet,
+						operators: RESULT.variables.defaultAlphabet.get,
 						brackets: [
 							["[", "]"],
 							["{", "}"]
@@ -4515,11 +4547,7 @@ export function instance(transformation = ID) {
 							function parse(sides) {
 								for (let i = 0; i < sides.length; i++) {
 									for (const v of origmappings)
-										sides[i] = this.plug(
-											sides[i],
-											v,
-											origmappings[v]
-										)
+										sides[i] = this.plug(sides[i], v, origmappings[v])
 									for (const b of brackets) {
 										// ? Refactor? [generalize...]
 										sides[i] = RESULT.aliases.native.string.sreplace(
@@ -4593,15 +4621,15 @@ export function instance(transformation = ID) {
 							) {
 								// ? What to do with this now? [The thing has mutiple sides of the equation...];
 								// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
-								// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data]; 
+								// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data];
 								function diffs(mappings, varname, varvalue) {
-									// ! PROBLEM: not thought through well enough; 
-									// * Now, the present process shall be such: 
+									// ! PROBLEM: not thought through well enough;
+									// * Now, the present process shall be such:
 									// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN]
-									// 	2. Plugging in [on a number-by-number basis...]; 
-									// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation]; 
-									// 	4. Returning the list; 
-									// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user]; 
+									// 	2. Plugging in [on a number-by-number basis...];
+									// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
+									// 	4. Returning the list;
+									// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user];
 									// const plugged = this.parse(mappings)
 									// return plugged
 								}
@@ -4611,9 +4639,7 @@ export function instance(transformation = ID) {
 									floor(10 ** -precision, precision),
 									precision
 								).map((i) => {
-									return Math.abs(
-										diffs(mappings, varname, i)
-									)
+									return Math.abs(diffs(mappings, varname, i))
 								})
 								return (
 									startvalue +
