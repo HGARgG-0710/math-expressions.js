@@ -5,6 +5,10 @@
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR, CLASS } from "./macros.js"
 
+export const StaticThisTransform = (templated, template) => {
+	templated.static.this = templated
+}
+
 // ! GENERAL NOTE [1]: as to the way that the classes are built;
 // * They DO NOT ALLOW THE DIRECT ACCESS to the methods from outside the INSTANCE OF THE CLASS!!!
 // This is no good; One has to have an instance of the class to bind the methods of the class to something else...
@@ -35,8 +39,7 @@ export function instance(transformation = ID) {
 								.InfiniteCounter(RESULT.main.addnumber(this.template))
 								.class(x)
 								.map(this.template.icclass)
-						},
-						word: "function"
+						}
 					}),
 
 					// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
@@ -425,8 +428,7 @@ export function instance(transformation = ID) {
 								x
 							)
 						},
-						defaults: { n: 1, default: null },
-						word: "function"
+						defaults: { n: 1, default: null }
 					}),
 
 					hasArrays: function (array = []) {
@@ -629,8 +631,7 @@ export function instance(transformation = ID) {
 						defaults: {
 							comparison: RESULT.main.valueCompare,
 							defarr: []
-						},
-						word: "function"
+						}
 					}),
 
 					// TODO: this should also separate onto findValue and findReference;
@@ -762,8 +763,7 @@ export function instance(transformation = ID) {
 							in: RESULT.aliases.id,
 							out: RESULT.aliases.id,
 							deff: RESULT.aliases.id
-						},
-						word: "function"
+						}
 					}),
 
 					expression: {
@@ -786,8 +786,7 @@ export function instance(transformation = ID) {
 								defop: undefined,
 								defobjs: [],
 								optable: RESULT.variables.defaultTable.get
-							},
-							word: "function"
+							}
 						}),
 
 						/**
@@ -843,6 +842,8 @@ export function instance(transformation = ID) {
 						}),
 
 						// Executes an expression;
+						// ! INCOMPLETE - does not seem to work with expressions of the type 'a(b(p2, p3, p4), c(d(p), pdash), p1)', where a,b,c,d - are operators [in short - don't support multi-directed operators...];
+						// * This must be fixed before proceeding with the NumberEquation...
 						fullExp: TEMPLATE(
 							function (
 								operators = [],
@@ -923,8 +924,7 @@ export function instance(transformation = ID) {
 							},
 							defaults: {
 								optable: RESULT.variables.defaultTable.get
-							},
-							word: "function"
+							}
 						}),
 
 						repeatedOperation: TEMPLATE({
@@ -942,8 +942,7 @@ export function instance(transformation = ID) {
 							},
 							defaults: {
 								optable: RESULT.variables.defaultTable.get
-							},
-							word: "function"
+							}
 						})
 					}
 				},
@@ -1013,8 +1012,7 @@ export function instance(transformation = ID) {
 						defaults: {
 							notfound: undefined,
 							treatUniversal: false
-						},
-						word: "function"
+						}
 					}),
 
 					// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
@@ -1194,8 +1192,7 @@ export function instance(transformation = ID) {
 							most = t.object().current
 					})
 					return most
-				},
-				word: "function"
+				}
 			}),
 
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
@@ -1216,8 +1213,7 @@ export function instance(transformation = ID) {
 					function: function (x = this.template.defaultS) {
 						return this.template.pfun(this.template.interpret(x))
 					},
-					defaults: { pfun: console.log, interpret: ID, defaultS: "" },
-					word: "function"
+					defaults: { pfun: console.log, interpret: ID, defaultS: "" }
 				}),
 
 				// todo: create some special cases for this stuff pray...
@@ -1237,7 +1233,6 @@ export function instance(transformation = ID) {
 									.function(loophandle)
 							}
 						},
-						word: "function",
 						transform: (templated, template) => {
 							templated.template.this = templated
 							templated.template.defstr = templated.template.ustrclass("")
@@ -1289,7 +1284,6 @@ export function instance(transformation = ID) {
 							ishandle: false,
 							function: _this
 						}),
-						word: "function",
 						// TODO: make an alias for that one (it's used quite frequently...);
 						transform: (templated, template) => {
 							templated.template.this = templated
@@ -1331,8 +1325,7 @@ export function instance(transformation = ID) {
 
 						// TODO: create a way to 'insert' the separator like so into the thing;
 						return representation.join(this.template.separator)
-					},
-					word: "function"
+					}
 				})
 			},
 
@@ -1359,15 +1352,10 @@ export function instance(transformation = ID) {
 						currindex: this.template.class.template.icclass.class(),
 						this: A
 					}
-					// TODO: generalize this thing [A MACRO] - will be used by classes (a lot, probably all the classes); Additionally - put the '.static' and the '.methods' in it as well...
-					// ! CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
-					// ? How to generalize this? Pray consider... [This is CURRENT AGENDA - a part of the finishing of the UnlimitedString, EXTENSION and CLASSes structure]; 
-					for (const x in this.methods) A[x] = this.methods[x].bind(A.this)
 					return A
 				},
-				transform: (templated, template) => {
-					templated.static.this = templated
-				},
+				// ? Should this also become a part of the new CLASS definition?
+				transform: StaticThisTransform,
 				static: {
 					empty(template = this.this.template) {
 						return this.this.class(template).class()
@@ -2548,8 +2536,7 @@ export function instance(transformation = ID) {
 						arrayFlat: (a) => [...a],
 						objectFlat: (a) => ({ ...a })
 					}
-				},
-				word: "function"
+				}
 			}),
 
 			// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
@@ -2568,8 +2555,7 @@ export function instance(transformation = ID) {
 						if (typeTransform(x)(a))
 							return RESULT.main.copy().function()[x](a, this.function)
 					return a
-				},
-				word: "function"
+				}
 			}),
 
 			// ! [1]
@@ -2631,8 +2617,7 @@ export function instance(transformation = ID) {
 							.slice(0, args.length - 1)
 							.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
 					)
-				},
-				word: "function"
+				}
 			}),
 
 			// TODO [GENERAL] : add the ability for certain methods to take arbitrary number of arguments from the user... Let it use the '...something' operator for Arguments-to-Array conversion...
@@ -2714,8 +2699,7 @@ export function instance(transformation = ID) {
 						}
 					}
 					return false
-				},
-				word: "function"
+				}
 			}),
 
 			// TODO: template the 'recursiveCounter' (slightly more curious than the rest the cases insofar - namely, one desires for powerful generalization of the constructs used to assemble the final 'returned'); Work on the thing in question greatly...
@@ -3038,8 +3022,7 @@ export function instance(transformation = ID) {
 								RESULT.main.maxgeneral(recarr.map(this.function))
 							)
 					return this.template.icclass.class()
-				},
-				word: "function"
+				}
 			}),
 
 			// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
@@ -3073,8 +3056,7 @@ export function instance(transformation = ID) {
 						fields.length(),
 						object
 					)
-				},
-				word: "function"
+				}
 			}),
 
 			repeatedApplication: TEMPLATE({
@@ -3090,249 +3072,250 @@ export function instance(transformation = ID) {
 					for (let i = template.icclass.class(); !i.compare(times); i = iter(i))
 						r = f(r, i.difference(offset))
 					return r
-				},
-				word: "function"
+				}
 			}),
 
 			// * This can create infinite loops...
-			// ! create a 'While' - same as 'Whilst' [naming conventions];
-			// ? Template?
-			repeatedApplicationWhilst: function (
-				function_,
-				property,
-				initial = undefined
-			) {
-				let curr = initial
-				while (property()) curr = function_(curr)
-				return curr
-			},
+			// ? create a 'While' - same as 'Whilst'? Or just rename? [naming conventions];
+			repeatedApplicationWhilst: TEMPLATE({
+				defaults: { initial: undefined },
+				function: function () {
+					let curr = initial
+					while (this.template.property()) curr = this.template.function(curr)
+					return curr
+				}
+			}),
 
 			// ! CURRENT AGENDA: from here on - continue working on the code [more than mere 'macrofication' of templates...];
 			// * Finally, get on with the generalization of finite types... (Still not quite sure what to do about it, though... Want to consult the old notes a tad further first);
 
-			InfiniteCounter(template = {}) {
-				const A = {
-					static: {
-						direction(ic) {
-							return ic.compare(this.this.class())
-						},
-						// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-						// * Pray make it work generally, put all the methods into this one form;
-						forloop(
-							target,
-							i = this.this.class(),
-							goal,
-							jumping = (x) => x.next(),
-							comparison = this.this.template.comparison
-						) {
-							// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
-							// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
-							return repeatedApplicationWhilst(
-								(r) => {
-									i = i.next()
-									return jumping(r)
-								},
-								() => !i.compare(goal, comparison, () => true),
-								target
-							)
-						},
-						// TODO [general]: ensure the use of 'leftover' argument objects across the library...
-						// ! Problem: the 'forloop' and 'whileloop' are the same function; Get rid of one of them in favour of another, fix things, replace the chosen for deletion with the other one...
-						// * They differ very slightly; ought to be GENERALIZED to the same function;
-						whileloop(
-							start = this.this.class(),
-							end,
-							each,
-							iter = (x) => x.next(),
-							comparison = this.this.template.comparison
-						) {
-							let curr = RESULT.main.deepCopy(start)
-							while (!comparison(curr, end)) {
-								each(curr)
-								curr = iter(curr)
-							}
-							return curr
-						}
+			InfiniteCounter: CLASS({
+				defaults: {
+					comparison: RESULT.main.valueCompare,
+					unfound: null
+				},
+				function: function (previous) {
+					const R = {
+						class: this
+					}
+					R.this = {
+						this: R,
+						// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
+						value: !previous ? this.template.generator() : previous.value
+					}
+					return R
+				},
+				transform: StaticThisTransform,
+				static: {
+					direction(ic) {
+						return ic.compare(this.this.class())
 					},
-					template: {
-						comparison: RESULT.main.valueCompare,
-						unfound: null,
-						...template
+					// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+					// * Pray make it work generally, put all the methods into this one form;
+					forloop(
+						target,
+						i = this.this.class(),
+						goal,
+						jumping = (x) => x.next(),
+						comparison = this.this.template.comparison
+					) {
+						// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
+						// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
+						return repeatedApplicationWhilst(
+							(r) => {
+								i = i.next()
+								return jumping(r)
+							},
+							() => !i.compare(goal, comparison, () => true),
+							target
+						)
 					},
-					class: function (previous) {
-						return {
-							class: this,
-							// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
-							value: !previous ? this.template.generator() : previous.value,
-							next() {
-								// * An observation: this is one of the ways to be able to reference a function from within itself...
-								return this.class.template.generator(this)
-							},
-							// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
-							// One-worded names are preferred to all the other ones...
-							// flatcase (submodules, methods, varnames, general ids) is generally preferred to camelCase (methods, varnames), which is preferred to PascalCase ("classes" and some templated functions), which is prefereed to UPPERCASE, which is preferred to all else...
-							// TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
-							previous() {
-								return this.class.template.inverse(this)
-							},
-							/**
-							 *
-							 * * DEFINE:
-							 *
-							 *		length(x, a) := number of iterations of 'generator' required to get to 'a' from 'x';
-							 *
-							 * Positive - of generator;
-							 * Negative - of inverse;
-							 *
-							 * Then, the boolean case ( return { true | false } ) function is equivalent to evaluating
-							 *
-							 *		length(this, a) >= 0;
-							 *
-							 * * 'null' means 'no strict following in appearance (no linear order) under chosen pair of generators';
-							 *
-							 * ! NOTE: this thing is pretty much useless... The new API DON'T WORK WITH JSDoc NOTATION VERY WELL... INSTEAD, RESERVE TO SIMPLE DESCRIPTIONS WHEN IT COMES DOWN TO WRITING THE DOCS...
-							 * @return { any }
-							 */
-							compare(ic, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range,
-									unfound: this.class.template.unfound
-								})
-								// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
-
-								// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
-								if (!leftovers.range(ic.value)) return leftovers.unfound
-
-								let pointerfor = ic
-								let pointerback = ic
-
-								// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison(x.value, t.value)')
-								// TODO [general]: Do the above thing [InfiniteCounter wrapper influence removal] generally...
-
-								// TODO: generalize this loop thing...
-								while (
-									!leftovers.comparison(pointerfor.value, this.value) &&
-									!leftovers.comparison(pointerback.value, this.value)
-								) {
-									pointerfor = pointerfor.next()
-									pointerback = pointerback.previous()
-								}
-
-								return leftovers.comparison(pointerfor, this)
-							},
-							difference(ic, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range,
-									unfound: this.class.template.unfound
-								})
-
-								let current = this.class.class()
-								// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
-								// ? If not created that 'alias' already...
-								const next = ic.compare(this, leftovers)
-									? (x) => x.previous()
-									: (x) => x.next()
-								// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
-								// TODO: above *;
-								this.class.static.whileloop(
-									RESULT.main.deepCopy(this),
-									ic,
-									() => {
-										current = next(current)
-									},
-									next,
-									leftovers.comparison
-								)
-								return current
-							},
-							jumpDirection(ic, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range
-								})
-								const d = this.class.static.direction(ic)
-								// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
-								// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
-								return d
-									? this.jumpForward(ic, leftovers)
-									: d === null
-									? this
-									: this.jumpBackward(ic, leftovers)
-							},
-							// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
-							jump(x, jumping = (k) => k.next(), leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range,
-									counterclass: this.class
-								})
-								// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
-								// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
-								// What one means is:
-								//		`const a = ...; f(a); c(a); ...` -> `((a) => {f(a); c(a); ...})(...)`
-								// Really just replaces 'const' with these brackets and an arrow...
-								if (!leftovers.range(x.value)) return this
-								return this.class.static.forloop(
-									{
-										// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
-										...RESULT.main.deepCopy(this),
-										class: this.this
-									},
-									RESULT.main.InfiniteCounter(leftovers.counterclass)(),
-									x,
-									jumping,
-									leftovers.comparison
-								)
-							},
-							jumpForward(x, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range
-								})
-								return this.jump(x, (a) => a.next(), leftovers)
-							},
-							jumpBackward(x, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison,
-									range: this.class.template.range
-								})
-								return this.jump(x, (k) => k.previous(), leftovers)
-							},
-							map(icClass = this.class, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									comparison: this.class.template.comparison
-								})
-								let current = this.class.class()
-								let alterCurrent = icClass.class()
-								while (!leftovers.comparison(current, this))
-									alterCurrent = alterCurrent.next()
-								return alterCurrent
-							},
-							reverse() {
-								const zero = this.class.class()
-								// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
-								const dirfunc = (
-									(p) => (x) =>
-										x[p]
-								)(this.class.static.direction(this) ? "previous" : "next")
-								let a = this.class.class()
-								let copy = RESULT.main.deepCopy(this)
-								while (!this.class.template.comparison(zero, copy)) {
-									copy = copy.previous()
-									a = dirfunc(a)
-								}
-								return a
-							}
+					// TODO [general]: ensure the use of 'leftover' argument objects across the library...
+					// ! Problem: the 'forloop' and 'whileloop' are the same function; Get rid of one of them in favour of another, fix things, replace the chosen for deletion with the other one...
+					// * They differ very slightly; ought to be GENERALIZED to the same function;
+					whileloop(
+						start = this.this.class(),
+						end,
+						each,
+						iter = (x) => x.next(),
+						comparison = this.this.template.comparison
+					) {
+						let curr = RESULT.main.deepCopy(start)
+						while (!comparison(curr, end)) {
+							each(curr)
+							curr = iter(curr)
 						}
+						return curr
+					}
+				},
+				methods: {
+					next: function () {
+						// * An observation: this is one of the ways to be able to reference a function from within itself...
+						return this.this.class.template.generator(this.this.this)
+					},
+					// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
+					// One-worded names are preferred to all the other ones...
+					// flatcase (submodules, methods, varnames, general ids) is generally preferred to camelCase (methods, varnames), which is preferred to PascalCase ("classes" and some templated functions), which is prefereed to UPPERCASE, which is preferred to all else...
+					// TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
+					previous: function () {
+						return this.this.class.template.inverse(this.this.this)
+					},
+					/**
+					 *
+					 * * DEFINE:
+					 *
+					 *		length(x, a) := number of iterations of 'generator' required to get to 'a' from 'x';
+					 *
+					 * Positive - of generator;
+					 * Negative - of inverse;
+					 *
+					 * Then, the boolean case ( return { true | false } ) function is equivalent to evaluating
+					 *
+					 *		length(this, a) >= 0;
+					 *
+					 * * 'null' means 'no strict following in appearance (no linear order) under chosen pair of generators';
+					 *
+					 * ! NOTE: this thing is pretty much useless... The new API DON'T WORK WITH JSDoc NOTATION VERY WELL... INSTEAD, RESERVE TO SIMPLE DESCRIPTIONS WHEN IT COMES DOWN TO WRITING THE DOCS...
+					 * @return { any }
+					 */
+					compare(ic, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range,
+							unfound: this.this.class.template.unfound
+						})
+						// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
+
+						// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
+						if (!leftovers.range(ic.value)) return leftovers.unfound
+
+						let pointerfor = ic
+						let pointerback = ic
+
+						// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison(x.value, t.value)')
+						// TODO [general]: Do the above thing [InfiniteCounter wrapper influence removal] generally...
+
+						// TODO: generalize this loop thing...
+						while (
+							!leftovers.comparison(
+								pointerfor.value,
+								this.this.this.value
+							) &&
+							!leftovers.comparison(pointerback.value, this.this.this.value)
+						) {
+							pointerfor = pointerfor.next()
+							pointerback = pointerback.previous()
+						}
+
+						return leftovers.comparison(pointerfor, this.this.this)
+					},
+					difference(ic, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range,
+							unfound: this.this.class.template.unfound
+						})
+
+						let current = this.this.class.class()
+						// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
+						// ? If not created that 'alias' already...
+						const next = ic.compare(this.this.this, leftovers)
+							? (x) => x.previous()
+							: (x) => x.next()
+						// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
+						// TODO: above *;
+						this.class.static.whileloop(
+							RESULT.main.deepCopy(this.this.this),
+							ic,
+							() => {
+								current = next(current)
+							},
+							next,
+							leftovers.comparison
+						)
+						return current
+					},
+					jumpDirection(ic, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range
+						})
+						const d = this.this.class.static.direction(ic)
+						// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
+						// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
+						return d
+							? this.this.this.jumpForward(ic, leftovers)
+							: d === null
+							? this.this.this
+							: this.this.this.jumpBackward(ic, leftovers)
+					},
+					// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
+					jump(x, jumping = (k) => k.next(), leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range,
+							counterclass: this.this.class
+						})
+						// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
+						// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
+						// What one means is:
+						//		`const a = ...; f(a); c(a); ...` -> `((a) => {f(a); c(a); ...})(...)`
+						// Really just replaces 'const' with these brackets and an arrow...
+						if (!leftovers.range(x.value)) return this.this.this
+						returnthis.this.class.static.forloop(
+							{
+								// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
+								...RESULT.main.deepCopy(this.this.this),
+								class: this.this.class
+							},
+							RESULT.main.InfiniteCounter(leftovers.counterclass)(),
+							x,
+							jumping,
+							leftovers.comparison
+						)
+					},
+					// ? QUESTION [general]: should one make it as 'this.this.class', or 'this.this.this.this.class'? In the former of the cases, the '.class' doesn't change with the 'this.this.this', whereas in the latter it does...
+					jumpForward(x, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range
+						})
+						return this.jump(x, (a) => a.next(), leftovers)
+					},
+					jumpBackward(x, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison,
+							range: this.this.class.template.range
+						})
+						return this.jump(x, (k) => k.previous(), leftovers)
+					},
+					map(icClass = this.class, leftovers = {}) {
+						RESULT.ensureProperties(leftovers, {
+							comparison: this.this.class.template.comparison
+						})
+						let current = this.this.class.class()
+						let alterCurrent = icClass.class()
+						while (!leftovers.comparison(current, this))
+							alterCurrent = alterCurrent.next()
+						return alterCurrent
+					},
+					reverse() {
+						const zero = this.this.class.class()
+						// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
+						const dirfunc = (
+							(p) => (x) =>
+								x[p]
+						)(this.this.class.static.direction(this) ? "previous" : "next")
+						let a = this.this.class.class()
+						let copy = RESULT.main.deepCopy(this)
+						while (!this.this.class.template.comparison(zero, copy)) {
+							copy = copy.previous()
+							a = dirfunc(a)
+						}
+						return a
 					}
 				}
-
-				// TODO [GENERAL]: that's how one does add a self-reference to the 'static' member of the class's object. Pray ensure that this is used and all the classes have their own 'static.this'
-				A.static.this = A
-				return A
-			},
+			}),
 
 			MultiInfiniteCounter(template = {}) {
 				// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
@@ -3484,6 +3467,8 @@ export function instance(transformation = ID) {
 					})
 				}
 			},
+			// ! ANOTHER SUCH CASE - how does one want to generalize the usage of 'template' outside the '.template' field?
+			// * More thought regarding the generalization procedures of the library is required...
 			CommonArray(template = {}) {
 				return {
 					template: { offset: -1, ...template },
@@ -3973,7 +3958,23 @@ export function instance(transformation = ID) {
 
 			// ? Does one want to generalize this?
 			statistics: {
-				// ! Problem: what to do with the 'statistics' part of the API? [CONSIDER, PRAY...]
+				// * SKETCH OF A PLAN [as to what to do with Statistics API]:
+				// 		0. This whole thing gets translated into the 'general' language [instead of Arrays - GeneralArrays, instead of numbers - InfiniteCounters, or other TrueNumber classes...];
+				// 		1. One can STILL work with the numeric part of it like before - in particular, one can do things related to [note: requires a default InfiniteCounter class to use with still...]:
+				// 			1.1. mostPopular;
+				// 			1.2.
+				// 		2. Stuff related to orders must be abstracted [in particular, the notion of 'order' must become present...]:
+				// 			2.1. 'sorted';
+				// 			2.2. 'min';
+				// 			2.3. 'max';
+				// 		3. The topics regarding the difference between objects shall too require a separate notion of 'difference' (like with 'order', defaulted to the appropriate function from within the InfiniteCounter structure):
+				// 			3.1. range;
+				// 			3.2. deviations;
+				// 			3.3. standardDeviation;
+				// 			3.4. standardError;
+				// 		4. Stuff related to arithmetic (such as sums and divisions), too shall be specified...:
+				// 			4.1. average;
+				// ! Pray consider in greater depth the plan slightly later...
 				/**
 				 * This class represents an assembly of various statistics on the array of numeric data given.
 				 *
@@ -4166,7 +4167,7 @@ export function instance(transformation = ID) {
 				},
 
 				/**
-				 * Takes an array of umbers and returns the smallest of thems.
+				 * Takes an array of numbers and returns the smallest of thems.
 				 * @param {number[]} nums An array of numbers passed to the function.
 				 * @returns {number} The smallest number of the passed array.
 				 */
@@ -4478,18 +4479,23 @@ export function instance(transformation = ID) {
 			// % The UnlimitedString wihtin the question is governed by the EquationForm object class
 			// ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
 			// * Tasks list before continuing with the NumberEquation:
-			// 		1. Finish the UnlimitedString implementation;
-			// 		2. Create the EquationForm;
-			// 		3. Create the EquationParser (based off EquationForm);
+			// 		1. Finish (fix) the fullExp;
+			// 		2. Finish the UnlimitedString implementation;
+			// 		3. Genereralize the '.static.ParseEquation' to a user-defined function;
 
 			NumberEquation: function (template = {}) {
 				const X = {
 					template: {
 						operators: RESULT.variables.defaultAlphabet.get,
+						// ! make a default variable...
 						brackets: [
+							["(", ")"],
 							["[", "]"],
 							["{", "}"]
 						],
+						// ! make a default variable...
+						// ! generalize, make more user- and format- friendly...
+						separator: ",",
 						...template
 					},
 					static: {
@@ -4499,38 +4505,58 @@ export function instance(transformation = ID) {
 						 * @param {VarMapping} mappings A mapping of variables to their values.
 						 * @param {string[]} variables Additional variable names.
 						 */
-						ParseEquation(equationLine, origmappings) {
+						ParseEquation(
+							eqline = this.this.template.ustrclass.template.empty
+						) {
 							const brackets = this.this.template.brackets
-							equationLine = RESULT.aliases.native.string.sreplace(
-								equationLine,
+							const ops = Object.keys(this.this.template.operators)
+							const separator = this.this.template.separator
+
+							const result = [
+								this.this.template.genarrclass.static.empty(),
+								this.this.template.genarrclass.static.empty()
+							]
+
+							eqline = RESULT.aliases.native.string.sreplace(
+								eqline,
 								" ",
 								""
 							)
 							// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
-							// ? Question: allow for multiple parts of the equation, not just left-right?
-							// * CURRENT DECISION: YES, although present code [for now] will still assume the working with the two. Then, after having patched it up and refactored, will generalize...
-							equationLine = equationLine.split("=")
+							eqline = eqline.split("=")
 							// ? QUESTION: enable arbitrary user-defined syntaxes?
-							function parse(sides) {
-								for (let i = 0; i < sides.length; i++) {
-									for (const v of origmappings)
-										sides[i] = this.plug(sides[i], v, origmappings[v])
-									for (const b of brackets) {
-										// ? Refactor? [generalize...]
-										sides[i] = RESULT.aliases.native.string.sreplace(
-											sides[i],
-											b[0],
-											"("
-										)
-										sides[i] = RESULT.aliases.native.string.sreplace(
-											sides[i],
-											b[1],
-											")"
-										)
+
+							// TODO: redefine the 'looping' method for the UnlimitedString class...
+							// ! Complete the sketch of the parsing method [after tuning the stuff, and so on...];
+							// 		% In particular:
+							// 			1. Make it safer [working even when invalid strings are provided];
+							// 			2. Ensure it working [to each and every small detail see...];
+							// ! Generalize, make the decided parsing method a default, establish the requirements for a user-created parsing method for an equation...;
+							eqline.loop()._full((side) => {
+								while (true) {
+									let i = side.firstIndex(op[0])
+									let co = op[0]
+									let cb = brackets[0]
+
+									for (const o of ops.slice(1)) {
+										let pi = i
+										i = min([i, side.firstIndex(o)])
+										cb = min([cb[0], side.firstIndex(cb)])
+										if (pi != i) co = o
 									}
+
+									result[0].pushback(co)
+									// TODO: perform corresponding transformations to the ic-format of the .genarrclass;
+									side = side.slice(co.length)
+									side = side.slice(cb[0].length)
+									side = side.slice(0, side.length - cb[1].length)
+									side = side.split(separator)
+
+									// * Sketch: look for operators symbols, followed by one of the 'brackets' symbols;
 								}
-							}
-							return parse(equationLine)
+							})
+
+							return result
 						},
 						// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
 						plug(origparsed, varname, varvalue) {
@@ -4547,10 +4573,13 @@ export function instance(transformation = ID) {
 							return parsed
 						}
 					},
-					class: function (equationText = "", vars = {}) {
+					class: function (
+						equationText = this.this.template.ustrclass.empty,
+						vars = {}
+					) {
 						return {
 							class: this,
-							equation: equationText || "",
+							equation: equationText || this.this.template.ustrclass.empty,
 							variables: vars || {},
 							parse(mappings = this.variables) {
 								return this.class.static.ParseEquation(
@@ -4592,7 +4621,7 @@ export function instance(transformation = ID) {
 								function diffs(mappings, varname, varvalue) {
 									// ! PROBLEM: not thought through well enough;
 									// * Now, the present process shall be such:
-									// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN]
+									// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN];
 									// 	2. Plugging in [on a number-by-number basis...];
 									// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
 									// 	4. Returning the list;

@@ -1,6 +1,8 @@
 // * Space for macros and local constants... [used for semantics and simplification of development/code-reading];
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
+// ! In particular - later create a General versions of macros (using unlimited types...);
+// ! In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
 
 export const ID = (a) => a
 
@@ -147,7 +149,30 @@ export const EXTENSION = TEMPLATE(
 )
 
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
-export const CLASS = NOREST(["methods", "static"])
+// ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
+// * Use all over the place...
+export const CLASS = (ptemplate = {}) => {
+	ensureProperty(ptemplate, "word", "class")
+	const template = NOREST(["methods", "static"])(ptemplate)
+	const POSTTF = template.function
+	template.function = function (vtemplate = template.template.deftemplate) {
+		const p = POSTTF(vtemplate)
+		const POSTF = p[template.template.word]
+		p[template.template.word] = function (...args) {
+			const V = POSTF(...args)
+			// ! FURTHER PROBLEM - solved the '.methods' bit, now - what about the '.this'?
+			// * The thing in question uses the 'this.this.this' structure...;
+			// ? One wanted to use it across the library...\
+			// ^ decision [temporary]: for now only, let the thing stay as-is, AND all the library's classes now use the 'this.this.this';
+			// ! later, one'll generalize;
+			// ! [GENERAL] CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
+			for (const x in this.methods) V[x] = this.methods[x].bind(V.this)
+			return V
+		}.bind(p)
+		return p
+	}
+	return template
+}
 
 // ! PROBLEM: the way that this thing ties with other functions - namely, the 'nominal' (in reality, missing) "[template.word]: ID" property from the TEMPLATE definiton;
 // Consider it more carefully, pray...
