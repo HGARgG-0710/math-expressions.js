@@ -88,72 +88,105 @@ export const HIERARCHY = function (hierarr = []) {
 	return final
 }
 
-// * This function shall be used by:
+// * This macro shall be used to determine:
 // 	1. InfiniteMap (extends GeneralArray);
 //  2. UnlimitedString (extends GeneralArray);
 //  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
-// ! PROBLEM [1]: must have a different 'X' structure; [Look at UnlimitedString, for an example];
-// ! PROBLEM [2]: missing a layer - what is must return is the new *CLASS* based off another class (one that's capable of producing an instance itself), not an instance of that another class;
-export const EXTENSION = TEMPLATE(
-	function (...args) {
-		ensureProperties(args, this.template.defaults.constructor)
+export const EXTENSION = (template = {}) => {
+	const ftemplate = {
+		function: function (template = {}) {
+			// ! FINISH THIS: the present issue is with the structure of the result of the 'function:' underneath... Decide how ought it all look like...
+			// ^ CONCLUSION: in order to finish the 'EXTENSION', one must also work with the presence/lack of turning on/off of the 'this.this.this' construct (and, additionally, the generalization of it, like it is here...)
+			return CLASS({
+				function: function (...args) {
+					ensureProperties(args, this.template.defaults.constructor)
 
-		const s = this.template.name.selfname === null
-		const X = s
-			? {
-					[this.template.name.instname]: this.template.parentclass.class(
-						...args
-					),
-					...this.template.methods
-			  }
-			: {}
+					// ? Make more general?
+					const s =
+						this.template.name.subinstancename === null ||
+						this.template.name.selfname === null
+					const X = s
+						? {
+								[this.template.name.instname]:
+									this.template.parentclass.class(...args)
+						  }
+						: {}
 
-		// How to 'turn it off'
-		if (!s) {
-			X[this.template.name.instname][this.template.name.selfname] = X
-			X[this.template.name.instname][this.template.name.subinstancename] =
-				this.template.parentclass.class(...args)
-			for (const method in this.template.methods)
-				X[method] = this.template.methods[method](this)
-		}
+					// How to 'turn it off'
+					// ! the 'CLASS' macro must also be able to 'turn this.this.this off'...
+					if (!s) {
+						X[this.template.name.instname][this.template.name.selfname] = X
+						X[this.template.name.instname][
+							this.template.name.subinstancename
+						] = this.template.parentclass.class(...args)
+						for (const method in this.template.methods)
+							X[method] = this.template.methods[method].bind(
+								(s ? ID : (x) => x[this.template.name.instname])(X)
+							)
+					}
 
-		X[this.template.name.classrefname] = this
+					X[this.template.name.classrefname] = this
 
-		// ! PROBLEM: with the way that the 'this.template.toextend' works like;
-		// * Pray consider a more general [id est, convinient] design for it...
-		for (const x in RESULT.aliases.native.array.arrIntersections([
-			Object.keys(this.template.parentclass.methods),
-			this.template.toextend
-		]))
-			X[this.template.name.instname][x] = function (...args) {
-				if (this.class.template.defaults.methods[x])
-					ensureProperties(args, this.class.template.defaults.methods[x])
-				// ? Is this correct, pray?
-				return this[this.class.template.name][x](...args)
-			}.bind(X)
+					for (const x in RESULT.aliases.native.array.arrIntersections([
+						Object.keys(this.template.parentclass.methods),
+						this.template.toextend
+					])) {
+						const R = this.template.parentclass.methods[x].bind(X)
+						X[this.template.name.instname][x] = function (...args) {
+							if (
+								this[this.template.name.classrefname].template.defaults
+									.methods[x]
+							)
+								ensureProperties(
+									args,
+									this[this.template.name.classrefname].template
+										.defaults.methods[x]
+								)
+							return R(...args)
+						}.bind(X)
+					}
 
-		return X
-	},
-	{
-		name: {
-			classrefname: "class",
-			instname: "proto",
-			selfname: "this",
-			subinstancename: "sub"
+					return X
+				},
+				methods: { ...this.template.methods },
+				static: { ...this.template.static }
+			})
 		},
-		methods: {},
-		defaults: { constructor: [], methods: {}, template: {} },
-		toextend: []
-	},
-	"function"
-)
+		...template,
+		defaults: {
+			name: {
+				classrefname: "class",
+				instname: "proto",
+				selfname: "this",
+				subinstancename: "sub",
+				...template.defaults.name
+			},
+			methods: { ...template.defaults.methods },
+			defaults: {
+				constructor: [],
+				methods: {},
+				template: {},
+				...template.defaults.defaults
+			},
+			toextend: [
+				...(template.toextend === true
+					? template.defaults.parentclass.methods
+					: template.toextend)
+			],
+			...template.defaults
+		}
+	}
+
+	return PRECLASS(ftemplate)
+}
 
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
+export const PRECLASS = NOREST(["methods", "static"])
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
 // * Use all over the place...
 export const CLASS = (ptemplate = {}) => {
 	ensureProperty(ptemplate, "word", "class")
-	const template = NOREST(["methods", "static"])(ptemplate)
+	const template = PRECLASS(ptemplate)
 	const POSTTF = template.function
 	template.function = function (vtemplate = template.template.deftemplate) {
 		const p = POSTTF(vtemplate)

@@ -9,15 +9,7 @@ export const StaticThisTransform = (templated, template) => {
 	templated.static.this = templated
 }
 
-// ! GENERAL NOTE [1]: as to the way that the classes are built;
-// * They DO NOT ALLOW THE DIRECT ACCESS to the methods from outside the INSTANCE OF THE CLASS!!!
-// This is no good; One has to have an instance of the class to bind the methods of the class to something else...
-// ? Pray consider it...
-// ^ IDEA: share the methods of the instance with the class [id est, "gut it"];
-// * While this DOES solve the problem of [1], there is a further issue:
-// % [2] The user is not able to meaningfully call the function within the question upon the class in question;
-// Namely, if the methods have been designed in such a way so as to be called upon a class instance, putting it in some 'classname.methods' will cause the 'methods' to be *useable* as a class instance;
-// ^ conclusion: so, while this is definitely decided to be a thing to do [presently with the GeneralArray, generally - with all the classes created and defined within the library], one ought additionally consider this 'cleaning up' issue;
+// ? PROBLEM [general]: The user is not able to meaningfully call the '.methods' as they are;
 
 // ? Make a template itself?
 export function instance(transformation = ID) {
@@ -844,8 +836,8 @@ export function instance(transformation = ID) {
 						// Executes an expression;
 						// ! INCOMPLETE - does not seem to work with expressions of the type 'a(b(p2, p3, p4), c(d(p), pdash), p1)', where a,b,c,d - are operators [in short - don't support multi-directed operators...];
 						// * This must be fixed before proceeding with the NumberEquation...
-						fullExp: TEMPLATE(
-							function (
+						fullExp: TEMPLATE({
+							function: function (
 								operators = [],
 								objects = [],
 								indexes = operators.map(RESULT.aliases._const(0))
@@ -885,11 +877,10 @@ export function instance(transformation = ID) {
 									[objects[0], 1]
 								)[0]
 							},
-							{
+							defaults: {
 								optable: RESULT.variables.defaultTable.get
-							},
-							"function"
-						),
+							}
+						}),
 
 						// ? Consider refactoring [couldn't it be rewritten via fullExp];
 						repeatExp: TEMPLATE({
@@ -3094,6 +3085,7 @@ export function instance(transformation = ID) {
 					comparison: RESULT.main.valueCompare,
 					unfound: null
 				},
+				// ! Generalize further! In particular, as one has separated the values for the 'methods', do so for the 'properties' (in particular, abstract the 'this.this.this+this.this.this.this.class' form...)
 				function: function (previous) {
 					const R = {
 						class: this
