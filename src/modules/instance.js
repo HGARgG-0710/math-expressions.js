@@ -1,7 +1,3 @@
-// ! PROBLEM: generally with the usage of TEMPLATE - does one desire for to keep the the access to the 'template-templates', or instead just keep it as-is?
-// * The things would be extremely useful for the redefinition procedures by the user...
-// ^ CURRENT DECISION: yes, keep the '.f'; Consider [maybe], changing it to '.function' within the TEMPLATE definition...;
-
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR, CLASS } from "./macros.js"
 

@@ -6,6 +6,7 @@
 
 // TODO [general; leave for the test-tune period]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
 // TODO [general; leave for tidying-up period]: pray walk through all of code and inspect the desireability of all the elements of the style (ranges from [kinds of functions used in places it does not, as such, matter] to [variable names and conventions used for them] to [whether to use one-time constants for the sake of memory-efficiency or not] to [chosen orders of properties/elements within objects/arrays])
+// TODO [general; leave until sometime later]: think further (and more deeply) on the matter of the publicity of the structure that is presented to the user by the results of the various macros;
 
 export const ID = (a) => a
 
@@ -98,84 +99,61 @@ export const HIERARCHY = function (hierarr = []) {
 export const EXTENSION = (template = {}) => {
 	const ftemplate = {
 		function: function (template = {}) {
-			// ! FINISH THIS: the present issue is with the structure of the result of the 'function:' underneath... Decide how ought it all look like...
-			// ^ CONCLUSION: in order to finish the 'EXTENSION', one must also work with the presence/lack of turning on/off of the 'this.this.this' construct (and, additionally, the generalization of it, like it is here...)
+			// TODO: rewrite the 'function:' completely...
 			return CLASS({
+				...this,
 				function: function (...args) {
 					ensureProperties(args, this.template.defaults.constructor)
-
-					// ? Make more general?
-					const s =
-						this.template.name.subinstancename === null ||
-						this.template.name.selfname === null
-					const X = s
-						? {
-								[this.template.name.instname]:
-									this.template.parentclass.class(...args)
-						  }
-						: {}
-
-					// How to 'turn it off'
-					// ! the 'CLASS' macro must also be able to 'turn this.this.this off'...
-					if (!s) {
-						X[this.template.name.instname][this.template.name.selfname] = X
-						X[this.template.name.instname][
-							this.template.name.subinstancename
-						] = this.template.parentclass.class(...args)
-						for (const method in this.template.methods)
-							X[method] = this.template.methods[method].bind(
-								(s ? ID : (x) => x[this.template.name.instname])(X)
-							)
+					// ^ Conlcusion: on how to finish the definition of the 'EXTENSION':
+					// 		* Add the following part of the code underneath [namely, the part that is responsible for a re-assignment of the new context ('.bind(X)')] to the 'methods' definition...;
+					// For that, though, maybe one may want to create a separate macro that'd do precisely that, then use here. [So that the user is able to individually do the entire thing themselves, nay?]; 
+					return {
+						[this.template.defaults.name]: this.template.parentclass.class(
+							...args
+						)
 					}
 
-					X[this.template.name.classrefname] = this
+					// for (const x in RESULT.aliases.native.array.arrIntersections([
+					// 	Object.keys(this.template.parentclass.methods),
+					// 	this.template.toextend
+					// ])) {
+					// 	const R = this.template.parentclass.methods[x].bind(X)
+					// 	X[this.template.name.instname][x] = function (...args) {
+					// 		if (
+					// 			this[this.template.name.classrefname].template.defaults
+					// 				.methods[x]
+					// 		)
+					// 			ensureProperties(
+					// 				args,
+					// 				this[this.template.name.classrefname].template
+					// 					.defaults.methods[x]
+					// 			)
+					// 		return R(...args)
+					// 	}.bind(X)
+					// }
 
-					for (const x in RESULT.aliases.native.array.arrIntersections([
-						Object.keys(this.template.parentclass.methods),
-						this.template.toextend
-					])) {
-						const R = this.template.parentclass.methods[x].bind(X)
-						X[this.template.name.instname][x] = function (...args) {
-							if (
-								this[this.template.name.classrefname].template.defaults
-									.methods[x]
-							)
-								ensureProperties(
-									args,
-									this[this.template.name.classrefname].template
-										.defaults.methods[x]
-								)
-							return R(...args)
-						}.bind(X)
-					}
-
-					return X
-				},
-				methods: { ...this.template.methods },
-				static: { ...this.template.static }
+					// return X
+				}
 			})
 		},
 		...template,
 		defaults: {
-			name: {
-				classrefname: "class",
-				instname: "proto",
-				selfname: "this",
-				subinstancename: "sub",
-				...template.defaults.name
-			},
-			methods: { ...template.defaults.methods },
-			defaults: {
-				constructor: [],
-				methods: {},
-				template: {},
-				...template.defaults.defaults
-			},
-			toextend: [
+			name: "sub",
+			methods: {
+				...template.defaults.methods,
 				...(template.toextend === true
 					? template.defaults.parentclass.methods
-					: template.toextend)
-			],
+					: RESULT.aliases.native.array
+							.arrIntersections([
+								Object.keys(this.template.parentclass.methods),
+								template.toextend
+							])
+							.map((a) => this.template.parentclass.methods[a]))
+			},
+			defaults: {
+				constructor: [],
+				...template.defaults.defaults
+			},
 			...template.defaults
 		}
 	}
@@ -184,10 +162,10 @@ export const EXTENSION = (template = {}) => {
 }
 
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
-export const PRECLASS = NOREST(["methods", "static"]) // ? Do I want to keep this one in the library?
+export const PRECLASS = NOREST(["methods", "static"]) // ? Do I want to keep this one in the library even?
 
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
-// ? Make into a template? 
+// ? Make into a template?
 // * Use all over the place...
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
@@ -208,8 +186,8 @@ export const CLASS = (ptemplate = {}) => {
 		"selfname",
 		"subselfname"
 	])(ptemplate)
-	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod'; 
-	// * Apparantly, during the assignment THE FINAL VALUE OF 'x' __DOES_NOT___ by default retain the 'this' context's value; So, hence, one ALWAYS has to assign it explicitly during such conversions; 
+	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod';
+	// * Apparantly, during the assignment THE FINAL VALUE OF 'x' __DOES_NOT___ by default retain the 'this' context's value; So, hence, one ALWAYS has to assign it explicitly during such conversions;
 	// TODO: pray ensure that this is the thing done _throughout_the_code! TEST THE LIBRARY MOST VIGOROUSLY...
 	const POSTTF = template.function.bind(template)
 	template.function = function (vtemplate = template.template.deftemplate) {
@@ -231,6 +209,7 @@ export const CLASS = (ptemplate = {}) => {
 			}
 
 			// ! [GENERAL] CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
+			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
 			for (const x in this.methods)
 				V[x] = this.methods[x].bind(
 					(template.template.rest.recursive ? (x) => x[this.selfname] : ID)(V)
