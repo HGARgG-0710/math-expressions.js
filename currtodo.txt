@@ -193,7 +193,7 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 
 						Note [6]: When flesh wrote the code for this thing, it must have been half-asleep!
 
-						NOTE [7]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray; 				
+						NOTE [7]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray;]
 
 			1.2. Then, generalize; 
 		
@@ -201,7 +201,8 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 			([IN PARTICULAR] BEFORE DOING ANY OF THIS STUFF, PRAY RETHINK WHAT DOES ONE WANT THE UnlimitedString TO TRULY BE!)
 			2.1. Preliminary: 
 				2.1.1. Finish the EXTENSION macro; 
-					2.1.1.1. Fix the general design in accordance with the renewed version of CLASS; 
+					2.1.1.1. Finish the fixing in accordance with the general version of CLASS; 
+						2.1.1.1.1. Add [maybe?] the macro for the procedure in question; Then, do the thing in question using the macro...
 				2.1.2. Rewrite the UnlimitedString as an EXTENSION of the GeneralArray; 
 				2.1.3. Repeatedly Validate throughout the development, solve upcoming definition issues...
 			2.2. Main: 

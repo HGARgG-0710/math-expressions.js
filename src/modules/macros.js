@@ -99,40 +99,15 @@ export const HIERARCHY = function (hierarr = []) {
 export const EXTENSION = (template = {}) => {
 	const ftemplate = {
 		function: function (template = {}) {
-			// TODO: rewrite the 'function:' completely...
 			return CLASS({
 				...this,
 				function: function (...args) {
 					ensureProperties(args, this.template.defaults.constructor)
-					// ^ Conlcusion: on how to finish the definition of the 'EXTENSION':
-					// 		* Add the following part of the code underneath [namely, the part that is responsible for a re-assignment of the new context ('.bind(X)')] to the 'methods' definition...;
-					// For that, though, maybe one may want to create a separate macro that'd do precisely that, then use here. [So that the user is able to individually do the entire thing themselves, nay?]; 
 					return {
 						[this.template.defaults.name]: this.template.parentclass.class(
 							...args
 						)
 					}
-
-					// for (const x in RESULT.aliases.native.array.arrIntersections([
-					// 	Object.keys(this.template.parentclass.methods),
-					// 	this.template.toextend
-					// ])) {
-					// 	const R = this.template.parentclass.methods[x].bind(X)
-					// 	X[this.template.name.instname][x] = function (...args) {
-					// 		if (
-					// 			this[this.template.name.classrefname].template.defaults
-					// 				.methods[x]
-					// 		)
-					// 			ensureProperties(
-					// 				args,
-					// 				this[this.template.name.classrefname].template
-					// 					.defaults.methods[x]
-					// 			)
-					// 		return R(...args)
-					// 	}.bind(X)
-					// }
-
-					// return X
 				}
 			})
 		},
@@ -143,12 +118,30 @@ export const EXTENSION = (template = {}) => {
 				...template.defaults.methods,
 				...(template.toextend === true
 					? template.defaults.parentclass.methods
-					: RESULT.aliases.native.array
-							.arrIntersections([
+					: ((x) =>
+							RESULT.aliases.native.object.obj(
+								x,
+								x.map((a) => (...args) => {
+									// ! THE 'this.class' bit is flawed, must instead rely upon the 'classreference'; [STILL UNFINISHED...]
+									// * The problem has now shifted to the fact that the object of such a class instance has no means of accessing the class, which [for it], is the ONLY mean of knowing which of the properties contains the way to the class! 
+									// ^ CONCLUSION: to solve this, either:
+									// 		% A. the object must itself have the access to the class's name by means of some fixed property...
+									// 		% B. the names of the properties in question must be constant...;
+									// 		% C. one creates another layer of function abstraction over the methods of a class, that would rely upon the names for the objects in question; Then, the new form of the methods is adapted by this present 'non-static' form and, hence, it no longer depends on the precise values for a function's name!
+									// 			* In this case, however, there still remains the problem of flexibility - namely, that each and every method must still be made a TEMPLATE in order for the thing wtih arbitrary namesf for fields to be truly workable with...
+									//	^ DECISION: yes, pray do make it so; Only small issue is the following - does one want the TEMPLATEs of methods for decided names of the properties to be completely optional, or not? 
+									if (this.class.template.defaults.hasOwnProperty(a)) 
+										ensureProperties(args, this.class.template.defaults[a])	
+									return this.class.template.parentclass.methods[a](
+										...args
+									)
+								})
+							))(
+							RESULT.aliases.native.array.arrIntersections([
 								Object.keys(this.template.parentclass.methods),
 								template.toextend
 							])
-							.map((a) => this.template.parentclass.methods[a]))
+					  ))
 			},
 			defaults: {
 				constructor: [],
