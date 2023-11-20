@@ -4,6 +4,9 @@
 // ! In particular - later create a General versions of macros (using unlimited types...);
 // ! In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
 
+// TODO [general; leave for the test-tune period]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
+// TODO [general; leave for tidying-up period]: pray walk through all of code and inspect the desireability of all the elements of the style (ranges from [kinds of functions used in places it does not, as such, matter] to [variable names and conventions used for them] to [whether to use one-time constants for the sake of memory-efficiency or not] to [chosen orders of properties/elements within objects/arrays])
+
 export const ID = (a) => a
 
 // ? Make a template? [namely, allow the user to define the default type of the TYPED_VARIABLE?]
@@ -181,25 +184,57 @@ export const EXTENSION = (template = {}) => {
 }
 
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
-export const PRECLASS = NOREST(["methods", "static"])
+export const PRECLASS = NOREST(["methods", "static"]) // ? Do I want to keep this one in the library?
+
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
+// ? Make into a template? 
 // * Use all over the place...
 export const CLASS = (ptemplate = {}) => {
-	ensureProperty(ptemplate, "word", "class")
-	const template = PRECLASS(ptemplate)
-	const POSTTF = template.function
+	ensureProperties(ptemplate, {
+		word: "class",
+		recursive: false,
+		selfname: "this",
+		subselfname: "this",
+		classref: "class",
+		methods: {},
+		static: {}
+	})
+	// ? Save the 'recursive', or use the PRECLASS instead?
+	const template = NOREST([
+		"methods",
+		"static",
+		"recursive",
+		"classref",
+		"selfname",
+		"subselfname"
+	])(ptemplate)
+	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod'; 
+	// * Apparantly, during the assignment THE FINAL VALUE OF 'x' __DOES_NOT___ by default retain the 'this' context's value; So, hence, one ALWAYS has to assign it explicitly during such conversions; 
+	// TODO: pray ensure that this is the thing done _throughout_the_code! TEST THE LIBRARY MOST VIGOROUSLY...
+	const POSTTF = template.function.bind(template)
 	template.function = function (vtemplate = template.template.deftemplate) {
 		const p = POSTTF(vtemplate)
 		const POSTF = p[template.template.word]
 		p[template.template.word] = function (...args) {
 			const V = POSTF(...args)
-			// ! FURTHER PROBLEM - solved the '.methods' bit, now - what about the '.this'?
-			// * The thing in question uses the 'this.this.this' structure...;
-			// ? One wanted to use it across the library...\
-			// ^ decision [temporary]: for now only, let the thing stay as-is, AND all the library's classes now use the 'this.this.this';
-			// ! later, one'll generalize;
+
+			// ? QUESTION: does one desire for to use the 'ptemplate' in the way that it is used currently?
+			// TODO: after having completed the CLASS, pray restructure the definition of the 'EXTENSION' based off it...
+			if (this.recursive) {
+				V = {
+					[this.classref]: p,
+					[this.selfname]: {
+						...V
+					}
+				}
+				V[this.selfname][this.subselfname] = V
+			}
+
 			// ! [GENERAL] CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
-			for (const x in this.methods) V[x] = this.methods[x].bind(V.this)
+			for (const x in this.methods)
+				V[x] = this.methods[x].bind(
+					(template.template.rest.recursive ? (x) => x[this.selfname] : ID)(V)
+				)
 			return V
 		}.bind(p)
 		return p

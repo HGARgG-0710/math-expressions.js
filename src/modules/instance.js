@@ -1334,16 +1334,12 @@ export function instance(transformation = ID) {
 					treatfinite: false
 				},
 				function: function (array = this.template.empty) {
-					// TODO: ensure that all the objects within the library possess this style [uniformity; so that it's more intuitive to work with (under certain particular interpretation of 'intuitive' + it has more features...)]; Allows for changing the 'this' dynamically easily [something that plain JS 'this' don't really allow];
-					const A = { class: this }
-					A.this = {
+					return {
 						array: this.template.treatfinite
 							? this.static.fromArray(array)
 							: array,
-						currindex: this.template.class.template.icclass.class(),
-						this: A
+						currindex: this.template.class.template.icclass.class()
 					}
-					return A
 				},
 				// ? Should this also become a part of the new CLASS definition?
 				transform: StaticThisTransform,
@@ -2463,7 +2459,8 @@ export function instance(transformation = ID) {
 							this.this.this.sorted(predicate, leftovers)
 						)
 					}
-				}
+				},
+				recursive: true
 			}),
 
 			number: GENERATOR({
@@ -3085,17 +3082,12 @@ export function instance(transformation = ID) {
 					comparison: RESULT.main.valueCompare,
 					unfound: null
 				},
-				// ! Generalize further! In particular, as one has separated the values for the 'methods', do so for the 'properties' (in particular, abstract the 'this.this.this+this.this.this.this.class' form...)
+				// ? Generalize further! In particular, as one has separated the values for the 'methods', maybe do so for the 'properties' (using a different Macro...)
 				function: function (previous) {
-					const R = {
-						class: this
-					}
-					R.this = {
-						this: R,
+					return {
 						// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
 						value: !previous ? this.template.generator() : previous.value
 					}
-					return R
 				},
 				transform: StaticThisTransform,
 				static: {
@@ -3306,7 +3298,8 @@ export function instance(transformation = ID) {
 						}
 						return a
 					}
-				}
+				},
+				recursive: true
 			}),
 
 			MultiInfiniteCounter(template = {}) {
