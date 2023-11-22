@@ -9,6 +9,9 @@ import {
 	EXTENSION
 } from "./macros.js"
 
+// ! PROBLEM: with the 'get/set' - namely, the fact that their copying methods seem to differ from the simple good-old '.bind': one ought to create more of the various copying functions for this stuff...
+
+// ? Move this somewhere? 
 export const StaticThisTransform = (templated, template) => {
 	templated.static.this = templated
 }
@@ -1330,7 +1333,8 @@ export function instance(transformation = ID) {
 			// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
 			// One could even generalize to the 'args' passed to the function, doing it like so:
 			//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
-			// * with the 'value' getting changed in the 'switch'
+			// * with the 'value' getting changed in the 'switch' hanged in the 'switch'
+			// TODO: reimplement all the methods from the GeneralArray in such a way that it only operates on the 'this.this.this'
 			GeneralArray: CLASS({
 				defaults: {
 					empty: [],
@@ -3526,62 +3530,35 @@ export function instance(transformation = ID) {
 			// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
 			// That's for the addition of things into the UnlimitedString;
 			// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
-			/* UnlimitedString(template = {}) {
-				return {
-					template: { empty: "", ...template },
-					class(string = this.template.empty) {
-						// ? What other methods does one desire within this one???
-						// * Ideally, it ought to have all the possibilities of the GeneralArray;
-						// ^ IDEA [for implementation of it]: just use these 'method-objects-definitions' thingies, to basically create a perfect wrapper, aside from a couple of methods like 'append', say...
-						// ^ IDEA [for a generalization]: create a generalization of this particular instance of a 'wrapping' operation, define instead a class for creating a 'templated this.this.this-wrapper' for a class, with a further function defined for it...;
-						// Implemented below...;
-						// TODO: work further on the proper 'UnlimitedString' instance structure - how does one want it exactly...
-						// * Namely - [There must be a way to copy it]; Generally, consider the copying procedures for the objects of the library in question... [Decide a good general way for copying things;]
-						const X = {
-							class: this,
-							this: {
-								string: this.template.genarrclass.static.empty(),
-								join(separator = this.this.class.template.empty) {
-									// TODO: implement a general algorithm for 'merging' the arrays - 'combining' them in precisely this fashion; Then, reimplement this thing via it...
-									let renewed =
-										this.this.class.template.genarrclass.static.empty()
-									this.this.this.loop()._full((x) => {
-										renewed.pushback(x.object().current)
-										renewed.pushback(separator)
-									})
-									this.this.this.string = renewed
-									return
-								},
-								// ! This function is DIFFERENT FROM THE GENERALARRAY'S VERSION!
-								// TODO: create a GeneralArray's function 'split', which would do the same thing as 'splitArr()' alias currently does...
-								split() {}
-							}
-						}
-						X.this.this = X
-						// TODO: create a way to use this together with EXTENSION's '.toextend';
-						for (const x of Object.keys(X.this.string)) {
-							if (!X.this.hasOwnProperty(x))
-								X.this[x] = function (...args) {
-									return this.this.this.string[x](...args)
-								}.bind(X.this)
-						}
-						X.this.append(string)
-						return X
-					}
-				}
-			}, */
-
-			UnlimitedString: function (parent = RESULT.main.LastIndexArray) { EXTENSION({
-				// ! PROBLEM: with this 'parentclass...'; One is expecting a manner of a GeneralArray here... Yet, what *kind* of a general array is expected, one does not know; Must be compatible with the named usage of GeneralArray; 
-				defaults: { 
-					parentclass: parent,
+			UnlimitedString: function (parent = RESULT.main.LastIndexArray) {
+				return EXTENSION({
+					defaults: {
+						parentclass: parent,
+						empty: ""
+					},
 					methods: {
 						// TODO: pray write all the UnlimitedString methods desired here...
-						// * Current list: 
-						// ! CURRENT AGENDA: write the list...
-					}
-				}
-			})},
+						// * Current list [add to UnlimitedString(...).methods]:
+						// % 	1. split(separator) - returns a GeneralArray of UnlimitedStrings; 
+						// % 	2. slice(begin, end);
+						// %	3. loop();
+						// % 	5. read(index); 
+						// % 	6. write(index, value); 
+						// % 	7. concat(ustring); 
+						// % 	8. currelem [not as 'get-set', but as an object-like thing instead {get: function () {...}, set: function() {...}} - like with 'GeneralArray.length()']; 
+						// % 	9. length(); 
+						// % 	10. copied(); 
+						// %	11. copy(); 
+						// % 	12. 
+						// * note: the '4' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
+						// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass'; 
+						// * Current list [add to GeneralArray]:
+						// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
+						// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question; [gets re-added to the UnlimitedString in question...]; 
+					},
+					recursive: true
+				})
+			},
 
 			// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
 			// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...

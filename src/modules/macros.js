@@ -35,7 +35,6 @@ export const READONLY = (x) =>
 // * Allows to define templated classes and functions more non-conventionally;
 // ! use actively across the entire library...
 // TODO: optimize the macros; [re-implement them more desireably...];
-// ! The default keyword is now 'function' and not '.class';
 export const TEMPLATE = function (template = {}) {
 	return {
 		template: {
@@ -104,13 +103,21 @@ export const HIERARCHY = function (hierarr = []) {
 // 	1. InfiniteMap (extends GeneralArray);
 //  2. UnlimitedString (extends GeneralArray);
 //  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
-// ! Somewhat of a problem: the final methods of the extension in question are NOT reassignable relative to their 'instance+name', if they are chosen not to be general...;
-// ! CHECK THE FINAL STRUCTURE [something is very very wrong with it indeed];
+// ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
+// * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
+// 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;  
 export const EXTENSION = (template = {}) => {
-	ensureProperties(template, {
+	// TODO: refactor this piece of code, pray...
+	ensureProperties(ptemplate, {
+		word: "class",
+		recursive: false,
+		selfname: "this",
+		subselfname: "this",
 		classref: "class",
-		toextend: true,
-		methods: {}
+		methods: {},
+		static: {},
+		isgeneral: {},
+		toextend: true
 	})
 	const ftemplate = {
 		function: function (template = {}) {
@@ -142,26 +149,35 @@ export const EXTENSION = (template = {}) => {
 					x,
 					x.map((a) => [
 						template.isgeneral[x] || false,
-						NAMED_TEMPLATE(function (
-							instance = this.template.instance,
-							name = this.template.name
-						) {
-							return (...args) => {
-								if (
-									instance[
-										name.classref
-									].template.defaults.hasOwnProperty(a)
-								)
-									ensureProperties(
-										args,
-										instance[name.classref].template.defaults[a]
+						NAMED_TEMPLATE(
+							function (
+								instance = this.template.instance,
+								name = this.template.name
+							) {
+								return function (...args) {
+									if (
+										this[
+											name.classref
+										].template.defaults.hasOwnProperty(a)
 									)
-								return instance[
-									name.classref
-								].template.parentclass.methods[a](...args)
+										ensureProperties(
+											args,
+											this[name.classref].template.defaults[a]
+										)
+									// ? Question: does one want the individual treatment of each and every parentclass method in regard of whether they should be bound to
+									// ! PROBLEM [1]: with 'recursive' classes and the way that '.bind' works for them - the separate '.bind' must be implemented for these kinds of methods, seemingly... [namely], one must have the thing attributed to the right part of it... - not the '{classref: ..., selfname: ...}' part, but the '.selfname: {...}' part...;
+									// ! PROBLEM [2]: with the referencing of the 'recursive' class properties, namely the fact that the '[...]' operator doesn't universally work in the desired fashion with the properties of the thing...
+									// ^ IDEA [for a solution]: implement the '.get(...)' method for the classes objects [namely, in the { classref: ..., selfname?: ... } part], which'd resolve this uncertainty [for non-recursive classes would return a thing as-is, whereas for the recursive ones - it'd do the '[.selfname][x]' thing...]; 
+									// * For this thing to work properly, the '.get' method must be present and used in all the CLASSes and macros related to CLASSes; 
+									return this[
+										this[name.classref].template.defaults.name
+									][a](...args)
+								}.bind(instance)
+							},
+							{
+								classref: template.classref,
 							}
-						},
-						template.classref)
+						)
 					])
 				))(
 				template.toextend === true
@@ -172,8 +188,8 @@ export const EXTENSION = (template = {}) => {
 					  ])
 			)
 		}
-	}	
-	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...]; 
+	}
+	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...];
 	delete ftemplate.toextend
 	return PRECLASS(ftemplate)
 }
@@ -252,8 +268,6 @@ export const CLASS = (ptemplate = {}) => {
 	return template
 }
 
-// ! PROBLEM: the way that this thing ties with other functions - namely, the 'nominal' (in reality, missing) "[template.word]: ID" property from the TEMPLATE definiton;
-// Consider it more carefully, pray...
 export const NOREST = function (labels = []) {
 	return function (template = {}) {
 		const X = {}
