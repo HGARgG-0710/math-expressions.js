@@ -1,5 +1,13 @@
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
-import { HIERARCHY, VARIABLE, TEMPLATE, ID, GENERATOR, CLASS } from "./macros.js"
+import {
+	HIERARCHY,
+	VARIABLE,
+	TEMPLATE,
+	ID,
+	GENERATOR,
+	CLASS,
+	EXTENSION
+} from "./macros.js"
 
 export const StaticThisTransform = (templated, template) => {
 	templated.static.this = templated
@@ -3518,7 +3526,7 @@ export function instance(transformation = ID) {
 			// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
 			// That's for the addition of things into the UnlimitedString;
 			// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
-			UnlimitedString(template = {}) {
+			/* UnlimitedString(template = {}) {
 				return {
 					template: { empty: "", ...template },
 					class(string = this.template.empty) {
@@ -3561,7 +3569,19 @@ export function instance(transformation = ID) {
 						return X
 					}
 				}
-			},
+			}, */
+
+			UnlimitedString: function (parent = RESULT.main.LastIndexArray) { EXTENSION({
+				// ! PROBLEM: with this 'parentclass...'; One is expecting a manner of a GeneralArray here... Yet, what *kind* of a general array is expected, one does not know; Must be compatible with the named usage of GeneralArray; 
+				defaults: { 
+					parentclass: parent,
+					methods: {
+						// TODO: pray write all the UnlimitedString methods desired here...
+						// * Current list: 
+						// ! CURRENT AGENDA: write the list...
+					}
+				}
+			})},
 
 			// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
 			// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...

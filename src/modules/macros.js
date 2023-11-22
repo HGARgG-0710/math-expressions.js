@@ -24,6 +24,14 @@ export const TYPED_VARIABLE =
 
 export const VARIABLE = TYPED_VARIABLE()
 
+export const NAMED_TEMPLATE = (f, dname = undefined, dinstance = undefined, rest = {}) =>
+	TEMPLATE({ defaults: { name: dname, instance: dinstance }, function: f, ...rest })
+
+export const READONLY = (x) =>
+	Object.freeze({
+		get: x
+	})
+
 // * Allows to define templated classes and functions more non-conventionally;
 // ! use actively across the entire library...
 // TODO: optimize the macros; [re-implement them more desireably...];
@@ -96,7 +104,14 @@ export const HIERARCHY = function (hierarr = []) {
 // 	1. InfiniteMap (extends GeneralArray);
 //  2. UnlimitedString (extends GeneralArray);
 //  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
+// ! Somewhat of a problem: the final methods of the extension in question are NOT reassignable relative to their 'instance+name', if they are chosen not to be general...;
+// ! CHECK THE FINAL STRUCTURE [something is very very wrong with it indeed];
 export const EXTENSION = (template = {}) => {
+	ensureProperties(template, {
+		classref: "class",
+		toextend: true,
+		methods: {}
+	})
 	const ftemplate = {
 		function: function (template = {}) {
 			return CLASS({
@@ -114,51 +129,68 @@ export const EXTENSION = (template = {}) => {
 		...template,
 		defaults: {
 			name: "sub",
-			methods: {
-				...template.defaults.methods,
-				...(template.toextend === true
-					? template.defaults.parentclass.methods
-					: ((x) =>
-							RESULT.aliases.native.object.obj(
-								x,
-								x.map((a) => (...args) => {
-									// ! THE 'this.class' bit is flawed, must instead rely upon the 'classreference'; [STILL UNFINISHED...]
-									// * The problem has now shifted to the fact that the object of such a class instance has no means of accessing the class, which [for it], is the ONLY mean of knowing which of the properties contains the way to the class! 
-									// ^ CONCLUSION: to solve this, either:
-									// 		% A. the object must itself have the access to the class's name by means of some fixed property...
-									// 		% B. the names of the properties in question must be constant...;
-									// 		% C. one creates another layer of function abstraction over the methods of a class, that would rely upon the names for the objects in question; Then, the new form of the methods is adapted by this present 'non-static' form and, hence, it no longer depends on the precise values for a function's name!
-									// 			* In this case, however, there still remains the problem of flexibility - namely, that each and every method must still be made a TEMPLATE in order for the thing wtih arbitrary namesf for fields to be truly workable with...
-									//	^ DECISION: yes, pray do make it so; Only small issue is the following - does one want the TEMPLATEs of methods for decided names of the properties to be completely optional, or not? 
-									if (this.class.template.defaults.hasOwnProperty(a)) 
-										ensureProperties(args, this.class.template.defaults[a])	
-									return this.class.template.parentclass.methods[a](
-										...args
-									)
-								})
-							))(
-							RESULT.aliases.native.array.arrIntersections([
-								Object.keys(this.template.parentclass.methods),
-								template.toextend
-							])
-					  ))
-			},
 			defaults: {
 				constructor: [],
 				...template.defaults.defaults
 			},
 			...template.defaults
+		},
+		methods: {
+			...template.methods,
+			...((x) =>
+				RESULT.aliases.native.object.obj(
+					x,
+					x.map((a) => [
+						template.isgeneral[x] || false,
+						NAMED_TEMPLATE(function (
+							instance = this.template.instance,
+							name = this.template.name
+						) {
+							return (...args) => {
+								if (
+									instance[
+										name.classref
+									].template.defaults.hasOwnProperty(a)
+								)
+									ensureProperties(
+										args,
+										instance[name.classref].template.defaults[a]
+									)
+								return instance[
+									name.classref
+								].template.parentclass.methods[a](...args)
+							}
+						},
+						template.classref)
+					])
+				))(
+				template.toextend === true
+					? template.defaults.parentclass.methods
+					: RESULT.aliases.native.array.arrIntersections([
+							Object.keys(template.defaults.parentclass.methods),
+							template.toextend
+					  ])
+			)
 		}
-	}
-
+	}	
+	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...]; 
+	delete ftemplate.toextend
 	return PRECLASS(ftemplate)
 }
 
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
-export const PRECLASS = NOREST(["methods", "static"]) // ? Do I want to keep this one in the library even?
+export const PRECLASS = NOREST([
+	"methods",
+	"static",
+	"recursive",
+	"classref",
+	"selfname",
+	"subselfname",
+	"isgeneral"
+])
 
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
-// ? Make into a template?
+// ? Make into a template? [Highly doubtful currently...]
 // * Use all over the place...
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
@@ -168,17 +200,10 @@ export const CLASS = (ptemplate = {}) => {
 		subselfname: "this",
 		classref: "class",
 		methods: {},
-		static: {}
+		static: {},
+		isgeneral: {}
 	})
-	// ? Save the 'recursive', or use the PRECLASS instead?
-	const template = NOREST([
-		"methods",
-		"static",
-		"recursive",
-		"classref",
-		"selfname",
-		"subselfname"
-	])(ptemplate)
+	const template = PRECLASS(ptemplate)
 	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod';
 	// * Apparantly, during the assignment THE FINAL VALUE OF 'x' __DOES_NOT___ by default retain the 'this' context's value; So, hence, one ALWAYS has to assign it explicitly during such conversions;
 	// TODO: pray ensure that this is the thing done _throughout_the_code! TEST THE LIBRARY MOST VIGOROUSLY...
@@ -203,10 +228,23 @@ export const CLASS = (ptemplate = {}) => {
 
 			// ! [GENERAL] CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
 			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
-			for (const x in this.methods)
+			for (const x in this.methods) {
+				const isarr = this.methods[x] instanceof Array
+				if (isarr || this.isgeneral.hasOwnProperty(x)) {
+					const B = isarr
+						? this.methods[x]
+						: [this.isgeneral[x], this.methods[x]]
+					const A = B[1]
+					A.template.instance = (this.recursive ? (x) => x[this.selfname] : ID)(
+						V
+					)
+					V[x] = B.methods[0] ? A.function.bind(A) : A.function()
+					continue
+				}
 				V[x] = this.methods[x].bind(
-					(template.template.rest.recursive ? (x) => x[this.selfname] : ID)(V)
+					(this.recursive ? (x) => x[this.selfname] : ID)(V)
 				)
+			}
 			return V
 		}.bind(p)
 		return p
@@ -218,10 +256,10 @@ export const CLASS = (ptemplate = {}) => {
 // Consider it more carefully, pray...
 export const NOREST = function (labels = []) {
 	return function (template = {}) {
-		const X = {
-			...template,
-			rest: {}
-		}
+		const X = {}
+		// ! refactor!
+		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
+		X.rest = {}
 		// ! refactor!
 		for (const l of labels) X.rest[l] = template[l]
 		X.rest = { ...X.rest, ...template.rest }
