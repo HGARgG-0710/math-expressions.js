@@ -11,7 +11,7 @@ import {
 
 // ! PROBLEM: with the 'get/set' - namely, the fact that their copying methods seem to differ from the simple good-old '.bind': one ought to create more of the various copying functions for this stuff...
 
-// ? Move this somewhere? 
+// ? Move this somewhere?
 export const StaticThisTransform = (templated, template) => {
 	templated.static.this = templated
 }
@@ -1180,19 +1180,6 @@ export function instance(transformation = ID) {
 			fun: Function,
 			bi: BigInt,
 
-			// ? Put it where?
-			// * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
-			most: TEMPLATE({
-				function: function (garr = this.template.genarrclass.static.empty()) {
-					let most = garr.read(garr.init())
-					garr.loop()._full((t) => {
-						if (this.template.comparison(t.object().current, most))
-							most = t.object().current
-					})
-					return most
-				}
-			}),
-
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
 			property: (p) => (x) => x[p],
 			trim:
@@ -1327,1188 +1314,361 @@ export function instance(transformation = ID) {
 				})
 			},
 
-			// ^ IDEA: naming-maps-defined methods!
-			// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
-			// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
-			// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
-			// One could even generalize to the 'args' passed to the function, doing it like so:
-			//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
-			// * with the 'value' getting changed in the 'switch' hanged in the 'switch'
-			// TODO: reimplement all the methods from the GeneralArray in such a way that it only operates on the 'this.this.this'
-			GeneralArray: CLASS({
-				defaults: {
-					empty: [],
-					unfound: undefined,
-					treatfinite: false
+			counters: {
+				number: GENERATOR({
+					defaults: { start: 0 },
+					generator(x = this.template.start) {
+						return this.template.forward(Number(x))
+					},
+					inverse(x = this.template.start) {
+						return this.template.backward(Number(x))
+					},
+					range: RESULT.negate(isNaN)
+				}),
+				// ? QUESTION [1]: the degree to which some such thing may be extended, mayhaps? [Namely, ought one be able to extend the object passed down to the 'RESULT.main.number' right there or not?]
+				// ? QUESTION [2]: does one want to make a macro for this one, or categorize into one of the already existing ones [as a TEMPLATE, perhaps]? Pray consider...
+				// * Current decision [temporary]: leave alone such cases for now, as are...
+				// ! notice: should there generally not be a mean to extend BOTH the template's shape {the data} and the template's function {the transformation regulated by the data};
+				addnumber(template = {}) {
+					return RESULT.main.number({
+						template: { fdiff: 1, bdiff: -1, ...template },
+						forward(x) {
+							return x + this.template.fdiff
+						},
+						backward(x) {
+							return x + this.template.bdiff
+						}
+					})
 				},
-				function: function (array = this.template.empty) {
-					return {
-						array: this.template.treatfinite
-							? this.static.fromArray(array)
-							: array,
-						currindex: this.template.class.template.icclass.class()
+
+				multnumber(template = {}) {
+					return RESULT.main.number({
+						template: { fdiff: 1, bdiff: -1, ...template },
+						forward(x) {
+							return x * this.template.fdiff
+						},
+						backward(x) {
+							return x * this.template.bdiff
+						}
+					})
+				},
+				// * Probably the "simplest" infinite counter one would have in JS is based off this generator;
+				arrayCounter: GENERATOR({
+					defaults: {
+						start: null
+					},
+					generator(a = this.template.start) {
+						if (!this.range(a)) this.template.start = a
+						return [a]
+					},
+					// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
+					inverse: function (a) {
+						return a[0]
+					},
+					range: function (a) {
+						return (
+							a === this.template.start ||
+							(a instanceof Array && this.range(this.inverse(a)))
+						)
 					}
-				},
-				// ? Should this also become a part of the new CLASS definition?
-				transform: StaticThisTransform,
-				static: {
-					empty(template = this.this.template) {
-						return this.this.class(template).class()
+				}),
+
+				// * Generalization of the thing above (arrayCounter)...
+				objCounter: GENERATOR({
+					defaults: {
+						field: "",
+						start: null,
+						// ? Does one desire the refCompare? Or valueCompare to be the default?
+						comparison: RESULT.aliases.refCompare
 					},
-					pushbackLoop(template = {}) {
-						return {
-							template: {
-								arguments: [],
-								transform: RESULT.id,
-								...template
-							},
-							function(b) {
-								return this.template.target.pushback(
-									this.template.transform(b.object().currelem),
-									...this.template.arguments
-								)
-							}
-						}
+					generator: function (a = this.template.start) {
+						if (!this.range(a)) this.template.start = a
+						return { [this.template.field]: a }
 					},
-					// * This is pretty much THE SAME code as above for the 'pushbackLoop';
-					// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
-					pushfrontLoop(template = {}) {
-						return {
-							template: {
-								arguments: [],
-								transform: RESULT.id,
-								...template
-							},
-							function(b) {
-								return this.template.target.pushfront(
-									this.template.transform(b.object().currelem),
-									...this.template.arguments
-								)
-							}
-						}
+					inverse: function (a) {
+						return a[this.template.field]
 					},
-					// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
-					fromArray(arr, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.template.icclass.template.range,
-							comparison: this.this.template.icclass.template.comparison
-						})
-						const generalized = this.empty()
-						for (const a of arr) generalized.pushback(a, leftovers)
-						return generalized
+					range: function (a) {
+						return (
+							this.template.comparison(a, this.template.start) ||
+							(typeof a === "object" && this.range(this.inverse(a)))
+						)
 					}
-				},
-				methods: {
-					next() {
-						return (this.this.this.currindex =
-							this.this.this.currindex.next())
-					},
-					previous() {
-						return (this.this.this.currindex =
-							this.this.this.currindex.previous())
-					},
-					get currelem() {
-						// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
-						// todo [general] : pray do just that...
-						return this.this.this.this.class.template.elem(this.this.this)
-					},
-					set currelem(newval) {
-						return this.this.this.this.class.template.newvalue(
-							this.this.this,
-							newval
-						)
-					},
-					// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
-					// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
-					loop(template = {}) {
-						// ? Generalize to a separate class maybe???
-						const a = {
-							template: {
-								indexiter: (x) => x.object().next(),
-								end: (x) =>
-									x.object().this.class.template.isEnd(x.object()),
-								begin: (x) => x.object().begin(),
-								icclass: this.this.this.this.class.template.icclass,
-								...template
-							},
-							object: RESULT._const(this.this.this),
-							restart: function () {
-								this.counter = this.template.icclass.class()
-							},
-							yield: function (
-								_indexiter = this.template.indexiter,
-								end = this.template.end,
-								iter = true
-							) {
-								if (iter) _indexiter(this)
-								const isend = end(this)
-								if (!isend && iter) this.counter = this.counter.next()
-								return isend
-							},
-							_full(
-								each,
-								iter = RESULT._const(this.template.indexiter),
-								end = RESULT._const(this.template.end),
-								begin = this.template.begin
-							) {
-								const index = this.object().currindex
-								begin(this)
-								let r = undefined
-								let is = this.yield(RESULT._const(null), end(), false)
-								while (!is) {
-									r = each(this, r)
-									is = this.yield(iter(), end())
-									if (this.broke) break
-								}
-								this.restart()
-								this.broke = false
-								this.object().currindex = index
-								return r
-							},
-							// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
-							// ? work on their names...
-							// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
-							full(
-								each = this.template.each,
-								iter = RESULT._const(this.template.indexiter),
-								end = RESULT._const(this.template.end),
-								begin = this.template.begin
-							) {
-								const index = this.object().currindex
-								begin(this)
-								let r = undefined
-								let is = this.yield(null, end(), false)
-								while (!is) {
-									const x = each(this)
-									let goOn = true
-									r = x.loop()._full((t) => {
-										if (goOn) {
-											if (this.broke || this.continued) {
-												goOn = false
-												return
-											}
-											return t.object().currelem(t)
-										}
-									})
-									is = this.yield(iter(), end())
-									if (this.broke) break
-									goOn = true
-									this.continued = false
-								}
-								this.restart()
-								this.broke = false
-								this.object().currindex = index
-								return r
-							},
-							break: function () {
-								this.broke = true
-							},
-							continue: function () {
-								this.continued = true
-							},
-							broke: false,
-							continued: false
-						}
-						a.restart()
-						return a
-					},
-					// ! shorten the code with these 4 [begin, end, init, finish]...
-					begin() {
-						return this.this.this.go(
-							this.this.this.init(),
-							RESULT._const(true)
-						)
-					},
-					end() {
-						// * skipping the check because one knows that it would be 'true' anyway...
-						return this.this.this.go(
-							this.this.this.finish(),
-							RESULT._const(true)
-						)
-					},
-					init() {
-						return this.this.this.this.class.template.icclass.class()
-					},
-					// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
-					finish() {
-						return this.this.this.length().get().previous()
-					},
-					// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
-					// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
-					go(
-						index,
-						range = this.this.this.this.class.template.icclass.template.range
-					) {
-						if (!range(index.value))
-							throw new RangeError(
-								"Range error in the '.go' method 'index' argument whilst calling."
+				}),
+				// TODO: template the 'recursiveCounter' (slightly more curious than the rest the cases insofar - namely, one desires for powerful generalization of the constructs used to assemble the final 'returned'); Work on the thing in question greatly...
+
+				// * A maximally efficient structurally counter based on array recursion and finite orders;
+				// ! Clean, review again later; fix	problems
+				// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
+				recursiveCounter(template = {}) {
+					// ^ IDEA: generalize this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences... (as in 0-1-2-3-...-2^(whatever...)-[0]-...[2^(whatever)]-...)
+					// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
+					const returned = {
+						template: {
+							comparison: RESULT.main.valueCompare,
+							maxarrlen: RESULT.variables.MAX_ARRAY_LENGTH,
+							type: RESULT.aliases._const(true),
+							...template
+						},
+						range(x) {
+							return (
+								x instanceof Array &&
+								!!x.length &&
+								!!RESULT.functions.min(
+									(x) =>
+										this.template.type(x) ||
+										(x instanceof Array && this.range(x))
+								)
 							)
+						}
+					}
 
-						return (this.this.this.currindex = index)
-					},
-					// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
-
-					// TODO: pray decide about the question of dependence/independence of methods from mutual definition...
-					// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
-					move(
-						index,
-						preface = RESULT.void,
-						comparison = this.this.this.this.class.template.icclass.template
-							.comparison,
-						each = (x) => x.next(),
-						stop = (x) => comparison(x.length().get(), x.currindex)
-					) {
-						preface(arguments, this.this.this)
-						while (
-							!comparison(this.this.this.currindex, index) &&
-							!stop(this.this.this)
-						)
-							each(this.this.this)
-						return this.this.this.currindex
-					},
-					moveforward(index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							begin: false,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison,
-							stop: (x) =>
-								leftovers.comparison(x.length().get().next(), x.currindex)
-						})
-						return this.this.this.move(
-							index,
-							(args, x) => {
-								if (leftovers.begin) x.currindex = x.init()
-							},
-							leftovers.comparison,
-							(x) => x.next(),
-							leftovers.stop
-						)
-					},
-					// TODO [GENERAL]: work on the order of arguments of various methods and functions... Update things in correspondence with them.
-					movebackward(index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							end: false,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison,
-							stop: (x) => leftovers.comparison(x.init(), x.currindex)
-						})
-						return this.this.this.move(
-							index,
-							(args, x) => {
-								if (leftovers.end) x.currindex = x.length().get()
-							},
-							leftovers.comparison,
-							(x) => x.previous(),
-							leftovers.stop
-						)
-					},
-					movedirection(index, leftovers = {}) {
-						RESULT.ensureProperty(
-							leftovers,
-							"comparison",
-							this.this.this.this.class.template.icclass.template.comparison
-						)
-						return this.this.this.currindex.compare(index)
-							? this.moveforward(index, {
-									begin: false,
-									comparison: leftovers.comparison,
-									stop: (leftovers.stop =
-										leftovers.stop ||
-										((x) =>
-											leftovers.comparison(
-												x.currindex,
-												x.length().get()
-											)))
-							  })
-							: this.movebackward(index, {
-									end: false,
-									comparison: leftovers.comparison,
-									stop: (leftovers.stop =
-										leftovers.stop ||
-										((x) =>
-											leftovers.comparison(x.currindex, x.init())))
-							  })
-					},
-					jump(index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison:
-								this.this.this.this.class.template.icclass.comparison,
-							range: this.this.this.this.class.template.icclass.range
-						})
-						return (this.this.this.currindex =
-							this.this.this.currindex.jumpDirection(
-								index,
-								leftovers.comparison,
-								leftovers.range
-							))
-					},
-					/**
-					 * * Hello, Wilbur!
-					 * ? Does that thing work even???
-					 * * might...
-					 * TODO: pray check if these kinds of 'nested'ly stuctured objects' methods even get their in-editor JSDoc documentation properly... [Quite a jolly surprise if they do!]
-					 */
-					read(index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const ind = this.this.this.currindex
-						if (leftovers.fast) this.this.this.go(index, leftovers.range)
-						else this.this.this.moveforward(index, true, leftovers.comparison)
-						this.this.this.currindex = ind
-						const c = this.this.this.currelem
-						return c
-					},
-					write(index, value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const ind = this.this.this.currindex
-						if (leftovers.fast) this.this.this.go(index, leftovers.range)
-						else
-							this.this.this.moveforward(index, {
-								begin: true,
-								comparison: leftovers.comparison
+					// TODO: generalize this operation to an outer-scope function;
+					const keys = ["inverse", "generator"]
+					keys.map(
+						(x, i) =>
+							(returned[x] = function (t) {
+								return generalgenerator(t, !!i, this)
 							})
-						const returned = (this.this.this.currelem = value)
-						this.this.this.currindex = ind
-						return returned
-					},
-					length() {
-						// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
-						// ? Or like a getter? As in: 'get get() {...}'; Then, one'd drop the '()' from '.get()' during the calling procedure...
-						// * pray think on it...
-						return {
-							object: RESULT._const(this.this.this),
-							get() {
-								// ? Could this [the 'length.get()' method] not be rewritten by the means of the '.loop()' method??? Pray consider...
-								// * Yes, indeed! Pray do...
-								// TODO: refactor...
-								const index = this.object().currindex
-								this.object().begin()
-								while (
-									!this.object().this.class.template.isEnd(
-										this.object()
-									)
-								)
-									this.object().next()
-								const returned = this.object().currindex
-								this.object().currindex = index
-								return returned
-							},
-							set(value, leftovers = {}) {
-								RESULT.ensureProperties(leftovers, {
-									range: this.object().this.class.template.class
-										.template.icclass.template.range,
-									comparison:
-										this.object().this.class.template.class.template
-											.icclass.template.comparison
-								})
+					)
 
-								if (!leftovers.range(value.value))
-									throw new RangeError(
-										"Index range error for array length setting"
+					function signedAdd(sign) {
+						return function (thisobject) {
+							return function (x) {
+								let indexes = findDeepUnfilled(sign)(x)
+								let result = x
+
+								if (!indexes) {
+									indexes = findDeepUnfilledArr(x)
+									if (!indexes) return [x]
+
+									result = RESULT.main.recursiveIndexationInfFields()(
+										result,
+										indexes
 									)
 
-								if (
-									leftovers.comparison(
-										this.object().length().get(),
-										value
+									// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
+									// * Including the infinite versions of them...
+									result = RESULT.main.repeatedApplication()(
+										(value) => {
+											value.push([])
+											return value[value.length - 1]
+										},
+										dim({
+											icclass: indexes.this.class.template.icclass
+										})(a)
+											.difference(indexes.length())
+											.previous(),
+										result
 									)
-								)
-									return
-
-								if (
-									this.object()
-										.length()
-										.get()
-										.compare(value, undefined, RESULT._const(true))
-								) {
-									// Decrease the length
-									this.object().deleteMult(
-										this.object().init(),
-										this.object()
-											.length()
-											.get()
-											.jumpDirection(
-												this.object()
-													.length()
-													.get()
-													.difference(value)
-											)
-									)
-								} else {
-									// Increase the length
-									// TODO: finish the sketch...
-									// * Sketch: .pushback() some 'default()' element(s) [settable as a default-template by the user] for the required number of items...
-									// The number of items is supposed to be given by the InfiniteCounter.difference(ic) method... would essentially take an 'InfiniteCounter' instance, find the difference between it and the current index;
-									// * note: the returned difference would be non-absolute and by the chosen generator, that being, one would 'jump' on the appropritate number of times;
+									result.push(thisobject.template.lower)
+									return x
 								}
-							}
-						}
-					},
-					appendfront(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
 
-						const newArr = this.this.this.this.class.static.fromArray(
-							[x],
-							leftovers
-						)
-						newArr.concat(this.this.this, leftovers)
-						return newArr
-					},
-					copied(method, _arguments = [], f = RESULT.id, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						const c = this.this.this.copy(f, leftovers)
-						if (c[method]) c[method](..._arguments)
-						return c
-					},
-					// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
-					// Shape of the modifiable 'this' objects...
-					// const A = {this: {...[the actual object]}}; A.this.this = A;
-					// * The user would access the object by means of 'obj.this'; And from within - using 'this.this.this' [for the sake of ability to change the value of 'this.this.this']
-					// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
-					// ? Think on HOW to document it all... Ought to be general yet also representative of the possible uses such as to employ different combinations of separate elements of the library per a single one...
-					// TODO [general]: spread this 'this.this.this' architecture throughout the project...
-					pushback(value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return this.this.this.write(
-							this.this.this.length().get(),
-							value,
-							leftovers
-						)
-					},
-					pushfront(value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return (this.this.this = this.this.this.appendfront(
-							value,
-							leftovers
-						))
-					},
-					// TODO: ensure these kinds of 'saviour' default empty templates all over the templated code;
-					pushfrontLoop(template = {}) {
-						const origin =
-							this.this.this.this.class.static.pushfrontkLoop(template)
-						const T = {
-							template: {
-								target: this.this.this,
-								...origin.template
-							}
-						}
-						T.function = origin.function.bind(T)
-						return T
-					},
-					pushbackLoop(template = {}) {
-						const origin =
-							this.this.this.this.class.static.pushbackLoop(template)
-						const T = {
-							template: {
-								target: this.this.this,
-								...origin.template
-							}
-						}
-						T.function = origin.function.bind(T)
-						return T
-					},
-					// TODO: allow for multiple arrays to concat the current one with... [perhaps, an array of arrays?]
-					concat(
-						// TODO: make the 'array' an '.empty()' by default in such and other similar cases...
-						array,
-						leftovers = {}
-					) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return array.loop()._full(
-							this.this.this.pushbackLoop({
-								arguments: [leftovers]
-							}).function
-						)
-					},
-					empty(template = this.this.this.this.class.template) {
-						return this.this.this.this.class.static.empty(template)
-					},
-					copy(f = RESULT.id, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const copied = this.this.this.empty()
-						this.this.this.loop()._full(
-							copied.pushbackLoop({
-								transform: f,
-								arguments: [leftovers]
-							}).function
-						)
-						return copied
-					},
-					slice(
-						begin = this.this.this.init(),
-						end = this.this.this.finish(),
-						leftovers = {}
-					) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						if (!leftovers.range(end.value))
-							throw new RangeError(
-								"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
-							)
-
-						// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
-						const sliced = this.this.this.empty()
-
-						this.this.this.loop()._full(
-							sliced.pushbackLoop({
-								arguments: [leftovers]
-							}).function,
-							undefined,
-							// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
-							// TODO: decide generally....
-							// ^ decided! Let all the algorithms involving indexes all be inclusive to the arguments' values...
-							// TODO: pray ensure that too...
-							RESULT._const((t) => end.compare(t.object().currindex)),
-							(t) => {
-								t.object().begin()
-								t.object().go(begin, leftovers.range)
-							}
-						)
-						return sliced
-					},
-					*forin() {
-						for (
-							let c = this.this.this.init();
-							!c.compare(this.this.this.length().get());
-							c = c.next()
-						)
-							yield c
-					},
-					*[Symbol.iterator](leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						for (
-							let c = this.this.this.init();
-							!c.compare(this.this.this.length().get());
-							c = c.next()
-						)
-							yield this.this.this.read(c, leftovers)
-					},
-					// TODO: rewrite by means of already create methods [refactor];
-					// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
-					// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
-					// ! later, pray review the integrity of the small things with this sketch...;
-					fillfrom(index, value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						const indexsaved = this.this.this.currindex
-						this.this.this.go(index, leftovers.range)
-						while (
-							!leftovers.comparison(
-								this.this.this.currindex,
-								this.this.this.finish()
-							)
-						) {
-							this.this.this.currelem = value
-							this.this.this.next()
-						}
-						this.this.this.currindex = indexsaved
-					},
-					convert(
-						// ? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
-						template = this.this.this.this.class.template,
-						leftovers = {}
-					) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: template.icclass.template.range,
-							comparison: template.icclass.template.comparison
-						})
-						const newArr = RESULT.GeneralArray(templates[0]).class()
-						this.this.this.loop()._full(
-							newArr.pushbackLoop({
-								arguments: [leftovers]
-							}).function
-						)
-						return newArr
-					},
-					delete(index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return this.this.this.deleteMult(index, index, leftovers)
-					},
-					deleteMult(startindex, endindex = startindex, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return (this.this.this = this.this.this
-							.slice(
-								this.this.this.init(),
-								startindex.previous(),
-								leftovers
-							)
-							.concat(this.this.this.slice(endindex.next(), leftovers)))
-					},
-					projectComplete(array, index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const _index = this.this.this.currindex
-						array.loop()._full(
-							(t) => {
-								// TODO: generalize this as well - some '.currwriteLoop(value, fast, range, comparison)', or something...
-								this.this.this.write(
-									this.this.this.currindex,
-									t.object().currelem,
-									leftovers
+								result = RESULT.main.recursiveIndexationInfFields()(
+									result,
+									indexes.slice(undefined, indexes.finish().previous())
 								)
-							},
-							RESULT._const((x) => {
-								x.object().next()
-								this.this.this.next()
+								const endind = indexes.read(indexes.finish())
+								result[endind] = thisobject.template[
+									sign ? "forward" : "backward"
+								](result[endind])
+								return x
+							}
+						}
+					}
+					function signedDelete(sign) {
+						return function (thisobject) {
+							return function (x) {
+								if (
+									!findDeepUnfilled(sign)(x) &&
+									findDeepUnfilledArr(x) &&
+									x.length === 1
+								)
+									return x[0]
+
+								// TODO [general]: use the 'recursiveSetting' where appropriate; Create an infinite version for it as well...
+								let lastIndexes = findDeepLast(a)
+								const finind = lastIndexes.final()
+								const ffinind = finind.previous()
+								// * Note: the one underneath here is an old note;
+								// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
+								let ppointer = RESULT.main.recursiveIndexationInfFields()(
+									x,
+									lastIndexes.slice(undefined, ffinind.previous())
+								)
+								let pointer = RESULT.main.recursiveIndexationInfFields()(
+									x,
+									lastIndexes.slice(undefined, ffinind)
+								)
+								const llindex = lastIndexes.read(ffinind)
+								const lindex = lastIndexes.read(finind)
+
+								if (thisobject.template.sign(pointer[lindex])) {
+									pointer[lindex] = thisobject.template[
+										sign ? "forward" : "backward"
+									](pointer[lindex])
+									return x
+								}
+
+								ppointer[llindex] = RESULT.aliases._remove(
+									ppointer[llindex],
+									lindex
+								)
+								pointer = ppointer[llindex]
+
+								let index = lindex
+								let hlindex = llindex
+
+								// TODO [local refactoring]: the pre-while-loop piece of code is nigh exactly the same as that within the loop; Pray re-organize to make this stuff shorter and more concise... [for instance, separate declarations from definitions and on and on...]
+								while (!pointer.length) {
+									// TODO: now, this is a RECURSIVE step, so, for instance, one accomplishes this same one procedure not just for 'pointer', but for the 'ppointer' and all the other ones such as well...
+									// * Consider carefully how to do this precisely...
+									// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
+									index = index.previous()
+									ppointer = RESULT.main.recursiveIndexationInfFields()(
+										x,
+										lastIndexes.slice(
+											undefined,
+											(hlindex = hlindex.previous())
+										)
+									)
+									ppointer[hlindex] = RESULT.aliases._remove(
+										ppointer[hlindex],
+										index
+									)
+									pointer = RESULT.main.recursiveIndexationInfFields()(
+										x,
+										lastIndexes.slice(undefined, index)
+									)
+								}
+
+								return x
+							}
+						}
+					}
+
+					const sat = signedAdd(true),
+						saf = signedAdd(false),
+						sdt = signedDelete(true),
+						sdf = signedDelete(false)
+
+					function boolfunctswitch(f, bool) {
+						return f ? (bool ? sat : saf) : bool ? sdt : sdf
+					}
+
+					function generalgenerator(x, bool, thisobj) {
+						if (!thisobj.range(x)) return [thisobj.template.lower]
+						let r = RESULT.main.deepCopy(x)
+						return boolfunctswitch(
+							thisobj.template.globalsign(r),
+							bool
+						)(thisobj)(r)
+					}
+
+					// ! PROBLEM [same - with the re-creation of different methods for the purpose of running this thing...];
+					// TODO: DO THE SAME THERE...
+					// TODO: generalize the 'LastIndexArray + arrayCounter()' part...
+					// ? What about putting these things out into the 'submodules.RESULT.main.' or some other more global scope?
+					const findDeepUnfilled = (t = true) => {
+						RESULT.main.generalSearch({
+							genarrclass: RESULT.main.LastIndexArray({
+								icclass: RESULT.main.InfiniteCounter(
+									RESULT.main.arrayCounter()
+								)
 							}),
-							undefined,
-							(x) => {
-								x.object().begin()
-								this.this.this.go(index, leftovers.range)
-							}
-						)
-						// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
-						// ! Problem : generally , one might want to implement a sort of a multi-array loop function [so that the 'index' could be changed and then restored for multiple of them...]...
-						// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
-						// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
-						this.this.this.currindex = _index
-					},
-					// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
-					// TODO: think deeply on the return values for the GeneralArray algorithms...
-					projectFit(array, index, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const ind = array.currindex
-						this.this.this.loop()._full(
-							(t) => {
-								t.object().write(
-									t.object().currindex,
-									array.currelem,
-									leftovers
-								)
-								array.next()
-							},
-							undefined,
-							(x) =>
-								x.object().this.class.template.isEnd(x.object()) ||
-								array.this.class.template.isEnd(array),
-							(t) => t.object().go(index, leftovers.range)
-						)
-						array.currindex = ind
-					},
-					inserted(index, value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						const x = this.this.this.slice(
-							undefined,
-							index.previous(),
-							leftovers
-						)
-						x.pushback(value, leftovers)
-						x.concat(this.this.this.slice(index, undefined, leftovers))
-						return x
-					},
-					insert(index, value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return (this.this.this = this.inserted(index, value, leftovers))
-					},
-					has(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							unfound: this.this.this.this.class.template.unfound,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return !leftovers.comparison(
-							this.this.this.firstIndex(x, leftovers),
-							leftovers.unfound
-						)
-					},
-					// * Just an alias...
-					index(i, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return this.this.this.read(i, leftovers)
-					},
-					// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
-					indexesOf(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						const indexes = this.this.this.empty()
-						this.this.this.loop()._full((arr) => {
-							if (leftovers.comparison(arr.object().currelem, x))
-								indexes.pushback(arr.currindex, leftovers)
-						})
-						return indexes
-					},
-
-					// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
-					// * Something like 'comparison = this.comparison || this.class.comparison'?
-					// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
-					// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
-					//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
-
-					firstIndex(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							unfound: this.this.this.this.class.template.unfound,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						let index = leftovers.unfound
-						this.this.this.loop()._full((arr) => {
-							if (leftovers.comparison(arr.object().currelem, x)) {
-								index = arr.currindex
-								arr.break()
-							}
-						})
-						return index
-					},
-					// TODO: template the 'baseelem' argument, pray;
-					shiftForward(
-						times,
-						icclass = this.this.this.this.class.template.icclass,
-						baseelem = undefined,
-						leftovers = {}
-					) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						const x = this.this.this.this.class.static
-							.fromArray([baseelem])
-							.repeat(times, icclass)
-						x.concat(this.this.this, leftovers)
-						return x
-					},
-					// TODO [general]: do proper work on the functions' defaults;
-					shiftBackward(times, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						this.this.this = this.this.this.slice(
-							times.map(
-								this.this.this.this.template.class.template.icclass
-							),
-							undefined,
-							leftovers
-						)
-					},
-					repeat(
-						times = this.this.this.init(),
-						icclass = this.this.this.this.class.template.icclass,
-						leftovers = {}
-					) {
-						const newarr = this.this.this.empty()
-						icclass.static.whileloop(icclass.class(), times, () =>
-							newarr.concat(this.this.this, leftovers)
-						)
-						return newarr
-					},
-					reversed(leftovers = {}) {
-						const reversedArr = this.this.this.empty()
-						this.this.this.loop()._full(
-							reversedArr.pushfrontLoop({
-								arguments: [leftovers]
-							}).function
-						)
-						return reversedArr
-					},
-					reverse() {
-						return (this.this.this = this.this.this.reversed())
-					},
-					// * Just an alias for 'copy'...
-					map(f = RESULT.id, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return this.this.this.copy(f, leftovers)
-					},
-					isEmpty(isend = this.this.this.this.class.template.isEnd) {
-						const index = this.this.this.currindex
-						this.this.this.begin()
-						const val = isend(this.this.this)
-						this.this.this.currindex = index
-						return val
-					},
-					/**
-					 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
-					 *
-					 * DEFINITION:
-					 *
-					 * WIKI:
-					 */
-					sorted(predicate, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-
-						// TODO: create an alias for that thing...
-						// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
-						const ALIAS = (x) =>
-							RESULT.infinite
-								.InfiniteCounter(
-									RESULT.RESULT.main.addnumber({
-										start: -1
-									})
-								)({ value: x })
-								.map(this.this.this.this.class.template.icclass)
-
-						const TWO = ALIAS(2),
-							THREE = ALIAS(3)
-
-						function split(a) {
-							if (
-								leftovers.comparison(TWO, a.length().get()) ||
-								leftovers.comparison(a.length().get(), THREE)
-							)
-								return this.this.this.this.class.static.fromArray(
-									[a],
-									leftovers
-								)
-
-							// ? Should one generalize this ???
-							// * YES, this code is getting slightly repetitious and unwieldy...
-							const counter = this.this.ths.init()
-							while (
-								!leftovers.comparison(
-									a.finish(),
-									counter.jump(counter)
+							soughtProp: (x) =>
+								returned.template.type(x) &&
+								(t ? RESULT.aliases.id : RESULT.aliases.n)(
+									returned.template.sign(x)
 								) &&
-								!leftovers.comparison(
-									a.finish(),
-									counter.jump(counter.next())
+								!returned.template.comparison(
+									t
+										? returned.template.upper
+										: returned.template.rupper,
+									x
 								)
-							)
-								counter = counter.next()
-
-							// TODO: it's really time to generalize this [the empty arrays thing...]!!!
-							const final = this.this.this.empty()
-							final.concat(split(a.slice(a.init(), counter, leftovers)))
-							final.concat(
-								split(a.slice(counter, undefined, leftovers)),
-								leftovers
-							)
-							return final
-						}
-						function merge(a) {
-							function binmerge(a, b) {
-								// TODO: AGAIN...
-								const merged = this.this.this.empty()
-
-								// TODO: make the default 'index' for .read() to be '.init()'...; Then, here, one'd just write 'undefined everywhere...'
-								// * One was expecting this to be far more unwieldy...
-								// ? Question: make it better? Pray do sometime later...
-								const F = (x) => {
-									const K = (ampt, bmpt) => {
-										const f1 = elem_sort(
-											a.this.class.static.fromArray(
-												ampt
-													? [b.read(b.init(), leftovers)]
-													: bmpt
-													? [a.read(a.init(), leftovers)]
-													: [
-															a.read(a.init(), leftovers),
-															b.read(b.init(), leftovers)
-													  ],
-												leftovers
-											)
-										)
-										merged.pushback(
-											f1.read(f1.init(), leftovers),
-											leftovers
-										)
-										// TODO: fix up the usage of 'a.has' here...
-										const c =
-											bmpt || a.has(f1.read(f1.init(), leftovers))
-												? a
-												: b
-										// TODO: finish the .shiftBackward() first... - one is required to delete only 1 element from the start...
-										c.shiftBackward()
-									}
-									// * This code does not run when both are true, by the way...
-									K(a.isEmpty(), b.isEmpty())
-								}
-								const T = (x) =>
-									x.loop()._full(F, RESULT._const(RESULT.void))
-
-								T(a)
-								T(b)
-
-								return merged
-							}
-							let current = elem_sort(a.index(a.init(), leftovers))
-							a.loop()._full(
-								(x) =>
-									(current = binmerge(
-										current,
-										elem_sort(x.object().currelem)
-									)),
-								undefined,
-								undefined,
-								(x) => x.object().go(x.object().init().next())
-							)
-						}
-						function elem_sort(a) {
-							function TWOCASE(a) {
-								const first = a.read(a.init(), leftovers)
-								const second = a.read(a.init().next(), leftovers)
-								return predicate(second, first)
-									? a
-									: a.this.class.static.fromArray(
-											[second, first],
-											leftovers
-									  )
-							}
-							function THREECASE(a) {
-								const first = a.read(a.init())
-								// todo: pray finish the arguments list for .shiftBackward()...
-								const copied = elem_sort(a.copied("shiftBackward"))
-
-								const c1 = copied.read(copied.init(), leftovers)
-								const c2 = copied.read(copied.init().next(), leftovers)
-
-								const fC1 = predicate(first, c1)
-								const fC2 = predicate(first, c2)
-
-								// ? QUESTION: should one try to shorten these kinds of things....
-								// * Pray consider in some depth...
-								return fC1
-									? fC2
-										? a.this.class.static.fromArray(
-												[c1, c2, first],
-												leftovers
-										  )
-										: a.this.class.static.fromArray(
-												[c1, first, c2],
-												leftovers
-										  )
-									: a.this.class.static.fromArray(
-											[first, c1, c2],
-											leftovers
-									  )
-							}
-							return leftovers.comparison(a.length().get(), TWO)
-								? TWOCASE(a)
-								: THREECASE(a)
-						}
-
-						return merge(split(this.this.this))
-					},
-					sort(predicate, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return (this.this.this = this.this.this.sorted(
-							predicate,
-							leftovers
-						))
-					},
-					isSorted(predicate, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							fast: false,
-							range: this.this.this.this.class.template.icclass.template
-								.range,
-							comparison:
-								this.this.this.this.class.template.icclass.template
-									.comparison
-						})
-						return leftovers.comparison(
-							this.this.this,
-							this.this.this.sorted(predicate, leftovers)
-						)
+						}).function
 					}
-				},
-				recursive: true
-			}),
+					const findDeepUnfilledArr = RESULT.main.generalSearch({
+						genarrclass: RESULT.main.LastIndexArray({
+							icclass: RESULT.main.InfiniteCounter(
+								RESULT.main.arrayCounter()
+							)
+						}),
+						soughtProp: (x) =>
+							x instanceof Array && x.length < returned.template.maxarrlen,
+						self: true
+					}).functions
+					const findDeepLast = RESULT.main.generalSearch({
+						genarrclass: RESULT.main.LastIndexArray({
+							icclass: RESULT.main.InfiniteCounter(
+								RESULT.main.arrayCounter()
+							)
+						}),
+						soughtProp: returned.template.type,
+						reversed: true
+					}).function
 
-			number: GENERATOR({
-				defaults: { start: 0 },
-				generator(x = this.template.start) {
-					return this.template.forward(Number(x))
+					return returned
 				},
-				inverse(x = this.template.start) {
-					return this.template.backward(Number(x))
-				},
-				range: RESULT.negate(isNaN)
-			}),
 
-			// ? QUESTION [1]: the degree to which some such thing may be extended, mayhaps? [Namely, ought one be able to extend the object passed down to the 'RESULT.main.number' right there or not?]
-			// ? QUESTION [2]: does one want to make a macro for this one, or categorize into one of the already existing ones [as a TEMPLATE, perhaps]? Pray consider...
-			// * Current decision [temporary]: leave alone such cases for now, as are...
-			// ! notice: should there generally not be a mean to extend BOTH the template's shape {the data} and the template's function {the transformation regulated by the data};
-			addnumber(template = {}) {
-				return RESULT.main.number({
-					template: { fdiff: 1, bdiff: -1, ...template },
-					forward(x) {
-						return x + this.template.fdiff
-					},
-					backward(x) {
-						return x + this.template.bdiff
-					}
-				})
+				// * That's an example of an infinite counter;
+				// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
+				// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
+				// note: creates new objects after having been called;
+				numberCounter(template = {}) {
+					return RESULT.main.recursiveCounter({
+						upper: RESULT.variables.MAX_INT.get,
+						lower: 0,
+						rupper: -RESULT.variables.MAX_INT.get,
+						sign: (x) => x > 0,
+						// TODO: generalize this to an 'alias';
+						globalsign: function (x) {
+							return !!RESULT.methods.max(
+								x.map((a) => this.sign(a) || this.globalsign(a))
+							)
+						},
+						// ? Should this not be replaced with !isNaN(x)? [this'd permit stuff like '[true]' to be recieved by the '.range()'; ]
+						// * Also, create an alias for that thing pray...
+						type: (x) => typeof x === "number" || x instanceof Number,
+						forward: (x) => x + 1,
+						backward: (x) => x - 1,
+						...template
+					})
+				},
+
+				// A special case of 'recusiveCounter';
+				// * Uses array-orders (by default);
+				orderCounter(template = {}) {
+					return RESULT.main.recursiveCounter({
+						upper: template.order[template.strorder.length - 1],
+						lower: template.order[Math.floor(template.order.length / 2)],
+						rupper: template.order[0],
+						forward: (x) => template.order[template.order.indexOf(x) + 1],
+						backward: (x) => template.order[template.order.indexOf(x) - 1],
+						globalsign: function (x) {
+							return !!RESULT.methods.max(
+								x.map((a) => this.sign(a) || this.globalsign(a))
+							)
+						},
+						sign: (x) =>
+							strorder.indexOf(x) > Math.floor(template.order.length / 2),
+						...template
+					})
+				},
+
+				stringCounter(template = {}) {
+					// todo: create a nice default 'template.order' made of strings...;
+					// ^ IDEA [for a thing to plug in] : a maximally long array of unique strings, generated by some single elegant expression;
+					return RESULT.main.orderCounter({
+						type: (x) => typeof x === "string" || x instanceof String,
+						...template
+					})
+				}
 			},
 
-			multnumber(template = {}) {
-				return RESULT.main.number({
-					template: { fdiff: 1, bdiff: -1, ...template },
-					forward(x) {
-						return x * this.template.fdiff
-					},
-					backward(x) {
-						return x * this.template.bdiff
-					}
-				})
-			},
+			// ! THESE THREE FUNCTIONS ARE THE ONLY ONES THAT REMAIN UNGROUPED in the 'RESULT.main' presently...
 
 			// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
 			copy: TEMPLATE({
@@ -2566,9 +1726,9 @@ export function instance(transformation = ID) {
 
 			// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
 			//
-			// ! [2]: with the currently chosen solution for the handling of the funciton arguments;
+			// ! [2]: with the currently chosen solution for the handling of the function arguments;
 			// * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
-			// TODO: once having implemented the JSON library for the 1.1 or 1.2 release of the library, pray
+			// TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray
 			// TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
 
 			// ? Seemingly fixing the problem regarding the infinitely recursive (self-referential) objects?
@@ -2619,349 +1779,10 @@ export function instance(transformation = ID) {
 			// TODO [GENERAL] : add the ability for certain methods to take arbitrary number of arguments from the user... Let it use the '...something' operator for Arguments-to-Array conversion...
 			// Like the way one's done recently with the valueCompare...
 
-			// * Probably the "simplest" infinite counter one would have in JS is based off this generator;
-			arrayCounter: GENERATOR({
-				defaults: {
-					start: null
-				},
-				generator(a = this.template.start) {
-					if (!this.range(a)) this.template.start = a
-					return [a]
-				},
-				// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
-				inverse: function (a) {
-					return a[0]
-				},
-				range: function (a) {
-					return (
-						a === this.template.start ||
-						(a instanceof Array && this.range(this.inverse(a)))
-					)
-				}
-			}),
-
-			// * Generalization of the thing above (arrayCounter)...
-			objCounter: GENERATOR({
-				defaults: {
-					field: "",
-					start: null,
-					// ? Does one desire the refCompare? Or valueCompare to be the default?
-					comparison: RESULT.aliases.refCompare
-				},
-				generator: function (a = this.template.start) {
-					if (!this.range(a)) this.template.start = a
-					return { [this.template.field]: a }
-				},
-				inverse: function (a) {
-					return a[this.template.field]
-				},
-				range: function (a) {
-					return (
-						this.template.comparison(a, this.template.start) ||
-						(typeof a === "object" && this.range(this.inverse(a)))
-					)
-				}
-			}),
-
-			// * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
-			generalSearch: TEMPLATE({
-				defaults: {
-					self: false,
-					reversed: false
-				},
-				function: function (
-					arrrec = [],
-					prevArr = this.template.genarrclass.static.empty(),
-					self = this.template.self,
-					reversed = this.template.reversed
-				) {
-					const i = prevArr.copy()
-					if (self && this.template.soughtProp(arrrec)) return i
-
-					const boundprop = reversed ? (x) => x >= 0 : (x) => x < arrrec.length
-					i.pushback(reversed ? arrrec.length - 1 : 0)
-					i.end()
-					for (; boundprop(i.currelem); i.currelem += (-1) ** reversed) {
-						if (this.template.soughtProp(arrrec[i.currelem])) return i
-						if (arrec[i.currelem] instanceof Array) {
-							const r = this.function(
-								arrrec[i.currelem],
-								i,
-								false,
-								reversed
-							)
-							if (!r) continue
-							return r
-						}
-					}
-					return false
-				}
-			}),
-
-			// TODO: template the 'recursiveCounter' (slightly more curious than the rest the cases insofar - namely, one desires for powerful generalization of the constructs used to assemble the final 'returned'); Work on the thing in question greatly...
-
-			// * A maximally efficient structurally counter based on array recursion and finite orders;
-			// ! Clean, review again later; fix	problems
-			// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
-			recursiveCounter(template = {}) {
-				// ^ IDEA: generalize this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences... (as in 0-1-2-3-...-2^(whatever...)-[0]-...[2^(whatever)]-...)
-				// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
-				const returned = {
-					template: {
-						comparison: RESULT.main.valueCompare,
-						maxarrlen: RESULT.variables.MAX_ARRAY_LENGTH,
-						type: RESULT.aliases._const(true),
-						...template
-					},
-					range(x) {
-						return (
-							x instanceof Array &&
-							!!x.length &&
-							!!RESULT.functions.min(
-								(x) =>
-									this.template.type(x) ||
-									(x instanceof Array && this.range(x))
-							)
-						)
-					}
-				}
-
-				// TODO: generalize this operation to an outer-scope function;
-				const keys = ["inverse", "generator"]
-				keys.map(
-					(x, i) =>
-						(returned[x] = function (t) {
-							return generalgenerator(t, !!i, this)
-						})
-				)
-
-				function signedAdd(sign) {
-					return function (thisobject) {
-						return function (x) {
-							let indexes = findDeepUnfilled(sign)(x)
-							let result = x
-
-							if (!indexes) {
-								indexes = findDeepUnfilledArr(x)
-								if (!indexes) return [x]
-
-								result = RESULT.main.recursiveIndexationInfFields()(
-									result,
-									indexes
-								)
-
-								// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
-								// * Including the infinite versions of them...
-								result = RESULT.main.repeatedApplication()(
-									(value) => {
-										value.push([])
-										return value[value.length - 1]
-									},
-									dim({
-										icclass: indexes.this.class.template.icclass
-									})(a)
-										.difference(indexes.length())
-										.previous(),
-									result
-								)
-								result.push(thisobject.template.lower)
-								return x
-							}
-
-							result = RESULT.main.recursiveIndexationInfFields()(
-								result,
-								indexes.slice(undefined, indexes.finish().previous())
-							)
-							const endind = indexes.read(indexes.finish())
-							result[endind] = thisobject.template[
-								sign ? "forward" : "backward"
-							](result[endind])
-							return x
-						}
-					}
-				}
-				function signedDelete(sign) {
-					return function (thisobject) {
-						return function (x) {
-							if (
-								!findDeepUnfilled(sign)(x) &&
-								findDeepUnfilledArr(x) &&
-								x.length === 1
-							)
-								return x[0]
-
-							// TODO [general]: use the 'recursiveSetting' where appropriate; Create an infinite version for it as well...
-							let lastIndexes = findDeepLast(a)
-							const finind = lastIndexes.final()
-							const ffinind = finind.previous()
-							// * Note: the one underneath here is an old note;
-							// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-							let ppointer = RESULT.main.recursiveIndexationInfFields()(
-								x,
-								lastIndexes.slice(undefined, ffinind.previous())
-							)
-							let pointer = RESULT.main.recursiveIndexationInfFields()(
-								x,
-								lastIndexes.slice(undefined, ffinind)
-							)
-							const llindex = lastIndexes.read(ffinind)
-							const lindex = lastIndexes.read(finind)
-
-							if (thisobject.template.sign(pointer[lindex])) {
-								pointer[lindex] = thisobject.template[
-									sign ? "forward" : "backward"
-								](pointer[lindex])
-								return x
-							}
-
-							ppointer[llindex] = RESULT.aliases._remove(
-								ppointer[llindex],
-								lindex
-							)
-							pointer = ppointer[llindex]
-
-							let index = lindex
-							let hlindex = llindex
-
-							// TODO [local refactoring]: the pre-while-loop piece of code is nigh exactly the same as that within the loop; Pray re-organize to make this stuff shorter and more concise... [for instance, separate declarations from definitions and on and on...]
-							while (!pointer.length) {
-								// TODO: now, this is a RECURSIVE step, so, for instance, one accomplishes this same one procedure not just for 'pointer', but for the 'ppointer' and all the other ones such as well...
-								// * Consider carefully how to do this precisely...
-								// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
-								index = index.previous()
-								ppointer = RESULT.main.recursiveIndexationInfFields()(
-									x,
-									lastIndexes.slice(
-										undefined,
-										(hlindex = hlindex.previous())
-									)
-								)
-								ppointer[hlindex] = RESULT.aliases._remove(
-									ppointer[hlindex],
-									index
-								)
-								pointer = RESULT.main.recursiveIndexationInfFields()(
-									x,
-									lastIndexes.slice(undefined, index)
-								)
-							}
-
-							return x
-						}
-					}
-				}
-
-				const sat = signedAdd(true),
-					saf = signedAdd(false),
-					sdt = signedDelete(true),
-					sdf = signedDelete(false)
-
-				function boolfunctswitch(f, bool) {
-					return f ? (bool ? sat : saf) : bool ? sdt : sdf
-				}
-
-				function generalgenerator(x, bool, thisobj) {
-					if (!thisobj.range(x)) return [thisobj.template.lower]
-					let r = RESULT.main.deepCopy(x)
-					return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(
-						r
-					)
-				}
-
-				// ! PROBLEM [same - with the re-creation of different methods for the purpose of running this thing...];
-				// TODO: DO THE SAME THERE...
-				// TODO: generalize the 'LastIndexArray + arrayCounter()' part...
-				// ? What about putting these things out into the 'submodules.RESULT.main.' or some other more global scope?
-				const findDeepUnfilled = (t = true) => {
-					RESULT.main.generalSearch({
-						genarrclass: RESULT.main.LastIndexArray({
-							icclass: RESULT.main.InfiniteCounter(
-								RESULT.main.arrayCounter()
-							)
-						}),
-						soughtProp: (x) =>
-							returned.template.type(x) &&
-							(t ? RESULT.aliases.id : RESULT.aliases.n)(
-								returned.template.sign(x)
-							) &&
-							!returned.template.comparison(
-								t ? returned.template.upper : returned.template.rupper,
-								x
-							)
-					}).function
-				}
-				const findDeepUnfilledArr = RESULT.main.generalSearch({
-					genarrclass: RESULT.main.LastIndexArray({
-						icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
-					}),
-					soughtProp: (x) =>
-						x instanceof Array && x.length < returned.template.maxarrlen,
-					self: true
-				}).functions
-				const findDeepLast = RESULT.main.generalSearch({
-					genarrclass: RESULT.main.LastIndexArray({
-						icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
-					}),
-					soughtProp: returned.template.type,
-					reversed: true
-				}).function
-
-				return returned
-			},
-
-			// * That's an example of an infinite counter;
-			// * btw, it is non-linear, that is one can give to it absolutely any array, like for example [[[0, 1234566643]]], and it won't say word against it; will continue in the asked fashion...
-			// * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
-			// note: creates new objects after having been called;
-			numberCounter(template = {}) {
-				return RESULT.main.recursiveCounter({
-					upper: RESULT.variables.MAX_INT.get,
-					lower: 0,
-					rupper: -RESULT.variables.MAX_INT.get,
-					sign: (x) => x > 0,
-					// TODO: generalize this to an 'alias';
-					globalsign: function (x) {
-						return !!RESULT.methods.max(
-							x.map((a) => this.sign(a) || this.globalsign(a))
-						)
-					},
-					// ? Should this not be replaced with !isNaN(x)? [this'd permit stuff like '[true]' to be recieved by the '.range()'; ]
-					// * Also, create an alias for that thing pray...
-					type: (x) => typeof x === "number" || x instanceof Number,
-					forward: (x) => x + 1,
-					backward: (x) => x - 1,
-					...template
-				})
-			},
-
-			// A special case of 'recusiveCounter';
-			// * Uses array-orders (by default);
-			orderCounter(template = {}) {
-				return RESULT.main.recursiveCounter({
-					upper: template.order[template.strorder.length - 1],
-					lower: template.order[Math.floor(template.order.length / 2)],
-					rupper: template.order[0],
-					forward: (x) => template.order[template.order.indexOf(x) + 1],
-					backward: (x) => template.order[template.order.indexOf(x) - 1],
-					globalsign: function (x) {
-						return !!RESULT.methods.max(
-							x.map((a) => this.sign(a) || this.globalsign(a))
-						)
-					},
-					sign: (x) =>
-						strorder.indexOf(x) > Math.floor(template.order.length / 2),
-					...template
-				})
-			},
-
-			stringCounter(template = {}) {
-				// todo: create a nice default 'template.order' made of strings...;
-				// ^ IDEA [for a thing to plug in] : a maximally long array of unique strings, generated by some single elegant expression;
-				return RESULT.main.orderCounter({
-					type: (x) => typeof x === "string" || x instanceof String,
-					...template
-				})
-			},
+			// ! THESE THREE FUNCTIONS ARE THE ONLY ONES THAT REMAIN UNGROUPED in the 'RESULT.main' presently...
+			// % Suggestions as to where to put them:
+			// 	 1. The 'valueCompare' is good as an order - one may want to put it in 'orders', or something related;
+			// 	 2. copy, copyFunction should be grouped somewhere together;
 
 			// TODO: pray finish the sketch for the 'Structure' API... (used for extended work with native JS object/array-forms...)
 			structure: {
@@ -3007,881 +1828,2412 @@ export function instance(transformation = ID) {
 				}
 			},
 
-			dim: TEMPLATE({
-				defaults: { comparison: RESULT.aliases.refCompare },
-				function: function (recarr = this.template.genarrclass.static.empty()) {
-					if (this.template.comparison(recarr.class, this.template.genarrclass))
-						return this.template.icclass
-							.class()
-							.next()
-							.jumpDirection(
-								RESULT.main.maxgeneral(recarr.map(this.function))
-							)
-					return this.template.icclass.class()
-				}
-			}),
-
-			// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
-			min: function (template = {}) {
-				// ! Make aliases for these 'chosen/current' functions...
-				return RESULT.aliases.mostg({
-					comparison: (chosen, current) => !chosen.compare(current),
-					...template
-				})
-			},
-			max: function (template = {}) {
-				// ! Make aliases for these 'chosen/current' functions...
-				return RESULT.aliases.mostg({
-					comparison: (chosen, current) => !current.compare(chosen),
-					...template
-				})
-			},
-
-			recursiveIndexationInfFields: TEMPLATE({
-				function: function (
-					object,
-					fields = this.template.genarrclass.static.empty()
-				) {
-					return RESULT.main.repeatedApplication({
-						icclass: fields.this.class.template.icclass,
-						...this.template
-					})(
-						(x, i) => {
-							return x[fields.read(i)]
-						},
-						fields.length(),
-						object
-					)
-				}
-			}),
-
-			repeatedApplication: TEMPLATE({
-				defaults: { iter: (x) => x.next() },
-				function: function (
-					initial = this.template.initial,
-					times = this.template.times,
-					f = this.template.f,
-					offset = this.template.icclass.class(),
-					iter = this.template.iter
-				) {
-					let r = initial
-					for (let i = template.icclass.class(); !i.compare(times); i = iter(i))
-						r = f(r, i.difference(offset))
-					return r
-				}
-			}),
-
-			// * This can create infinite loops...
-			// ? create a 'While' - same as 'Whilst'? Or just rename? [naming conventions];
-			repeatedApplicationWhilst: TEMPLATE({
-				defaults: { initial: undefined },
-				function: function () {
-					let curr = initial
-					while (this.template.property()) curr = this.template.function(curr)
-					return curr
-				}
-			}),
-
-			// ! CURRENT AGENDA: from here on - continue working on the code [more than mere 'macrofication' of templates...];
-			// * Finally, get on with the generalization of finite types... (Still not quite sure what to do about it, though... Want to consult the old notes a tad further first);
-
-			InfiniteCounter: CLASS({
-				defaults: {
-					comparison: RESULT.main.valueCompare,
-					unfound: null
+			// * The 'orders' module [for working with GeneralArray-based linear and non-linear orders];
+			// Currently, provides means of immidiate construction of orders based off GeneralArrays [non-generalized, a sketch, only the finite arrays for now...]
+			// ^ idea [for the further restrucruring of the library] - take out most of the stuff from 'aliases', which isn't (in itself) any manner of an alias at all; The present case of 'min/max' is an excellent example;
+			// 		% An alias ought to do little less but add a new name for a special case of a general thing or a native part of JS [example String->str];
+			orders: {
+				// ! GENERALIZE AND REFACTOR EVERYTHING IN HERE... [some very early code indeed...];
+				linear(array = [], reflexive = true) {
+					return reflexive
+						? (a, b) => array.indexOf(a) <= array.indexOf(b)
+						: (a, b) => array.indexOf(a) < array.indexOf(b)
 				},
-				// ? Generalize further! In particular, as one has separated the values for the 'methods', maybe do so for the 'properties' (using a different Macro...)
-				function: function (previous) {
-					return {
-						// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
-						value: !previous ? this.template.generator() : previous.value
-					}
-				},
-				transform: StaticThisTransform,
-				static: {
-					direction(ic) {
-						return ic.compare(this.this.class())
-					},
-					// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-					// * Pray make it work generally, put all the methods into this one form;
-					forloop(
-						target,
-						i = this.this.class(),
-						goal,
-						jumping = (x) => x.next(),
-						comparison = this.this.template.comparison
-					) {
-						// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
-						// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
-						return repeatedApplicationWhilst(
-							(r) => {
-								i = i.next()
-								return jumping(r)
-							},
-							() => !i.compare(goal, comparison, () => true),
-							target
-						)
-					},
-					// TODO [general]: ensure the use of 'leftover' argument objects across the library...
-					// ! Problem: the 'forloop' and 'whileloop' are the same function; Get rid of one of them in favour of another, fix things, replace the chosen for deletion with the other one...
-					// * They differ very slightly; ought to be GENERALIZED to the same function;
-					whileloop(
-						start = this.this.class(),
-						end,
-						each,
-						iter = (x) => x.next(),
-						comparison = this.this.template.comparison
-					) {
-						let curr = RESULT.main.deepCopy(start)
-						while (!comparison(curr, end)) {
-							each(curr)
-							curr = iter(curr)
+				// "fixes" a linear order, by means of excluding all the repeating elements from it...
+				fixLinear(array = []) {
+					const copy = [...array]
+					for (let i = 0; i < copy.length; i++) {
+						let x = copy.slice(i + 1)
+						while (x.includes(copy[i])) {
+							const ind = x.indexOf(copy[i])
+							copy = copy
+								.slice(0, i + 1)
+								.concat(x.slice(0, ind).concat(x.slice(ind + 1)))
 						}
+					}
+					return copy
+				},
+				nonlinear(array = [], reflexive = true) {
+					const f = reflexive ? (x, y) => x <= y : (x, y) => x < y
+					return (a, b) =>
+						max(
+							indexesOf(array, a).map((x) =>
+								max(indexesOf(b).map((y) => f(x, y)))
+							)
+						)
+				},
+
+				// ! IN FOR GETTING REWRITTEN and connected with the present 'orders' mini sub-module;
+				// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
+				min: function (template = {}) {
+					// ! Make aliases for these 'chosen/current' functions...
+					return this.most({
+						comparison: (chosen, current) => !chosen.compare(current),
+						...template
+					})
+				},
+				max: function (template = {}) {
+					// ! Make aliases for these 'chosen/current' functions...
+					return this.most({
+						comparison: (chosen, current) => !current.compare(chosen),
+						...template
+					})
+				},
+
+				// * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
+				most: TEMPLATE({
+					function: function (garr = this.template.genarrclass.static.empty()) {
+						let most = garr.read(garr.init())
+						garr.loop()._full((t) => {
+							if (this.template.comparison(t.object().current, most))
+								most = t.object().current
+						})
+						return most
+					}
+				})
+			},
+
+			// * This is the 'NArray' part; For the multidimensional work with GeneralArrays;
+			// ^ IDEA: separate the functions in the 'main' onto such categories/submodules, that would be largely separate from one another...;
+			multidim: {
+				dim: TEMPLATE({
+					defaults: { comparison: RESULT.aliases.refCompare },
+					function: function (
+						recarr = this.template.genarrclass.static.empty()
+					) {
+						if (
+							this.template.comparison(
+								recarr.class,
+								this.template.genarrclass
+							)
+						)
+							return this.template.icclass
+								.class()
+								.next()
+								.jumpDirection(
+									RESULT.main.maxgeneral(recarr.map(this.function))
+								)
+						return this.template.icclass.class()
+					}
+				}),
+
+				recursiveIndexationInfFields: TEMPLATE({
+					function: function (
+						object,
+						fields = this.template.genarrclass.static.empty()
+					) {
+						return RESULT.main.repeatedApplication({
+							icclass: fields.this.class.template.icclass,
+							...this.template
+						})(
+							(x, i) => {
+								return x[fields.read(i)]
+							},
+							fields.length(),
+							object
+						)
+					}
+				}),
+
+				repeatedApplication: TEMPLATE({
+					defaults: { iter: (x) => x.next() },
+					function: function (
+						initial = this.template.initial,
+						times = this.template.times,
+						f = this.template.f,
+						offset = this.template.icclass.class(),
+						iter = this.template.iter
+					) {
+						let r = initial
+						for (
+							let i = template.icclass.class();
+							!i.compare(times);
+							i = iter(i)
+						)
+							r = f(r, i.difference(offset))
+						return r
+					}
+				}),
+
+				// * This can create infinite loops...
+				// ? create a 'While' - same as 'Whilst'? Or just rename? [naming conventions];
+				repeatedApplicationWhilst: TEMPLATE({
+					defaults: { initial: undefined },
+					function: function () {
+						let curr = initial
+						while (this.template.property())
+							curr = this.template.function(curr)
 						return curr
 					}
-				},
-				methods: {
-					next: function () {
-						// * An observation: this is one of the ways to be able to reference a function from within itself...
-						return this.this.class.template.generator(this.this.this)
-					},
-					// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
-					// One-worded names are preferred to all the other ones...
-					// flatcase (submodules, methods, varnames, general ids) is generally preferred to camelCase (methods, varnames), which is preferred to PascalCase ("classes" and some templated functions), which is prefereed to UPPERCASE, which is preferred to all else...
-					// TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
-					previous: function () {
-						return this.this.class.template.inverse(this.this.this)
-					},
-					/**
-					 *
-					 * * DEFINE:
-					 *
-					 *		length(x, a) := number of iterations of 'generator' required to get to 'a' from 'x';
-					 *
-					 * Positive - of generator;
-					 * Negative - of inverse;
-					 *
-					 * Then, the boolean case ( return { true | false } ) function is equivalent to evaluating
-					 *
-					 *		length(this, a) >= 0;
-					 *
-					 * * 'null' means 'no strict following in appearance (no linear order) under chosen pair of generators';
-					 *
-					 * ! NOTE: this thing is pretty much useless... The new API DON'T WORK WITH JSDoc NOTATION VERY WELL... INSTEAD, RESERVE TO SIMPLE DESCRIPTIONS WHEN IT COMES DOWN TO WRITING THE DOCS...
-					 * @return { any }
-					 */
-					compare(ic, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range,
-							unfound: this.this.class.template.unfound
-						})
-						// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
+				}),
 
-						// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
-						if (!leftovers.range(ic.value)) return leftovers.unfound
-
-						let pointerfor = ic
-						let pointerback = ic
-
-						// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison(x.value, t.value)')
-						// TODO [general]: Do the above thing [InfiniteCounter wrapper influence removal] generally...
-
-						// TODO: generalize this loop thing...
-						while (
-							!leftovers.comparison(
-								pointerfor.value,
-								this.this.this.value
-							) &&
-							!leftovers.comparison(pointerback.value, this.this.this.value)
-						) {
-							pointerfor = pointerfor.next()
-							pointerback = pointerback.previous()
-						}
-
-						return leftovers.comparison(pointerfor, this.this.this)
+				// * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
+				generalSearch: TEMPLATE({
+					defaults: {
+						self: false,
+						reversed: false
 					},
-					difference(ic, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range,
-							unfound: this.this.class.template.unfound
-						})
-
-						let current = this.this.class.class()
-						// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
-						// ? If not created that 'alias' already...
-						const next = ic.compare(this.this.this, leftovers)
-							? (x) => x.previous()
-							: (x) => x.next()
-						// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
-						// TODO: above *;
-						this.class.static.whileloop(
-							RESULT.main.deepCopy(this.this.this),
-							ic,
-							() => {
-								current = next(current)
-							},
-							next,
-							leftovers.comparison
-						)
-						return current
-					},
-					jumpDirection(ic, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range
-						})
-						const d = this.this.class.static.direction(ic)
-						// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
-						// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
-						return d
-							? this.this.this.jumpForward(ic, leftovers)
-							: d === null
-							? this.this.this
-							: this.this.this.jumpBackward(ic, leftovers)
-					},
-					// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
-					jump(x, jumping = (k) => k.next(), leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range,
-							counterclass: this.this.class
-						})
-						// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
-						// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
-						// What one means is:
-						//		`const a = ...; f(a); c(a); ...` -> `((a) => {f(a); c(a); ...})(...)`
-						// Really just replaces 'const' with these brackets and an arrow...
-						if (!leftovers.range(x.value)) return this.this.this
-						returnthis.this.class.static.forloop(
-							{
-								// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
-								...RESULT.main.deepCopy(this.this.this),
-								class: this.this.class
-							},
-							RESULT.main.InfiniteCounter(leftovers.counterclass)(),
-							x,
-							jumping,
-							leftovers.comparison
-						)
-					},
-					// ? QUESTION [general]: should one make it as 'this.this.class', or 'this.this.this.this.class'? In the former of the cases, the '.class' doesn't change with the 'this.this.this', whereas in the latter it does...
-					jumpForward(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range
-						})
-						return this.jump(x, (a) => a.next(), leftovers)
-					},
-					jumpBackward(x, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison,
-							range: this.this.class.template.range
-						})
-						return this.jump(x, (k) => k.previous(), leftovers)
-					},
-					map(icClass = this.class, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
-							comparison: this.this.class.template.comparison
-						})
-						let current = this.this.class.class()
-						let alterCurrent = icClass.class()
-						while (!leftovers.comparison(current, this))
-							alterCurrent = alterCurrent.next()
-						return alterCurrent
-					},
-					reverse() {
-						const zero = this.this.class.class()
-						// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
-						const dirfunc = (
-							(p) => (x) =>
-								x[p]
-						)(this.this.class.static.direction(this) ? "previous" : "next")
-						let a = this.this.class.class()
-						let copy = RESULT.main.deepCopy(this)
-						while (!this.this.class.template.comparison(zero, copy)) {
-							copy = copy.previous()
-							a = dirfunc(a)
-						}
-						return a
-					}
-				},
-				recursive: true
-			}),
-
-			MultiInfiniteCounter(template = {}) {
-				// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
-				// * Perhaps, one would have multiple comparisons assigned to each and every one index of the array in question? [But, that'd require using the same manner of array-templates for them...]
-				// ! Pray think and decide...
-				return {
-					template: {
-						comparison: RESULT.main.valueCompre,
-						...template
-					},
-					class: function (
-						previous,
-						index,
-						generators = this.template.generators
+					function: function (
+						arrrec = [],
+						prevArr = this.template.genarrclass.static.empty(),
+						self = this.template.self,
+						reversed = this.template.reversed
 					) {
-						return {
-							class: this,
-							generators: generators,
-							value: previous
-								? this.generator(index)(previous.value)
-								: this.generator(index)(),
-							generator(index) {
-								return this.generators.read(index)
-							},
-							next(index) {
-								return this.generator(index)(this)
-							},
-							// TODO: pray consider the fate of all the other methods within the structure in question....
-							// * What about '.compare()'? Because of greatness of variaty of manner of things possible within the structure in question, one would [if at all, that being] not have it the same way as it is within the InfiniteCounter!
-							// One might do this by only choosing some one particular generator of the entire bunch; Or [more general], perhaps, creating some manner of way for the user to set the order by which to 'judge' the return value of the 'compare', with it serving as merely a wrapper for the essential part of the order in question???
-							// * For '.jump()', one would require the 'ranges' + also the index of the generator that is to be used for the jump...
-							// ! About the ranges: does one really want them to be an argument for this stuff??? [Perhaps, make them arguments for other things too, then???]
-							// ^ Implementation of '.jump()';
-							jump(x, index, ranges = this.class.template.ranges) {
-								if (!ranges.read(index)(x.value)) return this
-								// TODO: generalize the InfiniteCounter.jump(), then use the stuff here [essentially the same code]...
+						const i = prevArr.copy()
+						if (self && this.template.soughtProp(arrrec)) return i
+
+						const boundprop = reversed
+							? (x) => x >= 0
+							: (x) => x < arrrec.length
+						i.pushback(reversed ? arrrec.length - 1 : 0)
+						i.end()
+						for (; boundprop(i.currelem); i.currelem += (-1) ** reversed) {
+							if (this.template.soughtProp(arrrec[i.currelem])) return i
+							if (arrec[i.currelem] instanceof Array) {
+								const r = this.function(
+									arrrec[i.currelem],
+									i,
+									false,
+									reversed
+								)
+								if (!r) continue
+								return r
 							}
-							// * For '.map()'... What does one do about '.map()'???
-							// * Due to the fact that there is not one single direction to continue in [and there is an infinite number of different permutations of operators...]
-							// * There's no way to know generally how does one get from a certain thing 'x' to a 'y' using the Multi; Thus, CANNOT BE IMPLEMENTED TO BE THE SAME WAY...
-							// ! However.... If one was to somehow remember the path taken [starting from the decided position...];
-							// * One may as well do it...
-							// ! Or better, make a general method which would accept a GeneralArray of indexes, that'd correspond to indexes of the 'this.generators';
-							// * Then, one'd just iterate over the array in question, applying the '=.next(currindex)' to the chosen 'beginindex'!
-							// ? Would this not better be off as a static method, though?
-							// * CURRENT DECISION: yes!
-							// TODO: work on the static methods for the class-like structures in question...
 						}
+						return false
 					}
-				}
-			},
-
-			// TODO [general]: polish [look for small issues and solve them] and tidy [make the thing as of itself look more liked by oneself]...
-			LastIndexArray(template = {}) {
-				const A = {
-					template: {
-						icclass: RESULT.main.InfiniteCounter(RESULT.main.numberCounter()),
-						maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
-						filling: null,
-						...template,
-						bound: (i) => i < this.template.maxarrlen - 1,
-						...template
-					}
-				}
-
-				A.class = RESULT.main.GeneralArray({
-					this: A,
-					elem: function (
-						arrobj,
-						array = arrobj.array,
-						pointer = false,
-						beginningobj = array.currindex,
-						beginningind = 0
-					) {
-						// TODO [general]: a very small thing - format the spaces between lines; group the lines that in a fashion that is by oneself desireable...
-						const begin = arrobj.init()
-						let currarr = array
-						const original = arrobj.currindex
-						array.currindex = beginningobj
-						let isReturn = [false, undefined]
-						let index = beginningind
-						for (
-							;
-							!arrobj.this.class.template.icclass.template.comparison(
-								begin,
-								arrobj.currindex
-							);
-							arrobj.previous()
-						) {
-							const withinbounds = this.this.template.bound(index)
-
-							if (!(index in currarr)) {
-								isReturn[0] = true
-								if (withinbounds) isReturn[1] = null
-								break
-							}
-
-							if (withinbounds) {
-								index++
-								continue
-							}
-
-							currarr = currarr[index]
-							index = 0
-						}
-						const returned = arrobj.currindex
-						arrobj.currindex = original
-						return isReturn[0]
-							? pointer
-								? [isReturn[1], currarr, index, returned]
-								: undefined
-							: !pointer
-							? currarr[index]
-							: [currarr, index]
-					},
-					newvalue: function (array, value) {
-						let pointer = this.elem(array, undefined, true)
-						while (!pointer[0]) {
-							pointer[1][pointer[2]] = (
-								pointer[0] === undefined ? (x) => [x] : RESULT.aliases.id
-							)(this.this.template.filling)
-							pointer = this.elem(
-								array,
-								pointer[1],
-								true,
-								pointer[3],
-								pointer[2]
-							)
-						}
-						return (pointer[0][pointer[1]] = value)
-					},
-					icclass: A.template.icclass
 				})
-
-				return A
 			},
-			// * This is the 'arr.length > MAXLENGTH -> arr = [arr] ELSE arr.push([recursively, until hitting the 'min-depth']) THEN arr.push(newvalue)'-kind of an array [the one that is very resourceful and with slowly growin layers...]
-			// ! finish
-			DeepArray(template = {}) {
-				// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
-				return {
-					template: {
-						icclass: this.InfiniteCounter(RESULT.main.numberCounter())
+
+			types: {
+				InfiniteCounter: CLASS({
+					defaults: {
+						comparison: RESULT.main.valueCompare,
+						unfound: null
 					},
-					class: RESULT.main.GeneralArray({
-						newvalue: function (array, value) {},
-						elem(array) {},
-						icclass: this.template.icclass
-					})
-				}
-			},
-			// ! ANOTHER SUCH CASE - how does one want to generalize the usage of 'template' outside the '.template' field?
-			// * More thought regarding the generalization procedures of the library is required...
-			CommonArray(template = {}) {
-				return {
-					template: { offset: -1, ...template },
-					class: RESULT.main.GeneralArray({
-						newvalue: function (arr, value) {
-							return (arr.array[arr.currindex] = value)
+					// ? Generalize further! In particular, as one has separated the values for the 'methods', maybe do so for the 'properties' (using a different Macro...)
+					function: function (previous) {
+						return {
+							// ! THE CHECK FOR 'non-nullness' here is flawed; Pray generalize, keep this as a default...
+							value: !previous ? this.template.generator() : previous.value
+						}
+					},
+					transform: StaticThisTransform,
+					static: {
+						direction(ic) {
+							return ic.compare(this.this.class())
 						},
-						elem: function (arr) {
-							return arr.array[arr.currindex]
+						// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+						// * Pray make it work generally, put all the methods into this one form;
+						forloop(
+							target,
+							i = this.this.class(),
+							goal,
+							jumping = (x) => x.next(),
+							comparison = this.this.template.comparison
+						) {
+							// TODO: create a generalization of the repeatedApplicationWhilst, which'd be a function, accomplishing an application of functions onto a certain initial object consequently [like here],
+							// * ; with the functions being generated by a different function passed, one of a current index; With '(i) => f', for some 'f', one'd get this thing...
+							return repeatedApplicationWhilst(
+								(r) => {
+									i = i.next()
+									return jumping(r)
+								},
+								() => !i.compare(goal, comparison, () => true),
+								target
+							)
 						},
-						icclass: RESULT.main.InfiniteCounter(
-							RESULT.main.addnumber({
-								start: this.template.offset
+						// TODO [general]: ensure the use of 'leftover' argument objects across the library...
+						// ! Problem: the 'forloop' and 'whileloop' are the same function; Get rid of one of them in favour of another, fix things, replace the chosen for deletion with the other one...
+						// * They differ very slightly; ought to be GENERALIZED to the same function;
+						whileloop(
+							start = this.this.class(),
+							end,
+							each,
+							iter = (x) => x.next(),
+							comparison = this.this.template.comparison
+						) {
+							let curr = RESULT.main.deepCopy(start)
+							while (!comparison(curr, end)) {
+								each(curr)
+								curr = iter(curr)
+							}
+							return curr
+						}
+					},
+					methods: {
+						next: function () {
+							// * An observation: this is one of the ways to be able to reference a function from within itself...
+							return this.this.class.template.generator(this.this.this)
+						},
+						// * DECIDED: full words are preferred to shortenings and shortenings are preferred to abbreviations...
+						// One-worded names are preferred to all the other ones...
+						// flatcase (submodules, methods, varnames, general ids) is generally preferred to camelCase (methods, varnames), which is preferred to PascalCase ("classes" and some templated functions), which is prefereed to UPPERCASE, which is preferred to all else...
+						// TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
+						previous: function () {
+							return this.this.class.template.inverse(this.this.this)
+						},
+						/**
+						 *
+						 * * DEFINE:
+						 *
+						 *		length(x, a) := number of iterations of 'generator' required to get to 'a' from 'x';
+						 *
+						 * Positive - of generator;
+						 * Negative - of inverse;
+						 *
+						 * Then, the boolean case ( return { true | false } ) function is equivalent to evaluating
+						 *
+						 *		length(this, a) >= 0;
+						 *
+						 * * 'null' means 'no strict following in appearance (no linear order) under chosen pair of generators';
+						 *
+						 * ! NOTE: this thing is pretty much useless... The new API DON'T WORK WITH JSDoc NOTATION VERY WELL... INSTEAD, RESERVE TO SIMPLE DESCRIPTIONS WHEN IT COMES DOWN TO WRITING THE DOCS...
+						 * @return { any }
+						 */
+						compare(ic, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range,
+								unfound: this.this.class.template.unfound
 							})
-						),
-						...template
-					})
-				}
-			},
+							// TODO: Pray think deeply and create a sequence of similar todo-s regarding use of counters in relation to presence/lack of InfiniteCounter-wrapper and other such similar objects...
 
-			// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
-			// _? Question: store the pointer to the 'infinite' structure within the thing in question.
-			InfiniteMap(template = {}) {
-				return {
-					template: { keyclass: template.valueclass, ...template },
-					class: function (initial = {}) {
-						const final = {
-							this: {
-								indexes: this.template.keyclass(),
-								values: this.templates.valueclass(),
-								// TODO: about the 'leftovers' concept's implementation:
-								// * It ought to be used in such a manner as for to allow for greater diversity of functionality, that being - one ought to allow for 'leftoverss' [an array of 'leftovers' objects, which are (in accordance), used in appropriate places]
-								get(index, leftovers = {}) {
-									return this.this.this.values.read(
-										this.this.this.indexes
-											.firstIndex(index, leftovers)
-											.map(
-												this.this.this.values.this.this.this.this
-													.class.template.icclass
-											),
+							// ? Shouldn't one generalize this to a function, to allow exceptions? [And only as a default - return that thing???]
+							if (!leftovers.range(ic.value)) return leftovers.unfound
+
+							let pointerfor = ic
+							let pointerback = ic
+
+							// TODO: again, do the same thing - get rid of the 'InfiniteCounter' wrapper's influence on the workflow of the methods that use it... (this time with 'comparison(x.value, t.value)')
+							// TODO [general]: Do the above thing [InfiniteCounter wrapper influence removal] generally...
+
+							// TODO: generalize this loop thing...
+							while (
+								!leftovers.comparison(
+									pointerfor.value,
+									this.this.this.value
+								) &&
+								!leftovers.comparison(
+									pointerback.value,
+									this.this.this.value
+								)
+							) {
+								pointerfor = pointerfor.next()
+								pointerback = pointerback.previous()
+							}
+
+							return leftovers.comparison(pointerfor, this.this.this)
+						},
+						difference(ic, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range,
+								unfound: this.this.class.template.unfound
+							})
+
+							let current = this.this.class.class()
+							// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
+							// ? If not created that 'alias' already...
+							const next = ic.compare(this.this.this, leftovers)
+								? (x) => x.previous()
+								: (x) => x.next()
+							// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
+							// TODO: above *;
+							this.class.static.whileloop(
+								RESULT.main.deepCopy(this.this.this),
+								ic,
+								() => {
+									current = next(current)
+								},
+								next,
+								leftovers.comparison
+							)
+							return current
+						},
+						jumpDirection(ic, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range
+							})
+							const d = this.this.class.static.direction(ic)
+							// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
+							// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
+							return d
+								? this.this.this.jumpForward(ic, leftovers)
+								: d === null
+								? this.this.this
+								: this.this.this.jumpBackward(ic, leftovers)
+						},
+						// TODO [general]: at a certain desired point, pray make some good and thorough work on the precise definitions for the template-structures for each and every templated thing...
+						jump(x, jumping = (k) => k.next(), leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range,
+								counterclass: this.this.class
+							})
+							// TODO [general]: one don't like that 'function' style for elimination of 'const's and 'let's; Get rid of it; Make things pretty and simple again;
+							// * Do not overdo that either, though; miss not the opportunities for generalizing/(bringing into the larger scope) something
+							// What one means is:
+							//		`const a = ...; f(a); c(a); ...` -> `((a) => {f(a); c(a); ...})(...)`
+							// Really just replaces 'const' with these brackets and an arrow...
+							if (!leftovers.range(x.value)) return this.this.this
+							returnthis.this.class.static.forloop(
+								{
+									// TODO [general]: use the 'deepCopy' and 'dataCopy' at appropriate places... Work some on determining those...
+									...RESULT.main.deepCopy(this.this.this),
+									class: this.this.class
+								},
+								RESULT.main.InfiniteCounter(leftovers.counterclass)(),
+								x,
+								jumping,
+								leftovers.comparison
+							)
+						},
+						// ? QUESTION [general]: should one make it as 'this.this.class', or 'this.this.this.this.class'? In the former of the cases, the '.class' doesn't change with the 'this.this.this', whereas in the latter it does...
+						jumpForward(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range
+							})
+							return this.jump(x, (a) => a.next(), leftovers)
+						},
+						jumpBackward(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison,
+								range: this.this.class.template.range
+							})
+							return this.jump(x, (k) => k.previous(), leftovers)
+						},
+						map(icClass = this.class, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison: this.this.class.template.comparison
+							})
+							let current = this.this.class.class()
+							let alterCurrent = icClass.class()
+							while (!leftovers.comparison(current, this))
+								alterCurrent = alterCurrent.next()
+							return alterCurrent
+						},
+						reverse() {
+							const zero = this.this.class.class()
+							// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
+							const dirfunc = (
+								(p) => (x) =>
+									x[p]
+							)(
+								this.this.class.static.direction(this)
+									? "previous"
+									: "next"
+							)
+							let a = this.this.class.class()
+							let copy = RESULT.main.deepCopy(this)
+							while (!this.this.class.template.comparison(zero, copy)) {
+								copy = copy.previous()
+								a = dirfunc(a)
+							}
+							return a
+						}
+					},
+					recursive: true
+				}),
+
+				// ^ IDEA: naming-maps-defined methods!
+				// * Implement a special way of object-definition allowing the creation of methods, which are defined based upon the 'this' object ['defining methods' would have access to those] + the name of the method...
+				// This way, one'd have that the object's methods' names' list would be run through a certian 'definingMethod', which for each and every one would return the value for it...
+				// * This'd allow for easy generalization of method names for things like these two here... Essentially cutting down greatly on the repeating code;
+				// One could even generalize to the 'args' passed to the function, doing it like so:
+				//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
+				// * with the 'value' getting changed in the 'switch' hanged in the 'switch'
+				// TODO: reimplement all the methods from the GeneralArray in such a way that it only operates on the 'this.this.this'
+				GeneralArray: CLASS({
+					defaults: {
+						empty: [],
+						unfound: undefined,
+						treatfinite: false
+					},
+					function: function (array = this.template.empty) {
+						return {
+							array: this.template.treatfinite
+								? this.static.fromArray(array)
+								: array,
+							currindex: this.template.class.template.icclass.class()
+						}
+					},
+					// ? Should this also become a part of the new CLASS definition?
+					transform: StaticThisTransform,
+					static: {
+						empty(template = this.this.template) {
+							return this.this.class(template).class()
+						},
+						pushbackLoop(template = {}) {
+							return {
+								template: {
+									arguments: [],
+									transform: RESULT.id,
+									...template
+								},
+								function(b) {
+									return this.template.target.pushback(
+										this.template.transform(b.object().currelem),
+										...this.template.arguments
+									)
+								}
+							}
+						},
+						// * This is pretty much THE SAME code as above for the 'pushbackLoop';
+						// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
+						pushfrontLoop(template = {}) {
+							return {
+								template: {
+									arguments: [],
+									transform: RESULT.id,
+									...template
+								},
+								function(b) {
+									return this.template.target.pushfront(
+										this.template.transform(b.object().currelem),
+										...this.template.arguments
+									)
+								}
+							}
+						},
+						// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
+						fromArray(arr, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.template.icclass.template.range,
+								comparison: this.this.template.icclass.template.comparison
+							})
+							const generalized = this.empty()
+							for (const a of arr) generalized.pushback(a, leftovers)
+							return generalized
+						}
+					},
+					methods: {
+						next() {
+							return (this.this.this.currindex =
+								this.this.this.currindex.next())
+						},
+						previous() {
+							return (this.this.this.currindex =
+								this.this.this.currindex.previous())
+						},
+						get currelem() {
+							// ^ CONCLUSION: yes, let it be; All the user-functions would have access to the entirety of the object's properties...
+							// todo [general] : pray do just that...
+							return this.this.this.this.class.template.elem(this.this.this)
+						},
+						set currelem(newval) {
+							return this.this.this.this.class.template.newvalue(
+								this.this.this,
+								newval
+							)
+						},
+						// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
+						// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
+						loop(template = {}) {
+							// ? Generalize to a separate class maybe???
+							const a = {
+								template: {
+									indexiter: (x) => x.object().next(),
+									end: (x) =>
+										x.object().this.class.template.isEnd(x.object()),
+									begin: (x) => x.object().begin(),
+									icclass: this.this.this.this.class.template.icclass,
+									...template
+								},
+								object: RESULT._const(this.this.this),
+								restart: function () {
+									this.counter = this.template.icclass.class()
+								},
+								yield: function (
+									_indexiter = this.template.indexiter,
+									end = this.template.end,
+									iter = true
+								) {
+									if (iter) _indexiter(this)
+									const isend = end(this)
+									if (!isend && iter) this.counter = this.counter.next()
+									return isend
+								},
+								_full(
+									each,
+									iter = RESULT._const(this.template.indexiter),
+									end = RESULT._const(this.template.end),
+									begin = this.template.begin
+								) {
+									const index = this.object().currindex
+									begin(this)
+									let r = undefined
+									let is = this.yield(RESULT._const(null), end(), false)
+									while (!is) {
+										r = each(this, r)
+										is = this.yield(iter(), end())
+										if (this.broke) break
+									}
+									this.restart()
+									this.broke = false
+									this.object().currindex = index
+									return r
+								},
+								// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
+								// ? work on their names...
+								// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
+								full(
+									each = this.template.each,
+									iter = RESULT._const(this.template.indexiter),
+									end = RESULT._const(this.template.end),
+									begin = this.template.begin
+								) {
+									const index = this.object().currindex
+									begin(this)
+									let r = undefined
+									let is = this.yield(null, end(), false)
+									while (!is) {
+										const x = each(this)
+										let goOn = true
+										r = x.loop()._full((t) => {
+											if (goOn) {
+												if (this.broke || this.continued) {
+													goOn = false
+													return
+												}
+												return t.object().currelem(t)
+											}
+										})
+										is = this.yield(iter(), end())
+										if (this.broke) break
+										goOn = true
+										this.continued = false
+									}
+									this.restart()
+									this.broke = false
+									this.object().currindex = index
+									return r
+								},
+								break: function () {
+									this.broke = true
+								},
+								continue: function () {
+									this.continued = true
+								},
+								broke: false,
+								continued: false
+							}
+							a.restart()
+							return a
+						},
+						// ! shorten the code with these 4 [begin, end, init, finish]...
+						begin() {
+							return this.this.this.go(
+								this.this.this.init(),
+								RESULT._const(true)
+							)
+						},
+						end() {
+							// * skipping the check because one knows that it would be 'true' anyway...
+							return this.this.this.go(
+								this.this.this.finish(),
+								RESULT._const(true)
+							)
+						},
+						init() {
+							return this.this.this.this.class.template.icclass.class()
+						},
+						// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
+						finish() {
+							return this.this.this.length().get().previous()
+						},
+						// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
+						// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
+						go(
+							index,
+							range = this.this.this.this.class.template.icclass.template
+								.range
+						) {
+							if (!range(index.value))
+								throw new RangeError(
+									"Range error in the '.go' method 'index' argument whilst calling."
+								)
+
+							return (this.this.this.currindex = index)
+						},
+						// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
+
+						// TODO: pray decide about the question of dependence/independence of methods from mutual definition...
+						// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
+						move(
+							index,
+							preface = RESULT.void,
+							comparison = this.this.this.this.class.template.icclass
+								.template.comparison,
+							each = (x) => x.next(),
+							stop = (x) => comparison(x.length().get(), x.currindex)
+						) {
+							preface(arguments, this.this.this)
+							while (
+								!comparison(this.this.this.currindex, index) &&
+								!stop(this.this.this)
+							)
+								each(this.this.this)
+							return this.this.this.currindex
+						},
+						moveforward(index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								begin: false,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison,
+								stop: (x) =>
+									leftovers.comparison(
+										x.length().get().next(),
+										x.currindex
+									)
+							})
+							return this.this.this.move(
+								index,
+								(args, x) => {
+									if (leftovers.begin) x.currindex = x.init()
+								},
+								leftovers.comparison,
+								(x) => x.next(),
+								leftovers.stop
+							)
+						},
+						// TODO [GENERAL]: work on the order of arguments of various methods and functions... Update things in correspondence with them.
+						movebackward(index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								end: false,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison,
+								stop: (x) => leftovers.comparison(x.init(), x.currindex)
+							})
+							return this.this.this.move(
+								index,
+								(args, x) => {
+									if (leftovers.end) x.currindex = x.length().get()
+								},
+								leftovers.comparison,
+								(x) => x.previous(),
+								leftovers.stop
+							)
+						},
+						movedirection(index, leftovers = {}) {
+							RESULT.ensureProperty(
+								leftovers,
+								"comparison",
+								this.this.this.this.class.template.icclass.template
+									.comparison
+							)
+							return this.this.this.currindex.compare(index)
+								? this.moveforward(index, {
+										begin: false,
+										comparison: leftovers.comparison,
+										stop: (leftovers.stop =
+											leftovers.stop ||
+											((x) =>
+												leftovers.comparison(
+													x.currindex,
+													x.length().get()
+												)))
+								  })
+								: this.movebackward(index, {
+										end: false,
+										comparison: leftovers.comparison,
+										stop: (leftovers.stop =
+											leftovers.stop ||
+											((x) =>
+												leftovers.comparison(
+													x.currindex,
+													x.init()
+												)))
+								  })
+						},
+						jump(index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								comparison:
+									this.this.this.this.class.template.icclass.comparison,
+								range: this.this.this.this.class.template.icclass.range
+							})
+							return (this.this.this.currindex =
+								this.this.this.currindex.jumpDirection(
+									index,
+									leftovers.comparison,
+									leftovers.range
+								))
+						},
+						/**
+						 * * Hello, Wilbur!
+						 * ? Does that thing work even???
+						 * * might...
+						 * TODO: pray check if these kinds of 'nested'ly stuctured objects' methods even get their in-editor JSDoc documentation properly... [Quite a jolly surprise if they do!]
+						 */
+						read(index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const ind = this.this.this.currindex
+							if (leftovers.fast) this.this.this.go(index, leftovers.range)
+							else
+								this.this.this.moveforward(
+									index,
+									true,
+									leftovers.comparison
+								)
+							this.this.this.currindex = ind
+							const c = this.this.this.currelem
+							return c
+						},
+						write(index, value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const ind = this.this.this.currindex
+							if (leftovers.fast) this.this.this.go(index, leftovers.range)
+							else
+								this.this.this.moveforward(index, {
+									begin: true,
+									comparison: leftovers.comparison
+								})
+							const returned = (this.this.this.currelem = value)
+							this.this.this.currindex = ind
+							return returned
+						},
+						length() {
+							// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
+							// ? Or like a getter? As in: 'get get() {...}'; Then, one'd drop the '()' from '.get()' during the calling procedure...
+							// * pray think on it...
+							return {
+								object: RESULT._const(this.this.this),
+								get() {
+									// ? Could this [the 'length.get()' method] not be rewritten by the means of the '.loop()' method??? Pray consider...
+									// * Yes, indeed! Pray do...
+									// TODO: refactor...
+									const index = this.object().currindex
+									this.object().begin()
+									while (
+										!this.object().this.class.template.isEnd(
+											this.object()
+										)
+									)
+										this.object().next()
+									const returned = this.object().currindex
+									this.object().currindex = index
+									return returned
+								},
+								set(value, leftovers = {}) {
+									RESULT.ensureProperties(leftovers, {
+										range: this.object().this.class.template.class
+											.template.icclass.template.range,
+										comparison:
+											this.object().this.class.template.class
+												.template.icclass.template.comparison
+									})
+
+									if (!leftovers.range(value.value))
+										throw new RangeError(
+											"Index range error for array length setting"
+										)
+
+									if (
+										leftovers.comparison(
+											this.object().length().get(),
+											value
+										)
+									)
+										return
+
+									if (
+										this.object()
+											.length()
+											.get()
+											.compare(
+												value,
+												undefined,
+												RESULT._const(true)
+											)
+									) {
+										// Decrease the length
+										this.object().deleteMult(
+											this.object().init(),
+											this.object()
+												.length()
+												.get()
+												.jumpDirection(
+													this.object()
+														.length()
+														.get()
+														.difference(value)
+												)
+										)
+									} else {
+										// Increase the length
+										// TODO: finish the sketch...
+										// * Sketch: .pushback() some 'default()' element(s) [settable as a default-template by the user] for the required number of items...
+										// The number of items is supposed to be given by the InfiniteCounter.difference(ic) method... would essentially take an 'InfiniteCounter' instance, find the difference between it and the current index;
+										// * note: the returned difference would be non-absolute and by the chosen generator, that being, one would 'jump' on the appropritate number of times;
+									}
+								}
+							}
+						},
+						appendfront(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const newArr = this.this.this.this.class.static.fromArray(
+								[x],
+								leftovers
+							)
+							newArr.concat(this.this.this, leftovers)
+							return newArr
+						},
+						copied(method, _arguments = [], f = RESULT.id, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							const c = this.this.this.copy(f, leftovers)
+							if (c[method]) c[method](..._arguments)
+							return c
+						},
+						// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
+						// Shape of the modifiable 'this' objects...
+						// const A = {this: {...[the actual object]}}; A.this.this = A;
+						// * The user would access the object by means of 'obj.this'; And from within - using 'this.this.this' [for the sake of ability to change the value of 'this.this.this']
+						// TODO: after having semi-completed the first stage of prototyping the library's contents and architechture, pray create the documentation for all that stuff...
+						// ? Think on HOW to document it all... Ought to be general yet also representative of the possible uses such as to employ different combinations of separate elements of the library per a single one...
+						// TODO [general]: spread this 'this.this.this' architecture throughout the project...
+						pushback(value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return this.this.this.write(
+								this.this.this.length().get(),
+								value,
+								leftovers
+							)
+						},
+						pushfront(value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return (this.this.this = this.this.this.appendfront(
+								value,
+								leftovers
+							))
+						},
+						// TODO: ensure these kinds of 'saviour' default empty templates all over the templated code;
+						pushfrontLoop(template = {}) {
+							const origin =
+								this.this.this.this.class.static.pushfrontkLoop(template)
+							const T = {
+								template: {
+									target: this.this.this,
+									...origin.template
+								}
+							}
+							T.function = origin.function.bind(T)
+							return T
+						},
+						pushbackLoop(template = {}) {
+							const origin =
+								this.this.this.this.class.static.pushbackLoop(template)
+							const T = {
+								template: {
+									target: this.this.this,
+									...origin.template
+								}
+							}
+							T.function = origin.function.bind(T)
+							return T
+						},
+						// TODO: allow for multiple arrays to concat the current one with... [perhaps, an array of arrays?]
+						concat(
+							// TODO: make the 'array' an '.empty()' by default in such and other similar cases...
+							array,
+							leftovers = {}
+						) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return array.loop()._full(
+								this.this.this.pushbackLoop({
+									arguments: [leftovers]
+								}).function
+							)
+						},
+						empty(template = this.this.this.this.class.template) {
+							return this.this.this.this.class.static.empty(template)
+						},
+						copy(f = RESULT.id, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const copied = this.this.this.empty()
+							this.this.this.loop()._full(
+								copied.pushbackLoop({
+									transform: f,
+									arguments: [leftovers]
+								}).function
+							)
+							return copied
+						},
+						slice(
+							begin = this.this.this.init(),
+							end = this.this.this.finish(),
+							leftovers = {}
+						) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							if (!leftovers.range(end.value))
+								throw new RangeError(
+									"Bad range in the 'end' argument passed to the 'GeneralArray.slice()' function call!"
+								)
+
+							// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
+							const sliced = this.this.this.empty()
+
+							this.this.this.loop()._full(
+								sliced.pushbackLoop({
+									arguments: [leftovers]
+								}).function,
+								undefined,
+								// ? QUESTION: should one use '.compare + same InfiniteCounter' or 'comparison()'???
+								// TODO: decide generally....
+								// ^ decided! Let all the algorithms involving indexes all be inclusive to the arguments' values...
+								// TODO: pray ensure that too...
+								RESULT._const((t) => end.compare(t.object().currindex)),
+								(t) => {
+									t.object().begin()
+									t.object().go(begin, leftovers.range)
+								}
+							)
+							return sliced
+						},
+						*forin() {
+							for (
+								let c = this.this.this.init();
+								!c.compare(this.this.this.length().get());
+								c = c.next()
+							)
+								yield c
+						},
+						*[Symbol.iterator](leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							for (
+								let c = this.this.this.init();
+								!c.compare(this.this.this.length().get());
+								c = c.next()
+							)
+								yield this.this.this.read(c, leftovers)
+						},
+						// TODO: rewrite by means of already create methods [refactor];
+						// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
+						// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
+						// ! later, pray review the integrity of the small things with this sketch...;
+						fillfrom(index, value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							const indexsaved = this.this.this.currindex
+							this.this.this.go(index, leftovers.range)
+							while (
+								!leftovers.comparison(
+									this.this.this.currindex,
+									this.this.this.finish()
+								)
+							) {
+								this.this.this.currelem = value
+								this.this.this.next()
+							}
+							this.this.this.currindex = indexsaved
+						},
+						convert(
+							// ? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
+							template = this.this.this.this.class.template,
+							leftovers = {}
+						) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: template.icclass.template.range,
+								comparison: template.icclass.template.comparison
+							})
+							const newArr = RESULT.GeneralArray(templates[0]).class()
+							this.this.this.loop()._full(
+								newArr.pushbackLoop({
+									arguments: [leftovers]
+								}).function
+							)
+							return newArr
+						},
+						delete(index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return this.this.this.deleteMult(index, index, leftovers)
+						},
+						deleteMult(startindex, endindex = startindex, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return (this.this.this = this.this.this
+								.slice(
+									this.this.this.init(),
+									startindex.previous(),
+									leftovers
+								)
+								.concat(this.this.this.slice(endindex.next(), leftovers)))
+						},
+						projectComplete(array, index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const _index = this.this.this.currindex
+							array.loop()._full(
+								(t) => {
+									// TODO: generalize this as well - some '.currwriteLoop(value, fast, range, comparison)', or something...
+									this.this.this.write(
+										this.this.this.currindex,
+										t.object().currelem,
 										leftovers
 									)
 								},
-								set(index, value, leftovers = {}) {
-									return this.this.this.values.write(
-										this.this.this.indexes
-											.firstIndex(index, leftovers)
-											.map(
-												this.this.this.values.this.this.this.this
-													.class.template.icclass
-											),
-										value,
+								RESULT._const((x) => {
+									x.object().next()
+									this.this.this.next()
+								}),
+								undefined,
+								(x) => {
+									x.object().begin()
+									this.this.this.go(index, leftovers.range)
+								}
+							)
+							// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
+							// ! Problem : generally , one might want to implement a sort of a multi-array loop function [so that the 'index' could be changed and then restored for multiple of them...]...
+							// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
+							// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
+							this.this.this.currindex = _index
+						},
+						// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
+						// TODO: think deeply on the return values for the GeneralArray algorithms...
+						projectFit(array, index, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							const ind = array.currindex
+							this.this.this.loop()._full(
+								(t) => {
+									t.object().write(
+										t.object().currindex,
+										array.currelem,
 										leftovers
 									)
-								}
-								// TODO: create a list of algorithms to go into the InfiniteMap, apart from the basic 'set' and 'get' (rely upon the GeneralArray's algorithms heavily...);
-							}
-						}
-						final.this.this = final
-						for (const key in initial) final.this.set(key, initial[key])
-						return final
-					}
-				}
-			},
+									array.next()
+								},
+								undefined,
+								(x) =>
+									x.object().this.class.template.isEnd(x.object()) ||
+									array.this.class.template.isEnd(array),
+								(t) => t.object().go(index, leftovers.range)
+							)
+							array.currindex = ind
+						},
+						inserted(index, value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
 
-			// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
-			// That's for the addition of things into the UnlimitedString;
-			// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
-			UnlimitedString: function (parent = RESULT.main.LastIndexArray) {
-				return EXTENSION({
-					defaults: {
-						parentclass: parent,
-						empty: ""
-					},
-					methods: {
-						// TODO: pray write all the UnlimitedString methods desired here...
-						// * Current list [add to UnlimitedString(...).methods]:
-						// % 	1. split(separator) - returns a GeneralArray of UnlimitedStrings; 
-						// % 	2. slice(begin, end);
-						// %	3. loop();
-						// % 	5. read(index); 
-						// % 	6. write(index, value); 
-						// % 	7. concat(ustring); 
-						// % 	8. currelem [not as 'get-set', but as an object-like thing instead {get: function () {...}, set: function() {...}} - like with 'GeneralArray.length()']; 
-						// % 	9. length(); 
-						// % 	10. copied(); 
-						// %	11. copy(); 
-						// % 	12. 
-						// * note: the '4' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
-						// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass'; 
-						// * Current list [add to GeneralArray]:
-						// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
-						// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question; [gets re-added to the UnlimitedString in question...]; 
-					},
-					recursive: true
-				})
-			},
-
-			// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
-			// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
-			TrueInteger(template = {}) {
-				return {
-					// * 'template' has the 'icclass';
-					template: { ...template },
-					class: function (v = this.template.icclass.class()) {
-						return {
-							class: this,
-							value: v,
-							// * Would return added value;
-							add(added) {
-								return TrueInteger(this.class.template)(
-									this.value
-										.jumpDirection(added.value.map(this.value.class))
-										.map(this.class.template.icclass)
-								)
-							},
-							// * Would return multiplied value
-							multiply(multiplied) {
-								return multiplied.class.static.forloop(
-									this,
-									multiplied.value.class.template.icclass.class(),
-									multiplied,
-									(x) => x.add(this)
-								)
-							},
-							// * Raise 'this' to the integer power of 'x' (works with negatives too...);
-							power(x) {
-								if (!this.class.template.icclass.direction(x))
-									return TrueRatio(this.template.icclass).class([
-										this.class.template.icclass.class().next(),
-										this.power(x.reverse())
-									])
-								return repeatedApplication(
-									(y) => y.multiply(this),
-									x,
-									this
-								)
-							},
-							// ? This thing could definitely be optimized... [Though, this appears to be far more 'clean' (in this context, equivalent of 'abstracted' and 'pure') as an algorithm... Think on it...]
-							// * For starters, one could '.add()' instead of multiplying by an index + use a '.static.while()' method... Pray consder...
-							modulo(divided) {
-								let i = TrueInteger(this.value.class.template).class(
-									this.value.class.template.icclass.class()
-								)
-								const d = TrueInteger(this.value.class.template).class(
-									divided.map(this.value.class.template.icclas)
-								)
-								while (!d.multiply(i).value.compare(this.value))
-									i.value = i.value.next()
-								return d.multiply(i).value.difference(this.value)
-							},
-							// * Would return the additive inverse;
-							invadd() {
-								// TODO: generalize this operation as a '.static()' - let it be something like 'ICClass-reversal';
-								const ICCLASS = this.class.template.icclass.template
-								return this.value.map({
-									generator(x) {
-										if (x === undefined) return ICCLASS.generator()
-										return ICCLASS.inverse(x)
-									},
-									inverse(x) {
-										return ICCLASS.generator(x)
-									},
-									range(x) {
-										return ICCLASS.range(x)
-									}
-								})
-							},
-							// * Would return a TrueRatio
-							invmult() {
-								return TrueRatio(this.class.template)(
-									this.class.template.icclass.class(),
-									this
-								)
-							}
-						}
-					}
-				}
-			},
-			TrueRatio(template = {}) {
-				const B = {
-					// * 'template' has the 'icclass';
-					template: { ...template },
-					static: {
-						simplify(ratio) {
-							let x = RESULT.main.deepCopy(ratio)
-							const l = RESULT.main.minfinite(ratio.value)
-							for (
-								let i = TrueInteger({
-									icclass: this.this.template.icclass
-								}).class();
-								!i.compare(l);
-								i.value = i.value.next()
-							) {
-								// ! generalize this thing in the condititon... [Basically, this is integer-division with rational output (non-simplified, possibly 'x: x.isWhole()');]
-								while (
-									TrueRatio()
-										.class(
-											x.value[0],
-											this.this.template.icclass.class().next()
-										)
-										.multiply(TrueRatio().class(i.invmult()))
-										.isWhole() &&
-									TrueRatio()
-										.class(
-											x.value[1],
-											this.this.template.icclass.class().next()
-										)
-										.multiply(TrueRatio().class(i.invmult()))
-										.isWhole()
-								) {
-									x.value[0] = TrueRatio()
-										.class(
-											x.value[0],
-											this.this.template.icclass.class().next()
-										)
-										.multiply(TrueRatio().class(i.invmult())).value[0]
-									x.value[1] = TrueRatio()
-										.class(
-											x.value[1],
-											this.this.template.icclass.class().next()
-										)
-										.multiply(TrueRatio().class(i.invmult())).value[0]
-								}
-							}
+							const x = this.this.this.slice(
+								undefined,
+								index.previous(),
+								leftovers
+							)
+							x.pushback(value, leftovers)
+							x.concat(this.this.this.slice(index, undefined, leftovers))
 							return x
-						}
-					},
-					class: function (numer, denom) {
-						return {
-							class: this,
-							value: [numer, denom],
-							add(addratio) {
-								return this.class.simpilfy(
-									TrueRatio().class(
-										this.value[0]
-											.multiply(addratio.value[1])
-											.add(
-												addratio.value[0].multiply(this.value[1])
-											),
-										this.value[1].multiply(addratio.value[1])
+						},
+						insert(index, value, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return (this.this.this = this.inserted(
+								index,
+								value,
+								leftovers
+							))
+						},
+						has(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								unfound: this.this.this.this.class.template.unfound,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return !leftovers.comparison(
+								this.this.this.firstIndex(x, leftovers),
+								leftovers.unfound
+							)
+						},
+						// * Just an alias...
+						index(i, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return this.this.this.read(i, leftovers)
+						},
+						// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
+						indexesOf(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							const indexes = this.this.this.empty()
+							this.this.this.loop()._full((arr) => {
+								if (leftovers.comparison(arr.object().currelem, x))
+									indexes.pushback(arr.currindex, leftovers)
+							})
+							return indexes
+						},
+
+						// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
+						// * Something like 'comparison = this.comparison || this.class.comparison'?
+						// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
+						// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
+						//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
+
+						firstIndex(x, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								unfound: this.this.this.this.class.template.unfound,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							let index = leftovers.unfound
+							this.this.this.loop()._full((arr) => {
+								if (leftovers.comparison(arr.object().currelem, x)) {
+									index = arr.currindex
+									arr.break()
+								}
+							})
+							return index
+						},
+						// TODO: template the 'baseelem' argument, pray;
+						shiftForward(
+							times,
+							icclass = this.this.this.this.class.template.icclass,
+							baseelem = undefined,
+							leftovers = {}
+						) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							const x = this.this.this.this.class.static
+								.fromArray([baseelem])
+								.repeat(times, icclass)
+							x.concat(this.this.this, leftovers)
+							return x
+						},
+						// TODO [general]: do proper work on the functions' defaults;
+						shiftBackward(times, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							this.this.this = this.this.this.slice(
+								times.map(
+									this.this.this.this.template.class.template.icclass
+								),
+								undefined,
+								leftovers
+							)
+						},
+						repeat(
+							times = this.this.this.init(),
+							icclass = this.this.this.this.class.template.icclass,
+							leftovers = {}
+						) {
+							const newarr = this.this.this.empty()
+							icclass.static.whileloop(icclass.class(), times, () =>
+								newarr.concat(this.this.this, leftovers)
+							)
+							return newarr
+						},
+						reversed(leftovers = {}) {
+							const reversedArr = this.this.this.empty()
+							this.this.this.loop()._full(
+								reversedArr.pushfrontLoop({
+									arguments: [leftovers]
+								}).function
+							)
+							return reversedArr
+						},
+						reverse() {
+							return (this.this.this = this.this.this.reversed())
+						},
+						// * Just an alias for 'copy'...
+						map(f = RESULT.id, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return this.this.this.copy(f, leftovers)
+						},
+						isEmpty(isend = this.this.this.this.class.template.isEnd) {
+							const index = this.this.this.currindex
+							this.this.this.begin()
+							const val = isend(this.this.this)
+							this.this.this.currindex = index
+							return val
+						},
+						/**
+						 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
+						 *
+						 * DEFINITION:
+						 *
+						 * WIKI:
+						 */
+						sorted(predicate, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+
+							// TODO: create an alias for that thing...
+							// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
+							const ALIAS = (x) =>
+								RESULT.infinite
+									.InfiniteCounter(
+										RESULT.RESULT.main.addnumber({
+											start: -1
+										})
+									)({ value: x })
+									.map(this.this.this.this.class.template.icclass)
+
+							const TWO = ALIAS(2),
+								THREE = ALIAS(3)
+
+							function split(a) {
+								if (
+									leftovers.comparison(TWO, a.length().get()) ||
+									leftovers.comparison(a.length().get(), THREE)
+								)
+									return this.this.this.this.class.static.fromArray(
+										[a],
+										leftovers
+									)
+
+								// ? Should one generalize this ???
+								// * YES, this code is getting slightly repetitious and unwieldy...
+								const counter = this.this.ths.init()
+								while (
+									!leftovers.comparison(
+										a.finish(),
+										counter.jump(counter)
+									) &&
+									!leftovers.comparison(
+										a.finish(),
+										counter.jump(counter.next())
 									)
 								)
-							},
-							multiply(multratio) {
-								return TrueRatio().class(
-									this.value[0].multiply(multratio.value[0]),
-									this.value[1].multiply(multratio.value[1])
+									counter = counter.next()
+
+								// TODO: it's really time to generalize this [the empty arrays thing...]!!!
+								const final = this.this.this.empty()
+								final.concat(split(a.slice(a.init(), counter, leftovers)))
+								final.concat(
+									split(a.slice(counter, undefined, leftovers)),
+									leftovers
 								)
-							},
-							invadd() {
-								return TrueRatio().class(
-									this.value[0].invadd(),
-									this.value[1]
-								)
-							},
-							invmult() {
-								return TrueRatio().class(...this.value.reverse())
-							},
-							isWhole() {
-								return this.class.template.icclass.template.comparison(
-									this.value[1],
-									this.class.template.icclass.class().next()
-								)
+								return final
 							}
-						}
-					}
-				}
-				B.static.this = B
-				return B
-			},
-			InfiniteSum(template = {}) {
-				return {
-					template: { ...template },
-					class: function (f = template.f) {
-						return {
-							f: f,
-							// * Sums up to a given point 'point'; The 'template' has an index-'generator' in it... That's used for index-generation, and 'point' is of the same icounter-type...
-							// uses 'f' for it...
-							sum(point) {
-								let added = TrueInteger(this.template.icclass).class()
-								this.template.icclass.static.whileloop(
-									this.template.icclass.class(),
-									point,
-									(i) => {
-										added = added.add(this.f(i))
+							function merge(a) {
+								function binmerge(a, b) {
+									// TODO: AGAIN...
+									const merged = this.this.this.empty()
+
+									// TODO: make the default 'index' for .read() to be '.init()'...; Then, here, one'd just write 'undefined everywhere...'
+									// * One was expecting this to be far more unwieldy...
+									// ? Question: make it better? Pray do sometime later...
+									const F = (x) => {
+										const K = (ampt, bmpt) => {
+											const f1 = elem_sort(
+												a.this.class.static.fromArray(
+													ampt
+														? [b.read(b.init(), leftovers)]
+														: bmpt
+														? [a.read(a.init(), leftovers)]
+														: [
+																a.read(
+																	a.init(),
+																	leftovers
+																),
+																b.read(
+																	b.init(),
+																	leftovers
+																)
+														  ],
+													leftovers
+												)
+											)
+											merged.pushback(
+												f1.read(f1.init(), leftovers),
+												leftovers
+											)
+											// TODO: fix up the usage of 'a.has' here...
+											const c =
+												bmpt ||
+												a.has(f1.read(f1.init(), leftovers))
+													? a
+													: b
+											// TODO: finish the .shiftBackward() first... - one is required to delete only 1 element from the start...
+											c.shiftBackward()
+										}
+										// * This code does not run when both are true, by the way...
+										K(a.isEmpty(), b.isEmpty())
 									}
-								)
-								return added
-							},
-							add(is) {
-								return InfiniteSum(this.class.template).class((i) =>
-									this.f(i).add(is.f(i))
-								)
-							}
-							// ? Does one want to implement anything else for this thing???
-						}
-					}
-				}
-			},
+									const T = (x) =>
+										x.loop()._full(F, RESULT._const(RESULT.void))
 
-			// ? QUESTION: about the UniversalMap... Does it remain under the '.main'? Or does it instead travel to the '.aliases.native'? Should it be replaced by the UnlimitedMap or turned into a distinctly named special case of it?
-			UniversalMap: function (template = {}) {
-				return {
-					template: {
-						// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
-						notfound: undefined,
-						treatUniversal: false,
-						comparison: RESULT.main.valueCompares,
-						...template
-					},
-					class: function (
-						keys = [],
-						values = [],
-						treatUniversal = this.template.treatUniversal
-					) {
-						// * Conversion from a non-array object...
-						if (!(keys instanceof Array)) {
-							if (keys.keys && keys.values && treatUniversal) {
-								values = values.values
-								keys = keys.keys
-							} else {
-								keys = Object(keys)
-								values = Object.values(keys)
-								keys = Object.keys(keys)
-							}
-						}
-						return {
-							keys: keys,
-							values: values,
-							index: 0,
-							class: this,
-							get(key, number = 1) {
-								const indexes = indexOfMult(
-									this.keys,
-									key,
-									this.class.template.comparison
-								)
-								if (indexes.length === 0)
-									return this.class.template.notfound
-								return indexes.slice(0, number).map((i) => this.values[i])
-							},
-							set(key, value) {
-								const index = indexOfMult(
-									this.keys,
-									key,
-									this.class.template.comparison
-								)
-								if (index.length !== 0)
-									for (const _index of index)
-										this.values[_index] = value
-								else {
-									this.keys.push(key)
-									this.values.push(value)
+									T(a)
+									T(b)
+
+									return merged
 								}
-								return value
-							},
-							// TODO: define the [Symbol.iterator] for all the types of all objects;
-							// * Similarly, define 'forin'
-							// ^ Funny, that reminds oneself:
-							// Thorin
-							// Fili
-							// Kili
-							// Oin
-							// Gloin
-							// Forin
-							// Balin
-							// Dwalin
-							// Ori
-							// Dori
-							// Nori
-							// Bifur
-							// Bofur
-							// Bombur
-							// * Noticed anything different? :D
-							// * hahaha!
-							// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
-							[Symbol.iterator]: function* () {
-								for (
-									this.index = 0;
-									this.index < this.keys.length;
-									this.index++
+								let current = elem_sort(a.index(a.init(), leftovers))
+								a.loop()._full(
+									(x) =>
+										(current = binmerge(
+											current,
+											elem_sort(x.object().currelem)
+										)),
+									undefined,
+									undefined,
+									(x) => x.object().go(x.object().init().next())
 								)
-									yield this.get(this.keys[this.index])
-							},
-							forin(body) {
-								for (
-									this.index = 0;
-									this.index < this.keys.length;
-									this.index++
-								)
-									body(this.keys[this.index])
-							},
+							}
+							function elem_sort(a) {
+								function TWOCASE(a) {
+									const first = a.read(a.init(), leftovers)
+									const second = a.read(a.init().next(), leftovers)
+									return predicate(second, first)
+										? a
+										: a.this.class.static.fromArray(
+												[second, first],
+												leftovers
+										  )
+								}
+								function THREECASE(a) {
+									const first = a.read(a.init())
+									// todo: pray finish the arguments list for .shiftBackward()...
+									const copied = elem_sort(a.copied("shiftBackward"))
 
-							// TODO: create a method for checking if this kind of conversion is valid; 'isValidObject', for instance...
-							toObject() {
-								const a = {}
-								for (let i = 0; i < this.keys.length; i++)
-									a[
-										(!["symbol", "number"].includes(
-											typeof this.keys[i]
-										)
-											? JSON.stringify
-											: RESULT.id)(this.keys[i])
-									] = this.values[i]
-								return a
+									const c1 = copied.read(copied.init(), leftovers)
+									const c2 = copied.read(
+										copied.init().next(),
+										leftovers
+									)
+
+									const fC1 = predicate(first, c1)
+									const fC2 = predicate(first, c2)
+
+									// ? QUESTION: should one try to shorten these kinds of things....
+									// * Pray consider in some depth...
+									return fC1
+										? fC2
+											? a.this.class.static.fromArray(
+													[c1, c2, first],
+													leftovers
+											  )
+											: a.this.class.static.fromArray(
+													[c1, first, c2],
+													leftovers
+											  )
+										: a.this.class.static.fromArray(
+												[first, c1, c2],
+												leftovers
+										  )
+								}
+								return leftovers.comparison(a.length().get(), TWO)
+									? TWOCASE(a)
+									: THREECASE(a)
+							}
+
+							return merge(split(this.this.this))
+						},
+						sort(predicate, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return (this.this.this = this.this.this.sorted(
+								predicate,
+								leftovers
+							))
+						},
+						isSorted(predicate, leftovers = {}) {
+							RESULT.ensureProperties(leftovers, {
+								fast: false,
+								range: this.this.this.this.class.template.icclass.template
+									.range,
+								comparison:
+									this.this.this.this.class.template.icclass.template
+										.comparison
+							})
+							return leftovers.comparison(
+								this.this.this,
+								this.this.this.sorted(predicate, leftovers)
+							)
+						}
+					},
+					recursive: true
+				}),
+
+				MultiInfiniteCounter(template = {}) {
+					// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
+					// * Perhaps, one would have multiple comparisons assigned to each and every one index of the array in question? [But, that'd require using the same manner of array-templates for them...]
+					// ! Pray think and decide...
+					return {
+						template: {
+							comparison: RESULT.main.valueCompre,
+							...template
+						},
+						class: function (
+							previous,
+							index,
+							generators = this.template.generators
+						) {
+							return {
+								class: this,
+								generators: generators,
+								value: previous
+									? this.generator(index)(previous.value)
+									: this.generator(index)(),
+								generator(index) {
+									return this.generators.read(index)
+								},
+								next(index) {
+									return this.generator(index)(this)
+								},
+								// TODO: pray consider the fate of all the other methods within the structure in question....
+								// * What about '.compare()'? Because of greatness of variaty of manner of things possible within the structure in question, one would [if at all, that being] not have it the same way as it is within the InfiniteCounter!
+								// One might do this by only choosing some one particular generator of the entire bunch; Or [more general], perhaps, creating some manner of way for the user to set the order by which to 'judge' the return value of the 'compare', with it serving as merely a wrapper for the essential part of the order in question???
+								// * For '.jump()', one would require the 'ranges' + also the index of the generator that is to be used for the jump...
+								// ! About the ranges: does one really want them to be an argument for this stuff??? [Perhaps, make them arguments for other things too, then???]
+								// ^ Implementation of '.jump()';
+								jump(x, index, ranges = this.class.template.ranges) {
+									if (!ranges.read(index)(x.value)) return this
+									// TODO: generalize the InfiniteCounter.jump(), then use the stuff here [essentially the same code]...
+								}
+								// * For '.map()'... What does one do about '.map()'???
+								// * Due to the fact that there is not one single direction to continue in [and there is an infinite number of different permutations of operators...]
+								// * There's no way to know generally how does one get from a certain thing 'x' to a 'y' using the Multi; Thus, CANNOT BE IMPLEMENTED TO BE THE SAME WAY...
+								// ! However.... If one was to somehow remember the path taken [starting from the decided position...];
+								// * One may as well do it...
+								// ! Or better, make a general method which would accept a GeneralArray of indexes, that'd correspond to indexes of the 'this.generators';
+								// * Then, one'd just iterate over the array in question, applying the '=.next(currindex)' to the chosen 'beginindex'!
+								// ? Would this not better be off as a static method, though?
+								// * CURRENT DECISION: yes!
+								// TODO: work on the static methods for the class-like structures in question...
 							}
 						}
 					}
-				}
-			},
-
-			// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
-			Pointer: TEMPLATE({
-				defaults: { label: "", nullptr: undefined },
-				function: function (value = this.template.nullptr) {
-					return { [this.template.label]: value }
 				},
-				word: "class"
-			}),
+
+				arrays: {
+					// TODO [general]: polish [look for small issues and solve them] and tidy [make the thing as of itself look more liked by oneself]...
+					LastIndexArray(template = {}) {
+						const A = {
+							template: {
+								icclass: RESULT.main.InfiniteCounter(
+									RESULT.main.numberCounter()
+								),
+								maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
+								filling: null,
+								...template,
+								bound: (i) => i < this.template.maxarrlen - 1,
+								...template
+							}
+						}
+
+						A.class = RESULT.main.GeneralArray({
+							this: A,
+							elem: function (
+								arrobj,
+								array = arrobj.array,
+								pointer = false,
+								beginningobj = array.currindex,
+								beginningind = 0
+							) {
+								// TODO [general]: a very small thing - format the spaces between lines; group the lines that in a fashion that is by oneself desireable...
+								const begin = arrobj.init()
+								let currarr = array
+								const original = arrobj.currindex
+								array.currindex = beginningobj
+								let isReturn = [false, undefined]
+								let index = beginningind
+								for (
+									;
+									!arrobj.this.class.template.icclass.template.comparison(
+										begin,
+										arrobj.currindex
+									);
+									arrobj.previous()
+								) {
+									const withinbounds = this.this.template.bound(index)
+
+									if (!(index in currarr)) {
+										isReturn[0] = true
+										if (withinbounds) isReturn[1] = null
+										break
+									}
+
+									if (withinbounds) {
+										index++
+										continue
+									}
+
+									currarr = currarr[index]
+									index = 0
+								}
+								const returned = arrobj.currindex
+								arrobj.currindex = original
+								return isReturn[0]
+									? pointer
+										? [isReturn[1], currarr, index, returned]
+										: undefined
+									: !pointer
+									? currarr[index]
+									: [currarr, index]
+							},
+							newvalue: function (array, value) {
+								let pointer = this.elem(array, undefined, true)
+								while (!pointer[0]) {
+									pointer[1][pointer[2]] = (
+										pointer[0] === undefined
+											? (x) => [x]
+											: RESULT.aliases.id
+									)(this.this.template.filling)
+									pointer = this.elem(
+										array,
+										pointer[1],
+										true,
+										pointer[3],
+										pointer[2]
+									)
+								}
+								return (pointer[0][pointer[1]] = value)
+							},
+							icclass: A.template.icclass
+						})
+
+						return A
+					},
+					// * This is the 'arr.length > MAXLENGTH -> arr = [arr] ELSE arr.push([recursively, until hitting the 'min-depth']) THEN arr.push(newvalue)'-kind of an array [the one that is very resourceful and with slowly growin layers...]
+					// ! finish
+					DeepArray(template = {}) {
+						// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
+						return {
+							template: {
+								icclass: this.InfiniteCounter(RESULT.main.numberCounter())
+							},
+							class: RESULT.main.GeneralArray({
+								newvalue: function (array, value) {},
+								elem(array) {},
+								icclass: this.template.icclass
+							})
+						}
+					},
+					// ! ANOTHER SUCH CASE - how does one want to generalize the usage of 'template' outside the '.template' field?
+					// * More thought regarding the generalization procedures of the library is required...
+					CommonArray(template = {}) {
+						return {
+							template: { offset: -1, ...template },
+							class: RESULT.main.GeneralArray({
+								newvalue: function (arr, value) {
+									return (arr.array[arr.currindex] = value)
+								},
+								elem: function (arr) {
+									return arr.array[arr.currindex]
+								},
+								icclass: RESULT.main.InfiniteCounter(
+									RESULT.main.addnumber({
+										start: this.template.offset
+									})
+								),
+								...template
+							})
+						}
+					}
+				},
+				// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
+				// _? Question: store the pointer to the 'infinite' structure within the thing in question.
+				InfiniteMap(template = {}) {
+					return {
+						template: { keyclass: template.valueclass, ...template },
+						class: function (initial = {}) {
+							const final = {
+								this: {
+									indexes: this.template.keyclass(),
+									values: this.templates.valueclass(),
+									// TODO: about the 'leftovers' concept's implementation:
+									// * It ought to be used in such a manner as for to allow for greater diversity of functionality, that being - one ought to allow for 'leftoverss' [an array of 'leftovers' objects, which are (in accordance), used in appropriate places]
+									get(index, leftovers = {}) {
+										return this.this.this.values.read(
+											this.this.this.indexes
+												.firstIndex(index, leftovers)
+												.map(
+													this.this.this.values.this.this.this
+														.this.class.template.icclass
+												),
+											leftovers
+										)
+									},
+									set(index, value, leftovers = {}) {
+										return this.this.this.values.write(
+											this.this.this.indexes
+												.firstIndex(index, leftovers)
+												.map(
+													this.this.this.values.this.this.this
+														.this.class.template.icclass
+												),
+											value,
+											leftovers
+										)
+									}
+									// TODO: create a list of algorithms to go into the InfiniteMap, apart from the basic 'set' and 'get' (rely upon the GeneralArray's algorithms heavily...);
+								}
+							}
+							final.this.this = final
+							for (const key in initial) final.this.set(key, initial[key])
+							return final
+						}
+					}
+				},
+
+				// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
+				// That's for the addition of things into the UnlimitedString;
+				// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
+				UnlimitedString: function (parent = RESULT.main.LastIndexArray) {
+					return EXTENSION({
+						defaults: {
+							parentclass: parent,
+							empty: ""
+						},
+						methods: {
+							// TODO: pray write all the UnlimitedString methods desired here...
+							// * Current list [add to UnlimitedString(...).methods]:
+							// % 	1. split(separator) - returns a GeneralArray of UnlimitedStrings;
+							// % 	2. slice(begin, end);
+							// %	3. loop();
+							// % 	5. read(index);
+							// % 	6. write(index, value);
+							// % 	7. concat(ustring);
+							// % 	8. currelem [not as 'get-set', but as an object-like thing instead {get: function () {...}, set: function() {...}} - like with 'GeneralArray.length()'];
+							// % 	9. length();
+							// % 	10. copied();
+							// %	11. copy();
+							// % 	12. insert(index, value); - An alias for a sequence of '.slice' and 'GeneralArray.insert' and '.join';
+							// % 	13. remove(index, value); - An alias for the '.slice()' - .slice is applied on 'this.this.this';
+							// * note: the '4' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
+							// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass';
+							// * Current list [add to GeneralArray]:
+							// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
+							// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question;
+							// 			? [gets re-added to the UnlimitedString in question... or not?];
+						},
+						recursive: true
+					})
+				},
+
+				numbers: {
+					// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
+					// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
+					TrueInteger(template = {}) {
+						return {
+							// * 'template' has the 'icclass';
+							template: { ...template },
+							class: function (v = this.template.icclass.class()) {
+								return {
+									class: this,
+									value: v,
+									// * Would return added value;
+									add(added) {
+										return TrueInteger(this.class.template)(
+											this.value
+												.jumpDirection(
+													added.value.map(this.value.class)
+												)
+												.map(this.class.template.icclass)
+										)
+									},
+									// * Would return multiplied value
+									multiply(multiplied) {
+										return multiplied.class.static.forloop(
+											this,
+											multiplied.value.class.template.icclass.class(),
+											multiplied,
+											(x) => x.add(this)
+										)
+									},
+									// * Raise 'this' to the integer power of 'x' (works with negatives too...);
+									power(x) {
+										if (!this.class.template.icclass.direction(x))
+											return TrueRatio(this.template.icclass).class(
+												[
+													this.class.template.icclass
+														.class()
+														.next(),
+													this.power(x.reverse())
+												]
+											)
+										return repeatedApplication(
+											(y) => y.multiply(this),
+											x,
+											this
+										)
+									},
+									// ? This thing could definitely be optimized... [Though, this appears to be far more 'clean' (in this context, equivalent of 'abstracted' and 'pure') as an algorithm... Think on it...]
+									// * For starters, one could '.add()' instead of multiplying by an index + use a '.static.while()' method... Pray consder...
+									modulo(divided) {
+										let i = TrueInteger(
+											this.value.class.template
+										).class(this.value.class.template.icclass.class())
+										const d = TrueInteger(
+											this.value.class.template
+										).class(
+											divided.map(this.value.class.template.icclas)
+										)
+										while (!d.multiply(i).value.compare(this.value))
+											i.value = i.value.next()
+										return d.multiply(i).value.difference(this.value)
+									},
+									// * Would return the additive inverse;
+									invadd() {
+										// TODO: generalize this operation as a '.static()' - let it be something like 'ICClass-reversal';
+										const ICCLASS =
+											this.class.template.icclass.template
+										return this.value.map({
+											generator(x) {
+												if (x === undefined)
+													return ICCLASS.generator()
+												return ICCLASS.inverse(x)
+											},
+											inverse(x) {
+												return ICCLASS.generator(x)
+											},
+											range(x) {
+												return ICCLASS.range(x)
+											}
+										})
+									},
+									// * Would return a TrueRatio
+									invmult() {
+										return TrueRatio(this.class.template)(
+											this.class.template.icclass.class(),
+											this
+										)
+									}
+								}
+							}
+						}
+					},
+					TrueRatio(template = {}) {
+						const B = {
+							// * 'template' has the 'icclass';
+							template: { ...template },
+							static: {
+								simplify(ratio) {
+									let x = RESULT.main.deepCopy(ratio)
+									const l = RESULT.main.minfinite(ratio.value)
+									for (
+										let i = TrueInteger({
+											icclass: this.this.template.icclass
+										}).class();
+										!i.compare(l);
+										i.value = i.value.next()
+									) {
+										// ! generalize this thing in the condititon... [Basically, this is integer-division with rational output (non-simplified, possibly 'x: x.isWhole()');]
+										while (
+											TrueRatio()
+												.class(
+													x.value[0],
+													this.this.template.icclass
+														.class()
+														.next()
+												)
+												.multiply(TrueRatio().class(i.invmult()))
+												.isWhole() &&
+											TrueRatio()
+												.class(
+													x.value[1],
+													this.this.template.icclass
+														.class()
+														.next()
+												)
+												.multiply(TrueRatio().class(i.invmult()))
+												.isWhole()
+										) {
+											x.value[0] = TrueRatio()
+												.class(
+													x.value[0],
+													this.this.template.icclass
+														.class()
+														.next()
+												)
+												.multiply(
+													TrueRatio().class(i.invmult())
+												).value[0]
+											x.value[1] = TrueRatio()
+												.class(
+													x.value[1],
+													this.this.template.icclass
+														.class()
+														.next()
+												)
+												.multiply(
+													TrueRatio().class(i.invmult())
+												).value[0]
+										}
+									}
+									return x
+								}
+							},
+							class: function (numer, denom) {
+								return {
+									class: this,
+									value: [numer, denom],
+									add(addratio) {
+										return this.class.simpilfy(
+											TrueRatio().class(
+												this.value[0]
+													.multiply(addratio.value[1])
+													.add(
+														addratio.value[0].multiply(
+															this.value[1]
+														)
+													),
+												this.value[1].multiply(addratio.value[1])
+											)
+										)
+									},
+									multiply(multratio) {
+										return TrueRatio().class(
+											this.value[0].multiply(multratio.value[0]),
+											this.value[1].multiply(multratio.value[1])
+										)
+									},
+									invadd() {
+										return TrueRatio().class(
+											this.value[0].invadd(),
+											this.value[1]
+										)
+									},
+									invmult() {
+										return TrueRatio().class(...this.value.reverse())
+									},
+									isWhole() {
+										return this.class.template.icclass.template.comparison(
+											this.value[1],
+											this.class.template.icclass.class().next()
+										)
+									}
+								}
+							}
+						}
+						B.static.this = B
+						return B
+					},
+					InfiniteSum(template = {}) {
+						return {
+							template: { ...template },
+							class: function (f = template.f) {
+								return {
+									f: f,
+									// * Sums up to a given point 'point'; The 'template' has an index-'generator' in it... That's used for index-generation, and 'point' is of the same icounter-type...
+									// uses 'f' for it...
+									sum(point) {
+										let added = TrueInteger(
+											this.template.icclass
+										).class()
+										this.template.icclass.static.whileloop(
+											this.template.icclass.class(),
+											point,
+											(i) => {
+												added = added.add(this.f(i))
+											}
+										)
+										return added
+									},
+									add(is) {
+										return InfiniteSum(this.class.template).class(
+											(i) => this.f(i).add(is.f(i))
+										)
+									}
+									// ? Does one want to implement anything else for this thing???
+								}
+							}
+						}
+					}
+				},
+				// ? QUESTION: about the UniversalMap... Does it remain under the '.main'? Or does it instead travel to the '.aliases.native'? Should it be replaced by the UnlimitedMap or turned into a distinctly named special case of it?
+				UniversalMap: function (template = {}) {
+					return {
+						template: {
+							// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
+							notfound: undefined,
+							treatUniversal: false,
+							comparison: RESULT.main.valueCompares,
+							...template
+						},
+						class: function (
+							keys = [],
+							values = [],
+							treatUniversal = this.template.treatUniversal
+						) {
+							// * Conversion from a non-array object...
+							if (!(keys instanceof Array)) {
+								if (keys.keys && keys.values && treatUniversal) {
+									values = values.values
+									keys = keys.keys
+								} else {
+									keys = Object(keys)
+									values = Object.values(keys)
+									keys = Object.keys(keys)
+								}
+							}
+							return {
+								keys: keys,
+								values: values,
+								index: 0,
+								class: this,
+								get(key, number = 1) {
+									const indexes = indexOfMult(
+										this.keys,
+										key,
+										this.class.template.comparison
+									)
+									if (indexes.length === 0)
+										return this.class.template.notfound
+									return indexes
+										.slice(0, number)
+										.map((i) => this.values[i])
+								},
+								set(key, value) {
+									const index = indexOfMult(
+										this.keys,
+										key,
+										this.class.template.comparison
+									)
+									if (index.length !== 0)
+										for (const _index of index)
+											this.values[_index] = value
+									else {
+										this.keys.push(key)
+										this.values.push(value)
+									}
+									return value
+								},
+								// TODO: define the [Symbol.iterator] for all the types of all objects;
+								// * Similarly, define 'forin'
+								// ^ Funny, that reminds oneself:
+								// Thorin
+								// Fili
+								// Kili
+								// Oin
+								// Gloin
+								// Forin
+								// Balin
+								// Dwalin
+								// Ori
+								// Dori
+								// Nori
+								// Bifur
+								// Bofur
+								// Bombur
+								// * Noticed anything different? :D
+								// * hahaha!
+								// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
+								[Symbol.iterator]: function* () {
+									for (
+										this.index = 0;
+										this.index < this.keys.length;
+										this.index++
+									)
+										yield this.get(this.keys[this.index])
+								},
+								forin(body) {
+									for (
+										this.index = 0;
+										this.index < this.keys.length;
+										this.index++
+									)
+										body(this.keys[this.index])
+								},
+
+								// TODO: create a method for checking if this kind of conversion is valid; 'isValidObject', for instance...
+								toObject() {
+									const a = {}
+									for (let i = 0; i < this.keys.length; i++)
+										a[
+											(!["symbol", "number"].includes(
+												typeof this.keys[i]
+											)
+												? JSON.stringify
+												: RESULT.id)(this.keys[i])
+										] = this.values[i]
+									return a
+								}
+							}
+						}
+					}
+				},
+
+				// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
+				Pointer: TEMPLATE({
+					defaults: { label: "", nullptr: undefined },
+					function: function (value = this.template.nullptr) {
+						return { [this.template.label]: value }
+					},
+					word: "class"
+				}),
+				// * This thing will allow to create function-based types on top of an Array;
+				// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
+				// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
+				TypedArray(template = {}) {
+					const C = {
+						template: {
+							empty: [],
+							typefunction: RESULT.aliases._const(true),
+							...template
+						}
+					}
+
+					C.class = function (array = C.template.empty) {
+						return GeneralArray({
+							this: C,
+							...C.template,
+							newvalue: function (arr, val) {
+								if (this.this.template.typefunction(val))
+									return this.this.template.newval(arr, val)
+								return this.this.template.typefail(arr, val)
+							}
+						}).class(array)
+					}
+
+					return C
+				},
+
+				// ^ CONCLUSION: the NumberEquation requires a more general construct to be implemented in the first place to be operable within the chosen path of development.
+				// * One ought to implement the EquationParser, which would be a very configurable function, purpose of which would be to interpret UnlimitedString(s), then
+				// 	return the Expression executable via the 'Expression' API (or fullExp function);
+				// % The UnlimitedString wihtin the question is governed by the EquationForm object class
+				// ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
+				// * Tasks list before continuing with the NumberEquation:
+				// 		1. Finish (fix) the fullExp;
+				// 		2. Finish the UnlimitedString implementation;
+				// 		3. Genereralize the '.static.ParseEquation' to a user-defined function;
+
+				NumberEquation: function (template = {}) {
+					const X = {
+						template: {
+							operators: RESULT.variables.defaultAlphabet.get,
+							// ! make a default variable...
+							brackets: [
+								["(", ")"],
+								["[", "]"],
+								["{", "}"]
+							],
+							// ! make a default variable...
+							// ! generalize, make more user- and format- friendly...
+							separator: ",",
+							...template
+						},
+						static: {
+							/**
+							 * A static method for parsing an equation with various mappings applied.
+							 * @param {string} equationLine A line, containing an equation.
+							 * @param {VarMapping} mappings A mapping of variables to their values.
+							 * @param {string[]} variables Additional variable names.
+							 */
+							ParseEquation(
+								eqline = this.this.template.ustrclass.template.empty
+							) {
+								const brackets = this.this.template.brackets
+								const ops = Object.keys(this.this.template.operators)
+								const separator = this.this.template.separator
+
+								const result = [
+									this.this.template.genarrclass.static.empty(),
+									this.this.template.genarrclass.static.empty()
+								]
+
+								eqline = RESULT.aliases.native.string.sreplace(
+									eqline,
+									" ",
+									""
+								)
+								// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
+								eqline = eqline.split("=")
+								// ? QUESTION: enable arbitrary user-defined syntaxes?
+
+								// TODO: redefine the 'looping' method for the UnlimitedString class...
+								// ! Complete the sketch of the parsing method [after tuning the stuff, and so on...];
+								// 		% In particular:
+								// 			1. Make it safer [working even when invalid strings are provided];
+								// 			2. Ensure it working [to each and every small detail see...];
+								// ! Generalize, make the decided parsing method a default, establish the requirements for a user-created parsing method for an equation...;
+								eqline.loop()._full((side) => {
+									while (true) {
+										let i = side.firstIndex(op[0])
+										let co = op[0]
+										let cb = brackets[0]
+
+										for (const o of ops.slice(1)) {
+											let pi = i
+											i = min([i, side.firstIndex(o)])
+											cb = min([cb[0], side.firstIndex(cb)])
+											if (pi != i) co = o
+										}
+
+										result[0].pushback(co)
+										// TODO: perform corresponding transformations to the ic-format of the .genarrclass;
+										side = side.slice(co.length)
+										side = side.slice(cb[0].length)
+										side = side.slice(0, side.length - cb[1].length)
+										side = side.split(separator)
+
+										// * Sketch: look for operators symbols, followed by one of the 'brackets' symbols;
+									}
+								})
+
+								return result
+							},
+							// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
+							plug(origparsed, varname, varvalue) {
+								const parsed = [...origparsed]
+								for (const pparsed of parsed)
+									for (let i = 0; i < pparsed.length; i++)
+										if (pparsed[i] === varname)
+											pparsed =
+												RESULT.aliases.native.string.sreplaceIndex(
+													pparsed,
+													i,
+													varvalue
+												)
+								return parsed
+							}
+						},
+						class: function (
+							equationText = this.this.template.ustrclass.empty,
+							vars = {}
+						) {
+							return {
+								class: this,
+								equation:
+									equationText || this.this.template.ustrclass.empty,
+								variables: vars || {},
+								parse(mappings = this.variables) {
+									return this.class.static.ParseEquation(
+										this.equation,
+										mappings
+									)
+								},
+								/**
+								 * This method searches for the solution of an equation it's invoked onto.
+								 *
+								 * ! WARNING 1 !
+								 *
+								 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+								 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+								 * (However, if the root is rational, then it could even be exactly it.)
+								 *
+								 * ! WARNING 2 !
+								 *
+								 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+								 *
+								 * PARAMETRES
+								 *
+								 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
+								 * @param {string} varname Name of the variable for which search is invoked.
+								 * @param {number} startvalue Value, from which search is invoked.
+								 * @param {number} pathlength The length of the search path.
+								 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+								 */
+								searchSolution(
+									mappings,
+									varname,
+									startvalue,
+									pathlength,
+									precision = 4
+								) {
+									// ? What to do with this now? [The thing has mutiple sides of the equation...];
+									// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
+									// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data];
+									function diffs(mappings, varname, varvalue) {
+										// ! PROBLEM: not thought through well enough;
+										// * Now, the present process shall be such:
+										// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN];
+										// 	2. Plugging in [on a number-by-number basis...];
+										// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
+										// 	4. Returning the list;
+										// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user];
+										// const plugged = this.parse(mappings)
+										// return plugged
+									}
+									const differences = generate(
+										startvalue,
+										startvalue + pathlength,
+										floor(10 ** -precision, precision),
+										precision
+									).map((i) => {
+										return Math.abs(diffs(mappings, varname, i))
+									})
+									return (
+										startvalue +
+										differences.indexOf(min(differences)) *
+											floor(10 ** -precision, precision)
+									)
+								}
+							}
+						}
+					}
+					X.static.this = X
+					return X
+				},
+
+				// TODO: implement InfiniteString [the *truly* infinite one, that is...]
+				InfiniteString() {},
+
+				// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
+				InfiniteArray() {}
+
+				// ? question: does one want to go implementing the 'InfiniteNumber' as well?
+			},
 
 			// TODO: extend this thing - create new algorithms implementations for the library...
 			// ! Generalize this [use General types...];
@@ -4422,214 +4774,7 @@ export function instance(transformation = ID) {
 						)
 					return storage
 				}
-			},
-
-			// * This thing will allow to create function-based types on top of an Array;
-			// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
-			// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
-			TypedArray(template = {}) {
-				const C = {
-					template: {
-						empty: [],
-						typefunction: RESULT.aliases._const(true),
-						...template
-					}
-				}
-
-				C.class = function (array = C.template.empty) {
-					return GeneralArray({
-						this: C,
-						...C.template,
-						newvalue: function (arr, val) {
-							if (this.this.template.typefunction(val))
-								return this.this.template.newval(arr, val)
-							return this.this.template.typefail(arr, val)
-						}
-					}).class(array)
-				}
-
-				return C
-			},
-
-			// ^ CONCLUSION: the NumberEquation requires a more general construct to be implemented in the first place to be operable within the chosen path of development.
-			// * One ought to implement the EquationParser, which would be a very configurable function, purpose of which would be to interpret UnlimitedString(s), then
-			// 	return the Expression executable via the 'Expression' API (or fullExp function);
-			// % The UnlimitedString wihtin the question is governed by the EquationForm object class
-			// ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
-			// * Tasks list before continuing with the NumberEquation:
-			// 		1. Finish (fix) the fullExp;
-			// 		2. Finish the UnlimitedString implementation;
-			// 		3. Genereralize the '.static.ParseEquation' to a user-defined function;
-
-			NumberEquation: function (template = {}) {
-				const X = {
-					template: {
-						operators: RESULT.variables.defaultAlphabet.get,
-						// ! make a default variable...
-						brackets: [
-							["(", ")"],
-							["[", "]"],
-							["{", "}"]
-						],
-						// ! make a default variable...
-						// ! generalize, make more user- and format- friendly...
-						separator: ",",
-						...template
-					},
-					static: {
-						/**
-						 * A static method for parsing an equation with various mappings applied.
-						 * @param {string} equationLine A line, containing an equation.
-						 * @param {VarMapping} mappings A mapping of variables to their values.
-						 * @param {string[]} variables Additional variable names.
-						 */
-						ParseEquation(
-							eqline = this.this.template.ustrclass.template.empty
-						) {
-							const brackets = this.this.template.brackets
-							const ops = Object.keys(this.this.template.operators)
-							const separator = this.this.template.separator
-
-							const result = [
-								this.this.template.genarrclass.static.empty(),
-								this.this.template.genarrclass.static.empty()
-							]
-
-							eqline = RESULT.aliases.native.string.sreplace(
-								eqline,
-								" ",
-								""
-							)
-							// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
-							eqline = eqline.split("=")
-							// ? QUESTION: enable arbitrary user-defined syntaxes?
-
-							// TODO: redefine the 'looping' method for the UnlimitedString class...
-							// ! Complete the sketch of the parsing method [after tuning the stuff, and so on...];
-							// 		% In particular:
-							// 			1. Make it safer [working even when invalid strings are provided];
-							// 			2. Ensure it working [to each and every small detail see...];
-							// ! Generalize, make the decided parsing method a default, establish the requirements for a user-created parsing method for an equation...;
-							eqline.loop()._full((side) => {
-								while (true) {
-									let i = side.firstIndex(op[0])
-									let co = op[0]
-									let cb = brackets[0]
-
-									for (const o of ops.slice(1)) {
-										let pi = i
-										i = min([i, side.firstIndex(o)])
-										cb = min([cb[0], side.firstIndex(cb)])
-										if (pi != i) co = o
-									}
-
-									result[0].pushback(co)
-									// TODO: perform corresponding transformations to the ic-format of the .genarrclass;
-									side = side.slice(co.length)
-									side = side.slice(cb[0].length)
-									side = side.slice(0, side.length - cb[1].length)
-									side = side.split(separator)
-
-									// * Sketch: look for operators symbols, followed by one of the 'brackets' symbols;
-								}
-							})
-
-							return result
-						},
-						// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
-						plug(origparsed, varname, varvalue) {
-							const parsed = [...origparsed]
-							for (const pparsed of parsed)
-								for (let i = 0; i < pparsed.length; i++)
-									if (pparsed[i] === varname)
-										pparsed =
-											RESULT.aliases.native.string.sreplaceIndex(
-												pparsed,
-												i,
-												varvalue
-											)
-							return parsed
-						}
-					},
-					class: function (
-						equationText = this.this.template.ustrclass.empty,
-						vars = {}
-					) {
-						return {
-							class: this,
-							equation: equationText || this.this.template.ustrclass.empty,
-							variables: vars || {},
-							parse(mappings = this.variables) {
-								return this.class.static.ParseEquation(
-									this.equation,
-									mappings
-								)
-							},
-							/**
-							 * This method searches for the solution of an equation it's invoked onto.
-							 *
-							 * ! WARNING 1 !
-							 *
-							 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-							 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
-							 * (However, if the root is rational, then it could even be exactly it.)
-							 *
-							 * ! WARNING 2 !
-							 *
-							 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-							 *
-							 * PARAMETRES
-							 *
-							 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
-							 * @param {string} varname Name of the variable for which search is invoked.
-							 * @param {number} startvalue Value, from which search is invoked.
-							 * @param {number} pathlength The length of the search path.
-							 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
-							 */
-							searchSolution(
-								mappings,
-								varname,
-								startvalue,
-								pathlength,
-								precision = 4
-							) {
-								// ? What to do with this now? [The thing has mutiple sides of the equation...];
-								// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
-								// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data];
-								function diffs(mappings, varname, varvalue) {
-									// ! PROBLEM: not thought through well enough;
-									// * Now, the present process shall be such:
-									// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN];
-									// 	2. Plugging in [on a number-by-number basis...];
-									// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
-									// 	4. Returning the list;
-									// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user];
-									// const plugged = this.parse(mappings)
-									// return plugged
-								}
-								const differences = generate(
-									startvalue,
-									startvalue + pathlength,
-									floor(10 ** -precision, precision),
-									precision
-								).map((i) => {
-									return Math.abs(diffs(mappings, varname, i))
-								})
-								return (
-									startvalue +
-									differences.indexOf(min(differences)) *
-										floor(10 ** -precision, precision)
-								)
-							}
-						}
-					}
-				}
-				X.static.this = X
-				return X
-			},
-
-			// TODO: do the NArrays' API (before doing so, pray decide what exactly does this mean - currently: recursive general-arrays API and the recursive native JS arrays);
-			// % note: some parts of it are even ready already - for instance, the 'recursiveIndexation';
+			}
 
 			// TODO: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
 			// TODO: think deeply on the matter of copying/referencing of 'class-template-static' objects within the instances objects... Review each and every method within each and every class, make it plausible to oneself, most general;
@@ -4640,14 +4785,6 @@ export function instance(transformation = ID) {
 
 			// TODO: add examples of the circular counters (too, an infiniteCounter, just one that is looped);
 			// * A case of InfiniteCounters; Based off array-orders [iteration over an ordering or an array];
-
-			// TODO: implement InfiniteString [the *truly* infinite one, that is...]
-			InfiniteString() {},
-
-			// TODO: pray create an actual InfiniteArray implementation [not that of 'UnlimitedArray' - term for special cases of GeneralArray];
-			InfiniteArray() {}
-
-			// ? question: does one want to go implementing the 'InfiniteNumber' as well?
 
 			// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 		},
