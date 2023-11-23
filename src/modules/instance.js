@@ -2246,6 +2246,11 @@ export function instance(transformation = ID) {
 				//		definingMethod (name, _this, args) {let value; switch(name) {...}; _this[name] = value}
 				// * with the 'value' getting changed in the 'switch' hanged in the 'switch'
 				// TODO: reimplement all the methods from the GeneralArray in such a way that it only operates on the 'this.this.this'
+				// 
+				// ! MAJOR ISSUE: with the 'this.this.this' implementation; 
+				// 	* The whole class's methods' complex's code is flawed! Instead of '[...][...]', it requires a recursively defined '.get()' and '.set()'; 
+				// ^ CONCLUSION: so, the new architecture is such - one binds all the methods to '{[classref]: {...}, get: function (...) {...}, set: function (...) {...}, [selfname]?: {...}, ...?}', with 'get' returning the current 'this', and the 'set' changing (replacing) it; 
+				// ! CURRENT AGENDA: fix all the classes' code via this procedure's accomplishment...
 				GeneralArray: CLASS({
 					defaults: {
 						empty: [],
@@ -2361,7 +2366,8 @@ export function instance(transformation = ID) {
 									each,
 									iter = RESULT._const(this.template.indexiter),
 									end = RESULT._const(this.template.end),
-									begin = this.template.begin
+									begin = this.template.begin,
+									after = ID
 								) {
 									const index = this.object().currindex
 									begin(this)
@@ -2375,6 +2381,7 @@ export function instance(transformation = ID) {
 									this.restart()
 									this.broke = false
 									this.object().currindex = index
+									after(this)
 									return r
 								},
 								// * The difference between '.full()' and '._full()' is that the former is based on later and allows for 'break' and 'continue'...
@@ -2384,7 +2391,9 @@ export function instance(transformation = ID) {
 									each = this.template.each,
 									iter = RESULT._const(this.template.indexiter),
 									end = RESULT._const(this.template.end),
-									begin = this.template.begin
+									begin = this.template.begin,
+									// ! Work further on this thing...
+									after = ID
 								) {
 									const index = this.object().currindex
 									begin(this)
@@ -2410,6 +2419,7 @@ export function instance(transformation = ID) {
 									this.restart()
 									this.broke = false
 									this.object().currindex = index
+									after(this)
 									return r
 								},
 								break: function () {
@@ -2717,7 +2727,11 @@ export function instance(transformation = ID) {
 										.comparison
 							})
 							const c = this.this.this.copy(f, leftovers)
-							if (c[method]) c[method](..._arguments)
+							if (
+								c.hasOwnProperty(method) &&
+								typeof c[method] === "function"
+							)
+								c[method](..._arguments)
 							return c
 						},
 						// ! Leftovers of a note... [DO NOT DELETE YET!!! KEEP FOR NOW, ONLY WHEN WRITING DOCUMENTATION AND CLEANING UP]
@@ -2844,7 +2858,6 @@ export function instance(transformation = ID) {
 
 							// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
 							const sliced = this.this.this.empty()
-
 							this.this.this.loop()._full(
 								sliced.pushbackLoop({
 									arguments: [leftovers]
@@ -2860,7 +2873,7 @@ export function instance(transformation = ID) {
 									t.object().go(begin, leftovers.range)
 								}
 							)
-							return sliced
+							return (this.this.this = sliced)
 						},
 						*forin() {
 							for (
@@ -2870,6 +2883,7 @@ export function instance(transformation = ID) {
 							)
 								yield c
 						},
+						// ! Not effecient; Pray reconsider the implementation...
 						*[Symbol.iterator](leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								fast: false,
@@ -2891,6 +2905,7 @@ export function instance(transformation = ID) {
 						// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
 						// ! later, pray review the integrity of the small things with this sketch...;
 						fillfrom(index, value, leftovers = {}) {
+							// ! refactor this repeating thing!
 							RESULT.ensureProperties(leftovers, {
 								range: this.this.this.this.class.template.icclass.template
 									.range,
@@ -2910,24 +2925,21 @@ export function instance(transformation = ID) {
 								this.this.this.next()
 							}
 							this.this.this.currindex = indexsaved
+							return this.this.this
 						},
 						convert(
-							// ? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
-							template = this.this.this.this.class.template,
-							leftovers = {}
+							// ! An old cryptic note - decipher...
+							// _? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
+							template = this.this.this.this.class.template
 						) {
-							RESULT.ensureProperties(leftovers, {
-								fast: false,
-								range: template.icclass.template.range,
-								comparison: template.icclass.template.comparison
+							return (this.this.this.this.class = {
+								...this.this.this.this.class,
+								template: { ...template }
 							})
-							const newArr = RESULT.GeneralArray(templates[0]).class()
-							this.this.this.loop()._full(
-								newArr.pushbackLoop({
-									arguments: [leftovers]
-								}).function
-							)
-							return newArr
+						},
+						// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
+						switchclass(arrclass = this.this.this.this.class) {
+							return (this.this.this.this.class = arrclass)
 						},
 						delete(index, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
@@ -2949,13 +2961,20 @@ export function instance(transformation = ID) {
 									this.this.this.this.class.template.icclass.template
 										.comparison
 							})
-							return (this.this.this = this.this.this
+							return this.this.this
 								.slice(
 									this.this.this.init(),
 									startindex.previous(),
 									leftovers
 								)
-								.concat(this.this.this.slice(endindex.next(), leftovers)))
+								.concat(
+									this.this.this.copied(
+										"slice",
+										[endindex.next()],
+										undefined,
+										leftovers
+									)
+								)
 						},
 						projectComplete(array, index, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
@@ -2985,13 +3004,14 @@ export function instance(transformation = ID) {
 								(x) => {
 									x.object().begin()
 									this.this.this.go(index, leftovers.range)
+								},
+								(_x) => {
+									// ! Problem : generally , one might want to implement a sort of a multi-array loop function [so that the 'index' could be changed and then restored for multiple of them...]...
+									// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
+									// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
+									this.this.this.currindex = _index
 								}
 							)
-							// ? Should one embed this into the '._full()/.full()' calls as well??? As some 'ending' argument, after the 'begin'???
-							// ! Problem : generally , one might want to implement a sort of a multi-array loop function [so that the 'index' could be changed and then restored for multiple of them...]...
-							// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
-							// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
-							this.this.this.currindex = _index
 						},
 						// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
 						// TODO: think deeply on the return values for the GeneralArray algorithms...
@@ -3023,25 +3043,6 @@ export function instance(transformation = ID) {
 							)
 							array.currindex = ind
 						},
-						inserted(index, value, leftovers = {}) {
-							RESULT.ensureProperties(leftovers, {
-								fast: false,
-								range: this.this.this.this.class.template.icclass.template
-									.range,
-								comparison:
-									this.this.this.this.class.template.icclass.template
-										.comparison
-							})
-
-							const x = this.this.this.slice(
-								undefined,
-								index.previous(),
-								leftovers
-							)
-							x.pushback(value, leftovers)
-							x.concat(this.this.this.slice(index, undefined, leftovers))
-							return x
-						},
 						insert(index, value, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								fast: false,
@@ -3051,11 +3052,22 @@ export function instance(transformation = ID) {
 									this.this.this.this.class.template.icclass.template
 										.comparison
 							})
-							return (this.this.this = this.inserted(
-								index,
-								value,
+							const x = this.this.this.copied(
+								"slice",
+								[undefined, index.previous()],
+								undefined,
 								leftovers
-							))
+							)
+							x.pushback(value, leftovers)
+							x.concat(
+								this.this.this.copied(
+									"slice",
+									[index],
+									undefined,
+									leftovers
+								)
+							)
+							return (this.this.this = x)
 						},
 						has(x, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
@@ -3098,13 +3110,11 @@ export function instance(transformation = ID) {
 							})
 							return indexes
 						},
-
 						// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
 						// * Something like 'comparison = this.comparison || this.class.comparison'?
 						// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
 						// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
 						//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
-
 						firstIndex(x, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								unfound: this.this.this.this.class.template.unfound,
@@ -3122,6 +3132,9 @@ export function instance(transformation = ID) {
 							return index
 						},
 						// TODO: template the 'baseelem' argument, pray;
+						// ! WORK ON THE TEMPLATES MATTER FURTHER:
+						// 		% 1. Does one want to change this ridiculous trailing 'leftovers' into anything more useful? [namely, make the functions templates...];
+						// 		% 2. If 1, then one ought to consider re-implementing some parts of the CLASS and EXTENSION macro [again!] for the sake of addition of the TEMPLATEs into the library's CLASSes;
 						shiftForward(
 							times,
 							icclass = this.this.this.this.class.template.icclass,
@@ -3139,11 +3152,10 @@ export function instance(transformation = ID) {
 							const x = this.this.this.this.class.static
 								.fromArray([baseelem])
 								.repeat(times, icclass)
-							x.concat(this.this.this, leftovers)
-							return x
+							return (this.this.this = x.concat(this.this.this, leftovers))
 						},
 						// TODO [general]: do proper work on the functions' defaults;
-						shiftBackward(times, leftovers = {}) {
+						shiftBackward(times = this.this.this.init(), leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								fast: false,
 								range: this.this.this.this.class.template.icclass.template
@@ -3152,7 +3164,7 @@ export function instance(transformation = ID) {
 									this.this.this.this.class.template.icclass.template
 										.comparison
 							})
-							this.this.this = this.this.this.slice(
+							return this.this.this.slice(
 								times.map(
 									this.this.this.this.template.class.template.icclass
 								),
@@ -3171,19 +3183,17 @@ export function instance(transformation = ID) {
 							)
 							return newarr
 						},
-						reversed(leftovers = {}) {
+						reverse(leftovers = {}) {
 							const reversedArr = this.this.this.empty()
 							this.this.this.loop()._full(
 								reversedArr.pushfrontLoop({
 									arguments: [leftovers]
 								}).function
 							)
-							return reversedArr
-						},
-						reverse() {
-							return (this.this.this = this.this.this.reversed())
+							return (this.this.this = reversedArr)
 						},
 						// * Just an alias for 'copy'...
+						// ? Question: does one want the aliases in the GeneralArray?
 						map(f = RESULT.id, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								fast: false,
@@ -3209,7 +3219,7 @@ export function instance(transformation = ID) {
 						 *
 						 * WIKI:
 						 */
-						sorted(predicate, leftovers = {}) {
+						sort(predicate, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
 								fast: false,
 								range: this.this.this.this.class.template.icclass.template
@@ -3379,21 +3389,7 @@ export function instance(transformation = ID) {
 									: THREECASE(a)
 							}
 
-							return merge(split(this.this.this))
-						},
-						sort(predicate, leftovers = {}) {
-							RESULT.ensureProperties(leftovers, {
-								fast: false,
-								range: this.this.this.this.class.template.icclass.template
-									.range,
-								comparison:
-									this.this.this.this.class.template.icclass.template
-										.comparison
-							})
-							return (this.this.this = this.this.this.sorted(
-								predicate,
-								leftovers
-							))
+							return (this.this.this = merge(split(this.this.this)))
 						},
 						isSorted(predicate, leftovers = {}) {
 							RESULT.ensureProperties(leftovers, {
@@ -3406,7 +3402,12 @@ export function instance(transformation = ID) {
 							})
 							return leftovers.comparison(
 								this.this.this,
-								this.this.this.sorted(predicate, leftovers)
+								this.this.this.copied(
+									"sort",
+									[predicate],
+									undefined,
+									leftovers
+								)
 							)
 						}
 					},
@@ -4906,7 +4907,7 @@ export function instance(transformation = ID) {
 
 	// * Copies an object/array deeply...
 	RESULT.main.deepCopy = RESULT.main.copyFunction({
-		list: ["array", "object", "function", "symbol", "primitive"]
+		list: ["array", "object", "function", "symbol"]
 	})
 
 	// * Keeps the functions references intact whilst copying...
