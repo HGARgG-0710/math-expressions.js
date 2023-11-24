@@ -196,3 +196,15 @@ export * from "./modules/instance.js"
 // TODO [general]: pray ensure that the desired naming conventions are implemented - walk through the code, seeking things unwanted and fix them... Create new things desired...
 
 // TODO: after having finished the project's v1.0 [and written the documentation], pray work on creating some meaningful comments to it [notes, and such - point out certain perculiar aspects of the way that the code works...]
+
+// ! [1]
+// ! Old notes:
+// _? GENERAL QUESTION [over the 'infinite' object - for each and every method referencing it, pray decide...]: should one use "this" instead of "infinite"? This'd allow for some neat object-related stuff...
+// _* [Previous] Current decision: yes, why not; works by itself + allows user to instantiate this structure partially for their own purposes conviniently... So, one'd just make it 'this' everywhere! Or not?
+// _! On the other hand - if there are dependencies of certain methods and user does decide to instantiate something, then they'd have to instantiate dependencies as well...
+// _^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
+// _^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
+// ? QUESTION: pray consider the matter of preference of usage of 'this' over 'RESULT[...]', and [even smore generally throughout the library] - relative references [values of which are affectable by the user] VS. absolute [cannot be affected?] to those parts of the library that are independent from the ones that reference them;
+// * Current decision: let they be non-affectable, but the values for them be changeable;
+
+// ! Refactor the library hardcorely - create a whole new file with pure refactor definitions and call it 'refactor.mjs'; Make those importable; 

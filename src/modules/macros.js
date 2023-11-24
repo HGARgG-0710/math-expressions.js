@@ -100,12 +100,12 @@ export const HIERARCHY = function (hierarr = []) {
 }
 
 // * This macro shall be used to determine:
-// 	1. InfiniteMap (extends GeneralArray);
+// 	1. UnlimitedMap (extends GeneralArray);
+// TODO [for UnlimitedMap implementation]: work further on the possibilities associated with having a multiple number of 'names' in the 'template.names'; 
 //  2. UnlimitedString (extends GeneralArray);
-//  3. NArray (maybe, if it's going to be a class and a separate API; extends GeneralArray)
 // ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
-// 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;  
+// 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
 export const EXTENSION = (template = {}) => {
 	// TODO: refactor this piece of code, pray...
 	ensureProperties(ptemplate, {
@@ -125,17 +125,16 @@ export const EXTENSION = (template = {}) => {
 				...this,
 				function: function (...args) {
 					ensureProperties(args, this.template.defaults.constructor)
-					return {
-						[this.template.defaults.name]: this.template.parentclass.class(
-							...args
-						)
-					}
+					const X = {}
+					for (const y of this.template.defaults.names)
+						X[y] = this.template.parentclass.class(...args)
+					return X
 				}
 			})
 		},
 		...template,
 		defaults: {
-			name: "sub",
+			names: ["sub"],
 			defaults: {
 				constructor: [],
 				...template.defaults.defaults
@@ -152,7 +151,7 @@ export const EXTENSION = (template = {}) => {
 						NAMED_TEMPLATE(
 							function (
 								instance = this.template.instance,
-								name = this.template.name
+								name = this.template.names[0]
 							) {
 								return function (...args) {
 									if (
@@ -167,15 +166,15 @@ export const EXTENSION = (template = {}) => {
 									// ? Question: does one want the individual treatment of each and every parentclass method in regard of whether they should be bound to
 									// ! PROBLEM [1]: with 'recursive' classes and the way that '.bind' works for them - the separate '.bind' must be implemented for these kinds of methods, seemingly... [namely], one must have the thing attributed to the right part of it... - not the '{classref: ..., selfname: ...}' part, but the '.selfname: {...}' part...;
 									// ! PROBLEM [2]: with the referencing of the 'recursive' class properties, namely the fact that the '[...]' operator doesn't universally work in the desired fashion with the properties of the thing...
-									// ^ IDEA [for a solution]: implement the '.get(...)' method for the classes objects [namely, in the { classref: ..., selfname?: ... } part], which'd resolve this uncertainty [for non-recursive classes would return a thing as-is, whereas for the recursive ones - it'd do the '[.selfname][x]' thing...]; 
-									// * For this thing to work properly, the '.get' method must be present and used in all the CLASSes and macros related to CLASSes; 
+									// ^ IDEA [for a solution]: implement the '.get(...)' method for the classes objects [namely, in the { classref: ..., selfname?: ... } part], which'd resolve this uncertainty [for non-recursive classes would return a thing as-is, whereas for the recursive ones - it'd do the '[.selfname][x]' thing...];
+									// * For this thing to work properly, the '.get' method must be present and used in all the CLASSes and macros related to CLASSes;
 									return this[
-										this[name.classref].template.defaults.name
+										this[name.classref].template.defaults.name[0]
 									][a](...args)
 								}.bind(instance)
 							},
 							{
-								classref: template.classref,
+								classref: template.classref
 							}
 						)
 					])
@@ -194,7 +193,7 @@ export const EXTENSION = (template = {}) => {
 	return PRECLASS(ftemplate)
 }
 
-// ! the 'function' is nominal... Consider, whether one wants to do something about it...
+// ! the 'function' field is nominal... Consider, whether one wants to do something about it...
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
 export const PRECLASS = NOREST([
 	"methods",

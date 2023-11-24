@@ -295,7 +295,11 @@ export function instance(transformation = ID) {
 									const copied = flatCopy(itered[i])
 									for (let j = 0; j < m; j++) {
 										copied[j]++
-										if (indexOfMult(itered, copied).length) {
+										if (
+											RESULT.aliases.native.array
+												.indexesOf()
+												.function(itered, copied).length
+										) {
 											copied[j]--
 											continue
 										}
@@ -361,10 +365,18 @@ export function instance(transformation = ID) {
 				array: {
 					// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
 					last: (arr, obj, comparison = valueCompare) => {
-						return max(indexOfMult(arr, obj, comparison))
+						return max(
+							RESULT.aliases.native.array
+								.indexesOf({ comparison: comparison })
+								.function(arr, obj, comparison)
+						)
 					},
 					first: (arr, obj, comparison = valueCompare) => {
-						return min(indexOfMult(arr, obj, comparison))
+						return min(
+							RESULT.aliases.native.array
+								.indexesOf({ comparison: comparison })
+								.function(arr, obj, comparison)
+						)
 					},
 					_last: (arr) => arr[arr.length - 1],
 					_first: (arr) => arr[0],
@@ -438,9 +450,9 @@ export function instance(transformation = ID) {
 						defaults: { n: 1, default: null }
 					}),
 
+					// ! CURRENT AGENDA: work on this, then hop back forth to the procedure of implementing the UnlimitedString;
+
 					hasArrays: function (array = []) {
-						// TODO: create an alias for such 'common' type expressions [like 'isarr(x) := x instanceof Array'];
-						// * Would also to avoid working with some funny parts of JS [like 'typeof [] == "object"', typeof not being sufficient for determination of certain aspects of the objects' nature];
 						return !!max(array.map((a) => a instanceof Array))
 					},
 
@@ -458,28 +470,35 @@ export function instance(transformation = ID) {
 							: 0
 					},
 
-					indexOfMult: function (array, el, comparison = (a, b) => a === b) {
-						const indexes = []
-						for (let i = 0; i < array.length; i++)
-							if (comparison(array[i], el)) indexes.push(i)
-						return indexes
-					},
+					// TODO: RENAMAME to 'indexesOf' - far more understandable and general in the sense of naming conventions...;
+					indexesOf: TEMPLATE({
+						defaults: { comparison: RESULT.main.refCompare },
+						function: function (array, el) {
+							const indexes = []
+							for (let i = 0; i < array.length; i++)
+								if (this.template.comparison(array[i], el))
+									indexes.push(i)
+							return indexes
+						}
+					}),
 
 					// * clears all but the first `tokeep` repetition of `el`
-					clearRepetitions: function (
-						arr,
-						el,
-						tokeep = 0,
-						comparison = (a, b) => a === b
-					) {
-						const firstMet = indexOfMult(arr, el, comparison)
-						return firstMet.length
-							? arr.filter(
-									(a, i) =>
-										firstMet.indexOf(i) < tokeep || !comparison(a, el)
-							  )
-							: [...arr]
-					},
+					clearRepetitions: TEMPLATE({
+						defaults: {
+							tokeep: 0,
+							comparison: RESULT.main.comparisons.refCompare
+						},
+						function: function (arr, el) {
+							const firstMet = RESULT.aliases.native.array
+								.indexesOf({ comparison: this.template.comparison })
+								.function(arr, el)
+							return arr.filter(
+								(a, i) =>
+									firstMet.indexOf(i) < tokeep ||
+									!this.template.comparison(a, el)
+							)
+						}
+					}),
 
 					// TODO: make the 'refCompare' a default comparison in cases like this (lonely utility methods);
 					splitArr: function (arr, el, comparison = RESULT.aliases.refCompare) {
@@ -571,35 +590,55 @@ export function instance(transformation = ID) {
 					// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
 
 					// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
-
 					// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
-					// ! Rewrite the structure of that thing capitally - comparison, a templated variable, whilst 'arrs' becomes '...arrs';
-					// TODO: rewrite as a templated GeneralArray algorihtm - intersection(...arrs)
-					arrIntersections: function (arrs, comparison = (a, b) => a === b) {
-						if (arrs.length === 0) return []
-						if (arrs.length === 1) return arrs[1]
-						if (arrs.length === 2) {
-							const result = []
-							for (let i = 0; i < arrs[0].length; i++) {
-								for (let j = 0; j < arrs[1].length; j++) {
-									// TODO: change for the use of indexOfMult... the .includes thing...
-									if (
-										comparison(arrs[0][i], arrs[1][j]) &&
-										!result.includes(arrs[0][i])
-									)
-										result.push([i, j, arrs[0][i], arrs[1][j]])
-								}
+
+					// TODO: later - use this and other such finite algorithms for the GeneralArray;
+					arrIntersections: TEMPLATE({
+						defaults: {
+							comparison: RESULT.main.comparisons.refCompare,
+							preferred: (a, b, c) => a
+						},
+						function: function (...arrs) {
+							switch (arrs.length) {
+								case 0:
+									return []
+								case 1:
+									return arrs[1]
+								case 2:
+									const result = []
+									for (let i = 0; i < arrs[0].length; i++) {
+										for (let j = 0; j < arrs[1].length; j++) {
+											if (
+												this.template.comparison(
+													arrs[0][i],
+													arrs[1][j]
+												) &&
+												!RESULT.aliases.native.array
+													.indexesOf({
+														comparison:
+															this.template.comparison
+													})
+													.function(result, arrs[0][i])
+											)
+												result.push(
+													this.template.preferred(
+														arrs[0][i],
+														arrs[1][j],
+														this.template.comparison
+													)
+												)
+										}
+									}
+									return result
 							}
-							return result
+
+							// TODO: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
+							return this.function(arrs[0], this.function(...arrs.slice(1)))
 						}
-						return arrIntersections(
-							[arrs[0], arrIntersections(arrs.slice(1), comparison)],
-							comparison
-						)
-					},
+					}),
 
 					// * Counts all non-array elements within a multidimensional array passed... [recursively so]
-					nonArrElems: function (array) {
+					nonArrElems: function (array = []) {
 						return array instanceof Array
 							? repeatedArithmetic(array.map(nonArrElems), "+")
 							: 1
@@ -1132,6 +1171,8 @@ export function instance(transformation = ID) {
 			fun: Function,
 			bi: BigInt,
 
+			ustr: RESULT.main.types.UnlimitedString,
+
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
 			property: (p) => (x) => x[p],
 			trim:
@@ -1142,7 +1183,21 @@ export function instance(transformation = ID) {
 				(cond) =>
 				(a = ID, b = ID) =>
 				(...args) =>
-					(cond() ? a : b)(...args)
+					(cond() ? a : b)(...args),
+
+			is: {
+				bool: (x) => x === true || x === false,
+				str: (x) => typeof x === "string" || x instanceof String,
+				num: (x) => typeof x === "number" || x instanceof Number,
+				obj: (x) => typeof x === "object" && x instanceof Object,
+				sym: (x) => typeof x === "symbol",
+				udef: (x) => x === undefined,
+				set: (x) => x instanceof Set,
+				arr: (x) => x instanceof Array,
+				fn: (x) => x instanceof Function,
+				fun: (x) => typeof x === "function",
+				bi: (x) => x instanceof BigInt
+			}
 			// ? [old todo - delete?]: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 		},
 		main: {
@@ -1636,18 +1691,19 @@ export function instance(transformation = ID) {
 						}
 					}
 
-					// TODO: write the finite version of the 'indexesOf' algorithm...
 					const generalized = (name, sign) =>
 						function (x) {
 							if (this.template.multitude.is(x))
 								return this.template.multitude.map(x, (a) => this[name])
-							const vals = indexesOf(this.template.values, x).map(
-								(i) =>
-									this.template.values[
-										(i + sign * this.template.hop) %
-											this.template.values
-									]
-							)
+							const vals = RESULT.aliases.native.array
+								.indexesOf(this.template.values, x)
+								.map(
+									(i) =>
+										this.template.values[
+											(i + sign * this.template.hop) %
+												this.template.values
+										]
+								)
 							if (vals.length == 1) return vals[0]
 							return this.template.multitude.new(vals)
 						}
@@ -1670,65 +1726,52 @@ export function instance(transformation = ID) {
 				}
 			},
 
-			// ! THESE TWO FUNCTIONS ARE THE ONLY ONES THAT REMAIN UNGROUPED in the 'RESULT.main' presently...
-
-			// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
-			copy: TEMPLATE({
-				defaults: {
-					objdefmeth: ID,
-					arrdefmeth: ID,
-					// TODO: make an alias for this...
-					defcontext: () => ({})
-				},
-				function: function (
-					arrmeth = this.template.arrdefmeth,
-					ometh = this.template.objdefmeth,
-					dcontext = this.template.defcontext
-				) {
-					return {
-						array: (a, method = arrmeth) => a.map(method),
-						object: (a, method = objmeth) => objFmap(a, method),
-						function: (a, context = dcontext()) => a.bind(context),
-						symbol: (a) =>
-							Symbol(RESULT.aliases.trim(RESULT.aliases.str(a).slice(7))),
-						arrayFlat: (a) => [...a],
-						objectFlat: (a) => ({ ...a })
+			// ? How about something related to 'native': RESULT.main.native? One'd also add more of the functions for it ('transfer' them from the 'aliases.native', for they are too large to qualify as aliases...);
+			native: {
+				// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
+				copy: TEMPLATE({
+					defaults: {
+						objdefmeth: ID,
+						arrdefmeth: ID,
+						// TODO: make an alias for this...
+						defcontext: () => ({})
+					},
+					function: function (
+						arrmeth = this.template.arrdefmeth,
+						ometh = this.template.objdefmeth,
+						dcontext = this.template.defcontext
+					) {
+						return {
+							array: (a, method = arrmeth) => a.map(method),
+							object: (a, method = objmeth) => objFmap(a, method),
+							function: (a, context = dcontext()) => a.bind(context),
+							symbol: (a) =>
+								Symbol(RESULT.aliases.trim(7)(RESULT.aliases.str(a))),
+							arrayFlat: (a) => [...a],
+							objectFlat: (a) => ({ ...a })
+						}
 					}
-				}
-			}),
+				}),
 
-			// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
-			copyFunction: TEMPLATE({
-				defaults: { list: [] },
-				function: function (a) {
-					// TODO: do something about that inner one; shouldn't be there...
-					// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
-					function typeTransform(x) {
-						if (x === "array" || x === "arrayFlat")
-							return (p) => p instanceof Array
-						if (x === "objectFlat") return (p) => typeof p === "object"
-						return (p) => typeof p === x
+				// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
+				copyFunction: TEMPLATE({
+					defaults: { list: [] },
+					function: function (a) {
+						// TODO: do something about that inner one; shouldn't be there...
+						// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
+						function typeTransform(x) {
+							if (x === "array" || x === "arrayFlat")
+								return (p) => p instanceof Array
+							if (x === "objectFlat") return (p) => typeof p === "object"
+							return (p) => typeof p === x
+						}
+						for (const x of this.template.list)
+							if (typeTransform(x)(a))
+								return RESULT.main.copy().function()[x](a, this.function)
+						return a
 					}
-					for (const x of this.template.list)
-						if (typeTransform(x)(a))
-							return RESULT.main.copy().function()[x](a, this.function)
-					return a
-				}
-			}),
-
-			// ! THESE TWO FUNCTIONS ARE THE ONLY ONES THAT REMAIN UNGROUPED in the 'RESULT.main' presently...
-			// % Suggestions as to where to put them:
-			// 	 1. copy, copyFunction should be grouped somewhere together;
-
-			// ! [1]
-			// ! Old notes:
-			// _? GENERAL QUESTION [over the 'infinite' object - for each and every method referencing it, pray decide...]: should one use "this" instead of "infinite"? This'd allow for some neat object-related stuff...
-			// _* [Previous] Current decision: yes, why not; works by itself + allows user to instantiate this structure partially for their own purposes conviniently... So, one'd just make it 'this' everywhere! Or not?
-			// _! On the other hand - if there are dependencies of certain methods and user does decide to instantiate something, then they'd have to instantiate dependencies as well...
-			// _^ IDEA [solution]: create an 'instantiation structure' for this thing; distribute as some instance of an InstantiableObject class, which creates instantiable objects; It allows to set dependencies,
-			// _^ which would 'by default' add the stuff required; [The default instantiation could, of course, be turned off - flag for it;]
-			// ? QUESTION: pray consider the matter of preference of usage of 'this' over 'RESULT[...]', and [even smore generally throughout the library] - relative references [values of which are affectable by the user] VS. absolute [cannot be affected?] to those parts of the library that are independent from the ones that reference them;
-			// * Current decision: let they be non-affectable, but the values for them be changeable;
+				})
+			},
 
 			comparisons: {
 				// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
@@ -3483,7 +3526,8 @@ export function instance(transformation = ID) {
 				},
 				// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
 				// _? Question: store the pointer to the 'infinite' structure within the thing in question.
-				InfiniteMap(template = {}) {
+				// ! MAKE A TEMPLATE...
+				UnlimitedMap(template = {}) {
 					return {
 						template: { keyclass: template.valueclass, ...template },
 						class: function (initial = {}) {
@@ -3534,31 +3578,86 @@ export function instance(transformation = ID) {
 						defaults: {
 							parentclass: parent,
 							empty: "",
-							name: "genarr"
+							names: ["genarr"], 
+							basestr: RESULT.aliases._const(" ")
 						},
 						methods: {
-							// TODO: pray write all the UnlimitedString methods desired here...
-							// ! PROBLEM: what about using UnlimitedStrings as arguments instead? The finite string can be
-							// * Current list [add to UnlimitedString(...).methods]:
-							// % 	1. split(separator) - returns a GeneralArray of UnlimitedStrings;
-							// % 	2. slice(begin, end);
-							// %	3. loop();
-							// % 	4. read(index);
-							// % 	5. write(index, value);
-							// % 	6. concat(ustring);
-							// % 	7. currelem [not as 'get-set', but as an object-like thing instead {get: function () {...}, set: function() {...}} - like with 'GeneralArray.length()'];
-							// % 	8. length();
-							// % 	9. copied();
-							// % 	10. insert(index, value); - An alias for a sequence of '.slice' and 'GeneralArray.insert' and '.join';
-							// % 	11. remove(index, value); - An alias for the '.slice()' - .slice is applied on 'this.this.this';
-							// % 	12. join(separator, frequency=() => icmap(2)); adds a separator after every 'frequency()'th symbol of the string (note: frequency is a function...); By default, adds the separator after every second...;
-							// % 	13. reverse();
-							// % 	14. map(f);
-							// % 	15. isEmpty(); NOTE: this ought to find out whether all of the present finite Strings within the UnlimitedString in question are equal to the 'this.template.empty';
-							// % 	16. sort(predicate); changes the present string to one that has been ordered in accordance with the predicate; Does 'this.this.this.split("").genarr.sort()';
-							// % 	17. isSorted(predicate); does same stuff as the GeneralArray version;
-							// % 	18. indexesOf(substring); Same stuff as with all the methods that use a different index-system [character-based, not sub-element-based];
-							// %	19. firstIndex(substring); will return the first index of the 'indexesOf'
+							// % Note: the UnlimitedStrings are to be used as the arguments for these methods [but, they are also to accept the finite strings...];
+							split() {
+								// % returns a GeneralArray of UnlimitedStrings;
+							},
+							slice(beginning, end) {
+								// % Changes the 'this.this.this' to equal to the string getting cut down
+							},
+							loop() {
+								// % returns a GeneralArray-like structure, allowing one to run loops on the UnlimitedString object in question;
+							},
+							read(index) {
+								// % returns the value of the index desired [indexation within methods that use it works in the same way as it does in a result of 'ustr.symbolic()'];
+							},
+							write(index, value) {
+								// % writes the new value to the according index of the string; 
+							},
+							concat(ustring) {
+								// % Concatenates the present string with the newly passed one; 
+							},
+							currelem() {
+								// % Returns the {.get, .set} structure for setting and getting the current string element; 
+								// * Based entirely off the '.genarr' object; 
+							},
+							// ! PROBLEM: the 'currindex'; One wants to be able to do exact same things with an UnlimitedString as with the GeneralArray, thus, one wants an additional 'currindex', which is a native JS number type [for an in-string position representation...]; 
+							// ^ CONCLUSION: before one proceeds further with the 'UnlimitedString' class, the appropriate parts of the CLASS and EXTENSION macros must be completed; 
+							next() {
+								// % Goes to the next string's element [next character]; 
+							}, 
+							previous () {
+								// % Goes to the previous string's element character [previous character]; 
+							},
+							length() {
+								// % Returns the {.get, .set} length of the string [in terms of the underlying GeneralArray's InfiniteClass class]
+							},
+							copied(method, arguments) {
+								// % Copies the present string, then applies the method given with the arguments given on it; 
+							},
+							insert(index, value) {
+								// % Inserts a new value at a given position in a string; Alters the original string; Affects the length of the string by +1; 
+							},
+							remove(index) {
+								// % Removes the part of the string at a given index; An invers of 'insert' at the same index; 
+							},
+							join(separator, frequency) {
+								// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again); 
+							},
+							reverse() {
+								// % reverses the present string; 
+							},
+							map(f = ID) {
+								// % maps a string to another string using the symbolic function 'f'; 
+							},
+							isEmpty() {
+								// % Checks if the string is empty; NOTE: this ought to find out whether all of the present finite Strings within the UnlimitedString in question are equal to the 'this.template.empty'; 
+							},
+							sort(predicate) {	
+								// % changes the present string to one that has been ordered in accordance with the predicate; Does 'this.this.this.split("").genarr.sort()';
+							},
+							isSorted(predicate) {
+								// % same as in GeneralArray, except works with the local 'sort'; [Refactor these two, maybe?]; 
+							},
+							indexesOf(ustring) {
+								// % Returns a GeneralArray of the indexes, at which one may find the string in question; 
+							},
+							firstIndex(ustring) {
+								// % Returns the first of the indexes where the passed string may be found inside the string in question; 
+							},
+							order() {
+								// % Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
+								// * Most memory- and that-from-the-standpoint-of-execution, efficient option; 
+							},
+							symbolic() {
+								// % The precise opposite of 'order': shall minimize the length of each and every string available within the underlying GeneralArray;
+								// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; 
+							}
+							// TODO: pray decide if any more methods are desired here...
 							// * note: the '3' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
 							// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass';
 							// * Current list [add to GeneralArray]:
@@ -3834,11 +3933,11 @@ export function instance(transformation = ID) {
 								index: 0,
 								class: this,
 								get(key, number = 1) {
-									const indexes = indexOfMult(
-										this.keys,
-										key,
-										this.class.template.comparison
-									)
+									const indexes = RESULT.aliases.native.array
+										.indexesOf({
+											comparison: this.class.template.comparison
+										})
+										.function(this.keys, key)
 									if (indexes.length === 0)
 										return this.class.template.notfound
 									return indexes
@@ -3846,7 +3945,7 @@ export function instance(transformation = ID) {
 										.map((i) => this.values[i])
 								},
 								set(key, value) {
-									const index = indexOfMult(
+									const index = RESULT.aliases.native.array.indexesOf(
 										this.keys,
 										key,
 										this.class.template.comparison
@@ -4438,35 +4537,39 @@ export function instance(transformation = ID) {
 				 * @param {number[]} elems An array of numbers passed to the function.
 				 * @param {any} noneValue A value, returned if the array doesn't have a most popular number. String "None" by default.
 				 */
-				mostPopular: function (
-					elems = [],
-					noneValue = null,
-					comparison = (a, b) => a === b
-				) {
-					if (elems.length === 0) return noneValue
-					const freq = new UniversalMap(
-						elems,
-						elems.map((el) => countAppearences(elems, el, 0, comparison))
-					)
-					return indexOfMult(freq.values, max(freq.values), comparison).map(
-						(a) => freq.keys[a]
-					)
-				},
+				mostPopular: TEMPLATE({
+					defaults: {
+						comparison: RESULT.main.comparisons.refCompare
+					},
+					function: function (elems = [], noneValue = null) {
+						if (elems.length === 0) return noneValue
+						const freq = new UniversalMap(
+							elems,
+							elems.map((el) => countAppearences(elems, el, 0, comparison))
+						)
+						return RESULT.aliases.native.array
+							.indexesOf({ comparison: this.template.comparison })
+							.function(freq.values, max(freq.values))
+							.map((a) => freq.keys[a])
+					}
+				}),
 
-				leastPopular: function (
-					elems = [],
-					noneValue = null,
-					comparison = (a, b) => a === b
-				) {
-					if (elems.length === 0) return noneValue
-					const freq = new UniversalMap(
-						elems,
-						elems.map((el) => countAppearences(elems, el, 0, comparison))
-					)
-					return indexOfMult(freq.values, min(freq.values), comparison).map(
-						(a) => freq.keys[a]
-					)
-				},
+				leastPopular: TEMPLATE({
+					defaults: {
+						comparison: RESULT.main.comparisons.refCompare
+					},
+					function: function (elems = [], noneValue = null) {
+						if (elems.length === 0) return noneValue
+						const freq = new UniversalMap(
+							elems,
+							elems.map((el) => countAppearences(elems, el, 0, comparison))
+						)
+						return RESULT.aliases.native.array
+							.indexesOf({ comparison: this.template.comparison })
+							.function(freq.values, min(freq.values))
+							.map((a) => freq.keys[a])
+					}
+				}),
 
 				// TODO: make the range of truncation an argument too... Generalize...
 				/**
