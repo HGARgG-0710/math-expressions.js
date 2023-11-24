@@ -101,7 +101,7 @@ export const HIERARCHY = function (hierarr = []) {
 
 // * This macro shall be used to determine:
 // 	1. UnlimitedMap (extends GeneralArray);
-// TODO [for UnlimitedMap implementation]: work further on the possibilities associated with having a multiple number of 'names' in the 'template.names'; 
+// TODO [for UnlimitedMap implementation]: work further on the possibilities associated with having a multiple number of 'names' in the 'template.names';
 //  2. UnlimitedString (extends GeneralArray);
 // ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
@@ -202,7 +202,8 @@ export const PRECLASS = NOREST([
 	"classref",
 	"selfname",
 	"subselfname",
-	"isgeneral"
+	"isgeneral", 
+	"properties"
 ])
 
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
@@ -217,7 +218,8 @@ export const CLASS = (ptemplate = {}) => {
 		classref: "class",
 		methods: {},
 		static: {},
-		isgeneral: {}
+		isgeneral: {},
+		properties: {}
 	})
 	const template = PRECLASS(ptemplate)
 	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod';
@@ -261,6 +263,10 @@ export const CLASS = (ptemplate = {}) => {
 					(this.recursive ? (x) => x[this.selfname] : ID)(V)
 				)
 			}
+
+			const O = this.recursive ? V[this.selfname][this.subselfname]: V
+			for (const p in this.properties)
+				O[p] = this.properties[p].bind(this)(...args)
 			return V
 		}.bind(p)
 		return p

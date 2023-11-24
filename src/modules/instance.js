@@ -1196,7 +1196,13 @@ export function instance(transformation = ID) {
 				arr: (x) => x instanceof Array,
 				fn: (x) => x instanceof Function,
 				fun: (x) => typeof x === "function",
-				bi: (x) => x instanceof BigInt
+				bi: (x) => x instanceof BigInt,
+				ustr: (x) => {
+					// TODO: define; would come in VERY handy...
+				},
+				genarr: (x) => {
+					// TODO: yet again, pray do - extremely useful; These kinds of methods ought to answer the question of 'does the instance (object) in question implement the structure of the class in question or not? (the answer is a boolean)'
+				}
 			}
 			// ? [old todo - delete?]: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 		},
@@ -2086,7 +2092,7 @@ export function instance(transformation = ID) {
 									this.template.unacceptable
 								)
 									? this.template.generator()
-									: previous.value
+									: previous
 							}
 						},
 						transform: StaticThisTransform,
@@ -2174,7 +2180,10 @@ export function instance(transformation = ID) {
 									pointerback = pointerback.previous()
 								}
 
-								return leftovers.comparison(pointerfor, this.this.this)
+								return leftovers.comparison(
+									pointerfor.value,
+									this.this.this.value
+								)
 							},
 							difference(ic, leftovers = {}) {
 								sh1(this, leftovers)
@@ -2873,7 +2882,7 @@ export function instance(transformation = ID) {
 								)
 								return (this.this.this = sliced)
 							},
-							*forin() {
+							*keys() {
 								for (
 									let c = this.this.this.init();
 									!c.compare(this.this.this.length().get());
@@ -3154,15 +3163,15 @@ export function instance(transformation = ID) {
 							 */
 							sort(predicate, leftovers = {}) {
 								sh1(this, leftovers)
-								// TODO: create an alias for that thing...
+								// TODO: create a proper [generally available throughout the library] alias for that thing...
 								// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
 								const ALIAS = (x) =>
-									RESULT.infinite
+									RESULT.main.types
 										.InfiniteCounter(
 											RESULT.RESULT.main.addnumber({
 												start: -1
 											})
-										)({ value: x })
+										)(x)
 										.map(this.this.this.this.class.template.icclass)
 
 								const TWO = ALIAS(2),
@@ -3578,13 +3587,140 @@ export function instance(transformation = ID) {
 						defaults: {
 							parentclass: parent,
 							empty: "",
-							names: ["genarr"], 
+							names: ["genarr"],
 							basestr: RESULT.aliases._const(" ")
+						},
+						properties: {
+							currindex: RESULT.aliases._const(0)
 						},
 						methods: {
 							// % Note: the UnlimitedStrings are to be used as the arguments for these methods [but, they are also to accept the finite strings...];
-							split() {
-								// % returns a GeneralArray of UnlimitedStrings;
+							split(useparator = "") {
+								const strarr =
+									this.this.this.this.class.template.parentclass.class()
+								if (RESULT.aliases.is.str(useparator)) {
+									let carryover = ""
+									for (const str of this.this.this.genarr) {
+										const postsplit = str.split(useparator)
+										for (let i = 0; i < postsplit.length; i++) {
+											if (i === 0) {
+												// ! THIS THING __DOES_NOT__ CHECK FOR LENGTH-SAFETY! PRAY FINISH; [It must split the string in 2, and instead represent as an UnlimitedString, whenever it is too long to be represented as 1...];
+												strarr.pushback(
+													carryover.join(postsplit[i])
+												)
+												continue
+											}
+											if (
+												i === postsplit.length - 1 &&
+												!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+													this.this.this.genarr.currindex,
+													this.this.this.genarr.finish()
+												)
+											) {
+												carryover = postsplit[i]
+												continue
+											}
+											strarr.pushback(postsplit[i])
+										}
+									}
+								}
+								if (RESULT.aliases.is.ustr(useparator)) {
+									let prevcounter = this.this.this.init()
+									let currcounter = this.this.this.init()
+									let backupcounter = this.this.this.init()
+									let hasBroken = false
+									const first = useparator.read(useparator.init())
+									for (
+										;
+										!currcounter
+											.length()
+											.get()
+											.compare(this.this.this.length().get());
+										currcounter = currcounter.next()
+									) {
+										while (this.this.this.read(currcounter) !== first)
+											continue
+										backupcounter = backupcounter.next()
+										while (
+											!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+												backupcounter,
+												useparator
+													.totalindex()
+													.map(
+														this.this.this.class.template
+															.parentclass.template.icclass
+													)
+											)
+										) {
+											// ! ISSUE [general]: with the passed instances of recursive classes - decide which parts of them are to be passed, how they should be read, and so on...
+											// * Current decision: by the 'this.this.this->.class' part... [the inner, that is...];
+											if (
+												this.this.this.read(
+													currcounter.jumpForward(backupcounter)
+												) !=
+												useparator.read(
+													backupcounter.map(
+														useparator.this.class.template
+															.parenclass.template.icclass
+													)
+												)
+											) {
+												hasBroken = true
+												break
+											}
+											backupcounter = backupcounter.next()
+										}
+
+										backupcounter = this.this.this.init()
+										if (!hasBroken) {
+											strarr.pushback(
+												this.this.this.copied("slice", [
+													prevcounter,
+													currcounter
+												])
+											)
+											prevcounter =
+												RESULT.main.native.deepCopy(currcounter)
+										}
+										hasBroken = false
+										currcounter =
+											currcounter.jumpForward(backupcounter)
+										continue
+									}
+
+									// * The last one is also needed due to the fact that the 'end' is 'open' in the sense that there is no more separators after it (hence, it follows that the end may also be equal to "");
+									strarr.pushback(
+										this.this.this.copied("slice", [
+											prevcounter,
+											currcounter
+										])
+									)
+								}
+								return strarr
+							},
+							// * Note: this transformation is the reverse of the thing that all the functions working with the data of the string must perform upon the indexes passed by the user...
+							totalindex() {
+								let final = this.this.this.init()
+								for (const x of this.this.this.genarr.keys())
+									final = final.jumpForward(
+										RESULT.main.types
+											.InfiniteCounter(
+												RESULT.main.counters.this.this.this.addnumber(
+													{ start: -1 }
+												)
+											)(genarr.read(x).length)
+											.map(final.class)
+									)
+								return final
+							},
+							begin() {
+								return this.this.this.read(this.this.this.init())
+							},
+							finish() {
+								// % Returns the last non-length index of the string;
+							},
+							end() {
+								// % Returns the last element of the string;
 							},
 							slice(beginning, end) {
 								// % Changes the 'this.this.this' to equal to the string getting cut down
@@ -3596,66 +3732,112 @@ export function instance(transformation = ID) {
 								// % returns the value of the index desired [indexation within methods that use it works in the same way as it does in a result of 'ustr.symbolic()'];
 							},
 							write(index, value) {
-								// % writes the new value to the according index of the string; 
+								// % writes the new value to the according index of the string;
 							},
 							concat(ustring) {
-								// % Concatenates the present string with the newly passed one; 
+								this.this.this.genarr.concat(ustring.genarr)
+								return this.this.this
 							},
 							currelem() {
-								// % Returns the {.get, .set} structure for setting and getting the current string element; 
-								// * Based entirely off the '.genarr' object; 
+								return {
+									get: () => {
+										return this.this.this.genarr.currelem().get()[
+											this.this.this.currindex
+										]
+									},
+									set: (char) => {
+										return this.this.this.genarr
+											.currelem()
+											.set(
+												RESULT.aliases.native.string.sreplaceIndex(
+													this.this.this.genarr
+														.currelem()
+														.get(),
+													this.this.this.currindex,
+													char
+												)
+											)
+									}
+								}
+								// % Returns the {.get, .set} structure for setting and getting the current string element;
+								// * Based entirely off the '.genarr' object;
 							},
-							// ! PROBLEM: the 'currindex'; One wants to be able to do exact same things with an UnlimitedString as with the GeneralArray, thus, one wants an additional 'currindex', which is a native JS number type [for an in-string position representation...]; 
-							// ^ CONCLUSION: before one proceeds further with the 'UnlimitedString' class, the appropriate parts of the CLASS and EXTENSION macros must be completed; 
 							next() {
-								// % Goes to the next string's element [next character]; 
-							}, 
-							previous () {
-								// % Goes to the previous string's element character [previous character]; 
+								if (
+									this.this.this.genarr.currelem().get().length >
+									this.this.this.currindex
+								)
+									return this.this.this.genarr.currelem().get()[
+										++this.this.this.currindex
+									]
+								this.this.this.genarr.next()
+								return this.this.this.genarr.currelem().get()[
+									(this.this.this.currindex = 0)
+								]
+							},
+							previous() {
+								if (this.this.this.currindex > 0)
+									return this.this.this.genarr.currelem().get()[
+										--this.this.this.currindex
+									]
+								this.this.this.genarr.previous()
+								return this.this.this.genarr.currelem().get()[
+									(this.this.this.currindex =
+										this.this.this.genarr.currelem().get().length - 1)
+								]
 							},
 							length() {
 								// % Returns the {.get, .set} length of the string [in terms of the underlying GeneralArray's InfiniteClass class]
 							},
 							copied(method, arguments) {
-								// % Copies the present string, then applies the method given with the arguments given on it; 
+								// % Copies the present string, then applies the method given with the arguments given on it;
 							},
 							insert(index, value) {
-								// % Inserts a new value at a given position in a string; Alters the original string; Affects the length of the string by +1; 
+								// % Inserts a new value at a given position in a string; Alters the original string; Affects the length of the string by +1;
 							},
 							remove(index) {
-								// % Removes the part of the string at a given index; An invers of 'insert' at the same index; 
+								// % Removes the part of the string at a given index; An invers of 'insert' at the same index;
 							},
 							join(separator, frequency) {
-								// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again); 
+								// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again);
 							},
 							reverse() {
-								// % reverses the present string; 
+								// % reverses the present string;
 							},
 							map(f = ID) {
-								// % maps a string to another string using the symbolic function 'f'; 
+								// % maps a string to another (copied) string using the symbolic function 'f';
 							},
 							isEmpty() {
-								// % Checks if the string is empty; NOTE: this ought to find out whether all of the present finite Strings within the UnlimitedString in question are equal to the 'this.template.empty'; 
+								// % Checks if the string is empty; NOTE: this ought to find out whether all of the present finite Strings within the UnlimitedString in question are equal to the 'this.template.empty';
 							},
-							sort(predicate) {	
+							sort(predicate) {
 								// % changes the present string to one that has been ordered in accordance with the predicate; Does 'this.this.this.split("").genarr.sort()';
 							},
 							isSorted(predicate) {
-								// % same as in GeneralArray, except works with the local 'sort'; [Refactor these two, maybe?]; 
+								// % same as in GeneralArray, except works with the local 'sort'; [Refactor these two, maybe?];
 							},
 							indexesOf(ustring) {
-								// % Returns a GeneralArray of the indexes, at which one may find the string in question; 
+								// % Returns a GeneralArray of the indexes, at which one may find the string in question;
 							},
 							firstIndex(ustring) {
-								// % Returns the first of the indexes where the passed string may be found inside the string in question; 
+								// % Returns the first of the indexes where the passed string may be found inside the string in question;
 							},
 							order() {
 								// % Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
-								// * Most memory- and that-from-the-standpoint-of-execution, efficient option; 
+								// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
 							},
 							symbolic() {
 								// % The precise opposite of 'order': shall minimize the length of each and every string available within the underlying GeneralArray;
-								// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; 
+								// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string];
+							},
+							pushback(ustring) {
+								// % Adds a new string/ustring to the ustring in question (in the back);
+							},
+							pushfront(ustring) {
+								// % Adds a new string/ustring to the ustring in question (in the front);
+							},
+							*[Symbol.iterator]() {
+								// % permits the 'for-of' syntax for the character of the loop;
 							}
 							// TODO: pray decide if any more methods are desired here...
 							// * note: the '3' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
@@ -4902,17 +5084,17 @@ export function instance(transformation = ID) {
 	)
 
 	// * Copies an object/array deeply...
-	RESULT.main.deepCopy = RESULT.main.copyFunction({
+	RESULT.main.native.deepCopy = RESULT.main.copyFunction({
 		list: ["array", "object", "function", "symbol"]
 	})
 
 	// * Keeps the functions references intact whilst copying...
-	RESULT.main.dataCopy = RESULT.main.copyFunction({
+	RESULT.main.native.dataCopy = RESULT.main.copyFunction({
 		list: ["array", "object", "symbol"]
 	})
 
 	// * Does a flat copy of something;
-	RESULT.main.flatCopy = RESULT.main.copyFunction({
+	RESULT.main.native.flatCopy = RESULT.main.copyFunction({
 		list: ["arrayFlat", "objectFlat", "function", "symbol"]
 	})
 
