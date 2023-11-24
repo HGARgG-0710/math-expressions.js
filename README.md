@@ -1,9 +1,9 @@
 # math-expressions.js
 
-math-expressions.js is a JavaScript library with a vast variety of covered areas of interest.
+math-expressions.js is a general-purpose JavaScript programming library with a vast variety of covered areas of interest.
 <!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
-Amongst those: very handy utilities, basic statistics, collections, abstract objects, 
-orders, multi-dimensional arrays, equation parsing, unlimited types 
+Amongst them are: very handy utilities, basic statistics, abstract objects, 
+orders, multi-dimensional arrays, equation parsing, unlimited recursion-based (including numeric) types 
 and highly configurable macros for elementary representations of powerful in-program 
 types based off the native JavaScript Objects;
 

@@ -201,9 +201,8 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 			([IN PARTICULAR] BEFORE DOING ANY OF THIS STUFF, PRAY RETHINK WHAT DOES ONE WANT THE UnlimitedString TO TRULY BE!)
 			2.1. Repeatedly Validate throughout the development, solve upcoming definition issues...
 			2.2. Main: 
-				2.2.1. Consider, whether all the GeneralArray methods shall be inside UnlimitedString; 
-				2.2.2. Make a list of new(added)/reworked(old, but redefined) methods for the UnlimitedString; 
-				2.2.3. Consider which new methods from UnlimitedString should go into GeneralArray [and then, possibly redefined in UnlimitedString]; 
+				2.2.1. Make a list of new(added)/reworked(old, but redefined) methods for the UnlimitedString; 
+				2.2.2. Consider which new methods from UnlimitedString should go into GeneralArray [and then, possibly redefined in UnlimitedString]; 
 
 		3. Fix Self-References; 
 			The library's self-references are extremely broken; Must be fixed...
@@ -212,3 +211,11 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 								IDEA: create another file within the library: 'lib.js'; 
 								This file would contain the actual definitions, whereas the 'instance.js' would simply import from there, in order to provide structure for the library
 									+ a powerful way of importing it...
+								
+		5. PROBLEM: with replacing the old API with the new General types: 
+			While an Idea of supreme beauty from the standpoint of structural integrity and the computational range potential [reference to the unlimitedness of the types], 
+				because of this transformation, the speed of the things may suffer greatly [namely, the numerous function calls]; 
+			
+			SO: before finally replacing all the 'Old' native-based apis with the general stuff, pray first ensure the difference in performance; 
+				IF, it is considered by oneself too great, then keep the things under a new name [such as '.fast', for instance...]; 
+				ELSE do as was previously decided; 

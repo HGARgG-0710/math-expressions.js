@@ -194,6 +194,7 @@ export const EXTENSION = (template = {}) => {
 	return PRECLASS(ftemplate)
 }
 
+// ! the 'function' is nominal... Consider, whether one wants to do something about it...
 export const GENERATOR = NOREST(["generator", "inverse", "range"])
 export const PRECLASS = NOREST([
 	"methods",
