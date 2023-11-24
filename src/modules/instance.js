@@ -3141,11 +3141,12 @@ export function instance(transformation = ID) {
 								)
 								return (this.this.this = reversedArr)
 							},
-							// * Just an alias for 'copy'...
-							// ? Question: does one want the aliases in the GeneralArray?
 							map(f = RESULT.id, leftovers = {}) {
 								sh1(this, leftovers)
-								return this.this.this.copy(f, leftovers)
+								return (this.this.this = this.this.this.copy(
+									f,
+									leftovers
+								))
 							},
 							isEmpty(isend = this.this.this.this.class.template.isEnd) {
 								const index = this.this.this.currindex
@@ -3596,6 +3597,28 @@ export function instance(transformation = ID) {
 						methods: {
 							// % Note: the UnlimitedStrings are to be used as the arguments for these methods [but, they are also to accept the finite strings...];
 							split(useparator = "") {
+								// todo: 1. generalize; 2. put it out somwhere...
+								function lengthSafeConcat(a, b) {
+									if (
+										a.length >=
+										RESULT.variables.MAX_STRING_LENGTH.get - b.length
+									)
+										return [
+											a.concat(
+												b.slice(
+													0,
+													RESULT.variables.MAX_STRING_LENGTH
+														.get - a.length
+												)
+											),
+											b.slice(
+												RESULT.variables.MAX_STRING_LENGTH.get -
+													a.length
+											)
+										]
+									return [a.concat(b)]
+								}
+
 								const strarr =
 									this.this.this.this.class.template.parentclass.class()
 								if (RESULT.aliases.is.str(useparator)) {
@@ -3604,10 +3627,10 @@ export function instance(transformation = ID) {
 										const postsplit = str.split(useparator)
 										for (let i = 0; i < postsplit.length; i++) {
 											if (i === 0) {
-												// ! THIS THING __DOES_NOT__ CHECK FOR LENGTH-SAFETY! PRAY FINISH; [It must split the string in 2, and instead represent as an UnlimitedString, whenever it is too long to be represented as 1...];
-												strarr.pushback(
-													carryover.join(postsplit[i])
-												)
+												lengthSafeConcat(
+													carryover,
+													postsplit[i]
+												).map(strarr.pushback)
 												continue
 											}
 											if (
@@ -3713,28 +3736,60 @@ export function instance(transformation = ID) {
 									)
 								return final
 							},
+							// ! TOREFACTOR: a great thing one has noticed - the same functions that get to be used in different object's contexts tend to reappear;
+							// TODO: refactor all of those [put into the 'refactor.mjs' file...];
+							finish() {
+								return this.this.this.length().get().previous()
+							},
+							// ! fix the 'begin()' and 'end()', they must change position and do that stuff instead...
 							begin() {
 								return this.this.this.read(this.this.this.init())
 							},
-							finish() {
-								// % Returns the last non-length index of the string;
-							},
 							end() {
-								// % Returns the last element of the string;
+								return this.this.this.read(this.this.this.finish())
 							},
-							slice(beginning, end) {
-								// % Changes the 'this.this.this' to equal to the string getting cut down
+							slice(
+								beginning = this.this.this.init(),
+								end = this.this.this.finish()
+							) {
+								// % Changes the 'this.this.this' to equal to the string getting cut down;
 							},
 							loop() {
 								// % returns a GeneralArray-like structure, allowing one to run loops on the UnlimitedString object in question;
 							},
 							read(index) {
-								// % returns the value of the index desired [indexation within methods that use it works in the same way as it does in a result of 'ustr.symbolic()'];
+								// ^ CONCLUSION: this is __the__ most desired way to do it within the library ONLY when one is intending for the method in question to be non-mutating...
+								return this.this.this
+									.copied("symbolic", [])
+									.genarr.read(index)
 							},
 							write(index, value) {
-								// % writes the new value to the according index of the string;
+								const lgaind = this.this.this.genarr.currindex
+								const lusind = this.this.this.currindex
+								this.this.this.begin()
+								for (const str of this.this.this.genarr)
+									for (c of str) {
+										if (
+											this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+												index.map(
+													this.this.this.this.class.template
+														.parentclass.template.icclass
+												),
+												this.this.this.init()
+											)
+										)
+											break
+										this.this.this.next()
+										index = index.previous()
+									}
+								this.this.this.currelem().set(value)
+								this.this.this.genarr.currindex = lgaind
+								this.this.this.currindex = lusind
+								return this.this.this
 							},
 							concat(ustring) {
+								if (RESULT.aliases.is.str(ustring))
+									return this.this.this.pushback(ustring)
 								this.this.this.genarr.concat(ustring.genarr)
 								return this.this.this
 							},
@@ -3759,8 +3814,6 @@ export function instance(transformation = ID) {
 											)
 									}
 								}
-								// % Returns the {.get, .set} structure for setting and getting the current string element;
-								// * Based entirely off the '.genarr' object;
 							},
 							next() {
 								if (
@@ -3789,32 +3842,83 @@ export function instance(transformation = ID) {
 							length() {
 								// % Returns the {.get, .set} length of the string [in terms of the underlying GeneralArray's InfiniteClass class]
 							},
-							copied(method, arguments) {
-								// % Copies the present string, then applies the method given with the arguments given on it;
+							copied(method, _arguments = [], f = ID) {
+								const acopy = this.this.this.copy(f)
+								if (
+									acopy.this.hasOwnProperty(method) &&
+									typeof acopy[method] === "function"
+								)
+									acopy[method](..._arguments)
+								return acopy
 							},
 							insert(index, value) {
-								// % Inserts a new value at a given position in a string; Alters the original string; Affects the length of the string by +1;
+								// ! Allow the 'concat' and other such functions in the UnlimitedString and GeneralArray to take multiple arguments [generalize from the 1/2-cases];
+								return (this.this.this = this.this.this
+									.copied("slice", [
+										this.this.this.init(),
+										index.previous()
+									])
+									.concat(value)
+									.concat(this.this.this.copied("slice", [index])))
 							},
 							remove(index) {
-								// % Removes the part of the string at a given index; An invers of 'insert' at the same index;
+								return this.this.this.slice(index, index)
 							},
-							join(separator, frequency) {
+							join(
+								separator,
+								frequency = RESULT.aliases._const(
+									RESULT.main.types
+										.InfiniteCounter(
+											RESULT.main.counters.addnumber({ start: -1 })
+										)
+										.class(1)
+										.map(
+											this.this.this.this.class.template.parentclass
+												.template.icclass
+										)
+								)
+							) {
 								// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again);
+								// * Requires work with True numbers; 
 							},
 							reverse() {
-								// % reverses the present string;
+								const x = this.this.this.map()
+								x.genarr.reverse()
+								for (y in x.genarr)
+									x.write(y, y.split("").reverse().join(""))
+								return (this.this.this = x)
 							},
 							map(f = ID) {
-								// % maps a string to another (copied) string using the symbolic function 'f';
+								return (this.this.this = this.this.this.copy(f))
+							},
+							copy(f = ID) {
+								const emptystr = this.this.this.this.class.class()
+								emptystr.this.genarr = this.this.this.genarr.copy()
+								for (const x of emptystr.keys()) emptystr.write(x, f(x))
+								return emptystr
+							},
+							*keys() {
+								let curr = this.this.this.init()
+								for (
+									;
+									!curr.compare(this.this.this.length().get());
+									curr = curr.next()
+								)
+									yield curr
 							},
 							isEmpty() {
-								// % Checks if the string is empty; NOTE: this ought to find out whether all of the present finite Strings within the UnlimitedString in question are equal to the 'this.template.empty';
+								for (const x of this.this.this.genarr)
+									if (x !== "") return false
+								return true
 							},
 							sort(predicate) {
-								// % changes the present string to one that has been ordered in accordance with the predicate; Does 'this.this.this.split("").genarr.sort()';
+								return this.this.this.split("").genarr.sort(predicate)
 							},
 							isSorted(predicate) {
-								// % same as in GeneralArray, except works with the local 'sort'; [Refactor these two, maybe?];
+								return this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+									this.this.this.copied("sort", [predicate]),
+									this.this.this
+								)
 							},
 							indexesOf(ustring) {
 								// % Returns a GeneralArray of the indexes, at which one may find the string in question;
@@ -3831,13 +3935,23 @@ export function instance(transformation = ID) {
 								// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string];
 							},
 							pushback(ustring) {
-								// % Adds a new string/ustring to the ustring in question (in the back);
+								if (RESULT.aliases.is.str(ustring))
+									return this.this.this.genarr.pushback(ustring)
+								return this.this.this.concat(ustring)
 							},
 							pushfront(ustring) {
-								// % Adds a new string/ustring to the ustring in question (in the front);
+								if (RESULT.aliases.is.str(ustring)) {
+									this.this.this.genarr.pushfront(ustring)
+									// ^ IDEA: let all the affecting object's methods return this.this.this! This way, one'll be able to chain them in a declarative style!
+									return this.this.this
+								}
+								return (this.this.this = ustring.copied("concat", [
+									this.this.this
+								]))
 							},
 							*[Symbol.iterator]() {
-								// % permits the 'for-of' syntax for the character of the loop;
+								for (const str of this.this.this.genarr)
+									for (const sym of str) yield sym
 							}
 							// TODO: pray decide if any more methods are desired here...
 							// * note: the '3' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
