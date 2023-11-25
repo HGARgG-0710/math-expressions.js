@@ -9,6 +9,8 @@ import {
 	EXTENSION
 } from "./macros.js"
 
+import { classes } from "./refactor.js"
+
 // ! PROBLEM: with the native JS 'getters/setters' - namely, the fact that their copying methods seem to differ from the simple good-old '.bind': one ought to create more of the various copying functions for this stuff...
 // * SOLUTION: replace all the places where they appear with a '.get()/.set() interface...';
 // ^ IDEA: generalize the interface to a macro;
@@ -1174,7 +1176,11 @@ export function instance(transformation = ID) {
 			ustr: RESULT.main.types.UnlimitedString,
 
 			// ! USE THIS ONE ESPECIALLY EXTENSIVELY...
-			property: (p) => (x) => x[p],
+			property:
+				(p) =>
+				(x) =>
+				(...args) =>
+					x[p](...args),
 			trim:
 				(n = 1) =>
 				(x) =>
@@ -2188,19 +2194,16 @@ export function instance(transformation = ID) {
 							difference(ic, leftovers = {}) {
 								sh1(this, leftovers)
 								let current = this.this.class.class()
-								// TODO: generalize with 'const propcall = (prop) => ((x) => x[prop]())'
-								// ? If not created that 'alias' already...
-								const next = ic.compare(this.this.this, leftovers)
-									? (x) => x.previous()
-									: (x) => x.next()
-								// * Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
-								// TODO: above *;
-								this.class.static.whileloop(
+								const next = RESULT.aliases.property(
+									ic.compare(this.this.this, leftovers)
+										? "previous"
+										: "next"
+								)
+								// TODO: Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
+								this.this.class.static.whileloop(
 									RESULT.main.deepCopy(this.this.this),
 									ic,
-									() => {
-										current = next(current)
-									},
+									() => (current = next(current)()),
 									next,
 									leftovers.comparison
 								)
@@ -2292,7 +2295,7 @@ export function instance(transformation = ID) {
 				// * with the 'value' getting changed in the 'switch' hanged in the 'switch'
 				// TODO: reimplement all the methods from the GeneralArray in such a way that it only operates on the 'this.this.this'
 				//
-				// ! ABOUT THE '.get-.set' (rethinking);
+				// ! ABOUT THE '.get-.set' for the 'this.this.this' bound to CLASSes instances' structure... (rethinking);
 				// * The code works perfectly fine, the only question is whether that is the way one wants it to work:
 				// 	% 1. If left as-is, the methods of the class's instance will all work with the 'this.this.this', which is the field of 'this.this', which unless changed always stays the same; So, the thing works;
 				// 	% 2. If changed to the '.get-.set' construction instead, one'll have a more flexible way to change (and affect) the setting of the 'this';
@@ -2517,27 +2520,13 @@ export function instance(transformation = ID) {
 								a.restart()
 								return a
 							},
-							// ! shorten the code with these 4 [begin, end, init, finish]...
-							begin() {
-								return this.this.this.go(
-									this.this.this.init(),
-									RESULT._const(true)
-								)
-							},
-							end() {
-								// * skipping the check because one knows that it would be 'true' anyway...
-								return this.this.this.go(
-									this.this.this.finish(),
-									RESULT._const(true)
-								)
-							},
+							begin: classes.begin,
+							end: classes.end,
 							init() {
 								return this.this.this.this.class.template.icclass.class()
 							},
 							// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
-							finish() {
-								return this.this.this.length().get().previous()
-							},
+							finish: classes.finish,
 							// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
 							// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
 							go(
@@ -2549,7 +2538,6 @@ export function instance(transformation = ID) {
 									throw new RangeError(
 										"Range error in the '.go' method 'index' argument whilst calling."
 									)
-
 								return (this.this.this.currindex = index)
 							},
 							// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
@@ -2691,6 +2679,7 @@ export function instance(transformation = ID) {
 							length() {
 								// ? QUESTION: does one want the '.length().get' to work like a function [current - finding the length]; or like a static value changed by transformations?
 								// ? Or like a getter? As in: 'get get() {...}'; Then, one'd drop the '()' from '.get()' during the calling procedure...
+								// ? OR like a "() => {}"??? Which of the three approaches for this structure is to be chosen?
 								// * pray think on it...
 								return {
 									object: RESULT._const(this.this.this),
@@ -3164,17 +3153,10 @@ export function instance(transformation = ID) {
 							 */
 							sort(predicate, leftovers = {}) {
 								sh1(this, leftovers)
-								// TODO: create a proper [generally available throughout the library] alias for that thing...
-								// ? Make this the 'fromNumber'??? Would be quite nice, considering how grotesque it is...
-								const ALIAS = (x) =>
-									RESULT.main.types
-										.InfiniteCounter(
-											RESULT.RESULT.main.addnumber({
-												start: -1
-											})
-										)(x)
-										.map(this.this.this.this.class.template.icclass)
-
+								const ALIAS = RESULT.aliases.native.number.fromNumber({
+									icclass: this.this.this.this.class.template.icclass,
+									start: -1
+								}).function
 								const TWO = ALIAS(2),
 									THREE = ALIAS(3)
 
@@ -3584,6 +3566,14 @@ export function instance(transformation = ID) {
 				// That's for the addition of things into the UnlimitedString;
 				// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
 				UnlimitedString: function (parent = RESULT.main.LastIndexArray) {
+					// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
+					const ALIAS = (_this) =>
+						RESULT.aliases.native.number.fromNumber({
+							icclass:
+								_this.this.this.this.class.template.parentclass.template
+									.icclass,
+							start: -1
+						}).function
 					return EXTENSION({
 						defaults: {
 							parentclass: parent,
@@ -3668,7 +3658,7 @@ export function instance(transformation = ID) {
 											!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
 												backupcounter,
 												useparator
-													.totalindex()
+													.tototalindex()
 													.map(
 														this.this.this.class.template
 															.parentclass.template.icclass
@@ -3722,9 +3712,18 @@ export function instance(transformation = ID) {
 								return strarr
 							},
 							// * Note: this transformation is the reverse of the thing that all the functions working with the data of the string must perform upon the indexes passed by the user...
-							totalindex() {
+							tototalindex(
+								ind = this.this.this.genarr.currindex,
+								subind = this.this.this.currindex
+							) {
+								const _ALIAS = ALIAS(this)
 								let final = this.this.this.init()
-								for (const x of this.this.this.genarr.keys())
+								for (const x of this.this.this.genarr
+									.copied("slice", [
+										this.this.this.init(),
+										ind.previous()
+									])
+									.keys())
 									final = final.jumpForward(
 										RESULT.main.types
 											.InfiniteCounter(
@@ -3734,26 +3733,58 @@ export function instance(transformation = ID) {
 											)(genarr.read(x).length)
 											.map(final.class)
 									)
-								return final
+								return final.jumpForward(_ALIAS(subind))
 							},
-							// ! TOREFACTOR: a great thing one has noticed - the same functions that get to be used in different object's contexts tend to reappear;
-							// TODO: refactor all of those [put into the 'refactor.mjs' file...];
-							finish() {
-								return this.this.this.length().get().previous()
+							finish: classes.finish,
+							go(
+								index,
+								range = this.this.this.this.class.template.parentclass
+									.template.icclass.template.range
+							) {
+								if (!range(index.value))
+									throw new RangeError(
+										"Range error in the '.go' method 'index' argument whilst calling."
+									)
+								const nind = this.this.this.fromtotalindex(index)
+								this.this.this.genarr.currindex = nind[0]
+								this.this.this.currindex = nind[1]
+								return this.this.this
 							},
-							// ! fix the 'begin()' and 'end()', they must change position and do that stuff instead...
-							begin() {
-								return this.this.this.read(this.this.this.init())
+							fromtotalindex(index) {
+								const _ALIAS = ALIAS(this)
+								let present = this.this.this.init()
+								let inarrind = this.this.this.init()
+								index = index.map(present.class)
+								let currstr = ""
+								for (const x of this.genarr.copy((str) =>
+									_ALIAS(str.length)
+								)) {
+									inarrind = inarrind.next()
+									currstr = x
+									present = present.jumpForward(x)
+									if (present.compare(index)) break
+								}
+								return [
+									inarrind,
+									currstr.length -
+										present.difference(index).map(
+											RESULT.main.types.InfiniteCounter(
+												RESULT.main.counters.addnumber({
+													start: -1
+												})
+											)
+										).value
+								]
 							},
-							end() {
-								return this.this.this.read(this.this.this.finish())
-							},
+							begin: classes.begin,
+							end: classes.end,
 							slice(
 								beginning = this.this.this.init(),
 								end = this.this.this.finish()
 							) {
 								// % Changes the 'this.this.this' to equal to the string getting cut down;
 							},
+							// ? Does one want that manner of a loop even? [Pray consider whether the thing in question is desirable after all, relook at the GeneralArray's version of the method...]
 							loop() {
 								// % returns a GeneralArray-like structure, allowing one to run loops on the UnlimitedString object in question;
 							},
@@ -3840,7 +3871,81 @@ export function instance(transformation = ID) {
 								]
 							},
 							length() {
-								// % Returns the {.get, .set} length of the string [in terms of the underlying GeneralArray's InfiniteClass class]
+								return {
+									get: () => {
+										// ! REALLY - refactor those .read(.finish()) and .read(.init())...
+										return this.this.this.tototalindex(
+											this.this.this.genarr.length().get(),
+											this.this.this.genarr.read(
+												this.this.this.genarr.finish()
+											)
+										)
+									},
+									set: (newlen) => {
+										const _ALIAS = ALIAS(this)
+										// ! THIS IS BROKEN! Pray fix the thing so that it could work in the following fashion...
+										const __ALIAS = ALIAS(newlen.class)
+										if (
+											!this.this.this.this.class.template.parentclass.template.icclass.template.range(
+												newlen.value
+											)
+										)
+											throw new RangeError(
+												"Index range error for array length setting"
+											)
+
+										// TODO: pray finish this thing...
+										if (
+											newlen.compare(this.this.this.length().get())
+										) {
+											// * Length increase;
+											if (
+												newlen
+													.difference(
+														this.this.this
+															.length()
+															.get()
+															.map(newlen.class)
+													)
+													.compare(
+														__ALIAS(
+															RESULT.variables
+																.MAX_STRING_LENGTH -
+																this.this.this.genarr.read(
+																	this.this.this.genarr.finish()
+																)
+														)
+													)
+											) {
+												// * Length increase; Involves '.pushback()' of base strings of correspondent lengths...; Return before leaving the 'if'...
+											}
+										}
+										// * Length decrease;
+
+										if (
+											this.this.this
+												.length()
+												.get()
+												.difference(
+													newlen.map(
+														this.this.this.length().get()
+															.class
+													)
+												)
+												.compare(
+													_ALIAS(
+														RESULT.variables
+															.MAX_STRING_LENGTH -
+															this.this.this.genarr.read(
+																this.this.this.genarr.finish()
+															)
+													)
+												)
+										) {
+											// * Length increase; Involves '.pushback()' of base strings of correspondent lengths...; Return before leaving the 'if'...
+										}
+									}
+								}
 							},
 							copied(method, _arguments = [], f = ID) {
 								const acopy = this.this.this.copy(f)
@@ -3879,7 +3984,7 @@ export function instance(transformation = ID) {
 								)
 							) {
 								// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again);
-								// * Requires work with True numbers; 
+								// * Requires work with True numbers;
 							},
 							reverse() {
 								const x = this.this.this.map()
@@ -3920,19 +4025,26 @@ export function instance(transformation = ID) {
 									this.this.this
 								)
 							},
-							indexesOf(ustring) {
+							// ^ IDEA: for making the implementation of 'indexesOf' more efficient - one gives it two arguments for enabling halting - 'halt (boolean)' [whether to halt] and 'haltAfter (counter)' [length().get() of the final array, after which to halt...]
+							// TODO: let this decision [idea] be reflected upon the GeneralArray definition accordingly as well...; 
+							indexesOf(ustring, halt = false, halfAfter = Infinity) {
+								// % Returns the first of the indexes where the passed string may be found inside the string in question;
 								// % Returns a GeneralArray of the indexes, at which one may find the string in question;
 							},
 							firstIndex(ustring) {
-								// % Returns the first of the indexes where the passed string may be found inside the string in question;
+								return this.this.this.indexesOf(ustring, true, this.this.this.init().next())
 							},
 							order() {
 								// % Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 								// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
-							},
+							},	
+							// The precise opposite of 'order': minimizes the length of each and every string available within the underlying GeneralArray;
+							// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code; 
 							symbolic() {
-								// % The precise opposite of 'order': shall minimize the length of each and every string available within the underlying GeneralArray;
-								// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string];
+								const symstr = this.this.this.this.class()
+								for (const sym of this.this.this) 
+									symstr.pushback(sym)	
+								return symstr
 							},
 							pushback(ustring) {
 								if (RESULT.aliases.is.str(ustring))
@@ -3954,7 +4066,7 @@ export function instance(transformation = ID) {
 									for (const sym of str) yield sym
 							}
 							// TODO: pray decide if any more methods are desired here...
-							// * note: the '3' must work similar to GeneralArray, but work on a symbol-by-symbol basis...
+							// * note: the 'loop()' must work in a fashion similar to that of 'GeneralArray', but on a symbol-by-symbol basis...; 
 							// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass';
 							// * Current list [add to GeneralArray]:
 							// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
