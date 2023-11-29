@@ -1,11 +1,32 @@
 # math-expressions.js
 
-math-expressions.js is a general-purpose JavaScript programming library with a vast variety of covered areas of interest.
-<!-- TODO: this is temporary, after having added more beautiful things to the 1.0, pray make this more full... -->
+math-expressions.js is a general-purpose abstract-type JavaScript programming library with a vast variety of covered areas of interest.
+
 Amongst them are: very handy utilities, basic statistics, abstract objects, 
 orders, multi-dimensional arrays, equation parsing, unlimited recursion-based (including numeric) types 
 and highly configurable macros for elementary representations of powerful in-program 
 types based off the native JavaScript Objects;
+
+The library's two ultimate goals are to provide: 
+
+1. A complete abstract wrapper-interface, sufficient for 
+working with various unlimited objects (and to provide an 
+implementation of a type system with immidiate freedom of 
+expression greater than that of native JavaScript). 
+
+2. An programmatic implementation of an interface for working with 
+the most elementary mathematical abstractions 
+(such as orders, maps, numbers, sets) on a numerically unlimited 
+level (which would effectively enable one to perform computations
+arbitrary in nature or in size, without having to alter one's 
+code for it too greatly)
+
+The current version (v1.0) is not built upon the concepts of 
+continuations, instead using the plain JS stack, so its final 
+computational power is still (sadly) limited (so, the library's final objectives are still not quite reached); 
+
+There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
+in one of the nearest future versions. 
 
 <!-- * About the compatibility changes: -->
 <!-- * The compatibility is broken in 3 places: 1. the imports and 2. the default arguments of functions... 3. (sometimes) The precise argument lists and definitions of functions (though, the changes were always only generalizing, expansive and constructive...) -->

@@ -46,11 +46,12 @@ export const TEMPLATE = function (template = {}) {
 			this: null,
 			rest: {},
 			transform: ID,
+			templateword: "template",
 			...template
 		},
 		function: function (template = this.template.deftemplate) {
 			const _class = {
-				template: {
+				[this.template.templateword]: {
 					...(this.template.isthis
 						? this.template.defaults(this.template.this)
 						: this.template.defaults),
@@ -202,24 +203,28 @@ export const PRECLASS = NOREST([
 	"classref",
 	"selfname",
 	"subselfname",
-	"isgeneral", 
-	"properties"
+	"isgeneral",
+	"properties",
+	"isname"
 ])
 
 // ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
 // ? Make into a template? [Highly doubtful currently...]
 // * Use all over the place...
+// ^ IDEA: generalize these, include into the 'this.this.this.this.class' as the '.is(something)' method;
+// * Ought to be general...Must be such that '.is(.class.class()) == true', for all other x: '.is(x) == false'
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
-		recursive: false,
-		selfname: "this",
-		subselfname: "this",
-		classref: "class",
 		methods: {},
 		static: {},
+		recursive: false,
+		classref: "class",
+		selfname: "this",
+		subselfname: "this",
 		isgeneral: {},
-		properties: {}
+		properties: {},
+		isname: "is"
 	})
 	const template = PRECLASS(ptemplate)
 	// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod';
@@ -236,7 +241,7 @@ export const CLASS = (ptemplate = {}) => {
 			// TODO: after having completed the CLASS, pray restructure the definition of the 'EXTENSION' based off it...
 			if (this.recursive) {
 				V = {
-					[this.classref]: p,
+					[this.classref]: this,
 					[this.selfname]: {
 						...V
 					}
@@ -264,10 +269,21 @@ export const CLASS = (ptemplate = {}) => {
 				)
 			}
 
-			const O = this.recursive ? V[this.selfname][this.subselfname]: V
-			for (const p in this.properties)
-				O[p] = this.properties[p].bind(this)(...args)
+			const O = this.recursive ? V[this.selfname][this.subselfname] : V
+			for (const pr in this.properties)
+				O[p] = this.properties[pr].bind(this)(...args)
 			return V
+		}.bind(p)
+		p[p.isname] = function (x) {
+			// ! These kinds of inter-dependencies throughout the library are SUPERBLY frequent; Pray think on how to make these things work...;
+			// ^ IDEA: export all the stuff from 'RESULT'; Then, just reference it in the 'RESULT' inside the 'instance'... (so, the 'instance' will just "compile" the library in accordance to the user's liking...);
+			// * Note: it'll have to be checked against scopes... (namely, how does 'const' behave precisely when faced with changing scopes...); One'll implement the issue with the STATIC REFERENCES as well, then! [Ability for the user to alter certain parts of the library without having to affect the rest...];
+
+			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is']; 
+			return (
+				x.hasOwnProperty("class") &&
+				RESULT.main.structure.objStructure().function(this).isisomorphic(x.class)
+			)
 		}.bind(p)
 		return p
 	}

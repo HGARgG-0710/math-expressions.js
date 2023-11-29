@@ -208,3 +208,5 @@ export * from "./modules/instance.js"
 // * Current decision: let they be non-affectable, but the values for them be changeable;
 
 // ! Refactor the library hardcorely - create a whole new file with pure refactor definitions and call it 'refactor.mjs'; Make those importable; 
+
+// TODO [general]: there is a great uncleanness inside the RESULT definition in the 'instance()' function of the 'instance' file; The definition possesses poorly ordered subdefinitions; Pray take them out; [EXAMPLE - a TEMPLATE, relying upon the 'RESULT' itself on the highest of levels of definition]

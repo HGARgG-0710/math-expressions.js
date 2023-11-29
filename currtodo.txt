@@ -219,3 +219,5 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 			SO: before finally replacing all the 'Old' native-based apis with the general stuff, pray first ensure the difference in performance; 
 				IF, it is considered by oneself too great, then keep the things under a new name [such as '.fast', for instance...]; 
 				ELSE do as was previously decided; 
+
+		6. Work on the Elementarization of all the library bits [abstraction from the 'instance' function]; 

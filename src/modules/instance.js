@@ -9,7 +9,7 @@ import {
 	EXTENSION
 } from "./macros.js"
 
-import { classes } from "./refactor.js"
+import { classes, general } from "./refactor.js"
 
 // ! PROBLEM: with the native JS 'getters/setters' - namely, the fact that their copying methods seem to differ from the simple good-old '.bind': one ought to create more of the various copying functions for this stuff...
 // * SOLUTION: replace all the places where they appear with a '.get()/.set() interface...';
@@ -28,7 +28,6 @@ export const StaticThisTransform = (templated, template) => {
 export function instance(transformation = ID) {
 	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
 	const RESULT = {
-		// ? Should 'aliases' get renamed into 'semantic'? Or something else? Think, pray...
 		aliases: {
 			// todo: work extensively on the precise list of aliases... Also, their names...
 
@@ -1203,17 +1202,10 @@ export function instance(transformation = ID) {
 				fn: (x) => x instanceof Function,
 				fun: (x) => typeof x === "function",
 				bi: (x) => x instanceof BigInt,
-				ustr: (x) => {
-					// TODO: define; would come in VERY handy...
-				},
-				genarr: (x) => {
-					// TODO: yet again, pray do - extremely useful; These kinds of methods ought to answer the question of 'does the instance (object) in question implement the structure of the class in question or not? (the answer is a boolean)'
-				}
 			}
 			// ? [old todo - delete?]: create a derived function ensureParam(), that too would take a function, expected number of non-undefined args and a bunch of arguments (either an array of them, or directly -- just like that...); let it ensure that all the given arguments are non-undefined...; in case it is not so, call different given function;
 		},
 		main: {
-			// ! order the definitions...
 			// ! REMINDER: consistency check across the entire library... [GRAND CLEANUP...]
 
 			// ! implement the 'printi' for generalarrays and ic-s;
@@ -1850,34 +1842,52 @@ export function instance(transformation = ID) {
 
 			// TODO: pray finish the sketch for the 'Structure' API... (used for extended work with native JS object/array-forms...)
 			structure: {
-				objStructure(template = {}) {
+				objStructure: function (template = {}) {
 					return {
 						template: {
-							form: (x) => x instanceof Object,
-							compequiv: ID,
+							form: RESULT.aliases.is.obj,
+							// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
+							compequiv: function (...args) {
+								if (args.length === 1) return args[1]
+								return true
+							},
 							...template
 						},
-						function(obj = {}) {
+						function: function (obj = {}) {
 							return {
 								template: {
 									template: this.template,
 									compequiv: this.template.compequiv,
-									form: this.template.form
+									form: this.template.form,
+									object: obj
 								},
-								// ^ note: with this function one has [largely], overdone the entire problem with the
-								// ^ 'form-representation': Anything that can be done with a native JS object can be done with a form!
-								// The only issues now are - the EXTENSIVENESS of the present version [it's a sketch, incomplete, requires more thought...]
-								// * for form(structure)-copying
 								equivalent: function () {
 									const o = {}
 									// ? Just what arguments instead of 'this.template.template' does one desire for the objStructure in this one case, pray tell?
-									for (const x in obj)
-										o[x] = this.template.form(obj[x])
+									for (const x in this.template.object)
+										o[x] = this.template.form(this.template.obj[x])
 											? objStructure(this.template.template)
-													.function(obj[x])
+													.function(this.template.obj[x])
 													.equivalent()
 											: this.template.compequiv(obj[x])
 									return o
+								},
+								isisomorphic(object, current = this.template.object) {
+									if (!this.template.form(object)) {
+										return (
+											!this.template.form(current) &&
+											this.template.compequiv(object, current)
+										)
+									}
+									const keys = Object.keys(object)
+									return (
+										RESULT.valueCompare(keys, Object.keys(current)) &&
+										!!RESULT.min(
+											keys.map((k) =>
+												this.isisomorphic(object[k], current[k])
+											)
+										)
+									)
 								}
 							}
 						}
@@ -1886,7 +1896,7 @@ export function instance(transformation = ID) {
 
 				arrStructure(template = {}) {
 					return this.objStructure({
-						form: (x) => x instanceof Array,
+						form: RESULT.aliases.is.arr,
 						...template
 					})
 				}
@@ -1897,7 +1907,7 @@ export function instance(transformation = ID) {
 			// ^ idea [for the further restrucruring of the library] - take out most of the stuff from 'aliases', which isn't (in itself) any manner of an alias at all; The present case of 'min/max' is an excellent example;
 			// 		% An alias ought to do little less but add a new name for a special case of a general thing or a native part of JS [example String->str];
 			orders: {
-				// ! GENERALIZE AND REFACTOR EVERYTHING IN HERE... [some very early code indeed...];
+				// ! GENERALIZE AND REFACTOR EVERYTHING IN HERE... [this is some very early code indeed...];
 				linear(array = [], reflexive = true) {
 					return reflexive
 						? (a, b) => array.indexOf(a) <= array.indexOf(b)
@@ -2054,7 +2064,7 @@ export function instance(transformation = ID) {
 						for (
 							;
 							boundprop(i.currelem().get());
-							i.currelem().set(i.currelem + (-1) ** reversed)
+							i.currelem().set(i.currelem().get() + (-1) ** reversed)
 						) {
 							if (this.template.soughtProp(arrrec[i.currelem().get()]))
 								return i
@@ -2333,64 +2343,57 @@ export function instance(transformation = ID) {
 								currindex: this.template.icclass.class()
 							}
 						},
-						// ? Should this also become a part of the new CLASS definition?
+						// ? Should this also become a part of the new CLASS definition? [a default, for instance?]
 						transform: StaticThisTransform,
-						static: {
-							empty(template = this.this.template) {
-								return this.this.class(template).class()
-							},
-							pushbackLoop(template = {}) {
-								return {
-									template: {
-										arguments: [],
-										transform: RESULT.id,
-										...template
-									},
-									function(b) {
-										return this.template.target.pushback(
-											this.template.transform(
-												b.object().currelem().get()
-											),
-											...this.template.arguments
+						static: (() => {
+							const R = {
+								empty(template = this.this.template) {
+									return this.this.class(template).class()
+								},
+								// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
+								fromArray(arr, leftovers = {}) {
+									sh1static(this, leftovers)
+									const generalized = this.empty()
+									for (const a of arr)
+										generalized.pushback(a, leftovers)
+									return generalized
+								},
+								fromCounter(counter, leftovers = {}) {
+									sh1static(this, leftovers)
+									const narr = this.empty()
+									counter.loop(() =>
+										narr.pushback(
+											this.this.this.class.template.default()
 										)
-									}
+									)
+									return narr
 								}
-							},
-							// * This is pretty much THE SAME code as above for the 'pushbackLoop';
-							// ! Strongly desired it is by one for it to be generalized [with 'function-name'-based approach, somewhere in the TODOS;]...
-							pushfrontLoop(template = {}) {
-								return {
-									template: {
-										arguments: [],
-										transform: RESULT.id,
-										...template
-									},
-									function(b) {
-										return this.template.target.pushfront(
-											this.template.transform(
-												b.object().currelem().get()
-											),
-											...this.template.arguments
-										)
-									}
-								}
-							},
-							// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
-							fromArray(arr, leftovers = {}) {
-								sh1static(this, leftovers)
-								const generalized = this.empty()
-								for (const a of arr) generalized.pushback(a, leftovers)
-								return generalized
-							},
-							fromCounter(counter, leftovers = {}) {
-								sh1static(this, leftovers)
-								const narr = this.empty()
-								counter.loop(() =>
-									narr.pushback(this.this.this.class.template.default())
-								)
-								return narr
 							}
-						},
+							for (const x of ["back", "front"]) {
+								R[`push${x}`] = TEMPLATE({
+									defaults: {
+										arguments: [],
+										transform: RESULT.id,
+										...template
+									},
+									function: function (b) {
+										// ? Perhaps, provide just 'b' in its stead? Pray consider...
+										// * The advantages of this thing is that it allows for a far more beautiful, convinient and native-JS-compatible syntax along with shorter identity names...;
+										// * The advantages of the alternative approach is the total number of arguments and the greater structural elegance...;
+										return this.template.target[`push${x}`](
+											this.template.transform(
+												b.object().currelem().get(),
+												b.object().currindex,
+												b.object(),
+												b
+											),
+											...this.template.arguments
+										)
+									}
+								})
+							}
+							return R
+						})(),
 						methods: {
 							next() {
 								return (this.this.this.currindex =
@@ -3036,7 +3039,9 @@ export function instance(transformation = ID) {
 								sh1(this, leftovers)
 								return this.this.this.read(i, leftovers)
 							},
-							// * Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
+							// ? Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
+							// ^ IDEA: for making the implementation of 'indexesOf' more efficient - one gives it two arguments for enabling halting - 'halt (boolean)' [whether to halt] and 'haltAfter (counter)' [length().get() of the final array, after which to halt...]
+							// TODO: let this decision [idea] be reflected upon the GeneralArray definition accordingly as well...;
 							indexesOf(x, leftovers = {}) {
 								sh1(this, leftovers)
 								const indexes = this.this.this.empty()
@@ -3077,20 +3082,18 @@ export function instance(transformation = ID) {
 								})
 								return index
 							},
-							// TODO: template the 'baseelem' argument, pray;
 							// ! WORK ON THE TEMPLATES MATTER FURTHER:
 							// 		% 1. Does one want to change this ridiculous trailing 'leftovers' into anything more useful? [namely, make the functions templates...];
 							// 		% 2. If 1, then one ought to consider re-implementing some parts of the CLASS and EXTENSION macro [again!] for the sake of addition of the TEMPLATEs into the library's CLASSes;
 							shiftForward(
 								times,
 								icclass = this.this.this.this.class.template.icclass,
-								baseelem = undefined,
+								baseelem = this.this.this.this.class.template.baseelem,
 								leftovers = {}
 							) {
 								sh1(this, leftovers)
-								const x = this.this.this.this.class.static
-									.fromArray([baseelem])
-									.repeat(times, icclass)
+								const x =
+									this.this.this.this.class.static.fromCounter(times)
 								return (this.this.this = x.concat(
 									this.this.this,
 									leftovers
@@ -3562,9 +3565,7 @@ export function instance(transformation = ID) {
 					}
 				},
 
-				// ^ IDEA [for a decision for an implementation]: let it work like a GeneralArray-based String-Stack; So, instead of looking at lengths, all one really do is just check that the 'incoming' thing is a string;
-				// That's for the addition of things into the UnlimitedString;
-				// * When removing/replacing/deleting a thing from the string, however, one treats it as a whole instead, looking at each single bit of the string separately in a two-level loop;
+				// ? Rename to GeneralString?
 				UnlimitedString: function (parent = RESULT.main.LastIndexArray) {
 					// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
 					const ALIAS = (_this) =>
@@ -3585,7 +3586,10 @@ export function instance(transformation = ID) {
 							currindex: RESULT.aliases._const(0)
 						},
 						methods: {
-							// % Note: the UnlimitedStrings are to be used as the arguments for these methods [but, they are also to accept the finite strings...];
+							// * Currently missing: 
+							// 	% 1. join(); 
+							// 	% 2. length().set(); 
+							// 	% 3. loop(); 
 							split(useparator = "") {
 								// todo: 1. generalize; 2. put it out somwhere...
 								function lengthSafeConcat(a, b) {
@@ -3638,11 +3642,27 @@ export function instance(transformation = ID) {
 									}
 								}
 								if (RESULT.aliases.is.ustr(useparator)) {
+									// ! This thing re-appears throughout the class twice! Pray refactor...
 									let prevcounter = this.this.this.init()
 									let currcounter = this.this.this.init()
 									let backupcounter = this.this.this.init()
 									let hasBroken = false
 									const first = useparator.read(useparator.init())
+
+									// ! Pray generalize and re-scope this thing later...
+									const FUNC = function (
+										strarr,
+										prevcounter,
+										currcounter
+									) {
+										return strarr.pushback(
+											this.this.this.copied("slice", [
+												prevcounter,
+												currcounter
+											])
+										)
+									}
+
 									for (
 										;
 										!currcounter
@@ -3684,13 +3704,11 @@ export function instance(transformation = ID) {
 											backupcounter = backupcounter.next()
 										}
 
-										backupcounter = this.this.this.init()
 										if (!hasBroken) {
-											strarr.pushback(
-												this.this.this.copied("slice", [
-													prevcounter,
-													currcounter
-												])
+											FUNC.bind(this)(
+												strarr,
+												prevcounter,
+												currcounter
 											)
 											prevcounter =
 												RESULT.main.native.deepCopy(currcounter)
@@ -3698,16 +3716,12 @@ export function instance(transformation = ID) {
 										hasBroken = false
 										currcounter =
 											currcounter.jumpForward(backupcounter)
+										backupcounter = this.this.this.init()
 										continue
 									}
 
 									// * The last one is also needed due to the fact that the 'end' is 'open' in the sense that there is no more separators after it (hence, it follows that the end may also be equal to "");
-									strarr.pushback(
-										this.this.this.copied("slice", [
-											prevcounter,
-											currcounter
-										])
-									)
+									FUNC.bind(this)(strarr, prevcounter, currcounter)
 								}
 								return strarr
 							},
@@ -3778,11 +3792,24 @@ export function instance(transformation = ID) {
 							},
 							begin: classes.begin,
 							end: classes.end,
+							// TODO: generally - perform all the required '.map's! DO NOT ASSUME THAT THE THING PASSED IS THE INFINITECOUNTER OF THE CORRESPONDING CLASS, ONLY ASSUME IT IS ___A___ COUNTER...;
+							// * This'll make InfiniteCounters (generally) EXTREMELY useful; All the inner information will be 'semi-hidden' (unneccessary to operate the thing), yet accessible (and hence, alterable, hence flexible) to the user;
 							slice(
 								beginning = this.this.this.init(),
-								end = this.this.this.finish()
+								end = this.this.this.finish(),
+								orderly = false
 							) {
-								// % Changes the 'this.this.this' to equal to the string getting cut down;
+								const newstr = this.this.this.this.class.class()
+								this.this.this.go(beginning)
+								for (
+									;
+									!this.this.this.tototalindex().compare(end);
+									this.this.this.next()
+								)
+									newstr.pushback(this.this.this.currelem().get())
+								return (this.this.this = (
+									orderly ? (x) => x.order() : ID
+								)(newstr))
 							},
 							// ? Does one want that manner of a loop even? [Pray consider whether the thing in question is desirable after all, relook at the GeneralArray's version of the method...]
 							loop() {
@@ -3795,25 +3822,20 @@ export function instance(transformation = ID) {
 									.genarr.read(index)
 							},
 							write(index, value) {
-								const lgaind = this.this.this.genarr.currindex
-								const lusind = this.this.this.currindex
-								this.this.this.begin()
-								for (const str of this.this.this.genarr)
-									for (c of str) {
-										if (
-											this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
-												index.map(
-													this.this.this.this.class.template
-														.parentclass.template.icclass
-												),
-												this.this.this.init()
-											)
+								general.fix(
+									[this.this.this.genarr, this.this.this],
+									RESULT.generate(1, 2).map(
+										RESULT.aliases._const("currindex")
+									),
+									() => {
+										this.this.this.go(
+											index,
+											RESULT.aliases._const(true)
 										)
-											break
-										this.this.this.next()
-										index = index.previous()
+										this.this.this.currelem().set(value)
 									}
-								this.this.this.currelem().set(value)
+								)
+								// TODO: make the alias of '._const(true)' - has appeared several times throughout already...
 								this.this.this.genarr.currindex = lgaind
 								this.this.this.currindex = lusind
 								return this.this.this
@@ -3999,7 +4021,8 @@ export function instance(transformation = ID) {
 							copy(f = ID) {
 								const emptystr = this.this.this.this.class.class()
 								emptystr.this.genarr = this.this.this.genarr.copy()
-								for (const x of emptystr.keys()) emptystr.write(x, f(x))
+								for (const x of emptystr.keys())
+									emptystr.write(x, f(emptystr.read(x), x, emptystr))
 								return emptystr
 							},
 							*keys() {
@@ -4025,25 +4048,108 @@ export function instance(transformation = ID) {
 									this.this.this
 								)
 							},
-							// ^ IDEA: for making the implementation of 'indexesOf' more efficient - one gives it two arguments for enabling halting - 'halt (boolean)' [whether to halt] and 'haltAfter (counter)' [length().get() of the final array, after which to halt...]
-							// TODO: let this decision [idea] be reflected upon the GeneralArray definition accordingly as well...; 
 							indexesOf(ustring, halt = false, halfAfter = Infinity) {
-								// % Returns the first of the indexes where the passed string may be found inside the string in question;
-								// % Returns a GeneralArray of the indexes, at which one may find the string in question;
+								const indexes =
+									this.this.this.this.class.template.parentclass.class()
+								if (RESULT.aliases.is.str(ustring))
+									return this.this.this.indexesOf(
+										this.this.this.this.class.class(ustring)
+									)
+								if (this.this.this.class.is(ustring)) {
+									// ! NOTE: (partially) the same code as in the 'split'; Pray, after further work on it - refactor...
+									let prevcounter = this.this.this.init()
+									let currcounter = this.this.this.init()
+									let backupcounter = this.this.this.init()
+									let hasBroken = false
+									const first = useparator.read(useparator.init())
+
+									for (
+										;
+										!currcounter
+											.length()
+											.get()
+											.compare(this.this.this.length().get());
+										currcounter = currcounter.next()
+									) {
+										if (
+											halt &&
+											indexes.length().get().compare(haltAfter)
+										)
+											break
+										while (this.this.this.read(currcounter) !== first)
+											continue
+										backupcounter = backupcounter.next()
+										while (
+											!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+												backupcounter,
+												useparator
+													.tototalindex()
+													.map(
+														this.this.this.class.template
+															.parentclass.template.icclass
+													)
+											)
+										) {
+											if (
+												this.this.this.read(
+													currcounter.jumpForward(backupcounter)
+												) !=
+												useparator.read(
+													backupcounter.map(
+														useparator.this.class.template
+															.parenclass.template.icclass
+													)
+												)
+											) {
+												hasBroken = true
+												break
+											}
+											backupcounter = backupcounter.next()
+										}
+
+										if (!hasBroken) {
+											indexes.pushback(currcounter)
+											prevcounter =
+												RESULT.main.native.deepCopy(currcounter)
+										}
+										hasBroken = false
+										currcounter =
+											currcounter.jumpForward(backupcounter)
+										backupcounter = this.this.this.init()
+										continue
+									}
+								}
+								return indexes
 							},
 							firstIndex(ustring) {
-								return this.this.this.indexesOf(ustring, true, this.this.this.init().next())
+								return this.this.this
+									.indexesOf(
+										ustring,
+										true,
+										this.this.this.init().next()
+									)
+									.read(this.this.this.init())
 							},
+							// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
+							// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
 							order() {
-								// % Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
-								// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
-							},	
+								const newstr = this.this.this.copy()
+								let bigind = this.this.this.init()
+								let smallind = 0
+								for (const x of this.this.this) {
+									if (smallind == MAX_STRING_LENGTH) {
+										bindind = bindind.next()
+										newstr.pushback("")
+									}
+									newstr.write(bindind, newstr.read(bigind) + x)
+								}
+								return (this.this.this = newstr)
+							},
 							// The precise opposite of 'order': minimizes the length of each and every string available within the underlying GeneralArray;
-							// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code; 
+							// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code;
 							symbolic() {
 								const symstr = this.this.this.this.class()
-								for (const sym of this.this.this) 
-									symstr.pushback(sym)	
+								for (const sym of this.this.this) symstr.pushback(sym)
 								return symstr
 							},
 							pushback(ustring) {
@@ -4066,7 +4172,7 @@ export function instance(transformation = ID) {
 									for (const sym of str) yield sym
 							}
 							// TODO: pray decide if any more methods are desired here...
-							// * note: the 'loop()' must work in a fashion similar to that of 'GeneralArray', but on a symbol-by-symbol basis...; 
+							// * note: the 'loop()' must work in a fashion similar to that of 'GeneralArray', but on a symbol-by-symbol basis...;
 							// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass';
 							// * Current list [add to GeneralArray]:
 							// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
