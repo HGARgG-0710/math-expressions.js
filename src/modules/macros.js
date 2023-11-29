@@ -279,7 +279,7 @@ export const CLASS = (ptemplate = {}) => {
 			// ^ IDEA: export all the stuff from 'RESULT'; Then, just reference it in the 'RESULT' inside the 'instance'... (so, the 'instance' will just "compile" the library in accordance to the user's liking...);
 			// * Note: it'll have to be checked against scopes... (namely, how does 'const' behave precisely when faced with changing scopes...); One'll implement the issue with the STATIC REFERENCES as well, then! [Ability for the user to alter certain parts of the library without having to affect the rest...];
 
-			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is']; 
+			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is'];
 			return (
 				x.hasOwnProperty("class") &&
 				RESULT.main.structure.objStructure().function(this).isisomorphic(x.class)
@@ -301,4 +301,15 @@ export const NOREST = function (labels = []) {
 		X.rest = { ...X.rest, ...template.rest }
 		return TEMPLATE(X)
 	}
+}
+
+export const OBJECT = function (keys = [], values = []) {
+	let length = Math.min([keys.length, values.length])
+	const returned = {}
+	for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
+	return returned
+}
+
+export const NOMODULE = function (moduleobj) {
+	return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
 }

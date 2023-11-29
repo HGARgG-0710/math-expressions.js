@@ -50,6 +50,9 @@ The library also supports basic in-editor JSDoc documentation.
 
 Files [purpose stated]: 
 
+<!-- * Funnote: later (when ready to publish on GitHub, and go write the docs) - count the definitions throughout the files; -->
+<!-- ! UPDATE THIS!!! Each and every file in the chain ought to have its purpose described here... -->
+
 1. src/math-expressions.js (the source code; this is a one-file library)
 2. src/examples.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
 3. test/* (the tests' directory; for each and every abstraction, there is a test; all separated)

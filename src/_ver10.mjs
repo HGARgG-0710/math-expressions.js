@@ -1,11 +1,14 @@
-// TODO: finish this introduction note [later...];
+// TODO: finish this introduction note [later...]; Plus, write new ones for each and every piece of the thing in question...
 /**
- * * math-expressions.js API source code, version 1.0 alpha (in work).
+ * * math-expressions.js API source code main file, version 1.0 alpha (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
 export * from "./modules/macros.js"
 export * from "./modules/instance.js"
+export * from "./modules/refactor.js"
+export * from "./modules/transforms.js"
+// ! export the stuff from the 'exports/'
 
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
@@ -207,6 +210,15 @@ export * from "./modules/instance.js"
 // ? QUESTION: pray consider the matter of preference of usage of 'this' over 'RESULT[...]', and [even smore generally throughout the library] - relative references [values of which are affectable by the user] VS. absolute [cannot be affected?] to those parts of the library that are independent from the ones that reference them;
 // * Current decision: let they be non-affectable, but the values for them be changeable;
 
-// ! Refactor the library hardcorely - create a whole new file with pure refactor definitions and call it 'refactor.mjs'; Make those importable; 
+// ! Refactor the library hardcorely - create a whole new file with pure refactor definitions and call it 'refactor.mjs'; Make those importable;
 
 // TODO [general]: there is a great uncleanness inside the RESULT definition in the 'instance()' function of the 'instance' file; The definition possesses poorly ordered subdefinitions; Pray take them out; [EXAMPLE - a TEMPLATE, relying upon the 'RESULT' itself on the highest of levels of definition]
+
+// TODO [GENERAL] : add the ability for certain methods to take arbitrary number of arguments from the user... Let it use the '...something' operator for Arguments-to-Array conversion...
+// Like the way one's done recently with the valueCompare...
+
+// ? [suggestion, under consideration...]: create a MultiGeneralArray, which [in essence], behaves exactly like the GeneralArray, but is "based" on it (has 'the same' methods set and template...) and allows for an infinite (arbitrary) number of counters [uses the MultiInfiniteCounter alternative...]
+// TODO: think deeply on the matter of copying/referencing of 'class-template-static' objects within the instances objects... Review each and every method within each and every class, make it plausible to oneself, most general;
+// TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
+
+// * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
