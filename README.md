@@ -7,7 +7,7 @@ orders, multi-dimensional arrays, equation parsing, unlimited recursion-based (i
 and highly configurable macros for elementary representations of powerful in-program 
 types based off the native JavaScript Objects;
 
-The library's two ultimate goals are to provide: 
+The library's two ultimate goals are to provide to the user:
 
 1. A complete abstract wrapper-interface, sufficient for 
 working with various unlimited objects (and to provide an 
@@ -22,8 +22,8 @@ arbitrary in nature or in size, without having to alter one's
 code for it too greatly)
 
 The current version (v1.0) is not built upon the concepts of 
-continuations, instead using the plain JS stack, so its final 
-computational power is still (sadly) limited (so, the library's final objectives are still not quite reached); 
+continuation-passing and tailpipe recursion, instead using the plain JS stack, so its present implementations' final 
+computational power is still (sadly) limited (so, the library's final objectives are still not quite yet reached); 
 
 There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
 in one of the nearest future versions. 
@@ -48,21 +48,32 @@ The library also supports basic in-editor JSDoc documentation.
 
 ## Source
 
-Files [purpose stated]: 
+A short repository files guide: 
 
 <!-- * Funnote: later (when ready to publish on GitHub, and go write the docs) - count the definitions throughout the files; -->
 <!-- ! UPDATE THIS!!! Each and every file in the chain ought to have its purpose described here... -->
 
-1. src/math-expressions.js (the source code; this is a one-file library)
-2. src/examples.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
-3. test/* (the tests' directory; for each and every abstraction, there is a test; all separated)
-4. README.md (this file)
-5. LICENSE (the license)
+- src/math-expressions.js - the main exports file
+- src/modules/ - directory with modules used by 'math-expressions.js'
+	- src/modules/exports - directory with the contents of the library, divided into thematically decided submodules
+		- ...
+	- instance.mjs - module with the 'instance' function, providing means of convinient import/manipulation of the library
+	- macros.mjs - module which provides exported macros (and which are also extensively used by the rest of the package's code)
+	- refactor.mjs - module, which was originally made for refactoring purposes; 
+	- transforms.mjs - module containing some transforms, that can be used with the 'instance' function's structure, so as to ease the user's experience in its structure manipulation; 
+- src/test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
+- tests/* - the tests' directory, withing which for each and every abstraction and definition of the library, there is an individual test script (the examples.mjs)
+- README.mjs - this file
+- LICENSE  - the MIT license
 
+
+For examples of library's usage, one may want to see the 'tests' directory or the documentation. 
 
 ## Modules
 
 The package uses ES modules. 
+<!-- ? Why only them? It could also support the CommonJS modules...; -->
+<!-- TODO: add support for those, decide which extensions one'd rather use... -->
 
 ## Current Status 
 

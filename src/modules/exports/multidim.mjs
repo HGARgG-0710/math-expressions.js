@@ -1,6 +1,10 @@
 // * This module defines some basic means of immidiate work with the multidimensional GeneralArrays and other recursive structures;
 
 import { TEMPLATE } from "./../macros.mjs"
+import * as types from "./types.mjs"
+import * as counters from "./counters.mjs"
+import * as comparisons from "./comparisons.mjs"
+import * as aliases from "./aliases.mjs"
 
 export const dim = TEMPLATE({
 	defaults: { comparison: RESULT.aliases.refCompare },
@@ -57,10 +61,16 @@ export const repeatedApplicationWhilst = TEMPLATE({
 })
 
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
+// ? What about the default addition of '.function's to the TEMPLATEs? Pray think about that as well...
 export const generalSearch = TEMPLATE({
 	defaults: {
 		self: false,
-		reversed: false
+		reversed: false,
+		// ? Give this thing an alias...;
+		genarrclass: types.arrays.LastIndexArray({
+			icclass: types.InfiniteCounter(counters.arrayCounter())
+		}),
+		soughtProp: aliases._const(true)
 	},
 	function: function (
 		arrrec = [],
@@ -88,4 +98,46 @@ export const generalSearch = TEMPLATE({
 		}
 		return false
 	}
-})
+}).function
+
+// ? Question [general]: does one want to put the thematically essential aliases for methods inside their appropriate theme-submodules or into the 'alias'?  Or ought one make a division of the alias? Or make an '.aliases' division inside each thematical one?
+// * Pray consider further reorganization of the library...;
+// ! THESE ONES DON'T CARRY ANY ESSENCE, EXCEPT AS ALIASES... Rethink the way that aliases organization is generally handled throughout the library...;
+// ^ DECISION [1]: about ones such as these - they'll be put in 'refactor.aliases';
+// ? perhaps, one has finally decided on how to abstract those kinds of 'multi-templates'?
+export const findDeepUnfilled = TEMPLATE({
+	defaults: {
+		soughtProp: aliases._const(true),
+		comparison: comparisons.valueCompare
+	},
+	function: function (template = {}) {
+		return generalSearch({
+			soughtProp: (x) =>
+				this.template.soughtProp(x) &&
+				!this.template.comparison(this.template.bound, x),
+			...this.template,
+			...template
+		}).function
+	}
+}).function()
+// * all of these things ought to have aliases...
+export const findDeepUnfilledArr = TEMPLATE({
+	defaults: { type: aliases.is.arr, comparison: (a, b) => a <= b.length, self: true },
+	function: function (template = {}) {
+		return findDeepUnfilled.function({
+			...this.template,
+			...template
+		})
+	}
+}).function()
+export const findDeepLast = TEMPLATE({
+	defaults: {
+		reversed: true
+	},
+	function: function (template = {}) {
+		return generalSearch({
+			...this.template,
+			...template
+		}).function
+	}
+}).function()

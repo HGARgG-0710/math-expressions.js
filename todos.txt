@@ -166,3 +166,8 @@ It gets changed actively.
 
 	Along with all the other small organization-related stuff: 
 		This includes 'package.json', and all the other yada yada yada...
+
+22. IDEA: for the package.json and 'npm run test', of the package make the following work:
+	Let the 'test' script that is being run accept an argument of an array of test files/cases to be executed, 
+	which will then be used to produce the appropriate testing procedure [namely, run the appropriate files]; 
+	If none are passed, then all the tests are executed in the alphabetic order...; 

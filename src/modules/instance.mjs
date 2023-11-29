@@ -1,17 +1,8 @@
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
 import {
-	HIERARCHY,
-	VARIABLE,
-	TEMPLATE,
 	ID,
-	GENERATOR,
-	CLASS,
-	EXTENSION,
-	OBJECT,
 	NOMODULE
-} from "./macros.js"
-
-import { classes, general } from "./refactor.js"
+} from "./macros.mjs"
 
 import * as algorithms from "./exports/algorithms.mjs"
 import * as aliases from "./exports/aliases.mjs"
@@ -42,12 +33,10 @@ export const StaticThisTransform = (templated, template) => {
 
 // ? Make a template itself?
 export function instance(transformation = ID) {
-	// TODO [general] : do the GRAND CLEANUP - final stage for the preparations of v1.0 of the library. It consists of fixing old broken code, renewing it and creating more new things [especially beautiful exotic stuff];
-	const RESULT = {
+	// * Module instance Export
+	return transformation({
 		aliases: NOMODULE(aliases),
 		main: {
-			// ! REMINDER: consistency check across the entire library... [GRAND CLEANUP...]
-
 			algorithms: NOMODULE(algorithms),
 			comparisons: NOMODULE(comparisons),
 			counters: NOMODULE(counters),
@@ -61,8 +50,5 @@ export function instance(transformation = ID) {
 			types: NOMODULE(types)
 		},
 		variables: NOMODULE(variables)
-	}	
-
-	// * Module Export
-	return transformation(RESULT)
+	})
 }

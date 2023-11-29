@@ -4,8 +4,8 @@
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
  */
 
-export * from "./modules/macros.js"
-export * from "./modules/instance.js"
+export * from "./modules/macros.mjs"
+export * from "./modules/instance.mjs"
 export * from "./modules/refactor.js"
 export * from "./modules/transforms.js"
 // ! export the stuff from the 'exports/'
@@ -14,41 +14,6 @@ export * from "./modules/transforms.js"
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
 
 // * This is the [temporary] place in the file, where the presently considered OLD CODE goes;
-
-// * A
-// ! Old code for the [incomplete] definition of the 'numberCounter' [later used for the recursiveCounter]; The renewed code [in accordance with the general 'recursiveCounter' counter] is above;
-// TODO: carefully revise, re-look, and do the stuff mentioned there that one desires for to; [Also, check correspondence with the newer version...]
-// // TODO: when putting out into the higher scope [RESULT.submodules.infinite], pray generalize - not just these general array types and counters [these'd get used in this particular version...];
-// // ? Keep these 2 as a part of 'submodules.infinite'?
-// // * Decided: yes! Add them, here [when generalizing], pray replace with the general constructions for this stuff...
-// const findDeepUnfilledNum = RESULT.submodules.infinite.generalSearch({
-// 	genarrclass: RESULT.submodules.infinite.LastIndexArray({
-// 		icclass: RESULT.submodules.infinite.InfiniteCounter(
-// 			RESULT.submodules.infinite.arrayCounter()
-// 		)
-// 	}),
-// 	soughtProp: (x) => typeof x === "number" && x < A.template.maxint
-// }).function
-// const findDeepUnfilledArr = RESULT.submodules.infinite.generalSearch({
-// 	genarrclass: RESULT.submodules.infinite.LastIndexArray({
-// 		icclass: RESULT.submodules.infinite.InfiniteCounter(
-// 			RESULT.submodules.infinite.arrayCounter()
-// 		)
-// 	}),
-// 	soughtProp: (x) =>
-// 		x instanceof Array && x.length < A.template.maxarrlen,
-// 	self: true
-// }).function
-
-// const findDeepLastNum = RESULT.submodules.infinite.generalSearch({
-// 	genarrclass: RESULT.submodules.infinite.LastIndexArray({
-// 		icclass: RESULT.submodules.infinite.InfiniteCounter(
-// 			RESULT.submodules.infinite.arrayCounter()
-// 		)
-// 	}),
-// 	soughtProp: (x) => typeof x === "number",
-// 	reversed: true
-// }).function
 
 // * B
 
@@ -222,3 +187,5 @@ export * from "./modules/transforms.js"
 // TODO: also, add stuff for different numeral systems; create one's own, generalize to a class for their arbitrary creation...
 
 // * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
+
+// ! REMINDER: a total consistency check across the entire library... [GRAND CLEANUP...]; Current code are all mere sketches, not yet functional [largely, only due to the faults in cross-referencing]; 

@@ -221,3 +221,4 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 				ELSE do as was previously decided; 
 
 		6. Work on the Elementarization of all the library bits [abstraction from the 'instance' function]; 
+			6.1. Fix the references, pray...

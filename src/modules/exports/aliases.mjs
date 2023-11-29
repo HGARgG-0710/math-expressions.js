@@ -107,10 +107,10 @@ export const native = {
 
 			// * Brings whatever is given within the given base to base 10;
 			// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-			nbase: function (nstr, base, alphabet = defaultAlphabet) {
+			nbase: function (nstr, alphabet = defaultAlphabet) {
 				return repeatedArithmetic(
 					generate(0, nstr.length - 1).map(
-						(i) => alphabet.indexOf(nstr[i]) * base ** i
+						(i) => alphabet.indexOf(nstr[i]) * alphabet.length ** i
 					),
 					"+"
 				)

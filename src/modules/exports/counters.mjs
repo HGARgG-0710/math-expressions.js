@@ -1,4 +1,8 @@
 import { GENERATOR } from "./../macros.mjs"
+import * as comparisons from "./comparisons.mjs"
+import * as variables from "./variables.mjs"
+import * as multidim from "./multidim.mjs"
+import * as aliases from "./aliases.mjs"
 
 export const number = GENERATOR({
 	defaults: { start: 0 },
@@ -80,39 +84,50 @@ export const objCounter = GENERATOR({
 		)
 	}
 })
-// TODO: template the 'recursiveCounter' (slightly more curious than the rest the cases insofar - namely, one desires for powerful generalization of the constructs used to assemble the final 'returned'); Work on the thing in question greatly...
 
 // * A maximally efficient structurally counter based on array recursion and finite orders;
-// ! Clean, review again later; fix	problems
-// TODO: this is the now generally chosen structure for the library; make all the 'template-generator-inverse-range' quartets to be written in it...
-export function recursiveCounter(template = {}) {
-	// ^ IDEA: generalize this thing EVEN further: add the 'R-L-U' linear order as a finite sub-counter preceeding the arrays' sequences... (as in 0-1-2-3-...-2^(whatever...)-[0]-...[2^(whatever)]-...)
-	// ! that's good, but what about the '[0]' concept? One don't want to have 2/3 strictly central points like this [because of linearity...]; Pray consider...
+export const recursiveCounter = function (template = {}) {
 	const returned = {
-		template: {
-			comparison: RESULT.main.valueCompare,
-			maxarrlen: RESULT.variables.MAX_ARRAY_LENGTH,
+		defaults: {
+			comparison: comparisons.valueCompare,
+			maxarrlen: variables.MAX_ARRAY_LENGTH.get,
 			type: RESULT.aliases._const(true),
 			...template
 		},
 		range(x) {
 			return (
-				x instanceof Array &&
+				aliases.is.arr(x) &&
 				!!x.length &&
-				!!RESULT.functions.min(
-					(x) => this.template.type(x) || (x instanceof Array && this.range(x))
+				!!min(
+					x.map(
+						(y) =>
+							this.template.type(y) || (aliases.is.arr(x) && this.range(y))
+					)
 				)
 			)
 		}
 	}
 
-	// TODO: generalize this operation to an outer-scope function;
+	const findDeepUnfilled = (t = true) => {
+		return multidim.findDeepUnfilled({
+			soughtProp: (x) =>
+				returned.template.type(x) &&
+				(t ? RESULT.aliases.id : RESULT.aliases.n)(returned.template.sign(x)),
+			bound: t ? returned.template.upper : returned.template.rupper,
+			comparison: returned.template.comparison
+		}).function
+	}
+	const findDeepUnfilledArr = multidim.findDeepUnfilledArr({
+		bound: returned.template.maxarrlen
+	})
+	const findDeepLast = multidim.findDeepLast({ soughtProp: returned.template.type })
+
 	const keys = ["inverse", "generator"]
 	keys.map(
 		(x, i) =>
 			(returned[x] = function (t) {
 				return generalgenerator(t, !!i, this)
-			})
+			}.bind(returned))
 	)
 
 	function signedAdd(sign) {
@@ -234,40 +249,7 @@ export function recursiveCounter(template = {}) {
 		return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(r)
 	}
 
-	// ! PROBLEM [same - with the re-creation of different methods for the purpose of running this thing...];
-	// TODO: DO THE SAME THERE...
-	// TODO: generalize the 'LastIndexArray + arrayCounter()' part...
-	// ? What about putting these things out into the 'submodules.RESULT.main.' or some other more global scope?
-	const findDeepUnfilled = (t = true) => {
-		RESULT.main.generalSearch({
-			genarrclass: RESULT.main.LastIndexArray({
-				icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
-			}),
-			soughtProp: (x) =>
-				returned.template.type(x) &&
-				(t ? RESULT.aliases.id : RESULT.aliases.n)(returned.template.sign(x)) &&
-				!returned.template.comparison(
-					t ? returned.template.upper : returned.template.rupper,
-					x
-				)
-		}).function
-	}
-	const findDeepUnfilledArr = RESULT.main.generalSearch({
-		genarrclass: RESULT.main.LastIndexArray({
-			icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
-		}),
-		soughtProp: (x) => x instanceof Array && x.length < returned.template.maxarrlen,
-		self: true
-	}).functions
-	const findDeepLast = RESULT.main.generalSearch({
-		genarrclass: RESULT.main.LastIndexArray({
-			icclass: RESULT.main.InfiniteCounter(RESULT.main.arrayCounter())
-		}),
-		soughtProp: returned.template.type,
-		reversed: true
-	}).function
-
-	return returned
+	return GENERATOR(returned)
 }
 
 // * That's an example of an infinite counter;
@@ -275,7 +257,7 @@ export function recursiveCounter(template = {}) {
 // * This particular nice feature allows to build different InfiniteCounters with different beginnings on it...
 // note: creates new objects after having been called;
 export function numberCounter(template = {}) {
-	return RESULT.main.recursiveCounter({
+	return recursiveCounter({
 		upper: RESULT.variables.MAX_INT.get,
 		lower: 0,
 		rupper: -RESULT.variables.MAX_INT.get,
@@ -296,7 +278,7 @@ export function numberCounter(template = {}) {
 // A special case of 'recusiveCounter';
 // * Uses array-orders (by default);
 export function orderCounter(template = {}) {
-	return RESULT.main.recursiveCounter({
+	return recursiveCounter({
 		upper: template.order[template.strorder.length - 1],
 		lower: template.order[Math.floor(template.order.length / 2)],
 		rupper: template.order[0],
@@ -311,10 +293,9 @@ export function orderCounter(template = {}) {
 }
 
 export function stringCounter(template = {}) {
-	// todo: create a nice default 'template.order' made of strings...;
-	// ^ IDEA [for a thing to plug in] : a maximally long array of unique strings, generated by some single elegant expression;
-	return RESULT.main.orderCounter({
+	return orderCounter({
 		type: (x) => typeof x === "string" || x instanceof String,
+		order: generate(1, variables.MAX_INT).map((x) => nbasereverse(x)), 
 		...template
 	})
 }

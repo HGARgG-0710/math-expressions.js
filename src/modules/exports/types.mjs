@@ -1996,7 +1996,7 @@ export const numbers = {
 	}
 }
 // ? QUESTION: about the UniversalMap... Does it remain under the '.main'? Or does it instead travel to the '.aliases.native'? Should it be replaced by the UnlimitedMap or turned into a distinctly named special case of it?
-function UniversalMap(template = {}) {
+export function UniversalMap(template = {}) {
 	return {
 		template: {
 			// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
