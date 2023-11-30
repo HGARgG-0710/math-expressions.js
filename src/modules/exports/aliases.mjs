@@ -741,6 +741,7 @@ export const native = {
 			return fs[fs.length - 1](RESULT.compose(fs.slice(0, fs.length - 1)))
 		},
 
+		// ! Pray use this one extensively...
 		wrapper: TEMPLATE({
 			function: function (f = this.template.deff) {
 				return (x) => this.template.out(f(this.template.in(x)))

@@ -13,25 +13,27 @@ export const classes = {
 		for (const element of this.this.this)
 			if (predicate(element)) subset.pushback(element)
 		return (this.this.this = subset)
-	}, 
+	},
 	any: function (predicate = aliases._const(true)) {
-				return !this.this.this
-					.init()
-					.compare(
-						this.this.this.copied("suchthat", [predicate]).length().get()
-					)
-			}, 
+		return !this.this.this
+			.init()
+			.compare(this.this.this.copied("suchthat", [predicate]).length().get())
+	},
 	every: function (predicate = aliases._const(true)) {
-				return this.this.this.class.template.icclass.template.comparison(
-					this.this.this.copied("suchthat", [predicate]).length().get(),
-					this.this.this.length().get()
-				)
-			}, 
-	forEach: function(method = aliases.void) {
-				for (const x of this.this.this)
-					method(x)
-				return this.this.this
-			}
+		return this.this.this.class.template.icclass.template.comparison(
+			this.this.this.copied("suchthat", [predicate]).length().get(),
+			this.this.this.length().get()
+		)
+	},
+	forEach: function (method = aliases.void) {
+		for (const x of this.this.this) method(x)
+		return this.this.this
+	},
+	includes: function (element) {
+		return (
+			this.this.this.firstIndex(element) !== this.this.this.class.template.unfound
+		)
+	}
 }
 
 export const general = {

@@ -403,8 +403,7 @@ export const GeneralArray = (() => {
 			},
 			// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
 			finish: classes.finish,
-			// * A far simpler, yet non-slowed down for corresponding tasks, direction independent alternative to '.move';
-			// Note, that 'move' hasn't a 'range' check; it is purposed to work with properties of indexes; [For instance, walk a sub-array of an array with the same cardinality as some particularly chosen array, or some such other thing...]
+			// * A far simpler (hence, less capable with performance of complex walking tasks), faster, direction independent alternative to '.move';
 			go(index, range = this.this.this.this.class.template.icclass.template.range) {
 				if (!range(index.value))
 					throw new RangeError(
@@ -722,11 +721,12 @@ export const GeneralArray = (() => {
 				this.this.this.currindex = indexsaved
 				return this.this.this
 			},
-			convert(
-				// ! An old cryptic note - decipher...
-				// _? An urge to generalize this thing as well -- by means of creating a 'type' of functions that can be 'called' an arbitrary number of times, then change this thing to a 'GeneralArray' and allow GeneralArray [and anything else] to be such a 'many-calls-function-type', to which a GeneralArray given could be applied...
-				template = this.this.this.this.class.template
-			) {
+			convert(template = this.this.this.this.class.template) {
+				// ! PROBLEM: this DOES NOT accomplish the conversion of one GeneralArrays' type's internal representation, only of the object's class properties;
+				// * The problem with these manner of issues runs deep within the means by which the internal representations are constructed; Namely, IT'S NOT POSSIBLE to generalize one to another, because the entire information as to how they are handled lies within the METHOD DEFINITIONS...
+				// ? how should one go about it? Attempt to generalize to some manner of object structures which would convert the given object with the desired information to methods which would perform appropriate actions upon the thing in question?
+				// ^ IDEA [for implementation]: one does it using the GeneralArray interface, namely - walking the present one and literally .pushback-by-.pushback copying it;
+				// ^ FURTHER IDEA [for implementation]: change the 'copy' function accordingly - allow for a template-change; Then, via this, pray reimplement this;
 				return (this.this.this.this.class = {
 					...this.this.this.this.class,
 					template: { ...template }
@@ -734,6 +734,7 @@ export const GeneralArray = (() => {
 			},
 			// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
 			switchclass(arrclass = this.this.this.this.class) {
+				// ! same issue as in the '.convert' method;
 				return (this.this.this.this.class = arrclass)
 			},
 			delete(index, leftovers = {}) {
@@ -1057,6 +1058,7 @@ export const GeneralArray = (() => {
 					this.this.this.copied("sort", [predicate], undefined, leftovers)
 				)
 			},
+			includes: classes.includes,
 			suchthat: classes.suchthat,
 			any: classes.any,
 			every: classes.every,
@@ -1253,9 +1255,18 @@ export function UnlimitedMap(parentclass) {
 		methods: {
 			// ! Issues:
 			// * Methods list outline:
-			// 	% 1. get(key); - obtain a value using the key; [note, if the key is missing - returns the 'this.this.this.this.class.template.unfound'];
-			// 	% 2. set(key, value); - set a value using the key; [note, if the key is unfound, creates a new key and sets the value to it];
-			// 	todo: pray work more deailedly on the exact list of these things...
+			// 	% 1. read(key); - obtain a value using the key; [note, if the key is missing - returns the 'this.this.this.this.class.template.unfound'];
+			// 	% 2. write(key, value); - set a value using the key; [note, if the key is unfound, creates a new key and sets the value to it];
+			// ? Operator overloading, maybe?
+			// * PROBLEM [language-related]: there isn't a way to implement it in this case because of diversity of arguments...;
+			// 	% 3. deleteKey(key); - delete a value by its keys;
+			// 	% 4. deleteValues(values); - delete all the key-value pairs that have the given values;
+			// 	% 5. suchthat(predicate); - assigns the 'this.this.this' to a submap, based off the given predicate;
+			// 	% 6. copy(); - copies the present map;
+			// 	% 7. copied(method); same as in 'GeneralArray';
+			// 	% 8. map(); - maps the present UnlimitedMap to the new one, replacing the new one with the present one;
+			// 	% 9. deleteKeys(keys); - a genarray-looped-over version of the deleteKey;
+			// 	todo: pray work more deailedly on the exact list...
 		},
 		static: {
 			fromObject(object = {}, finite = false) {
@@ -1269,49 +1280,8 @@ export function UnlimitedMap(parentclass) {
 		transform: StaticThisTransform,
 		recursive: true
 	})
-	// return {
-	// 	template: { keyclass: template.valueclass, ...template },
-	// 	class: function (initial = {}) {
-	// 		const final = {
-	// 			this: {
-	// 				indexes: this.template.keyclass(),
-	// 				values: this.templates.valueclass(),
-	// 				// TODO: about the 'leftovers' concept's implementation:
-	// 				// * It ought to be used in such a manner as for to allow for greater diversity of functionality, that being - one ought to allow for 'leftoverss' [an array of 'leftovers' objects, which are (in accordance), used in appropriate places]
-	// 				get(index, leftovers = {}) {
-	// 					return this.this.this.values.read(
-	// 						this.this.this.indexes
-	// 							.firstIndex(index, leftovers)
-	// 							.map(
-	// 								this.this.this.values.this.this.this.this.class
-	// 									.template.icclass
-	// 							),
-	// 						leftovers
-	// 					)
-	// 				},
-	// 				set(index, value, leftovers = {}) {
-	// 					return this.this.this.values.write(
-	// 						this.this.this.indexes
-	// 							.firstIndex(index, leftovers)
-	// 							.map(
-	// 								this.this.this.values.this.this.this.this.class
-	// 									.template.icclass
-	// 							),
-	// 						value,
-	// 						leftovers
-	// 					)
-	// 				}
-	// 				// TODO: create a list of algorithms to go into the InfiniteMap, apart from the basic 'set' and 'get' (rely upon the GeneralArray's algorithms heavily...);
-	// 			}
-	// 		}
-	// 		final.this.this = final
-	// 		for (const key in initial) final.this.set(key, initial[key])
-	// 		return final
-	// 	}
-	// }
 }
 
-// ? Rename to GeneralString?
 export function UnlimitedString(parent = arrays.LastIndexArray) {
 	// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
 	const ALIAS = (_this) =>
@@ -1324,7 +1294,8 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			parentclass: parent,
 			empty: "",
 			names: ["genarr"],
-			basestr: aliases._const(" ")
+			basestr: aliases._const(" "),
+			unfound: undefined
 		},
 		properties: {
 			currindex: aliases._const(0)
@@ -1779,10 +1750,16 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 				return indexes
 			},
 			firstIndex(ustring) {
-				return this.this.this
-					.indexesOf(ustring, true, this.this.this.init().next())
-					.read(this.this.this.init())
+				const indexes = this.this.this.indexesOf(
+					ustring,
+					true,
+					this.this.this.init().next()
+				)
+				if (indexes.length().get().compare(this.this.this.init()))
+					return indexes.read(this.this.this.init())
+				return this.this.this.this.class.template.unfound
 			},
+			includes: classes.includes,
 			// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 			// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
 			order() {
