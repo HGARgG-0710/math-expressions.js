@@ -86,7 +86,7 @@ export * from "./modules/transforms.js"
 // TODO: work on the names a lot; make it sound plausible to oneself...
 // TODO: work on the error messages...
 
-// TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them, mr. flesh];
+// TODO: test this thouroughly [for every function, every class, check every possibility and write tests runnable by the user; run them];
 // TODO: add more default parameter values, make code look and be [whatever that for self would mean...] tidy and to one's complete liking...
 
 // TODO: do micro-optimizations; Spend some time on making the code generally more performant [without sacrificing any of the style or shortness/simlicity of it, of course];
@@ -189,3 +189,4 @@ export * from "./modules/transforms.js"
 // * _ [OLD; re-assess later] TODO: implement -- depthOrder([[[0], [1], 2], 3, [[4, [5]]]]) := SomeInfiniteArrType([1,2,3,4,5])...
 
 // ! REMINDER: a total consistency check across the entire library... [GRAND CLEANUP...]; Current code are all mere sketches, not yet functional [largely, only due to the faults in cross-referencing]; 
+// Todo: [minor, general]: format the code manually; 

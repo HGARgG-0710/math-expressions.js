@@ -100,16 +100,12 @@ export const HIERARCHY = function (hierarr = []) {
 	return final
 }
 
-// * This macro shall be used to determine:
-// 	1. UnlimitedMap (extends GeneralArray);
-// TODO [for UnlimitedMap implementation]: work further on the possibilities associated with having a multiple number of 'names' in the 'template.names';
-//  2. UnlimitedString (extends GeneralArray);
 // ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
 // 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
 export const EXTENSION = (template = {}) => {
 	// TODO: refactor this piece of code, pray...
-	ensureProperties(ptemplate, {
+	ensureProperties(template, {
 		word: "class",
 		recursive: false,
 		selfname: "this",
@@ -118,19 +114,29 @@ export const EXTENSION = (template = {}) => {
 		methods: {},
 		static: {},
 		isgeneral: {},
-		toextend: true
+		toextend: true,
+		defaults: {},
+		index: {}
 	})
 	const ftemplate = {
 		function: function (template = {}) {
 			return CLASS({
 				...this,
 				function: function (...args) {
-					ensureProperties(args, this.template.defaults.constructor)
+					ensureProperties(
+						args,
+						this.template.defaults.constructor.map((x) => x.bind(this)())
+					)
 					const X = {}
-					for (const y of this.template.defaults.names)
-						X[y] = this.template.parentclass.class(...args)
+					let i = 0
+					for (const y of this.template.names) {
+						X[y] = this.template.parentclass.class(
+							this.template.defaults.inter(...args, i++)
+						)
+					}
 					return X
-				}
+				},
+				...template
 			})
 		},
 		...template,
@@ -138,6 +144,7 @@ export const EXTENSION = (template = {}) => {
 			names: ["sub"],
 			defaults: {
 				constructor: [],
+				inter: ID,
 				...template.defaults.defaults
 			},
 			...template.defaults
@@ -152,7 +159,7 @@ export const EXTENSION = (template = {}) => {
 						NAMED_TEMPLATE(
 							function (
 								instance = this.template.instance,
-								name = this.template.names[0]
+								name = this.template.name
 							) {
 								return function (...args) {
 									if (
@@ -170,12 +177,13 @@ export const EXTENSION = (template = {}) => {
 									// ^ IDEA [for a solution]: implement the '.get(...)' method for the classes objects [namely, in the { classref: ..., selfname?: ... } part], which'd resolve this uncertainty [for non-recursive classes would return a thing as-is, whereas for the recursive ones - it'd do the '[.selfname][x]' thing...];
 									// * For this thing to work properly, the '.get' method must be present and used in all the CLASSes and macros related to CLASSes;
 									return this[
-										this[name.classref].template.defaults.name[0]
+										this[name.classref].template.names[name.index]
 									][a](...args)
 								}.bind(instance)
 							},
 							{
-								classref: template.classref
+								classref: template.classref,
+								index: template.index[a] || 0
 							}
 						)
 					])
@@ -208,11 +216,8 @@ export const PRECLASS = NOREST([
 	"isname"
 ])
 
-// ! GENERALIZE TO ANOTHER [EVEN MORE SO] POWERFUL MACRO!
-// ? Make into a template? [Highly doubtful currently...]
+// ? generalize to another macro, maybe?
 // * Use all over the place...
-// ^ IDEA: generalize these, include into the 'this.this.this.this.class' as the '.is(something)' method;
-// * Ought to be general...Must be such that '.is(.class.class()) == true', for all other x: '.is(x) == false'
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
@@ -301,6 +306,10 @@ export const NOREST = function (labels = []) {
 		X.rest = { ...X.rest, ...template.rest }
 		return TEMPLATE(X)
 	}
+}
+
+export const DEOBJECT = function (obj = {}) {
+	return [Object.keys, Object.values].map((x) => x(obj))
 }
 
 export const OBJECT = function (keys = [], values = []) {

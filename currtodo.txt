@@ -191,9 +191,7 @@ IDEA [for v1.1. to implement; maybe]: unite the 'infinite' and non-infinite meth
 							ANSWER: currently - no; It doesn't give new information in regards of the minimal difference sought;  
 						NOTE [5]: It appears to be using eval; Let it use library's 'op' API instead...
 
-						Note [6]: When flesh wrote the code for this thing, it must have been half-asleep!
-
-						NOTE [7]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray;]
+						NOTE [6]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray;]
 
 			1.2. Then, generalize; 
 		

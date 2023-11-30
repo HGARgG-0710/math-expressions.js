@@ -1,8 +1,16 @@
+import * as aliases from "./aliases.mjs"
+import * as variables from "./variables.mjs"
+import * as comparisons from "./comparisons.mjs"
+import * as counters from "./counters.mjs"
+import { general, classes } from "../refactor.mjs"
+import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
+import { StaticThisTransform } from "../instance.mjs"
+
 // * The most essential part of the library - the types definitions;
 
 export const InfiniteCounter = (() => {
 	const sh1 = (_this, leftovers) =>
-		RESULT.ensureProperties(leftovers, {
+		ensureProperties(leftovers, {
 			comparison: _this.this.class.template.comparison,
 			range: _this.this.class.template.range,
 			unfound: _this.this.class.template.unfound
@@ -10,10 +18,10 @@ export const InfiniteCounter = (() => {
 	// * Note: a minor 'trick' about the entire thing is that the value that is assigned to 'template.unacceptable' is thrown out of the function's value scopes [because that is the value from which it starts to count]; However, there are several ways of going around it. One is also replacing the value for the 'template.initialcheck';
 	return CLASS({
 		defaults: {
-			comparison: RESULT.main.comparisons.valueCompare,
+			comparison: comparisons.valueCompare,
 			unfound: null,
 			unacceptable: undefined,
-			initialcheck: RESULT.main.comparisons.refCompare
+			initialcheck: comparisons.refCompare
 		},
 		// ? Generalize further! In particular, as one has separated the values for the 'methods', maybe do so for the 'properties' (using a different Macro...)
 		function: function (previous = this.template.unacceptable) {
@@ -39,7 +47,7 @@ export const InfiniteCounter = (() => {
 				comparison = (x, y) => x.compare(y),
 				init = undefined
 			) {
-				let curr = RESULT.main.deepCopy(start)
+				let curr = deepCopy(start)
 				let r = init
 				while (comparison(curr, end)) {
 					r = each(curr, r)
@@ -105,12 +113,12 @@ export const InfiniteCounter = (() => {
 			difference(ic, leftovers = {}) {
 				sh1(this, leftovers)
 				let current = this.this.class.class()
-				const next = RESULT.aliases.property(
+				const next = aliases.property(
 					ic.compare(this.this.this, leftovers) ? "previous" : "next"
 				)
 				// TODO: Work on all the 'functions' and 'default args' stuff... Review the previously made todos, notes, do it...
 				this.this.class.static.whileloop(
-					RESULT.main.deepCopy(this.this.this),
+					deepCopy(this.this.this),
 					ic,
 					() => (current = next(current)()),
 					next,
@@ -121,7 +129,7 @@ export const InfiniteCounter = (() => {
 			jumpDirection(ic, leftovers = {}) {
 				sh1(this, leftovers)
 				const d = this.this.class.static.direction(ic)
-				// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'RESULT.copy(this)', or some other copying-function?);
+				// ? Question: should one ever return 'this' like that??? Or should one instead do {...this} (or just 'copy(this)', or some other copying-function?);
 				// TODO [general] : pray consider this and other such small (a) detail(s) over any manner of a 'return' statement of any piece of code ;
 				return d
 					? this.this.this.jumpForward(ic, leftovers)
@@ -130,7 +138,7 @@ export const InfiniteCounter = (() => {
 					: this.this.this.jumpBackward(ic, leftovers)
 			},
 			jump(x, jumping = (k) => k.next(), leftovers = {}) {
-				RESULT.ensureProperties(leftovers, {
+				ensureProperties(leftovers, {
 					range: this.this.class.template.range,
 					counterclass: this.this.class
 				})
@@ -138,10 +146,10 @@ export const InfiniteCounter = (() => {
 				returnthis.this.class.static.whileloop(
 					x,
 					jumping,
-					RESULT.main.InfiniteCounter(leftovers.counterclass)(),
+					InfiniteCounter(leftovers.counterclass)(),
 					jumping,
 					undefined,
-					RESULT.main.deepCopy(this.this.this)
+					deepCopy(this.this.this)
 				)
 			},
 			loop(body = () => {}, start = this.this.class.class()) {
@@ -179,7 +187,7 @@ export const InfiniteCounter = (() => {
 						x[p]
 				)(this.this.class.static.direction(this) ? "previous" : "next")
 				let a = this.this.class.class()
-				let copy = RESULT.main.deepCopy(this)
+				let copy = deepCopy(this)
 				while (!this.this.class.template.comparison(zero, copy)) {
 					copy = copy.previous()
 					a = dirfunc(a)
@@ -199,13 +207,13 @@ export const InfiniteCounter = (() => {
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
-		RESULT.ensureProperties(leftovers, {
+		ensureProperties(leftovers, {
 			fast: false,
 			range: _this.this.this.this.class.template.icclass.template.range,
 			comparison: _this.this.this.this.class.template.icclass.template.comparison
 		})
 	const sh1static = (_this, leftovers) =>
-		RESULT.ensureProperties(leftovers, {
+		ensureProperties(leftovers, {
 			fast: false,
 			range: _this.this.template.icclass.template.range,
 			comparison: _this.this.template.icclass.template.comparison
@@ -216,12 +224,14 @@ export const GeneralArray = (() => {
 			empty: [],
 			unfound: undefined,
 			treatfinite: false,
-			default: RESULT.aliases._const(undefined)
+			default: aliases._const(undefined)
 		},
-		function: function (array = this.template.empty) {
-			return {
-				array: this.template.treatfinite ? this.static.fromArray(array) : array,
-				currindex: this.template.icclass.class()
+		properties: {
+			array: function (array = this.template.empty) {
+				return this.template.treatfinite ? this.static.fromArray(array) : array
+			},
+			currindex: function (_arr, startindex = this.template.icclass.class()) {
+				return startindex
 			}
 		},
 		// ? Should this also become a part of the new CLASS definition? [a default, for instance?]
@@ -251,7 +261,7 @@ export const GeneralArray = (() => {
 				R[`push${x}`] = TEMPLATE({
 					defaults: {
 						arguments: [],
-						transform: RESULT.id,
+						transform: id,
 						...template
 					},
 					function: function (b) {
@@ -292,16 +302,16 @@ export const GeneralArray = (() => {
 			// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
 			// * pray notice, that '.full()' changes the 'this.object.currindex' by default, whilst
 			loop(template = {}) {
-				// ? Generalize to a separate class maybe???
 				const a = {
 					template: {
 						indexiter: (x) => x.object().next(),
 						end: (x) => x.object().this.class.template.isEnd(x.object()),
 						begin: (x) => x.object().begin(),
 						icclass: this.this.this.this.class.template.icclass,
+						after: ID,
 						...template
 					},
-					object: RESULT._const(this.this.this),
+					object: _const(this.this.this),
 					restart: function () {
 						this.counter = this.template.icclass.class()
 					},
@@ -317,15 +327,15 @@ export const GeneralArray = (() => {
 					},
 					_full(
 						each,
-						iter = RESULT._const(this.template.indexiter),
-						end = RESULT._const(this.template.end),
+						iter = _const(this.template.indexiter),
+						end = _const(this.template.end),
 						begin = this.template.begin,
-						after = ID
+						after = this.template.after
 					) {
 						const index = this.object().currindex
 						begin(this)
 						let r = undefined
-						let is = this.yield(RESULT._const(null), end(), false)
+						let is = this.yield(_const(null), end(), false)
 						while (!is) {
 							r = each(this, r)
 							is = this.yield(iter(), end())
@@ -342,11 +352,10 @@ export const GeneralArray = (() => {
 					// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 					full(
 						each = this.template.each,
-						iter = RESULT._const(this.template.indexiter),
-						end = RESULT._const(this.template.end),
+						iter = _const(this.template.indexiter),
+						end = _const(this.template.end),
 						begin = this.template.begin,
-						// ! Work further on this thing...
-						after = ID
+						after = this.template.after
 					) {
 						const index = this.object().currindex
 						begin(this)
@@ -409,7 +418,7 @@ export const GeneralArray = (() => {
 			// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
 			move(
 				index,
-				preface = RESULT.void,
+				preface = aliases.void,
 				comparison = this.this.this.this.class.template.icclass.template
 					.comparison,
 				each = (x) => x.next(),
@@ -424,7 +433,7 @@ export const GeneralArray = (() => {
 				return this.this.this.currindex
 			},
 			moveforward(index, leftovers = {}) {
-				RESULT.ensureProperties(leftovers, {
+				ensureProperties(leftovers, {
 					begin: false,
 					comparison:
 						this.this.this.this.class.template.icclass.template.comparison,
@@ -441,9 +450,8 @@ export const GeneralArray = (() => {
 					leftovers.stop
 				)
 			},
-			// TODO [GENERAL]: work on the order of arguments of various methods and functions... Update things in correspondence with them.
 			movebackward(index, leftovers = {}) {
-				RESULT.ensureProperties(leftovers, {
+				ensureProperties(leftovers, {
 					end: false,
 					comparison:
 						this.this.this.this.class.template.icclass.template.comparison,
@@ -460,7 +468,7 @@ export const GeneralArray = (() => {
 				)
 			},
 			movedirection(index, leftovers = {}) {
-				RESULT.ensureProperty(
+				ensureProperty(
 					leftovers,
 					"comparison",
 					this.this.this.this.class.template.icclass.template.comparison
@@ -523,7 +531,7 @@ export const GeneralArray = (() => {
 				// ? OR like a "() => {}"??? Which of the three approaches for this structure is to be chosen?
 				// * pray think on it...
 				return {
-					object: RESULT._const(this.this.this),
+					object: _const(this.this.this),
 					get() {
 						// ? Could this [the 'length.get()' method] not be rewritten by the means of the '.loop()' method??? Pray consider...
 						// * Yes, indeed! Pray do...
@@ -537,7 +545,7 @@ export const GeneralArray = (() => {
 						return returned
 					},
 					set(value, leftovers = {}) {
-						RESULT.ensureProperties(leftovers, {
+						ensureProperties(leftovers, {
 							range: this.object().this.class.template.class.template
 								.icclass.template.range,
 							comparison:
@@ -557,7 +565,7 @@ export const GeneralArray = (() => {
 							this.object()
 								.length()
 								.get()
-								.compare(value, undefined, RESULT._const(true))
+								.compare(value, undefined, _const(true))
 						) {
 							// Decrease the length
 							this.object().deleteMult(
@@ -580,7 +588,7 @@ export const GeneralArray = (() => {
 					}
 				}
 			},
-			copied(method, _arguments = [], f = RESULT.id, leftovers = {}) {
+			copied(method, _arguments = [], f = id, leftovers = {}) {
 				sh1(this, leftovers)
 				const c = this.this.this.copy(f, leftovers)
 				if (c.hasOwnProperty(method) && typeof c[method] === "function")
@@ -601,7 +609,6 @@ export const GeneralArray = (() => {
 					.fromArray([x], leftovers)
 					.concat(this.this.this, leftovers))
 			},
-			// TODO: ensure these kinds of 'saviour' default empty templates all over the templated code;
 			pushfrontLoop(template = {}) {
 				const origin = this.this.this.this.class.static.pushfrontkLoop(template)
 				const T = {
@@ -640,7 +647,7 @@ export const GeneralArray = (() => {
 			empty(template = this.this.this.this.class.template) {
 				return this.this.this.this.class.static.empty(template)
 			},
-			copy(f = RESULT.id, leftovers = {}) {
+			copy(f = id, leftovers = {}) {
 				sh1(this, leftovers)
 				const copied = this.this.this.empty()
 				this.this.this.loop()._full(
@@ -669,7 +676,7 @@ export const GeneralArray = (() => {
 						arguments: [leftovers]
 					}).function,
 					undefined,
-					RESULT._const((t) => end.compare(t.object().currindex)),
+					_const((t) => end.compare(t.object().currindex)),
 					(t) => {
 						t.object().begin()
 						t.object().go(begin, leftovers.range)
@@ -688,6 +695,7 @@ export const GeneralArray = (() => {
 			// ! Not effecient; Pray reconsider the implementation...
 			*[Symbol.iterator](leftovers = {}) {
 				sh1(this, leftovers)
+
 				for (
 					let c = this.this.this.init();
 					!c.compare(this.this.this.length().get());
@@ -757,7 +765,7 @@ export const GeneralArray = (() => {
 							leftovers
 						)
 					},
-					RESULT._const((x) => {
+					_const((x) => {
 						x.object().next()
 						this.this.this.next()
 					}),
@@ -809,7 +817,7 @@ export const GeneralArray = (() => {
 				return (this.this.this = x)
 			},
 			has(x, leftovers = {}) {
-				RESULT.ensureProperties(leftovers, {
+				ensureProperties(leftovers, {
 					unfound: this.this.this.this.class.template.unfound,
 					comparison:
 						this.this.this.this.class.template.icclass.template.comparison
@@ -842,7 +850,7 @@ export const GeneralArray = (() => {
 			// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
 			//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
 			firstIndex(x, leftovers = {}) {
-				RESULT.ensureProperties(leftovers, {
+				ensureProperties(leftovers, {
 					unfound: this.this.this.this.class.template.unfound,
 					comparison:
 						this.this.this.this.class.template.icclass.template.comparison
@@ -900,7 +908,7 @@ export const GeneralArray = (() => {
 				)
 				return (this.this.this = reversedArr)
 			},
-			map(f = RESULT.id, leftovers = {}) {
+			map(f = id, leftovers = {}) {
 				sh1(this, leftovers)
 				return (this.this.this = this.this.this.copy(f, leftovers))
 			},
@@ -920,7 +928,7 @@ export const GeneralArray = (() => {
 			 */
 			sort(predicate, leftovers = {}) {
 				sh1(this, leftovers)
-				const ALIAS = RESULT.aliases.native.number.fromNumber({
+				const ALIAS = aliases.native.number.fromNumber({
 					icclass: this.this.this.this.class.template.icclass,
 					start: -1
 				}).function
@@ -982,7 +990,7 @@ export const GeneralArray = (() => {
 							// * This code does not run when both are true, by the way...
 							K(a.isEmpty(), b.isEmpty())
 						}
-						const T = (x) => x.loop()._full(F, RESULT._const(RESULT.void))
+						const T = (x) => x.loop()._full(F, _const(aliases.void))
 
 						T(a)
 						T(b)
@@ -1041,13 +1049,18 @@ export const GeneralArray = (() => {
 
 				return (this.this.this = merge(split(this.this.this)))
 			},
+			// ! spread the 'leftovers' all over the library's classes and types;
 			isSorted(predicate, leftovers = {}) {
 				sh1(this, leftovers)
 				return leftovers.comparison(
 					this.this.this,
 					this.this.this.copied("sort", [predicate], undefined, leftovers)
 				)
-			}
+			},
+			suchthat: classes.suchthat,
+			any: classes.any,
+			every: classes.every,
+			forEach: classes.forEach
 		},
 		recursive: true
 	})
@@ -1059,7 +1072,7 @@ export function MultiInfiniteCounter(template = {}) {
 	// ! Pray think and decide...
 	return {
 		template: {
-			comparison: RESULT.main.valueCompre,
+			comparison: valueCompre,
 			...template
 		},
 		class: function (previous, index, generators = this.template.generators) {
@@ -1106,8 +1119,8 @@ export const arrays = {
 	LastIndexArray(template = {}) {
 		const A = {
 			template: {
-				icclass: RESULT.main.InfiniteCounter(RESULT.main.numberCounter()),
-				maxarrlen: RESULT.constants.MAX_ARRAY_LENGTH,
+				icclass: InfiniteCounter(counters.numberCounter()),
+				maxarrlen: constants.MAX_ARRAY_LENGTH,
 				filling: null,
 				...template,
 				bound: (i) => i < this.template.maxarrlen - 1,
@@ -1115,7 +1128,7 @@ export const arrays = {
 			}
 		}
 
-		A.class = RESULT.main.GeneralArray({
+		A.class = GeneralArray({
 			this: A,
 			elem: function (
 				arrobj,
@@ -1124,7 +1137,6 @@ export const arrays = {
 				beginningobj = array.currindex,
 				beginningind = 0
 			) {
-				// TODO [general]: a very small thing - format the spaces between lines; group the lines that in a fashion that is by oneself desireable...
 				const begin = arrobj.init()
 				let currarr = array
 				const original = arrobj.currindex
@@ -1169,7 +1181,7 @@ export const arrays = {
 				let pointer = this.elem(array, undefined, true)
 				while (!pointer[0]) {
 					pointer[1][pointer[2]] = (
-						pointer[0] === undefined ? (x) => [x] : RESULT.aliases.id
+						pointer[0] === undefined ? (x) => [x] : aliases.id
 					)(this.this.template.filling)
 					pointer = this.elem(array, pointer[1], true, pointer[3], pointer[2])
 				}
@@ -1182,13 +1194,14 @@ export const arrays = {
 	},
 	// * This is the 'arr.length > MAXLENGTH -> arr = [arr] ELSE arr.push([recursively, until hitting the 'min-depth']) THEN arr.push(newvalue)'-kind of an array [the one that is very resourceful and with slowly growin layers...]
 	// ! finish
+	// ? Just how complex does one want this to be, pray?
 	DeepArray(template = {}) {
-		// TODO: provide the template; [Think through that thing first, slightly; make a templated itself (same for the LastIndexArray)];
+		// TODO: provide the template;
 		return {
 			template: {
-				icclass: this.InfiniteCounter(RESULT.main.numberCounter())
+				icclass: InfiniteCounter(counters.numberCounter())
 			},
-			class: RESULT.main.GeneralArray({
+			class: GeneralArray({
 				newvalue: function (array, value) {},
 				elem(array) {},
 				icclass: this.template.icclass
@@ -1200,15 +1213,15 @@ export const arrays = {
 	CommonArray(template = {}) {
 		return {
 			template: { offset: -1, ...template },
-			class: RESULT.main.GeneralArray({
+			class: GeneralArray({
 				newvalue: function (arr, value) {
 					return (arr.array[arr.currindex] = value)
 				},
 				elem: function (arr) {
 					return arr.array[arr.currindex]
 				},
-				icclass: RESULT.main.InfiniteCounter(
-					RESULT.main.addnumber({
+				icclass: InfiniteCounter(
+					addnumber({
 						start: this.template.offset
 					})
 				),
@@ -1220,54 +1233,89 @@ export const arrays = {
 // ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
 // _? Question: store the pointer to the 'infinite' structure within the thing in question.
 // ! MAKE A TEMPLATE...
-export function UnlimitedMap(template = {}) {
-	return {
-		template: { keyclass: template.valueclass, ...template },
-		class: function (initial = {}) {
-			const final = {
-				this: {
-					indexes: this.template.keyclass(),
-					values: this.templates.valueclass(),
-					// TODO: about the 'leftovers' concept's implementation:
-					// * It ought to be used in such a manner as for to allow for greater diversity of functionality, that being - one ought to allow for 'leftoverss' [an array of 'leftovers' objects, which are (in accordance), used in appropriate places]
-					get(index, leftovers = {}) {
-						return this.this.this.values.read(
-							this.this.this.indexes
-								.firstIndex(index, leftovers)
-								.map(
-									this.this.this.values.this.this.this.this.class
-										.template.icclass
-								),
-							leftovers
-						)
-					},
-					set(index, value, leftovers = {}) {
-						return this.this.this.values.write(
-							this.this.this.indexes
-								.firstIndex(index, leftovers)
-								.map(
-									this.this.this.values.this.this.this.this.class
-										.template.icclass
-								),
-							value,
-							leftovers
-						)
-					}
-					// TODO: create a list of algorithms to go into the InfiniteMap, apart from the basic 'set' and 'get' (rely upon the GeneralArray's algorithms heavily...);
+export function UnlimitedMap(parentclass) {
+	return EXTENSION({
+		defaults: {
+			names: ["keys", "values"],
+			parentclass: parentclass,
+			defaults: {
+				constructor: aliases.generate(1, 2).map(
+					aliases._const(function () {
+						return this.template.empty
+					})
+				),
+				inter: function (args, i) {
+					return i == 0 ? args : [args[1]]
 				}
+			},
+			unfound: undefined
+		},
+		methods: {
+			// ! Issues:
+			// * Methods list outline:
+			// 	% 1. get(key); - obtain a value using the key; [note, if the key is missing - returns the 'this.this.this.this.class.template.unfound'];
+			// 	% 2. set(key, value); - set a value using the key; [note, if the key is unfound, creates a new key and sets the value to it];
+			// 	todo: pray work more deailedly on the exact list of these things...
+		},
+		static: {
+			fromObject(object = {}, finite = false) {
+				return this.this.class(
+					...DEOBJECT(object).map(
+						finite ? ID : this.this.template.parentclass.static.fromArray
+					)
+				)
 			}
-			final.this.this = final
-			for (const key in initial) final.this.set(key, initial[key])
-			return final
-		}
-	}
+		},
+		transform: StaticThisTransform,
+		recursive: true
+	})
+	// return {
+	// 	template: { keyclass: template.valueclass, ...template },
+	// 	class: function (initial = {}) {
+	// 		const final = {
+	// 			this: {
+	// 				indexes: this.template.keyclass(),
+	// 				values: this.templates.valueclass(),
+	// 				// TODO: about the 'leftovers' concept's implementation:
+	// 				// * It ought to be used in such a manner as for to allow for greater diversity of functionality, that being - one ought to allow for 'leftoverss' [an array of 'leftovers' objects, which are (in accordance), used in appropriate places]
+	// 				get(index, leftovers = {}) {
+	// 					return this.this.this.values.read(
+	// 						this.this.this.indexes
+	// 							.firstIndex(index, leftovers)
+	// 							.map(
+	// 								this.this.this.values.this.this.this.this.class
+	// 									.template.icclass
+	// 							),
+	// 						leftovers
+	// 					)
+	// 				},
+	// 				set(index, value, leftovers = {}) {
+	// 					return this.this.this.values.write(
+	// 						this.this.this.indexes
+	// 							.firstIndex(index, leftovers)
+	// 							.map(
+	// 								this.this.this.values.this.this.this.this.class
+	// 									.template.icclass
+	// 							),
+	// 						value,
+	// 						leftovers
+	// 					)
+	// 				}
+	// 				// TODO: create a list of algorithms to go into the InfiniteMap, apart from the basic 'set' and 'get' (rely upon the GeneralArray's algorithms heavily...);
+	// 			}
+	// 		}
+	// 		final.this.this = final
+	// 		for (const key in initial) final.this.set(key, initial[key])
+	// 		return final
+	// 	}
+	// }
 }
 
 // ? Rename to GeneralString?
-export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
+export function UnlimitedString(parent = arrays.LastIndexArray) {
 	// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
 	const ALIAS = (_this) =>
-		RESULT.aliases.native.number.fromNumber({
+		aliases.native.number.fromNumber({
 			icclass: _this.this.this.this.class.template.parentclass.template.icclass,
 			start: -1
 		}).function
@@ -1276,34 +1324,30 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 			parentclass: parent,
 			empty: "",
 			names: ["genarr"],
-			basestr: RESULT.aliases._const(" ")
+			basestr: aliases._const(" ")
 		},
 		properties: {
-			currindex: RESULT.aliases._const(0)
+			currindex: aliases._const(0)
 		},
 		methods: {
 			// * Currently missing:
 			// 	% 1. join();
 			// 	% 2. length().set();
-			// 	% 3. loop();
 			split(useparator = "") {
 				// todo: 1. generalize; 2. put it out somwhere...
 				function lengthSafeConcat(a, b) {
-					if (a.length >= RESULT.variables.MAX_STRING_LENGTH.get - b.length)
+					if (a.length >= variables.MAX_STRING_LENGTH.get - b.length)
 						return [
 							a.concat(
-								b.slice(
-									0,
-									RESULT.variables.MAX_STRING_LENGTH.get - a.length
-								)
+								b.slice(0, variables.MAX_STRING_LENGTH.get - a.length)
 							),
-							b.slice(RESULT.variables.MAX_STRING_LENGTH.get - a.length)
+							b.slice(variables.MAX_STRING_LENGTH.get - a.length)
 						]
 					return [a.concat(b)]
 				}
 
 				const strarr = this.this.this.this.class.template.parentclass.class()
-				if (RESULT.aliases.is.str(useparator)) {
+				if (aliases.is.str(useparator)) {
 					let carryover = ""
 					for (const str of this.this.this.genarr) {
 						const postsplit = str.split(useparator)
@@ -1328,7 +1372,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 						}
 					}
 				}
-				if (RESULT.aliases.is.ustr(useparator)) {
+				if (aliases.is.ustr(useparator)) {
 					// ! This thing re-appears throughout the class twice! Pray refactor...
 					let prevcounter = this.this.this.init()
 					let currcounter = this.this.this.init()
@@ -1385,7 +1429,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 
 						if (!hasBroken) {
 							FUNC.bind(this)(strarr, prevcounter, currcounter)
-							prevcounter = RESULT.main.native.deepCopy(currcounter)
+							prevcounter = native.deepCopy(currcounter)
 						}
 						hasBroken = false
 						currcounter = currcounter.jumpForward(backupcounter)
@@ -1409,9 +1453,9 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 					.copied("slice", [this.this.this.init(), ind.previous()])
 					.keys())
 					final = final.jumpForward(
-						RESULT.main.types
+						types
 							.InfiniteCounter(
-								RESULT.main.counters.this.this.this.addnumber({
+								counters.this.this.this.addnumber({
 									start: -1
 								})
 							)(genarr.read(x).length)
@@ -1450,8 +1494,8 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 					inarrind,
 					currstr.length -
 						present.difference(index).map(
-							RESULT.main.types.InfiniteCounter(
-								RESULT.main.counters.addnumber({
+							types.InfiniteCounter(
+								counters.addnumber({
 									start: -1
 								})
 							)
@@ -1473,10 +1517,6 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 					newstr.pushback(this.this.this.currelem().get())
 				return (this.this.this = (orderly ? (x) => x.order() : ID)(newstr))
 			},
-			// ? Does one want that manner of a loop even? [Pray consider whether the thing in question is desirable after all, relook at the GeneralArray's version of the method...]
-			loop() {
-				// % returns a GeneralArray-like structure, allowing one to run loops on the UnlimitedString object in question;
-			},
 			read(index) {
 				// ^ CONCLUSION: this is __the__ most desired way to do it within the library ONLY when one is intending for the method in question to be non-mutating...
 				return this.this.this.copied("symbolic", []).genarr.read(index)
@@ -1484,9 +1524,9 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 			write(index, value) {
 				general.fix(
 					[this.this.this.genarr, this.this.this],
-					RESULT.generate(1, 2).map(RESULT.aliases._const("currindex")),
+					generate(1, 2).map(aliases._const("currindex")),
 					() => {
-						this.this.this.go(index, RESULT.aliases._const(true))
+						this.this.this.go(index, aliases._const(true))
 						this.this.this.currelem().set(value)
 					}
 				)
@@ -1496,8 +1536,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 				return this.this.this
 			},
 			concat(ustring) {
-				if (RESULT.aliases.is.str(ustring))
-					return this.this.this.pushback(ustring)
+				if (aliases.is.str(ustring)) return this.this.this.pushback(ustring)
 				this.this.this.genarr.concat(ustring.genarr)
 				return this.this.this
 			},
@@ -1512,7 +1551,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 						return this.this.this.genarr
 							.currelem()
 							.set(
-								RESULT.aliases.native.string.sreplaceIndex(
+								aliases.native.string.sreplaceIndex(
 									this.this.this.genarr.currelem().get(),
 									this.this.this.currindex,
 									char
@@ -1577,7 +1616,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 									)
 									.compare(
 										__ALIAS(
-											RESULT.variables.MAX_STRING_LENGTH -
+											variables.MAX_STRING_LENGTH -
 												this.this.this.genarr.read(
 													this.this.this.genarr.finish()
 												)
@@ -1598,7 +1637,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 								)
 								.compare(
 									_ALIAS(
-										RESULT.variables.MAX_STRING_LENGTH -
+										variables.MAX_STRING_LENGTH -
 											this.this.this.genarr.read(
 												this.this.this.genarr.finish()
 											)
@@ -1631,9 +1670,9 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 			},
 			join(
 				separator,
-				frequency = RESULT.aliases._const(
-					RESULT.main.types
-						.InfiniteCounter(RESULT.main.counters.addnumber({ start: -1 }))
+				frequency = aliases._const(
+					types
+						.InfiniteCounter(counters.addnumber({ start: -1 }))
 						.class(1)
 						.map(
 							this.this.this.this.class.template.parentclass.template
@@ -1678,15 +1717,14 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 					this.this.this
 				)
 			},
-			indexesOf(ustring, halt = false, halfAfter = Infinity) {
+			indexesOf(ustring, halt = false, haltAfter = Infinity) {
 				const indexes = this.this.this.this.class.template.parentclass.class()
-				if (RESULT.aliases.is.str(ustring))
+				if (aliases.is.str(ustring))
 					return this.this.this.indexesOf(
 						this.this.this.this.class.class(ustring)
 					)
 				if (this.this.this.class.is(ustring)) {
 					// ! NOTE: (partially) the same code as in the 'split'; Pray, after further work on it - refactor...
-					let prevcounter = this.this.this.init()
 					let currcounter = this.this.this.init()
 					let backupcounter = this.this.this.init()
 					let hasBroken = false
@@ -1731,10 +1769,7 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 							backupcounter = backupcounter.next()
 						}
 
-						if (!hasBroken) {
-							indexes.pushback(currcounter)
-							prevcounter = RESULT.main.native.deepCopy(currcounter)
-						}
+						if (!hasBroken) indexes.pushback(currcounter)
 						hasBroken = false
 						currcounter = currcounter.jumpForward(backupcounter)
 						backupcounter = this.this.this.init()
@@ -1771,12 +1806,12 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 				return symstr
 			},
 			pushback(ustring) {
-				if (RESULT.aliases.is.str(ustring))
+				if (aliases.is.str(ustring))
 					return this.this.this.genarr.pushback(ustring)
 				return this.this.this.concat(ustring)
 			},
 			pushfront(ustring) {
-				if (RESULT.aliases.is.str(ustring)) {
+				if (aliases.is.str(ustring)) {
 					this.this.this.genarr.pushfront(ustring)
 					// ^ IDEA: let all the affecting object's methods return this.this.this! This way, one'll be able to chain them in a declarative style!
 					return this.this.this
@@ -1785,15 +1820,22 @@ export function UnlimitedString(parent = RESULT.main.LastIndexArray) {
 			},
 			*[Symbol.iterator]() {
 				for (const str of this.this.this.genarr) for (const sym of str) yield sym
-			}
+			},
+			suchthat: classes.suchthat,
+			any: classes.any,
+			every: classes.every,
+			forEach: classes.forEach
 			// TODO: pray decide if any more methods are desired here...
-			// * note: the 'loop()' must work in a fashion similar to that of 'GeneralArray', but on a symbol-by-symbol basis...;
-			// * note: for all the methods that use an InfiniteCounter-s class, let the used one be the 'parentclass.template.icclass';
 			// * Current list [add to GeneralArray]:
 			// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
 			// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question;
-			// 			? [gets re-added to the UnlimitedString in question... or not?];
 		},
+		static: {
+			fromString(str = "") {
+				return this.this.class(str)
+			}
+		},
+		transform: StaticThisTransform,
 		recursive: true
 	})
 }
@@ -1884,8 +1926,8 @@ export const numbers = {
 			template: { ...template },
 			static: {
 				simplify(ratio) {
-					let x = RESULT.main.deepCopy(ratio)
-					const l = RESULT.main.minfinite(ratio.value)
+					let x = deepCopy(ratio)
+					const l = minfinite(ratio.value)
 					for (
 						let i = TrueInteger({
 							icclass: this.this.template.icclass
@@ -1995,14 +2037,14 @@ export const numbers = {
 		}
 	}
 }
-// ? QUESTION: about the UniversalMap... Does it remain under the '.main'? Or does it instead travel to the '.aliases.native'? Should it be replaced by the UnlimitedMap or turned into a distinctly named special case of it?
+// ? QUESTION [Extension of native JS Map]: Does one put this thing under the 'aliases' for a special case of UnlimitedMap?;
 export function UniversalMap(template = {}) {
 	return {
 		template: {
 			// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
 			notfound: undefined,
 			treatUniversal: false,
-			comparison: RESULT.main.valueCompares,
+			comparison: comparisons.valueCompares,
 			...template
 		},
 		class: function (
@@ -2027,7 +2069,7 @@ export function UniversalMap(template = {}) {
 				index: 0,
 				class: this,
 				get(key, number = 1) {
-					const indexes = RESULT.aliases.native.array
+					const indexes = aliases.native.array
 						.indexesOf({
 							comparison: this.class.template.comparison
 						})
@@ -2036,7 +2078,7 @@ export function UniversalMap(template = {}) {
 					return indexes.slice(0, number).map((i) => this.values[i])
 				},
 				set(key, value) {
-					const index = RESULT.aliases.native.array.indexesOf(
+					const index = aliases.native.array.indexesOf(
 						this.keys,
 						key,
 						this.class.template.comparison
@@ -2085,7 +2127,7 @@ export function UniversalMap(template = {}) {
 						a[
 							(!["symbol", "number"].includes(typeof this.keys[i])
 								? JSON.stringify
-								: RESULT.id)(this.keys[i])
+								: id)(this.keys[i])
 						] = this.values[i]
 					return a
 				}
@@ -2109,7 +2151,7 @@ export function TypedArray(template = {}) {
 	const C = {
 		template: {
 			empty: [],
-			typefunction: RESULT.aliases._const(true),
+			typefunction: aliases._const(true),
 			...template
 		}
 	}
@@ -2142,7 +2184,7 @@ export function TypedArray(template = {}) {
 export function NumberEquation(template = {}) {
 	const X = {
 		template: {
-			operators: RESULT.variables.defaultAlphabet.get,
+			operators: variables.defaultAlphabet.get,
 			// ! make a default variable...
 			brackets: [
 				["(", ")"],
@@ -2171,7 +2213,7 @@ export function NumberEquation(template = {}) {
 					this.this.template.genarrclass.static.empty()
 				]
 
-				eqline = RESULT.aliases.native.string.sreplace(eqline, " ", "")
+				eqline = aliases.native.string.sreplace(eqline, " ", "")
 				// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
 				eqline = eqline.split("=")
 				// ? QUESTION: enable arbitrary user-defined syntaxes?
@@ -2214,7 +2256,7 @@ export function NumberEquation(template = {}) {
 				for (const pparsed of parsed)
 					for (let i = 0; i < pparsed.length; i++)
 						if (pparsed[i] === varname)
-							pparsed = RESULT.aliases.native.string.sreplaceIndex(
+							pparsed = aliases.native.string.sreplaceIndex(
 								pparsed,
 								i,
 								varvalue

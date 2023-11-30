@@ -1,5 +1,7 @@
 // todo: work extensively on the precise list of aliases... Also, their names...
 
+import { DEOBJECT } from "../macros.mjs"
+
 // ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
 // TODO [general] : work on the spacing - all the definition lines must have a 1-spacing between each other [for readability]; The non-definition lines ('a:b' - pure aliases) ought to be 'grouped' without such a spacing;
 export const native = {
@@ -980,9 +982,7 @@ export const native = {
 			return newobj
 		},
 
-		objArr: function (obj = {}) {
-			return [Object.keys, Object.values].map((x) => x(obj))
-		},
+		objArr: DEOBJECT,
 
 		objSwap: function (obj1, obj2) {
 			;((obj1Copy, obj2Copy) => {

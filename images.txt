@@ -1,36 +1,18 @@
 One revisits this file to use it as a sort of todo-list...
 
-GeneralArray<
+GeneralArray<> (array) {
 	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
-	every(func) // like Array.every(); min(Array.map(boolmapfunction))
-	any(func) // max(Array.map(boolmapfunction))
 	reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
-	[filter/property/sub]() // like Array.filter()
-	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes
-	each<generator=defaultgenerator>((ind, el, arr) => {...}) // same as Array.forEach()
-> (array) {}
+	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
+}
 
-
-TODO: pray do, after having created the 'Order'-like [or generator/InfiniteArray-like] variable for the InfiniteMap (to provide with the other InfinteArray's methods [id est, make them equivalent...])
-Then, one would simply define the 'InfiniteArray' as InfiniteMap *without* that order-like argument and that's it! 
-CURRENT AGENDA: decide what kind of a structure to add to InfiniteMap for these kinds of things, think more about what stuff it should have...
-InfiniteMap<
+// Later, pray work further on a more complete concept of the UnlimitedMap
+UnlimitedMap<
 	entries<generator>() // like Object.entries()
 	map((value, key, obj) => [newvalue, newkey]) // Maps a map to a map. 
 	every((value, key) => boolean) // same as Array.
 	[Symbol.iterator]
 	>([keys, objects] or some: InfiniteMap or map: {})
-
-IDEA: ?separate the 'infinite' onto 'wrapper/abstract' and 'content/particular'? 
-GeneralArray would be in abstract, whilst stuff like numberCounter or lastIndexArray -- in particular. 
-
-IDEA: implement a 'convert' method for various such 'template' things; Let it do the next thing -- translate one template object into another; 
-??Work on a general matter of templates??
-
-IDEA: add a method indexes() to the InfiniteArray; Let it return all the indexes present within the array in question...
-It'd work useing the 'generator' template parameter...
-
-IDEA: add a method to the InfiniteArray for deleting by property [instead of an index -- generalized version...]; 
 
 IDEA: for an ACTUALLY infinite string (not just 'programmatically unlimited', actually infinite!); 
 Only problem is -- the possible amount of it that can be read is STILL finite :D, but the string itself is infinite! 
@@ -98,7 +80,7 @@ Because:
 
 So, for example, one could do 'infinite.algorithms.arrays.lastIndexArrConcat(..., ...)'; 
 
-TODO: for mr. flesh, pray implement...
+TODO: pray implement...
 // ? Question: should the GeneralArray thingy even HAVE all that separation onto 2 indexgenerator systems???
 // * Current decision: no, they are [in the class case, that being the general one] united. But, in special cases [like .map, for instance...], instead allows for this kind of diversity.
 
