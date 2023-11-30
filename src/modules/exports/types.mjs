@@ -1,12 +1,14 @@
+// * The most essential part of the library - the types definitions;
+
 import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as counters from "./counters.mjs"
+import * as algorithms from "./algorithms.mjs"
+
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
 import { StaticThisTransform } from "../instance.mjs"
-
-// * The most essential part of the library - the types definitions;
 
 export const InfiniteCounter = (() => {
 	const sh1 = (_this, leftovers) =>
@@ -204,6 +206,13 @@ export const InfiniteCounter = (() => {
 // 	% 1. If left as-is, the methods of the class's instance will all work with the 'this.this.this', which is the field of 'this.this', which unless changed always stays the same; So, the thing works;
 // 	% 2. If changed to the '.get-.set' construction instead, one'll have a more flexible way to change (and affect) the setting of the 'this';
 // ? Pray consider which one to do...;
+
+// TODO: Current list of methods to add to GeneralArray:
+// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
+// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question;
+// % 	3. splice(index, times); Same as Array.splice();
+// % 	4. spliceMult(indexes, ntimes); repeated spliceMult [both args are arrays...];
+// % 	5. splitlen(length); split the array onto subarrays of given length 'length'; If not possible to factor in such a way as to have them all being precisely 'length', then the last one is made shorter...;
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
@@ -497,13 +506,7 @@ export const GeneralArray = (() => {
 					leftovers.range
 				))
 			},
-			/**
-			 * * Hello, Wilbur!
-			 * ? Does that thing work even???
-			 * * might...
-			 * TODO: pray check if these kinds of 'nested'ly stuctured objects' methods even get their in-editor JSDoc documentation properly... [Quite a jolly surprise if they do!]
-			 */
-			read(index, leftovers = {}) {
+			read(index = this.this.this.init(), leftovers = {}) {
 				sh1(this, leftovers)
 				const ind = this.this.this.currindex
 				if (leftovers.fast) this.this.this.go(index, leftovers.range)
@@ -587,9 +590,16 @@ export const GeneralArray = (() => {
 					}
 				}
 			},
-			copied(method, _arguments = [], f = id, leftovers = {}) {
+			copied(
+				method,
+				_arguments = [],
+				f = id,
+				template = this.this.this.this.class.template,
+				isclass = false,
+				leftovers = {}
+			) {
 				sh1(this, leftovers)
-				const c = this.this.this.copy(f, leftovers)
+				const c = this.this.this.copy(f, template, isclass, leftovers)
 				if (c.hasOwnProperty(method) && typeof c[method] === "function")
 					c[method](..._arguments)
 				return c
@@ -647,9 +657,11 @@ export const GeneralArray = (() => {
 				return this.this.this.this.class.static.empty(template)
 			},
 			copy(
-				f = id,
-				template = this.this.this.this.class.template,
+				f = ID,
 				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
 				leftovers = {}
 			) {
 				sh1(this, leftovers)
@@ -664,6 +676,12 @@ export const GeneralArray = (() => {
 					}).function
 				)
 				return copied
+			},
+			delval(value) {
+				const x = this.this.this.firstIndex(value)
+				if (!(x === this.this.this.template.unfound))
+					return this.this.this.delete(x)
+				return this.this.this
 			},
 			slice(
 				begin = this.this.this.init(),
@@ -732,8 +750,8 @@ export const GeneralArray = (() => {
 			convert(template = this.this.this.this.class.template, leftovers = {}) {
 				return (this.this.this = this.this.this.copy(
 					ID,
-					template,
 					false,
+					template,
 					leftovers
 				))
 			},
@@ -742,8 +760,8 @@ export const GeneralArray = (() => {
 				// ! same issue as in the '.convert' method;
 				return (this.this.this = this.this.this.copy(
 					ID,
-					arrclass,
 					true,
+					arrclass,
 					leftovers
 				))
 			},
@@ -753,16 +771,15 @@ export const GeneralArray = (() => {
 			},
 			deleteMult(startindex, endindex = startindex, leftovers = {}) {
 				sh1(this, leftovers)
+				const x = this.this.this.copied(
+					"slice",
+					[endindex.next()],
+					undefined,
+					leftovers
+				)
 				return this.this.this
 					.slice(this.this.this.init(), startindex.previous(), leftovers)
-					.concat(
-						this.this.this.copied(
-							"slice",
-							[endindex.next()],
-							undefined,
-							leftovers
-						)
-					)
+					.concat(x)
 			},
 			projectComplete(array, index, leftovers = {}) {
 				sh1(this, leftovers)
@@ -826,19 +843,8 @@ export const GeneralArray = (() => {
 				x.concat(this.this.this.copied("slice", [index], undefined, leftovers))
 				return (this.this.this = x)
 			},
-			has(x, leftovers = {}) {
-				ensureProperties(leftovers, {
-					unfound: this.this.this.this.class.template.unfound,
-					comparison:
-						this.this.this.this.class.template.icclass.template.comparison
-				})
-				return !leftovers.comparison(
-					this.this.this.firstIndex(x, leftovers),
-					leftovers.unfound
-				)
-			},
 			// * Just an alias...
-			index(i, leftovers = {}) {
+			index(i = this.this.this.init(), leftovers = {}) {
 				sh1(this, leftovers)
 				return this.this.this.read(i, leftovers)
 			},
@@ -904,9 +910,19 @@ export const GeneralArray = (() => {
 				)
 				return (this.this.this = reversedArr)
 			},
-			map(f = id, leftovers = {}) {
+			map(
+				f = id,
+				template = this.this.this.this.class.template,
+				isclass = false,
+				leftovers = {}
+			) {
 				sh1(this, leftovers)
-				return (this.this.this = this.this.this.copy(f, leftovers))
+				return (this.this.this = this.this.this.copy(
+					f,
+					template,
+					isclass,
+					leftovers
+				))
 			},
 			isEmpty(isend = this.this.this.this.class.template.isEnd) {
 				const index = this.this.this.currindex
@@ -915,135 +931,10 @@ export const GeneralArray = (() => {
 				this.this.this.currindex = index
 				return val
 			},
-			/**
-			 * Implementation of the merge-sort of the GeneralArray in question by means of the passed predicate;
-			 *
-			 * DEFINITION:
-			 *
-			 * WIKI:
-			 */
-			sort(predicate, leftovers = {}) {
-				sh1(this, leftovers)
-				const ALIAS = aliases.native.number.fromNumber({
-					icclass: this.this.this.this.class.template.icclass,
-					start: -1
-				}).function
-				const TWO = ALIAS(2),
-					THREE = ALIAS(3)
-
-				function split(a) {
-					if (
-						leftovers.comparison(TWO, a.length().get()) ||
-						leftovers.comparison(a.length().get(), THREE)
-					)
-						return this.this.this.this.class.static.fromArray([a], leftovers)
-
-					// ? Should one generalize this ???
-					// * YES, this code is getting slightly repetitious and unwieldy...
-					const counter = this.this.ths.init()
-					while (
-						!leftovers.comparison(a.finish(), counter.jump(counter)) &&
-						!leftovers.comparison(a.finish(), counter.jump(counter.next()))
-					)
-						counter = counter.next()
-
-					// TODO: it's really time to generalize this [the empty arrays thing...]!!!
-					const final = this.this.this.empty()
-					final.concat(split(a.slice(a.init(), counter, leftovers)))
-					final.concat(split(a.slice(counter, undefined, leftovers)), leftovers)
-					return final
-				}
-				function merge(a) {
-					function binmerge(a, b) {
-						// TODO: AGAIN...
-						const merged = this.this.this.empty()
-
-						// TODO: make the default 'index' for .read() to be '.init()'...; Then, here, one'd just write 'undefined everywhere...'
-						// * One was expecting this to be far more unwieldy...
-						// ? Question: make it better? Pray do sometime later...
-						const F = (x) => {
-							const K = (ampt, bmpt) => {
-								const f1 = elem_sort(
-									a.this.class.static.fromArray(
-										ampt
-											? [b.read(b.init(), leftovers)]
-											: bmpt
-											? [a.read(a.init(), leftovers)]
-											: [
-													a.read(a.init(), leftovers),
-													b.read(b.init(), leftovers)
-											  ],
-										leftovers
-									)
-								)
-								merged.pushback(f1.read(f1.init(), leftovers), leftovers)
-								// TODO: fix up the usage of 'a.has' here...
-								const c =
-									bmpt || a.has(f1.read(f1.init(), leftovers)) ? a : b
-								// TODO: finish the .shiftBackward() first... - one is required to delete only 1 element from the start...
-								c.shiftBackward()
-							}
-							// * This code does not run when both are true, by the way...
-							K(a.isEmpty(), b.isEmpty())
-						}
-						const T = (x) => x.loop()._full(F, _const(aliases.void))
-
-						T(a)
-						T(b)
-
-						return merged
-					}
-					let current = elem_sort(a.index(a.init(), leftovers))
-					a.loop()._full(
-						(x) =>
-							(current = binmerge(
-								current,
-								elem_sort(x.object().currelem().get())
-							)),
-						undefined,
-						undefined,
-						(x) => x.object().go(x.object().init().next())
-					)
-				}
-				function elem_sort(a) {
-					function TWOCASE(a) {
-						const first = a.read(a.init(), leftovers)
-						const second = a.read(a.init().next(), leftovers)
-						return predicate(second, first)
-							? a
-							: a.this.class.static.fromArray([second, first], leftovers)
-					}
-					function THREECASE(a) {
-						const first = a.read(a.init())
-						// todo: pray finish the arguments list for .shiftBackward()...
-						const copied = elem_sort(a.copied("shiftBackward"))
-
-						const c1 = copied.read(copied.init(), leftovers)
-						const c2 = copied.read(copied.init().next(), leftovers)
-
-						const fC1 = predicate(first, c1)
-						const fC2 = predicate(first, c2)
-
-						// ? QUESTION: should one try to shorten these kinds of things....
-						// * Pray consider in some depth...
-						return fC1
-							? fC2
-								? a.this.class.static.fromArray(
-										[c1, c2, first],
-										leftovers
-								  )
-								: a.this.class.static.fromArray(
-										[c1, first, c2],
-										leftovers
-								  )
-							: a.this.class.static.fromArray([first, c1, c2], leftovers)
-					}
-					return leftovers.comparison(a.length().get(), TWO)
-						? TWOCASE(a)
-						: THREECASE(a)
-				}
-
-				return (this.this.this = merge(split(this.this.this)))
+			sort(predicate) {
+				return (this.this.this = algorithms.Sort.merge({
+					predicate: predicate
+				}).function(this.this.this))
 			},
 			isSorted(predicate, leftovers = {}) {
 				sh1(this, leftovers)
@@ -1298,18 +1189,6 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			// 	% 1. join();
 			// 	% 2. length().set();
 			split(useparator = "") {
-				// todo: 1. generalize; 2. put it out somwhere...
-				function lengthSafeConcat(a, b) {
-					if (a.length >= variables.MAX_STRING_LENGTH.get - b.length)
-						return [
-							a.concat(
-								b.slice(0, variables.MAX_STRING_LENGTH.get - a.length)
-							),
-							b.slice(variables.MAX_STRING_LENGTH.get - a.length)
-						]
-					return [a.concat(b)]
-				}
-
 				const strarr = this.this.this.this.class.template.parentclass.class()
 				if (aliases.is.str(useparator)) {
 					let carryover = ""
@@ -1317,9 +1196,9 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 						const postsplit = str.split(useparator)
 						for (let i = 0; i < postsplit.length; i++) {
 							if (i === 0) {
-								lengthSafeConcat(carryover, postsplit[i]).map(
-									strarr.pushback
-								)
+								general
+									.lengthSafeConcat(carryover, postsplit[i])
+									.map(strarr.pushback)
 								continue
 							}
 							if (
@@ -1336,7 +1215,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 						}
 					}
 				}
-				if (aliases.is.ustr(useparator)) {
+				if (this.this.this.this.class.is(useparator)) {
 					// ! This thing re-appears throughout the class twice! Pray refactor...
 					let prevcounter = this.this.this.init()
 					let currcounter = this.this.this.init()
@@ -1795,10 +1674,6 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			any: classes.any,
 			every: classes.every,
 			forEach: classes.forEach
-			// TODO: pray decide if any more methods are desired here...
-			// * Current list [add to GeneralArray]:
-			// % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
-			// % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question;
 		},
 		static: {
 			fromString(str = "") {
@@ -2106,7 +1981,7 @@ export function UniversalMap(template = {}) {
 	}
 }
 
-// Utilizes the fact that JS passes objects by reference; 
+// Utilizes the fact that JS passes objects by reference;
 export const Pointer = TEMPLATE({
 	defaults: { label: "", nullptr: undefined },
 	function: function (value = this.template.nullptr) {

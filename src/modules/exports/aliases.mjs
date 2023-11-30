@@ -199,3 +199,9 @@ export const T = TRUTH
 export const FALLACY = native.function._concat(false)
 export const F = FALLACY
 export const VOID = native.function.void
+
+// ! use these a lot...
+export const lesser = (a, b) => !a.compare(b)
+export const greater = (a, b) => !b.compare(a)
+export const lesseroe = (a, b) => b.compare(a)
+export const greateroe = (a, b) => a.compare(b)

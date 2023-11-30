@@ -1,4 +1,5 @@
 import * as aliases from "./exports/aliases.mjs"
+import * as comparisons from "./exports/comparisons.mjs"
 
 export const classes = {
 	finish: function () {
@@ -28,12 +29,18 @@ export const classes = {
 		)
 	},
 	forEach: function (method = aliases.VOID) {
-		for (const x of this.this.this) method(x)
+		for (const x of this.this.this.keys())
+			method(this.this.this.read(x), x, this.this.this)
 		return this.this.this
 	},
-	includes: function (element) {
-		return (
-			this.this.this.firstIndex(element) !== this.this.this.class.template.unfound
+	includes: function (element, leftovers = {}) {
+		ensureProperties(leftovers, {
+			unfound: this.this.this.this.class.template.unfound,
+			comparison: comparisons.refCompare
+		})
+		return !leftovers.comparison(
+			this.this.this.firstIndex(element),
+			this.this.this.class.template.unfound
 		)
 	}
 }
@@ -45,5 +52,13 @@ export const general = {
 		const returned = operation()
 		for (let i = 0; i < remember.length; i++) setfunc(objs[i], keys[i], remember[i])
 		return returned
+	},
+	lengthSafeConcat: function (a, b) {
+		if (a.length >= variables.MAX_STRING_LENGTH.get - b.length)
+			return [
+				a.concat(b.slice(0, variables.MAX_STRING_LENGTH.get - a.length)),
+				b.slice(variables.MAX_STRING_LENGTH.get - a.length)
+			]
+		return [a.concat(b)]
 	}
 }

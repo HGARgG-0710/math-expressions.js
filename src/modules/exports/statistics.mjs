@@ -2,25 +2,8 @@ import * as comparisons from "./comparisons.mjs"
 
 // * This module defines various basic statistical tests and measures implementations;
 
-// ! PRAY GENERALIZE USING THE TRUE-NUMBERS...
+// ! Generalize using the TrueNumber(s); 
 
-// * SKETCH OF A PLAN [as to what to do with Statistics API]:
-// 		0. This whole thing gets translated into the 'general' language [instead of Arrays - GeneralArrays, instead of numbers - InfiniteCounters, or other TrueNumber classes...];
-// 		1. One can STILL work with the numeric part of it like before - in particular, one can do things related to [note: requires a default InfiniteCounter class to use with still...]:
-// 			1.1. mostPopular;
-// 			1.2.
-// 		2. Stuff related to orders must be abstracted [in particular, the notion of 'order' must become present...]:
-// 			2.1. 'sorted';
-// 			2.2. 'min';
-// 			2.3. 'max';
-// 		3. The topics regarding the difference between objects shall too require a separate notion of 'difference' (like with 'order', defaulted to the appropriate function from within the InfiniteCounter structure):
-// 			3.1. range;
-// 			3.2. deviations;
-// 			3.3. standardDeviation;
-// 			3.4. standardError;
-// 		4. Stuff related to arithmetic (such as sums and divisions), too shall be specified...:
-// 			4.1. average;
-// ! Pray consider in greater depth the plan slightly later...
 /**
  * This class represents an assembly of various statistics on the array of numeric data given.
  *
@@ -285,32 +268,6 @@ export const leastPopular = TEMPLATE({
 export const range = function (nums = [], isInterquartile = false) {
 	const newArr = isInterquartile ? truncate(nums, 25) : copy(nums)
 	return floor(max(newArr) - min(newArr))
-}
-
-// TODO: what's below (star)...
-// * Make this thing into an object: let this be put under "bubble" (for bubble sort, if that's what this thing is...); Put the (general...) sorting algorithms under 'algorithms' instead...;
-/**
- * Takes an array of numbers and returns sorted version of it.
- * @param {number[]} nums An array of numbers, passed to the function to sort.
- * @param {boolean} forward A boolean, on which value depends will the function sort an array from least to the largest or from largest to the least. By default true.
- */
-export function sort(nums = [], forward = true) {
-	const listArr = copy(nums)
-	const sorted = []
-	if (forward) {
-		for (let i = 0; i < nums.length; i++) {
-			const least = min(listArr)
-			listArr.splice(listArr.indexOf(least), 1)
-			sorted.push(least)
-		}
-	} else {
-		for (let i = 0; i < nums.length; i++) {
-			const largest = max(listArr)
-			listArr.splice(listArr.indexOf(largest), 1)
-			sorted.push(largest)
-		}
-	}
-	return sorted
 }
 
 /**

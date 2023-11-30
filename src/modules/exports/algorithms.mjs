@@ -1,12 +1,19 @@
 // * Various algorithms for the library that one considered potentially useful;
 
 // TODO: extend this thing - create new algorithms implementations for the library...
-// ! Generalize this [use General types...];
+// TODO: make the things more efficient, general, implement more algorithms;
+
+// ! problem: in this instance - the usage of finite types;
+// ? When shall it be the preference?
+// * DECISION: yes, generalize them, then make the 'CommonArray'-kind of special cases; [Make such special cases for all of them...];
+
+import * as aliases from "./aliases.mjs"
+import * as orders from "./orders.mjs"
 
 export function BinarySearch(array, number) {
 	// * For getting the middle index of the array.
 	const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
-	const copyArray = sort(array)
+	const copyArray = Sort.bubble(array)
 	let index = middle(copyArray)
 	let copyArr = copy(copyArray)
 	let copyIndex = index
@@ -46,4 +53,78 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 		}
 	}
 	return gotten
+}
+
+// ! For that, one first has to fix the 'orders' part of the module...;
+export const Sort = {
+	bubble: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			const listArr = garr.copy()
+			const sorted = garr.empty()
+			const f = orders.most({ comparison: this.template.predicate })
+			for (const _t of garr) {
+				const extreme = f(listArr)
+				sorted.pushback(extreme)
+				listArr.delval(extreme)
+			}
+			return sorted
+		}
+	}),
+	merge: TEMPLATE({
+		defaults: {},
+		function: function (array = this.template.genarrclass.static.empty()) {
+			const CONSTOBJ = {}
+			function split(a) {
+				return a.copied("splitlen", [a.init().next()]).map((x) => [CONSTOBJ, x])
+			}
+			function merge(a) {
+				if (a.init().compare(a.length().get())) return a.read()[1]
+				const b = a.empty()
+				a.loop()._full(
+					(t) => {
+						if (t.object().currindex.next().compare(t.length().get())) return
+						const fn = t.object().read(t.object().currindex.next())[1]
+						const ca = t.object().currelem[1]
+						const newarr = t.object().empty()
+						let fc = t.object().init(),
+							sc = t.object().init()
+						for (
+							;
+							!fc
+								.jump(sc)
+								.compare(
+									t
+										.object()
+										.currelem.length()
+										.get()
+										.jump(fn.length().get())
+								);
+
+						) {
+							let m = CONSTOBJ
+							const firarrel = ca.read(fc)
+							const secarrel = fn.read(sc)
+
+							if (this.template.predicate(firarrel, secarrel)) {
+								m = firarrel
+								fc = fc.next()
+							}
+							if (m === CONSTOBJ) {
+								m = secarrel
+								sc = sc.next()
+							}
+
+							newarr.pushback(m)
+						}
+						b.pushback([CONSTOBJ, newarr])
+					},
+					aliases.function._const((x) => x.next().next())
+				)
+				return merge(b)
+			}	
+			return merge(split(array))
+		}
+	})
+	// todo: more sorting algorithms;
 }

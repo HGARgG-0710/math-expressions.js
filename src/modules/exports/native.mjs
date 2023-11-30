@@ -394,7 +394,7 @@ export const object = {
 		for (const key in keys) newobj[keys[key]] = obj[key]
 		if (id)
 			for (const key in obj)
-				if (!Object.values(keys).has(key)) newobj[key] = obj[key]
+				if (!Object.values(keys).includes(key)) newobj[key] = obj[key]
 		return newobj
 	},
 
@@ -670,6 +670,14 @@ export const array = {
 			: 1
 	},
 
+	noarrs(array) {
+		return array.filter((x) => !(x instanceof Array))
+	},
+
+	arrsonly(array) {
+		return array.filter((x) => x instanceof Array)
+	},
+
 	// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
 	totalElems: function (array) {
 		return array instanceof Array
@@ -775,7 +783,7 @@ export const array = {
 			return this.elements.add(x)
 		}
 		has(x) {
-			return this.elements.has(x)
+			return this.elements.includes(x)
 		}
 		get size() {
 			return this.elements.size
