@@ -2,7 +2,7 @@
 export function objStructure(template = {}) {
 	return {
 		template: {
-			form: RESULT.aliases.is.obj,
+			form: aliases.is.obj,
 			// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
 			compequiv: function (...args) {
 				if (args.length === 1) return args[1]
@@ -38,8 +38,8 @@ export function objStructure(template = {}) {
 					}
 					const keys = Object.keys(object)
 					return (
-						RESULT.valueCompare(keys, Object.keys(current)) &&
-						!!RESULT.min(
+						valueCompare(keys, Object.keys(current)) &&
+						!!min(
 							keys.map((k) => this.isisomorphic(object[k], current[k]))
 						)
 					)
@@ -51,7 +51,7 @@ export function objStructure(template = {}) {
 
 export function arrStructure(template = {}) {
 	return this.objStructure({
-		form: RESULT.aliases.is.arr,
+		form: aliases.is.arr,
 		...template
 	})
 }

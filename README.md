@@ -73,7 +73,7 @@ For examples of library's usage, one may want to see the 'tests' directory or th
 
 The package uses ES modules. 
 <!-- ? Why only them? It could also support the CommonJS modules...; -->
-<!-- TODO: add support for those, decide which extensions one'd rather use... -->
+<!-- TODO: add support for those - after finishing the testing procedures, compile to CJS with tsc and then add the appropriate 'export-require' fields in the 'package.json', decide which extensions one'd rather use... -->
 
 ## Current Status 
 
@@ -81,8 +81,8 @@ It is currently in development, so many things may (and most probably will) chan
 
 The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...). 
 
-From version 1.0 onwards, one plans to break backward compatibility for versions <=0.8, as well as the future ones. 
-Each and every version is independent from all the others. 
+From version 1.0 onwards, one explicitly breaks backward compatibility for versions <=0.8, as well as all the future ones. 
+Each and every version is independent from all the others (so, one has to be extremely specific regarding the version of the package). 
+
 This way, one would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of 
-experementation and new ideas in old places. 
-At the same time, it would require the user to update manually for each new version (if they want to update, that being). 
+experementation and new ideas. 

@@ -1,5 +1,8 @@
 // * Space for macros and local constants... [used for semantics and simplification of development/code-reading];
 
+import * as aliases from "./exports/aliases.mjs"
+import * as structure from "./exports/structure.mjs"
+
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
 // ! In particular - later create a General versions of macros (using unlimited types...);
 // ! In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
@@ -152,7 +155,7 @@ export const EXTENSION = (template = {}) => {
 		methods: {
 			...template.methods,
 			...((x) =>
-				RESULT.aliases.native.object.obj(
+				OBJECT(
 					x,
 					x.map((a) => [
 						template.isgeneral[x] || false,
@@ -190,7 +193,7 @@ export const EXTENSION = (template = {}) => {
 				))(
 				template.toextend === true
 					? template.defaults.parentclass.methods
-					: RESULT.aliases.native.array.arrIntersections([
+					: aliases.native.array.arrIntersections([
 							Object.keys(template.defaults.parentclass.methods),
 							template.toextend
 					  ])
@@ -202,8 +205,7 @@ export const EXTENSION = (template = {}) => {
 	return PRECLASS(ftemplate)
 }
 
-// ! the 'function' field is nominal... Consider, whether one wants to do something about it...
-export const GENERATOR = NOREST(["generator", "inverse", "range"])
+export const GENERATOR = NOREST(["inverse", "range"], { word: "generator" })
 export const PRECLASS = NOREST([
 	"methods",
 	"static",
@@ -280,14 +282,10 @@ export const CLASS = (ptemplate = {}) => {
 			return V
 		}.bind(p)
 		p[p.isname] = function (x) {
-			// ! These kinds of inter-dependencies throughout the library are SUPERBLY frequent; Pray think on how to make these things work...;
-			// ^ IDEA: export all the stuff from 'RESULT'; Then, just reference it in the 'RESULT' inside the 'instance'... (so, the 'instance' will just "compile" the library in accordance to the user's liking...);
-			// * Note: it'll have to be checked against scopes... (namely, how does 'const' behave precisely when faced with changing scopes...); One'll implement the issue with the STATIC REFERENCES as well, then! [Ability for the user to alter certain parts of the library without having to affect the rest...];
-
 			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is'];
 			return (
 				x.hasOwnProperty("class") &&
-				RESULT.main.structure.objStructure().function(this).isisomorphic(x.class)
+				structure.objStructure().function(this).isisomorphic(x.class)
 			)
 		}.bind(p)
 		return p
@@ -295,9 +293,9 @@ export const CLASS = (ptemplate = {}) => {
 	return template
 }
 
-export const NOREST = function (labels = []) {
+export const NOREST = function (labels = [], btemplate = {}) {
 	return function (template = {}) {
-		const X = {}
+		const X = { ...btemplate }
 		// ! refactor!
 		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
 		X.rest = {}

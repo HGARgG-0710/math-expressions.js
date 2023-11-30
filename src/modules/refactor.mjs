@@ -1,31 +1,33 @@
+import * as aliases from "./exports/aliases.mjs"
+
 export const classes = {
 	finish: function () {
 		return this.this.this.length().get().previous()
 	},
 	begin: function () {
-		return this.this.this.go(this.this.this.init(), RESULT.aliases._const(true))
+		return this.this.this.go(this.this.this.init(), aliases.TRUTH)
 	},
 	end: function () {
-		return this.this.this.go(this.this.this.finish(), RESULT.aliases._const(true))
+		return this.this.this.go(this.this.this.finish(), aliases.TRUTH)
 	},
-	suchthat: function (predicate = aliases._const(true)) {
+	suchthat: function (predicate = aliases.TRUTH) {
 		const subset = this.this.this.this.class.class()
 		for (const element of this.this.this)
 			if (predicate(element)) subset.pushback(element)
 		return (this.this.this = subset)
 	},
-	any: function (predicate = aliases._const(true)) {
+	any: function (predicate = aliases.TRUTH) {
 		return !this.this.this
 			.init()
 			.compare(this.this.this.copied("suchthat", [predicate]).length().get())
 	},
-	every: function (predicate = aliases._const(true)) {
+	every: function (predicate = aliases.TRUTH) {
 		return this.this.this.class.template.icclass.template.comparison(
 			this.this.this.copied("suchthat", [predicate]).length().get(),
 			this.this.this.length().get()
 		)
 	},
-	forEach: function (method = aliases.void) {
+	forEach: function (method = aliases.VOID) {
 		for (const x of this.this.this) method(x)
 		return this.this.this
 	},

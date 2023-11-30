@@ -12,14 +12,14 @@ export const number = GENERATOR({
 	inverse(x = this.template.start) {
 		return this.template.backward(Number(x))
 	},
-	range: RESULT.negate(isNaN)
+	range: negate(isNaN)
 })
-// ? QUESTION [1]: the degree to which some such thing may be extended, mayhaps? [Namely, ought one be able to extend the object passed down to the 'RESULT.main.number' right there or not?]
+// ? QUESTION [1]: the degree to which some such thing may be extended, mayhaps? [Namely, ought one be able to extend the object passed down to the 'number' right there or not?]
 // ? QUESTION [2]: does one want to make a macro for this one, or categorize into one of the already existing ones [as a TEMPLATE, perhaps]? Pray consider...
 // * Current decision [temporary]: leave alone such cases for now, as are...
 // ! notice: should there generally not be a mean to extend BOTH the template's shape {the data} and the template's function {the transformation regulated by the data};
 export function addnumber(template = {}) {
-	return RESULT.main.number({
+	return number({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
 			return x + this.template.fdiff
@@ -31,7 +31,7 @@ export function addnumber(template = {}) {
 }
 
 export function multnumber(template = {}) {
-	return RESULT.main.number({
+	return number({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
 			return x * this.template.fdiff
@@ -68,7 +68,7 @@ export const objCounter = GENERATOR({
 		field: "",
 		start: null,
 		// ? Does one desire the refCompare? Or valueCompare to be the default?
-		comparison: RESULT.aliases.refCompare
+		comparison: aliases.refCompare
 	},
 	generator: function (a = this.template.start) {
 		if (!this.range(a)) this.template.start = a
@@ -91,7 +91,7 @@ export const recursiveCounter = function (template = {}) {
 		defaults: {
 			comparison: comparisons.valueCompare,
 			maxarrlen: variables.MAX_ARRAY_LENGTH.get,
-			type: RESULT.aliases._const(true),
+			type: aliases._const(true),
 			...template
 		},
 		range(x) {
@@ -112,7 +112,7 @@ export const recursiveCounter = function (template = {}) {
 		return multidim.findDeepUnfilled({
 			soughtProp: (x) =>
 				returned.template.type(x) &&
-				(t ? RESULT.aliases.id : RESULT.aliases.n)(returned.template.sign(x)),
+				(t ? aliases.id : aliases.n)(returned.template.sign(x)),
 			bound: t ? returned.template.upper : returned.template.rupper,
 			comparison: returned.template.comparison
 		}).function
@@ -140,11 +140,11 @@ export const recursiveCounter = function (template = {}) {
 					indexes = findDeepUnfilledArr(x)
 					if (!indexes) return [x]
 
-					result = RESULT.main.recursiveIndexationInfFields()(result, indexes)
+					result = recursiveIndexationInfFields()(result, indexes)
 
 					// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
 					// * Including the infinite versions of them...
-					result = RESULT.main.repeatedApplication()(
+					result = repeatedApplication()(
 						(value) => {
 							value.push([])
 							return value[value.length - 1]
@@ -160,7 +160,7 @@ export const recursiveCounter = function (template = {}) {
 					return x
 				}
 
-				result = RESULT.main.recursiveIndexationInfFields()(
+				result = recursiveIndexationInfFields()(
 					result,
 					indexes.slice(undefined, indexes.finish().previous())
 				)
@@ -188,11 +188,11 @@ export const recursiveCounter = function (template = {}) {
 				const ffinind = finind.previous()
 				// * Note: the one underneath here is an old note;
 				// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-				let ppointer = RESULT.main.recursiveIndexationInfFields()(
+				let ppointer = recursiveIndexationInfFields()(
 					x,
 					lastIndexes.slice(undefined, ffinind.previous())
 				)
-				let pointer = RESULT.main.recursiveIndexationInfFields()(
+				let pointer = recursiveIndexationInfFields()(
 					x,
 					lastIndexes.slice(undefined, ffinind)
 				)
@@ -206,7 +206,7 @@ export const recursiveCounter = function (template = {}) {
 					return x
 				}
 
-				ppointer[llindex] = RESULT.aliases._remove(ppointer[llindex], lindex)
+				ppointer[llindex] = aliases._remove(ppointer[llindex], lindex)
 				pointer = ppointer[llindex]
 
 				let index = lindex
@@ -218,12 +218,12 @@ export const recursiveCounter = function (template = {}) {
 					// * Consider carefully how to do this precisely...
 					// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
 					index = index.previous()
-					ppointer = RESULT.main.recursiveIndexationInfFields()(
+					ppointer = recursiveIndexationInfFields()(
 						x,
 						lastIndexes.slice(undefined, (hlindex = hlindex.previous()))
 					)
-					ppointer[hlindex] = RESULT.aliases._remove(ppointer[hlindex], index)
-					pointer = RESULT.main.recursiveIndexationInfFields()(
+					ppointer[hlindex] = aliases._remove(ppointer[hlindex], index)
+					pointer = recursiveIndexationInfFields()(
 						x,
 						lastIndexes.slice(undefined, index)
 					)
@@ -245,7 +245,7 @@ export const recursiveCounter = function (template = {}) {
 
 	function generalgenerator(x, bool, thisobj) {
 		if (!thisobj.range(x)) return [thisobj.template.lower]
-		let r = RESULT.main.deepCopy(x)
+		let r = deepCopy(x)
 		return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(r)
 	}
 
@@ -258,13 +258,13 @@ export const recursiveCounter = function (template = {}) {
 // note: creates new objects after having been called;
 export function numberCounter(template = {}) {
 	return recursiveCounter({
-		upper: RESULT.variables.MAX_INT.get,
+		upper: variables.MAX_INT.get,
 		lower: 0,
-		rupper: -RESULT.variables.MAX_INT.get,
+		rupper: -variables.MAX_INT.get,
 		sign: (x) => x > 0,
 		// TODO: generalize this to an 'alias';
 		globalsign: function (x) {
-			return !!RESULT.methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
+			return !!methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
 		},
 		// ? Should this not be replaced with !isNaN(x)? [this'd permit stuff like '[true]' to be recieved by the '.range()'; ]
 		// * Also, create an alias for that thing pray...
@@ -285,7 +285,7 @@ export function orderCounter(template = {}) {
 		forward: (x) => template.order[template.order.indexOf(x) + 1],
 		backward: (x) => template.order[template.order.indexOf(x) - 1],
 		globalsign: function (x) {
-			return !!RESULT.methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
+			return !!methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
 		},
 		sign: (x) => strorder.indexOf(x) > Math.floor(template.order.length / 2),
 		...template
@@ -295,7 +295,7 @@ export function orderCounter(template = {}) {
 export function stringCounter(template = {}) {
 	return orderCounter({
 		type: (x) => typeof x === "string" || x instanceof String,
-		order: generate(1, variables.MAX_INT).map((x) => nbasereverse(x)), 
+		order: generate(1, variables.MAX_INT).map((x) => nbasereverse(x)),
 		...template
 	})
 }
@@ -316,7 +316,7 @@ export const circularCounter = (() => {
 		function (x) {
 			if (this.template.multitude.is(x))
 				return this.template.multitude.map(x, (a) => this[name])
-			const vals = RESULT.aliases.native.array
+			const vals = aliases.native.array
 				.indexesOf(this.template.values, x)
 				.map(
 					(i) =>
@@ -334,7 +334,7 @@ export const circularCounter = (() => {
 })()
 
 export function arrCircCounter(template = {}) {
-	return RESULT.main.counters.circularCounter({
+	return circularCounter.function({
 		multitude: {
 			new: Array,
 			is: (x) => x instanceof Array,

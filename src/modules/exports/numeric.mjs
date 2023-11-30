@@ -4,7 +4,7 @@ import { TEMPLATE } from "./../macros.mjs"
 // here, various predefined string-functions for representations of numbers would go;
 export const polystring = TEMPLATE({
 	defaults: {
-		alphabet: RESULT.variables.defaultAlphabet.get,
+		alphabet: variables.defaultAlphabet.get,
 		separator: ""
 	},
 	function: function (counter = this.template.icclass.class()) {
@@ -14,7 +14,7 @@ export const polystring = TEMPLATE({
 		const iccmap = (x) => x.map(this.template.icclass)
 		const converted = TIClass(iccmap(this.template.alphabet.length))
 
-		let copy = RESULT.main.deepCopy(counter)
+		let copy = deepCopy(counter)
 		let index = this.template.ustrclass.template.icclass()
 		const representation = this.template.ustrclass.class()
 		const copyZero = copy.class.class()

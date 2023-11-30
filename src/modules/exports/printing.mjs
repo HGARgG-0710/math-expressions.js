@@ -16,8 +16,7 @@ export const constrolprint = HIERARCHY([
 		defaults: {
 			pfun: console.log,
 			// TODO: make an alias for that thing...
-			limit: (x, appended) =>
-				x.length >= RESULT.MAX_STRING_LENGTH - appended.length,
+			limit: (x, appended) => x.length >= MAX_STRING_LENGTH - appended.length,
 			// * By default, will finish the printing of the thing using the function chosen [REGARDLESS OF SIZE!];
 			control: function (current, loophandle) {
 				this.pfun(current)
@@ -40,7 +39,7 @@ export const constrolprint = HIERARCHY([
 				// ! PROBLEM [general] : how does one pass the general arrays around? Is it via the {this: ...(the actual array)} reference, or just the '...(the actual array)'; One would desire it greater had it been unified...;
 				// * Current decision: via the '...(the actual array)' part;
 				toprint.loop().full((x) => {
-					return RESULT.main
+					return main
 						.CommonArray()
 						.class({ treatfinite: true })
 						.class([
@@ -54,7 +53,7 @@ export const constrolprint = HIERARCHY([
 									k.break()
 									broken = true
 									// * The 'full()' erases data regarding the current index from the handle in question;
-									handle = RESULT.main.deepCopy(k)
+									handle = deepCopy(k)
 								}
 							},
 							(t) => (final += t.object().current)

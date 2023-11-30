@@ -20,7 +20,7 @@ export const valueCompare = TEMPLATE({
 				switch (typeof a) {
 					case "object":
 						if (
-							!RESULT.max(
+							!max(
 								objs.map(
 									// TODO: create a nice function-alias for 'f(...) && g(...)'; [so that it may be used with the other ones]
 									(x) => x[0].includes(a) && x[0].includes(b)
@@ -42,7 +42,7 @@ export const valueCompare = TEMPLATE({
 				}
 			}
 		}
-		return !!RESULT.aliases.native.min(
+		return !!aliases.native.min(
 			args
 				.slice(0, args.length - 1)
 				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))

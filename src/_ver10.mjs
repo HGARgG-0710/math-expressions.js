@@ -64,3 +64,5 @@ export * from "./modules/exports.mjs"
 // TODO: expand the 'numeric' (in particular, with varying numeric systems...); generalize to a class for their arbitrary creation...
 // ! REMINDER: a total consistency check across the entire library... [GRAND CLEANUP...]; Current code are all mere sketches, not yet functional [largely, only due to the faults in cross-referencing]; 
 // Todo: [minor, general]: format the code manually; 
+// TODO: consider in some detail the list of the "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
+// ^ Decided: almost all the class methods within the library will return the instance ('return this.this.this'); This way, one is able to do things like 'a.b().c()...' without having to create copies all the time; Instead, they are assigned to the handler and the originals are disposed of;

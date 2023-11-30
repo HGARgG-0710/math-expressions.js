@@ -1,4 +1,6 @@
-// * This module defines various basic statistical tests and measures implementations; 
+import * as comparisons from "./comparisons.mjs"
+
+// * This module defines various basic statistical tests and measures implementations;
 
 // ! PRAY GENERALIZE USING THE TRUE-NUMBERS...
 
@@ -24,7 +26,7 @@
  *
  * Useful when needing a lot of info about data in one place.
  */
-class Statistics {
+export class Statistics {
 	static isNumeric(data) {
 		for (let i = 0; i < data.length; i++)
 			if (typeof data[i] !== "number") return false
@@ -75,7 +77,7 @@ class Statistics {
  * It is a static class, i.e. it is supposed to be like this:
  * * Tests.testName();
  */
-class Tests {
+export class Tests {
 	constructor() {
 		throw new TypeError("Tests is not a constructor")
 	}
@@ -191,7 +193,7 @@ class Tests {
  * @param {boolean} isTruncated A boolean saying does or does not the average will be truncated. By default false.
  * @param {number} percents A number, that is used as a multiplier for two, when shortening the numeric array.
  */
-function average(nums = [], isTruncated = false, percents = 10) {
+export function average(nums = [], isTruncated = false, percents = 10) {
 	return (function (newArr) {
 		return floor(
 			repeatedArithmetic(newArr, "+") /
@@ -206,7 +208,7 @@ function average(nums = [], isTruncated = false, percents = 10) {
  * @param {number[]} nums An array of numbers passed to the function.
  * @returns {number} The smallest number of the passed array.
  */
-function min(nums = []) {
+export function min(nums = []) {
 	return arrApply(Math.min, nums)
 }
 
@@ -227,7 +229,7 @@ export function median(nums = []) {
 	return (function (sorted) {
 		return (
 			nums.length % 2 === 1
-				? RESULT.id
+				? id
 				: (firstIndex) => average([firstIndex, sorted[nums.length / 2]])
 		)(sorted[Math.round(nums.length / 2) - 1])
 	})(sort(nums))
@@ -242,7 +244,7 @@ export function median(nums = []) {
  */
 export const mostPopular = TEMPLATE({
 	defaults: {
-		comparison: RESULT.main.comparisons.refCompare
+		comparison: comparisons.refCompare
 	},
 	function: function (elems = [], noneValue = null) {
 		if (elems.length === 0) return noneValue
@@ -250,7 +252,7 @@ export const mostPopular = TEMPLATE({
 			elems,
 			elems.map((el) => countAppearences(elems, el, 0, comparison))
 		)
-		return RESULT.aliases.native.array
+		return aliases.native.array
 			.indexesOf({ comparison: this.template.comparison })
 			.function(freq.values, max(freq.values))
 			.map((a) => freq.keys[a])
@@ -259,7 +261,7 @@ export const mostPopular = TEMPLATE({
 
 export const leastPopular = TEMPLATE({
 	defaults: {
-		comparison: RESULT.main.comparisons.refCompare
+		comparison: comparisons.refCompare
 	},
 	function: function (elems = [], noneValue = null) {
 		if (elems.length === 0) return noneValue
@@ -267,7 +269,7 @@ export const leastPopular = TEMPLATE({
 			elems,
 			elems.map((el) => countAppearences(elems, el, 0, comparison))
 		)
-		return RESULT.aliases.native.array
+		return aliases.native.array
 			.indexesOf({ comparison: this.template.comparison })
 			.function(freq.values, min(freq.values))
 			.map((a) => freq.keys[a])

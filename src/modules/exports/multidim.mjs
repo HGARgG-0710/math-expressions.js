@@ -7,20 +7,20 @@ import * as comparisons from "./comparisons.mjs"
 import * as aliases from "./aliases.mjs"
 
 export const dim = TEMPLATE({
-	defaults: { comparison: RESULT.aliases.refCompare },
+	defaults: { comparison: aliases.refCompare },
 	function: function (recarr = this.template.genarrclass.static.empty()) {
 		if (this.template.comparison(recarr.class, this.template.genarrclass))
 			return this.template.icclass
 				.class()
 				.next()
-				.jumpDirection(RESULT.main.maxgeneral(recarr.map(this.function)))
+				.jumpDirection(maxgeneral(recarr.map(this.function)))
 		return this.template.icclass.class()
 	}
 })
 
 export const recursiveIndexationInfFields = TEMPLATE({
 	function: function (object, fields = this.template.genarrclass.static.empty()) {
-		return RESULT.main.repeatedApplication({
+		return repeatedApplication({
 			icclass: fields.this.class.template.icclass,
 			...this.template
 		})(

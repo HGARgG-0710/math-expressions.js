@@ -646,9 +646,17 @@ export const GeneralArray = (() => {
 			empty(template = this.this.this.this.class.template) {
 				return this.this.this.this.class.static.empty(template)
 			},
-			copy(f = id, leftovers = {}) {
+			copy(
+				f = id,
+				template = this.this.this.this.class.template,
+				isclass = false,
+				leftovers = {}
+			) {
 				sh1(this, leftovers)
 				const copied = this.this.this.empty()
+				copied.class = isclass
+					? template
+					: { ...copied.class, template: { ...template } }
 				this.this.this.loop()._full(
 					copied.pushbackLoop({
 						transform: f,
@@ -721,21 +729,23 @@ export const GeneralArray = (() => {
 				this.this.this.currindex = indexsaved
 				return this.this.this
 			},
-			convert(template = this.this.this.this.class.template) {
-				// ! PROBLEM: this DOES NOT accomplish the conversion of one GeneralArrays' type's internal representation, only of the object's class properties;
-				// * The problem with these manner of issues runs deep within the means by which the internal representations are constructed; Namely, IT'S NOT POSSIBLE to generalize one to another, because the entire information as to how they are handled lies within the METHOD DEFINITIONS...
-				// ? how should one go about it? Attempt to generalize to some manner of object structures which would convert the given object with the desired information to methods which would perform appropriate actions upon the thing in question?
-				// ^ IDEA [for implementation]: one does it using the GeneralArray interface, namely - walking the present one and literally .pushback-by-.pushback copying it;
-				// ^ FURTHER IDEA [for implementation]: change the 'copy' function accordingly - allow for a template-change; Then, via this, pray reimplement this;
-				return (this.this.this.this.class = {
-					...this.this.this.this.class,
-					template: { ...template }
-				})
+			convert(template = this.this.this.this.class.template, leftovers = {}) {
+				return (this.this.this = this.this.this.copy(
+					ID,
+					template,
+					false,
+					leftovers
+				))
 			},
 			// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
-			switchclass(arrclass = this.this.this.this.class) {
+			switchclass(arrclass = this.this.this.this.class, leftovers = {}) {
 				// ! same issue as in the '.convert' method;
-				return (this.this.this.this.class = arrclass)
+				return (this.this.this = this.this.this.copy(
+					ID,
+					arrclass,
+					true,
+					leftovers
+				))
 			},
 			delete(index, leftovers = {}) {
 				sh1(this, leftovers)
@@ -783,27 +793,26 @@ export const GeneralArray = (() => {
 					}
 				)
 			},
-			// TODO: expand the list of those "leftover" arguments [the fast/range/comparison] + ensure their presence everywhere...; Look for vast generalization possibilities [so as not to trail them all around like that, maybe?...];
-			// TODO: think deeply on the return values for the GeneralArray algorithms...
 			projectFit(array, index, leftovers = {}) {
 				sh1(this, leftovers)
-				const ind = array.currindex
-				this.this.this.loop()._full(
-					(t) => {
-						t.object().write(
-							t.object().currindex,
-							array.currelem().get(),
-							leftovers
-						)
-						array.next()
-					},
-					undefined,
-					(x) =>
-						x.object().this.class.template.isEnd(x.object()) ||
-						array.this.class.template.isEnd(array),
-					(t) => t.object().go(index, leftovers.range)
-				)
-				array.currindex = ind
+				general.fix([array], ["currindex"], () => {
+					this.this.this.loop()._full(
+						(t) => {
+							t.object().write(
+								t.object().currindex,
+								array.currelem().get(),
+								leftovers
+							)
+							array.next()
+						},
+						undefined,
+						(x) =>
+							x.object().this.class.template.isEnd(x.object()) ||
+							array.this.class.template.isEnd(array),
+						(t) => t.object().go(index, leftovers.range)
+					)
+				})
+				return this.this.this
 			},
 			insert(index, value, leftovers = {}) {
 				sh1(this, leftovers)
@@ -835,7 +844,6 @@ export const GeneralArray = (() => {
 			},
 			// ? Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
 			// ^ IDEA: for making the implementation of 'indexesOf' more efficient - one gives it two arguments for enabling halting - 'halt (boolean)' [whether to halt] and 'haltAfter (counter)' [length().get() of the final array, after which to halt...]
-			// TODO: let this decision [idea] be reflected upon the GeneralArray definition accordingly as well...;
 			indexesOf(x, leftovers = {}) {
 				sh1(this, leftovers)
 				const indexes = this.this.this.empty()
@@ -845,11 +853,6 @@ export const GeneralArray = (() => {
 				})
 				return indexes
 			},
-			// ? Question[2]: should one add a (potentially, a template?) 'comparison' defaulting to the class's/instance's comparison[s]?
-			// * Something like 'comparison = this.comparison || this.class.comparison'?
-			// ? Repeating the [2] for all the correspondent 'leftover' arguments??? Might be quite nice... Modifying it per instance...
-			// * On the other hand, if the user really does want to modify it per instance, there's no utter requirement for this; A simpler solution would be just to do:
-			//	'const thing = ClassName()...()' all over anew, thus re-creating all the templates' levels within the question...
 			firstIndex(x, leftovers = {}) {
 				ensureProperties(leftovers, {
 					unfound: this.this.this.this.class.template.unfound,
@@ -865,15 +868,7 @@ export const GeneralArray = (() => {
 				})
 				return index
 			},
-			// ! WORK ON THE TEMPLATES MATTER FURTHER:
-			// 		% 1. Does one want to change this ridiculous trailing 'leftovers' into anything more useful? [namely, make the functions templates...];
-			// 		% 2. If 1, then one ought to consider re-implementing some parts of the CLASS and EXTENSION macro [again!] for the sake of addition of the TEMPLATEs into the library's CLASSes;
-			shiftForward(
-				times,
-				icclass = this.this.this.this.class.template.icclass,
-				baseelem = this.this.this.this.class.template.baseelem,
-				leftovers = {}
-			) {
+			shiftForward(times, leftovers = {}) {
 				sh1(this, leftovers)
 				const x = this.this.this.this.class.static.fromCounter(times)
 				return (this.this.this = x.concat(this.this.this, leftovers))
@@ -1050,7 +1045,6 @@ export const GeneralArray = (() => {
 
 				return (this.this.this = merge(split(this.this.this)))
 			},
-			// ! spread the 'leftovers' all over the library's classes and types;
 			isSorted(predicate, leftovers = {}) {
 				sh1(this, leftovers)
 				return leftovers.comparison(
@@ -1068,6 +1062,8 @@ export const GeneralArray = (() => {
 	})
 })()
 
+// ? Was... that such a good idea to implement this here after all? [Meaning - will one go through with it?]
+// * If the answer is to be affirmative, pray convert to a CLASS;
 export function MultiInfiniteCounter(template = {}) {
 	// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
 	// * Perhaps, one would have multiple comparisons assigned to each and every one index of the array in question? [But, that'd require using the same manner of array-templates for them...]
@@ -1232,9 +1228,6 @@ export const arrays = {
 		}
 	}
 }
-// ? [Olden - a todo] _TODO: let the InfiniteMap and UniversalMap have the capabilities of adding getters/setters (or better: create their natural extensions that would do it for them)
-// _? Question: store the pointer to the 'infinite' structure within the thing in question.
-// ! MAKE A TEMPLATE...
 export function UnlimitedMap(parentclass) {
 	return EXTENSION({
 		defaults: {
@@ -2113,7 +2106,7 @@ export function UniversalMap(template = {}) {
 	}
 }
 
-// Utilizes the simple matter of fact that JS creates a "pointer" (the object reference) to a certain object implicitly, then using it to pass it...
+// Utilizes the fact that JS passes objects by reference; 
 export const Pointer = TEMPLATE({
 	defaults: { label: "", nullptr: undefined },
 	function: function (value = this.template.nullptr) {
@@ -2154,7 +2147,7 @@ export function TypedArray(template = {}) {
 // % The UnlimitedString wihtin the question is governed by the EquationForm object class
 // ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
 // * Tasks list before continuing with the NumberEquation:
-// 		1. Finish (fix) the fullExp;
+// 		1. Finish (fix) the fullExp [AND FIND IT ITS OWN SPACE...];
 // 		2. Finish the UnlimitedString implementation;
 // 		3. Genereralize the '.static.ParseEquation' to a user-defined function;
 
