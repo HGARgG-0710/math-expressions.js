@@ -2188,7 +2188,7 @@ export function InfiniteArray() {}
 
 // ? question: does one want to go implementing the 'InfiniteNumber' as well?
 
-// ! Too skinny! Pray create more useful methods implementations to make the Trees more universal...; 
+// ! Too skinny! Pray create more useful methods implementations to make the Trees more universal...;
 export function Tree(parentclass) {
 	return EXTENSION({
 		defaults: {

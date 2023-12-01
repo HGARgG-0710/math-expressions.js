@@ -8,7 +8,7 @@
 // * DECISION: yes, generalize them, then make the 'CommonArray'-kind of special cases; [Make such special cases for all of them...];
 
 // * List of new abstract types interfaces to be implemented:
-// ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue; 
+// ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
 // 	% 1. Heap;
 // * DECISION: This stays in 'algorithms';
 // 	% 2. Graph?
@@ -55,7 +55,7 @@ export function Queue(parentclass) {
 	})
 }
 
-// ! Requires work with TrueRatio(s);
+// ! Unfinished. Requires work with TrueRatio(s);
 /**
  * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
  * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
@@ -82,8 +82,86 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 	return gotten
 }
 
-// ! Finish! [wanted: heap, quick, counting?, radix?, bucket?];
+// ! Finish! [wanted: heap, radix?, bucket?];
+// ! Check that the algorithms are implemented correctly and efficiently, when testing... [in particular, pay attention to the memory-efficiency... - get rid of undue copying];
+// TODO: pray make sure that the usage of 'this.predicate' (or, to be more precise, the 'arguments')
 export const sort = {
+	counting: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
+			const k = this.template.hasOwnProperty("maxkey")
+				? this.template.maxkey
+				: orders.most({ comparison: this.template.predicate })(
+						garr.copy((x) => this.template.predicate(x))
+				  )
+			const count = this.template.genarrclass.static
+				.fromCounter(k.next())
+				.map(aliases.function_const(k.class.init()))
+			const output = garr.copy(aliases.function._const(aliases.udef))
+
+			for (const x of garr) {
+				const j = this.template.predicate(x).map(count.class.template.icclass)
+				count.write(j, count.read(j).next())
+			}
+
+			for (let i = k.class.init().next(); !i.compare(k.next()); i = i.next()) {
+				const j = i.map(count.class.template.icclass)
+				count.write(j, count.read(j).jump(count.read(j.previous())))
+			}
+
+			for (let i = garr.finish(); i.compare(garr.init()); i = i.previous()) {
+				const j = this.template
+					.predicate(garr.read(i))
+					.map(count.class.template.icclass)
+				output.write(
+					count.read(j).previous().map(ouput.class.template.icclass),
+					garr.read(i)
+				)
+			}
+
+			return output
+		}
+	}),
+	quick: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			// ? DOES ONE WANT TO BE MAKING THESE MANNER OF MARKINGS ANYWHERE???
+			// * Consider this small question in some detail...
+			const ZERO = garr.init()
+			const ONE = ZERO.next()
+			const TWO = ONE.next()
+			if (TWO.next().compare(garr.length().get())) {
+				if (ONE.compare(garr.length().get())) return garr
+				const X = () => {
+					if (this.template.predicate(garr.read(ONE), garr.read()))
+						garr.swap(ZERO, ONE)
+				}
+				X()
+				if (TWO.compare(garr.length().get())) return garr
+				if (this.template.predicate(garr.read(ONE), garr.read(TWO)))
+					garr.swap(ONE, TWO)
+				X()
+				return garr
+			}
+
+			// ! future improvements - make the 'MIDDLE_ELEMENT' equal something more efficient...;
+			const MIDDLE_ELEMENT = garr.read(garr.finish())
+			return this.function(
+				garr.copied("suchthat", [
+					(x) => this.template.predicate(MIDDLE_ELEMENT, x)
+				])
+			)
+				.pushback(MIDDLE_ELEMENT)
+				.concat(
+					this.function(
+						garr.copied("suchthat", [
+							(x) => this.template.predicate(x, MIDDLE_ELEMENT)
+						])
+					)
+				)
+		}
+	}),
 	insertion: TEMPLATE({
 		defaults: {},
 		function: function (garr = this.template.genarrclass.static.empty()) {
@@ -124,6 +202,7 @@ export const sort = {
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			const listArr = garr.copy()
 			const sorted = garr.empty()
+			// ! alias this...
 			const f = orders.most({ comparison: this.template.predicate })
 			for (const _t of garr) {
 				const extreme = f(listArr)
