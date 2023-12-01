@@ -7,28 +7,17 @@
 // ? When shall it be the preference?
 // * DECISION: yes, generalize them, then make the 'CommonArray'-kind of special cases; [Make such special cases for all of them...];
 
+// TODO: implement interfaces of some common data types that the library is currently missing; [Based off either GeneralArray, or UnlimitedMap, or one of the others...]; 
+// * List of them: 
+// 	% 1. Tree; 
+// 	% 2. Heap; 
+// 	% 3. Stack?
+// 	% 4. Queue?
+// 	% 5. Graph?
+
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 
-export function BinarySearch(array, number) {
-	// * For getting the middle index of the array.
-	const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
-	const copyArray = Sort.bubble(array)
-	let index = middle(copyArray)
-	let copyArr = copy(copyArray)
-	let copyIndex = index
-	for (let i = 0; ; i++) {
-		if (number === copyArray[index]) return index
-		if (copyArr.length === 1) break
-		const isBigger = number > copyArray[index]
-		copyArr = isBigger
-			? copyArr.slice(copyIndex + 1, copyArr.length)
-			: copyArr.slice(0, copyIndex)
-		copyIndex = middle(copyArr)
-		index = isBigger ? index + copyIndex : index - copyIndex
-	}
-	return -1
-}
 /**
  * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
  * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
@@ -55,9 +44,44 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 	return gotten
 }
 
-// ! For that, one first has to fix the 'orders' part of the module...;
-export const Sort = {
+// ! Finish! [wanted: heap, quick, counting?, radix?, bucket?]; 
+export const sort = {
+	insertion: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			garr = garr.copy()
+			for (
+				let i = garr.init().next();
+				!i.compare(garr.length().get());
+				i = i.next()
+			) {
+				for (let j = garr.init(); !j.compare(i); j = j.next()) {
+					if (this.template.predicate(garr.read(i), garr.read(j))) continue
+					garr.insert(garr.read(i), j)
+					break
+				}
+			}
+			return garr
+		}
+	}),
 	bubble: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			garr = garr.copy()
+			// ! use the 'lesser/greater' aliases A LOT...; The code uses them all over the place;
+			// ! create corresponding finite versions of them (for >, >=, <, <=);
+			for (let i = garr.init(); !i.compare(garr.length().get()); i = i.next())
+				for (
+					let j = garr.init();
+					!j.compare(garr.length().get().jumpBackward(i));
+					j = j.next()
+				)
+					if (!this.template.predicate(garr.read(i), garr.read(j)))
+						garr.swap(i, j)
+			return garr
+		}
+	}),
+	selection: TEMPLATE({
 		defaults: {},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			const listArr = garr.copy()
@@ -122,9 +146,32 @@ export const Sort = {
 					aliases.function._const((x) => x.next().next())
 				)
 				return merge(b)
-			}	
+			}
 			return merge(split(array))
 		}
 	})
 	// todo: more sorting algorithms;
+}
+
+// ! work on that too... [make a list of algorithms...]
+export const search = {
+	binary: function (array, number) {
+		// * For getting the middle index of the array.
+		const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
+		const copyArray = Sort.bubble(array)
+		let index = middle(copyArray)
+		let copyArr = copy(copyArray)
+		let copyIndex = index
+		for (let i = 0; ; i++) {
+			if (number === copyArray[index]) return index
+			if (copyArr.length === 1) break
+			const isBigger = number > copyArray[index]
+			copyArr = isBigger
+				? copyArr.slice(copyIndex + 1, copyArr.length)
+				: copyArr.slice(0, copyIndex)
+			copyIndex = middle(copyArr)
+			index = isBigger ? index + copyIndex : index - copyIndex
+		}
+		return -1
+	}
 }

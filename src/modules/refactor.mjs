@@ -5,11 +5,17 @@ export const classes = {
 	finish: function () {
 		return this.this.this.length().get().previous()
 	},
-	begin: function () {
-		return this.this.this.go(this.this.this.init(), aliases.TRUTH)
+	begin: function (go = true) {
+		return this.this.this[go ? "go" : "read"](
+			this.this.this.init(),
+			go ? aliases.TRUTH : undefined
+		)
 	},
-	end: function () {
-		return this.this.this.go(this.this.this.finish(), aliases.TRUTH)
+	end: function (go = true) {
+		return this.this.this[go ? "go" : "read"](
+			this.this.this.finish(),
+			go ? aliases.TRUTH : undefined
+		)
 	},
 	suchthat: function (predicate = aliases.TRUTH) {
 		const subset = this.this.this.this.class.class()

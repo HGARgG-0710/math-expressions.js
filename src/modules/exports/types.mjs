@@ -765,6 +765,12 @@ export const GeneralArray = (() => {
 					leftovers
 				))
 			},
+			swap (i, j) {
+				const ival = this.this.this.read(i)
+				this.this.this.write(i, this.this.this.read(j))
+				this.this.this.write(j, ival)
+				return this.this.this
+			}, 
 			delete(index, leftovers = {}) {
 				sh1(this, leftovers)
 				return this.this.this.deleteMult(index, index, leftovers)
