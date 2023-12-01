@@ -1,4 +1,4 @@
-// * Various algorithms for the library that one considered potentially useful;
+// * Various algorithms and data structure types implementations for the library that one considered potentially useful;
 
 // TODO: extend this thing - create new algorithms implementations for the library...
 // TODO: make the things more efficient, general, implement more algorithms;
@@ -7,17 +7,55 @@
 // ? When shall it be the preference?
 // * DECISION: yes, generalize them, then make the 'CommonArray'-kind of special cases; [Make such special cases for all of them...];
 
-// TODO: implement interfaces of some common data types that the library is currently missing; [Based off either GeneralArray, or UnlimitedMap, or one of the others...]; 
-// * List of them: 
-// 	% 1. Tree; 
-// 	% 2. Heap; 
-// 	% 3. Stack?
-// 	% 4. Queue?
-// 	% 5. Graph?
+// * List of new abstract types interfaces to be implemented:
+// ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue; 
+// 	% 1. Heap;
+// * DECISION: This stays in 'algorithms';
+// 	% 2. Graph?
+// * Decision: part of 'algorithms';
+//  % 3. N-ary tree (generalization of Binary Tree);
+// * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
+// 	% 4. Prioritee queue?;
+// ? maybe? [pray think on it...]; Only after having implemented the Queue;
 
+import { EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
+import { classes } from "../refactor.mjs"
 
+// ! Finish these two, pray [this is a sketch; further design assesment, generalization and work on arguments is needed]
+export function Stack(parentclass) {
+	return EXTENSION({
+		defaults: { parentclass: parentclass, names: ["genarr"] },
+		toextend: [],
+		methods: {
+			push(element) {
+				return this.this.this.genarr.pushback(element)
+			},
+			pop: classes.pop,
+			peek: classes.peek,
+			copy: classes.copy
+		},
+		recursive: true
+	})
+}
+export function Queue(parentclass) {
+	return EXTENSION({
+		defaults: { parentclass: parentclass, names: ["genarr"] },
+		toextend: [],
+		methods: {
+			enqueue(element) {
+				return this.this.this.genarr.pushfront(element)
+			},
+			dequeue: classes.pop,
+			front: classes.peek,
+			copy: classes.copy
+		},
+		recursive: true
+	})
+}
+
+// ! Requires work with TrueRatio(s);
 /**
  * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
  * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
@@ -44,7 +82,7 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 	return gotten
 }
 
-// ! Finish! [wanted: heap, quick, counting?, radix?, bucket?]; 
+// ! Finish! [wanted: heap, quick, counting?, radix?, bucket?];
 export const sort = {
 	insertion: TEMPLATE({
 		defaults: {},

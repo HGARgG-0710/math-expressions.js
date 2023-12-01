@@ -213,6 +213,8 @@ export const InfiniteCounter = (() => {
 // % 	3. splice(index, times); Same as Array.splice();
 // % 	4. spliceMult(indexes, ntimes); repeated spliceMult [both args are arrays...];
 // % 	5. splitlen(length); split the array onto subarrays of given length 'length'; If not possible to factor in such a way as to have them all being precisely 'length', then the last one is made shorter...;
+// ? Question: about the 'move' methods... Should all the other datatypes implement the interfaces for their versions?
+// * Current decision [not full]: undeteremined, in later versions one may add them; Presently - not, nor will the '.move' methods will ever be deleted;
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
@@ -270,8 +272,7 @@ export const GeneralArray = (() => {
 				R[`push${x}`] = TEMPLATE({
 					defaults: {
 						arguments: [],
-						transform: id,
-						...template
+						transform: id
 					},
 					function: function (b) {
 						// ? Perhaps, provide just 'b' in its stead? Pray consider...
@@ -765,13 +766,13 @@ export const GeneralArray = (() => {
 					leftovers
 				))
 			},
-			swap (i, j) {
+			swap(i, j) {
 				const ival = this.this.this.read(i)
 				this.this.this.write(i, this.this.this.read(j))
 				this.this.this.write(j, ival)
 				return this.this.this
-			}, 
-			delete(index, leftovers = {}) {
+			},
+			delete(index = this.this.this.finish(), leftovers = {}) {
 				sh1(this, leftovers)
 				return this.this.this.deleteMult(index, index, leftovers)
 			},
@@ -1184,7 +1185,6 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			parentclass: parent,
 			empty: "",
 			names: ["genarr"],
-			basestr: aliases._const(" "),
 			unfound: undefined
 		},
 		properties: {
@@ -2187,3 +2187,21 @@ export function InfiniteString() {}
 export function InfiniteArray() {}
 
 // ? question: does one want to go implementing the 'InfiniteNumber' as well?
+
+// ! Too skinny! Pray create more useful methods implementations to make the Trees more universal...; 
+export function Tree(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass,
+			names: ["children"],
+			defaultnode: undefined
+		},
+		properties: {
+			node: function (n = this.template.defaultnode) {
+				return n
+			}
+		},
+		methods: {},
+		recursive: true
+	})
+}

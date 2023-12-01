@@ -1,6 +1,6 @@
 // * Space for macros and local constants... [used for semantics and simplification of development/code-reading];
 
-import * as aliases from "./exports/aliases.mjs"
+import * as native from "./exports/native.mjs"
 import * as structure from "./exports/structure.mjs"
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
@@ -132,11 +132,10 @@ export const EXTENSION = (template = {}) => {
 					)
 					const X = {}
 					let i = 0
-					for (const y of this.template.names) {
+					for (const y of this.template.names)
 						X[y] = this.template.parentclass.class(
 							this.template.defaults.inter(...args, i++)
 						)
-					}
 					return X
 				},
 				...template
@@ -193,7 +192,7 @@ export const EXTENSION = (template = {}) => {
 				))(
 				template.toextend === true
 					? template.defaults.parentclass.methods
-					: aliases.native.array.arrIntersections([
+					: native.array.arrIntersections([
 							Object.keys(template.defaults.parentclass.methods),
 							template.toextend
 					  ])
