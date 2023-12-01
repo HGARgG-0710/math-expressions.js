@@ -82,10 +82,47 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 	return gotten
 }
 
-// ! Finish! [wanted: heap, radix?, bucket?];
+// ! Finish! [wanted: heap!, radix!];
 // ! Check that the algorithms are implemented correctly and efficiently, when testing... [in particular, pay attention to the memory-efficiency... - get rid of undue copying];
 // TODO: pray make sure that the usage of 'this.predicate' (or, to be more precise, the 'arguments')
+// ^ About Radix Sort Implementation;
+// 	* For one to be capable of arbitrary objects sorting using it, necessity arises for the implementation of a 'toAlphabet' function; 
+// 		% And while one __could__ leave it to the user to finish... One could also do it by oneself in the following fashion: 
+// 			1. Get the set of objects in question;
+// 			2. Connect them using a manner of an InfiniteCounter class [namely, define a generator/inverse/range encomassing them and their connections] and get an order (.compare) based off it; 
+// 				* 2.1. The generator would be based off the GeneralArray that the user would give
+// 					TODO: create a 'garrCounter'/'finiteCounter', which would be based entirely off a user-passed GeneralArray; note - not circular, or infinite recursively defined based off given elements - just the simplest possible iteration... [id est, IT CAN END...]; 
+// 			3. Finally, use the 'numerics.polystring' with the alphabet given by the user; 
+// 			4. Using the order from 2., define the appropriate linear order function predicate (using the 'orders.linear'); 
+// * So, the whole procedure really just comes down to transforming the objects in question into a defined set of alphabet-described strings! Only then, may the Radix Sort be implemented desireably...; 
+// ^ About Heap Sort Implementation: 
+// * First, one must implement the Heap itself: 
+// 		% A. Implement the conversion of the given GeneralArray's order to a different one so that the Heap may read it (in accordance with a class template property called 'heappred', or somesuch): 
+// 		% B. Apply the conversion onto the given GeneralArray, then read the thing IN ACCORDANCE WITH THE OTHER PROPERTIES OF THE HEAP: 
+// 			B.1. 'n' - the 'n', on which the 'n'-ary Tree, on which the Heap is based upon will be built [By default, equals to 2 in the appropriate InfiniteCounter class - the one used by the Tree-parent's GeneralArray 'parentclass' is used]; 
+//	* Only then, may one finish the implementation of the thing in question...;
 export const sort = {
+	// ! Complete; 
+	bucket: TEMPLATE({
+		defaults: {},
+		function: function (garr = this.this.this.genarrclass.static.empty()) {
+			// ! must be refactored [same as the thing in the 'sort.counting'];
+			const k = this.template.hasOwnProperty("maxkey")
+				? this.template.maxkey
+				: orders.most({ comparison: this.template.predicate })(
+						garr.copy((x) => this.template.predicate(x))
+				  )
+			const buckets = this.this.this.genarrclass
+				.fromCounter(this.template.buckets)
+				.map(garr.empty)
+				
+			// ! PROBLEM: what about the index-arithmetic? [IT'S PRESENT IN THE DEFINITION OF BUCKET SORT...]
+			// * To finish this thing, one must first complete the 'TrueNumbers' (AGAIN, one runs into the necessity of finishing them first...); Probably going to do them soon, then...; 
+			for (const x of garr) {
+				buckets.write()
+			}
+		}
+	}),
 	counting: TEMPLATE({
 		defaults: {},
 		function: function (garr = this.template.genarrclass.static.empty()) {

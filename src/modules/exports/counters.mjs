@@ -1,4 +1,4 @@
-import { GENERATOR } from "./../macros.mjs"
+import { GENERATOR, ID } from "./../macros.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as multidim from "./multidim.mjs"
@@ -328,7 +328,7 @@ export const circularCounter = (() => {
 			return this.template.multitude.new(vals)
 		}
 	const arr = ["generator", "range"]
-	for (const i of [0, 1]) final[arr[i]] = generalized(arr[i], (-1) ** (i + 1))
+	for (const i of [0, 1]) final[arr[i]] = generalized(arr[i], (-1) ** i)
 
 	return GENERATOR(final)
 })()
@@ -336,7 +336,7 @@ export const circularCounter = (() => {
 export function arrCircCounter(template = {}) {
 	return circularCounter.function({
 		multitude: {
-			new: Array,
+			new: ID,
 			is: (x) => x instanceof Array,
 			map: (x, f) => x.map(f)
 		},

@@ -414,20 +414,19 @@ export const GeneralArray = (() => {
 			// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
 			finish: classes.finish,
 			// * A far simpler (hence, less capable with performance of complex walking tasks), faster, direction independent alternative to '.move';
-			go(index, range = this.this.this.this.class.template.icclass.template.range) {
+			go(
+				index = this.this.this.init(),
+				range = this.this.this.this.class.template.icclass.template.range
+			) {
 				if (!range(index.value))
 					throw new RangeError(
 						"Range error in the '.go' method 'index' argument whilst calling."
 					)
 				return (this.this.this.currindex = index)
 			},
-			// ? What about static methods??? Make this thing [other such similar ones???] static, rewrite in terms of the static class member?
-
-			// TODO: pray decide about the question of dependence/independence of methods from mutual definition...
-			// * For instance, if one has a thing relying on another thing, should user's interference with the definition also affect the behaviour of the thing that relies on it??? Or should contents of definitions be copied to their dependencies instead??? If so, pray create some general mechanism for organization of that manner of a procedure...
 			move(
-				index,
-				preface = aliases.void,
+				index = this.this.this.init(),
+				preface = aliases.VOID,
 				comparison = this.this.this.this.class.template.icclass.template
 					.comparison,
 				each = (x) => x.next(),
@@ -641,18 +640,21 @@ export const GeneralArray = (() => {
 				T.function = origin.function.bind(T)
 				return T
 			},
-			// TODO: allow for multiple arrays to concat the current one with... [perhaps, an array of arrays?]
-			concat(
-				// TODO: make the 'array' an '.empty()' by default in such and other similar cases...
-				array,
-				leftovers = {}
-			) {
+			concat(array = this.this.this.empty(), leftovers = {}) {
 				sh1(this, leftovers)
 				return array.loop()._full(
 					this.this.this.pushbackLoop({
 						arguments: [leftovers]
 					}).function
 				)
+			},
+			// * Note: the 'args' does __not__ have to be a native JS array; (This uses the Symbol.iterator...);
+			multcall(method, args = [], arrs = false, leftovers = {}) {
+				for (const x of args) {
+					if (!arrs) x = [x]
+					this.this.this[method](...x, leftovers)
+				}
+				return this.this.this
 			},
 			empty(template = this.this.this.this.class.template) {
 				return this.this.this.this.class.static.empty(template)
