@@ -10,6 +10,7 @@ import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
 import { StaticThisTransform } from "../instance.mjs"
 
+// TODO: create a proper '.copy' method...
 export const InfiniteCounter = (() => {
 	const sh1 = (_this, leftovers) =>
 		ensureProperties(leftovers, {
@@ -56,6 +57,18 @@ export const InfiniteCounter = (() => {
 					curr = iter(curr)
 				}
 				return curr
+			},
+			// ! Pray think a little more on the details of implementation of this static method [namely, the "generator"'s definition]...;
+			reverse() {
+				const _this = this
+				return InfiniteCounter({
+					generator(x) {
+						if (x === undefined) return _this.this.template.generator()
+						return _this.this.template.inverse(x)
+					},
+					inverse: this.this.template.generator(x),
+					range: this.this.template.range
+				})
 			}
 		},
 		methods: {
@@ -1696,88 +1709,141 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 export const numbers = {
 	// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
 	// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
-	TrueInteger(template = {}) {
-		return {
-			// * 'template' has the 'icclass';
-			template: { ...template },
-			class: function (v = this.template.icclass.class()) {
-				return {
-					class: this,
-					value: v,
-					// * Would return added value;
-					add(added) {
-						return TrueInteger(this.class.template)(
-							this.value
-								.jumpDirection(added.value.map(this.value.class))
-								.map(this.class.template.icclass)
+	// ! The 'numbers' API (and ALL THE OTHER ONES in 'types') must be independent of the underlying InfiniteCounter classes and generators [meaning, one uses '.map' MOST extensively];
+	TrueInteger: (function (parentclass) {
+		const ONE = (_this) =>
+			_this.this.this.this.class(
+				_this.this.this.this.class.template.icclass.class().next()
+			)
+		return EXTENSION({
+			defaults: {
+				parenclass: parentclass,
+				names: ["value"]
+			},
+			methods: {
+				// * Would return added value;
+				// ? Question: does one add 0, or 1 by default? [if do 0, then it will fit with the other methods defaults in the sense that calling without arguments makes no effect upon it...];
+				// * Current decision: 1;
+				add(added = ONE(this)) {
+					return this.this.this.this.class.class(
+						this.this.this.value.jumpDirection(
+							added.map(this.this.this.this.class.template.parentclass)
 						)
-					},
-					// * Would return multiplied value
-					multiply(multiplied) {
-						return multiplied.class.static.whileloop(
-							multiplied.value,
-							(x) => x.add(this),
-							multiplied.value.class.template.icclass.class(),
-							undefined,
-							undefined,
-							this
-						)
-					},
-					// * Raise 'this' to the integer power of 'x' (works with negatives too...);
-					power(x) {
-						if (!this.class.template.icclass.direction(x))
-							return TrueRatio(this.template.icclass).class([
-								this.class.template.icclass.class().next(),
-								this.power(x.reverse())
-							])
-						return repeatedApplication((y) => y.multiply(this), x, this)
-					},
-					// ? This thing could definitely be optimized... [Though, this appears to be far more 'clean' (in this context, equivalent of 'abstracted' and 'pure') as an algorithm... Think on it...]
-					// * For starters, one could '.add()' instead of multiplying by an index + use a '.static.while()' method... Pray consder...
-					modulo(divided) {
-						let i = TrueInteger(this.value.class.template).class(
-							this.value.class.template.icclass.class()
-						)
-						const d = TrueInteger(this.value.class.template).class(
-							divided.map(this.value.class.template.icclas)
-						)
-						while (!d.multiply(i).value.compare(this.value))
-							i.value = i.value.next()
-						return d.multiply(i).value.difference(this.value)
-					},
-					// * Would return the additive inverse;
-					invadd() {
-						// TODO: generalize this operation as a '.static()' - let it be something like 'ICClass-reversal';
-						const ICCLASS = this.class.template.icclass.template
-						return this.value.map({
-							generator(x) {
-								if (x === undefined) return ICCLASS.generator()
-								return ICCLASS.inverse(x)
-							},
-							inverse(x) {
-								return ICCLASS.generator(x)
-							},
-							range(x) {
-								return ICCLASS.range(x)
-							}
-						})
-					},
-					// * Would return a TrueRatio
-					invmult() {
-						return TrueRatio(this.class.template)(
-							this.class.template.icclass.class(),
-							this
-						)
-					}
+					)
+				},
+				// * Would return multiplied value
+				multiply(multiplied = ONE(this)) {
+					multiplied = multiplied.map(
+						this.this.this.this.class.template.icclass
+					)
+					return multiplied.value.class.static.whileloop(
+						multiplied.value,
+						(x) => x.add(this.this.this),
+						multiplied.class.template.parentclass.class(),
+						undefined,
+						undefined,
+						this.this.this
+					)
+				},
+				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
+				power(x = ONE(this)) {
+					if (!this.class.template.icclass.direction(x))
+						return TrueRatio(this.template.icclass).class([
+							this.class.template.icclass.class().next(),
+							this.power(x.reverse())
+						])
+					return repeatedApplication(
+						(y) => y.multiply(this.this.this),
+						x,
+						this.this.this
+					)
+				},
+				modulo(d = ONE(this)) {
+					d = d.map(this.value.class.template.icclas)
+					let curr = this.this.this.this.class.class()
+					while (!(curr = curr.add(d)).compare(this.this.this.value)) {}
+					return curr.difference(this.this.this)
+				},
+				// * Returns the additive inverse
+				invadd() {
+					return this.value.map(this.class.template.icclass.static.reverse())
+				},
+				// * Returns the multiplicative inverse (TrueRatio type);
+				invmult() {
+					return TrueRatio(this.this.this.this.class)(ONE(this), this.this.this)
+				},
+				map(icclass = this.this.this.this.class.template.icclass) {
+					return this.this.this.this.class(this.this.this.value.map(icclass))
+				},
+				compare(compared) {
+					return this.this.this.value.compare(
+						compared.map(this.this.this.this.class.template.icclass).value
+					)
+				},
+				difference(d) {
+					return this.this.this.add(d.invadd())
 				}
-			}
-		}
-	},
-	TrueRatio(template = {}) {
-		const B = {
-			// * 'template' has the 'icclass';
-			template: { ...template },
+			},
+			recursive: true,
+			toextend: []
+		})
+	})(),
+	// ! This - a double EXTENSION of the TrueInteger;
+	TrueRatio: function (parentclass) {
+		return EXTENSION({
+			defaults: {
+				parentclass: parentclass,
+				names: ["numerator", "denomenator"],
+				// ! appears for the second time, refactor?
+				inter: function (args, i) {
+					if (i === 0) return args
+					return [args[1]]
+				}
+			},
+			methods: {
+				// ! defaults...
+				add(addratio) {
+					return this.this.this.this.class.static.simpilfy(
+						this.this.this.this.class(
+							this.this.this.numerator
+								.multiply(addratio.denomenator)
+								.add(
+									addratio.numerator.multiply(
+										this.this.this.denomenator
+									)
+								),
+							this.this.this.denomenator.multiply(addratio.denomenator)
+						)
+					)
+				},
+				multiply(multratio) {
+					return TrueRatio().class(
+						this.value[0].multiply(multratio.value[0]),
+						this.value[1].multiply(multratio.value[1])
+					)
+				},
+				invadd() {
+					return this.this.this.this.class.class(
+						this.numerator.invadd(),
+						this.denomenator
+					)
+				},
+				// ! PROBLEM [general]: pray consider carefully the copying of the objects passed - when and where to copy...;
+				invmult() {
+					return this.this.this.this.class(
+						this.this.this.numerator,
+						this.this.this.denomenator
+					)
+				},
+				isWhole() {
+					return this.this.this.this.class.template.parentclass.template.parentclass.template.comparison(
+						this.this.this.denomenator,
+						this.this.this.this.class.template.parentclass().add()
+					)
+				}
+			},
 			static: {
+				// ! REWRITE...
 				simplify(ratio) {
 					let x = deepCopy(ratio)
 					const l = minfinite(ratio.value)
@@ -1822,43 +1888,11 @@ export const numbers = {
 					return x
 				}
 			},
-			class: function (numer, denom) {
-				return {
-					class: this,
-					value: [numer, denom],
-					add(addratio) {
-						return this.class.simpilfy(
-							TrueRatio().class(
-								this.value[0]
-									.multiply(addratio.value[1])
-									.add(addratio.value[0].multiply(this.value[1])),
-								this.value[1].multiply(addratio.value[1])
-							)
-						)
-					},
-					multiply(multratio) {
-						return TrueRatio().class(
-							this.value[0].multiply(multratio.value[0]),
-							this.value[1].multiply(multratio.value[1])
-						)
-					},
-					invadd() {
-						return TrueRatio().class(this.value[0].invadd(), this.value[1])
-					},
-					invmult() {
-						return TrueRatio().class(...this.value.reverse())
-					},
-					isWhole() {
-						return this.class.template.icclass.template.comparison(
-							this.value[1],
-							this.class.template.icclass.class().next()
-						)
-					}
-				}
-			}
-		}
-		B.static.this = B
-		return B
+			transform: StaticThisTransform,
+			recursive: true,
+			// ! work more on this list...Decide if it ought to remain empty for the time being...; 
+			toextend: []
+		})
 	},
 	InfiniteSum(template = {}) {
 		return {

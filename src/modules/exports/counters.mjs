@@ -343,3 +343,22 @@ export function arrCircCounter(template = {}) {
 		...template
 	})
 }
+
+export const finiteCounter = (() => {
+	const F = {}
+	const keys = ["generator", "inverse"]
+	const labels = ["next", "previous"]
+	for (const x of keys)
+		F[x] = function (item) {
+			return this.template.values.read(
+				this.template.values.firstIndex(item)[labels]()
+			)
+		}
+	return GENERATOR({
+		defaults: {},
+		...F, 	
+		range(x) {
+			return this.template.values.includes(x)
+		},
+	})
+})()

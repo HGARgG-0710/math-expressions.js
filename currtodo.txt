@@ -34,18 +34,26 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 			1.2. Then, generalize; 
 		
-		2. Finish the UnlimitedString; 
+		2. Finish the UnlimitedString [mostly done]; 
 			2.1. Main: 
 				2.1. Finish the missing methods from the UnlimiedString [this involves working with TrueNumbers, and also working with the .length().set()...]; 
 				2.2. Add the missing GeneralArray methods to it... [those that became to be as a part of UnlimitedString in the implementation in question originally]; 
-								
-		3. PROBLEM: with replacing the old API with the new General types: 
-			While an Idea of supreme beauty from the standpoint of structural integrity and the computational range potential [reference to the unlimitedness of the types], 
-				because of this transformation, the speed of the things may suffer greatly [namely, the numerous function calls]; 
-			
-			SO: before finally replacing all the 'Old' native-based apis with the general stuff, pray first ensure the difference in performance; 
-				IF, it is considered by oneself too great, then keep the things under a new name [such as '.fast', for instance...]; 
-				ELSE do as was previously decided; 
+				2.3. Small details like the 'leftovers', 
 
-		4. Work on the Elementarization of all the library bits [abstraction from the 'instance' function]; 
-			6.1. Fix the references, pray...
+		3. Fix the inter-references thoroughly, pray...
+		4. Finish TrueNumbers [surprisingly nearly finished already]: 
+			4.1. Work on the small details - stuff like 'leftovers'; 
+			4.2. Fix the old issues; Finish old todos; 	
+			4.3. Clean up the code, fix references, refactor; 
+			4.4. Finish the places that were left undecided, solve any new problems that may occurr...
+		5. Finish the Tree data-structure implementation; [METHODS FOR IT, THE METHODS...]; 
+		6. Create the implementation for the NTree; 
+		7. On 6., base the Heap; 
+		8. From 7., work on the sort.heap(); 
+		9. Do the 'sort.radix'; 
+		10. Having finished the work on the 'TrueNumbers', complete the 'algorithms.Farey' implementation; [shall one put this under 'numbers'?]
+		11. Finish the 'search.binary'; Start working on the 'search' subobject of the 'algorithms' module; Once finished, one may call the first sketch of the 'algorithms' complete and go on with the rest of the library...
+		12. Next - work on 'expressions', completing the UnlimitedString sometime in the meanwhile and fulfilling the 'NumberEquation' task;
+		13. Work on 'native' and creating the generalizations of those methods and transformations as well (think on where to put them..., maybe 'algorithms' too...); 
+		14. Think on the Graph from the 'algorithms'; 
+		15. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
