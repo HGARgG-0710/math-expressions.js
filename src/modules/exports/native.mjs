@@ -4,6 +4,7 @@
 import { TEMPLATE } from "./../macros.mjs"
 import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
+import * as variables from "./variables.mjs"
 
 // ? [name...] How about something related to 'native': native? One'd also add more of the functions for it ('transfer' them from the 'aliases.native', for they are too large to qualify as aliases...);
 // ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
@@ -62,32 +63,43 @@ export const flatCopy = copyFunction({
 	list: ["arrayFlat", "objectFlat", "function", "symbol"]
 })
 
-// ! Figure out what part of it one would with to have as an alias and which - as a part of native (don't delete, but pray do brush up and make templates out of all of this...);
+// ! Current agenda - work starts here...
+// % Tasks:
+// 	* 1. Brush up the old code [bring it up to the present standards];
+// 		1.1. Template it, where desired;
+// 		1.2. Refactor heavily;
+// 		1.3. Make use of aliases;
+// 		1.4. Distribute the definitions onto modules when necessary;
+// 	* 2. Generalize;
+// 	* 3. [most importantly - decide before all else] Consider:
+// 		3.2. whether there are going to be some few to be deleted after all;
+// 		3.2. [MOST ESSENTIAL] - which of the native algorithms get generalized [not all of them are wanted for generalization due to the specifics...];
 
 export const number = {
-	// todo: generalize -- let 'readable' be something that is definable by the user -- allow for an arbitrary separator, different patterns for indentation and so on... The current version would become a default...
+	// ! Note: this thing, while originally intended for numbers representations, actually is better categorized as an element for the string formatting operations;
+	// TODO: later, make either such a package/npm-module, or add such a section to the library; Then, put this there...;
 	/**
 	 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
 	 * @param {number} num A number, from which to make a better-looking version of it.
 	 */
-	readable: function (num = 0) {
-		const arr = String(num).split("")
-		let changeStr = ""
-		while (arr.length % 3 > 0) {
-			changeStr += arr[0]
-			if ((arr.length - 1) % 3 === 0) changeStr += " "
-			arr.shift()
+	readable: TEMPLATE({
+		defaults: {
+			mod: 3
+		},
+		function: function (num = 0) {
+			const arr = String(num).split("")
+			let affecteds = ""
+			while (arr.length % this.template.mod > 0) affecteds += arr.shift()
+			arr.forEach((number, index) => {
+				affecteds += (index % this.template.mod === 0 ? ` ` : ``) + number
+			})
+			return affecteds
 		}
-		arr.forEach((number, index) => {
-			index % 3 === 0 && index > 0
-				? (changeStr += ` ${number}`)
-				: (changeStr += `${number}`)
-		})
-		return changeStr
-	},
+	}),
 
 	// TODO: generalize this HEAVILY - instead of just numbers [as in addnumber], pray make it possible to do this thing with ANY generator -
 	// * Id est, getting an array of [f(s), f(f(s)), f(f(f(s))), ...] and so on forever; Generalize to a GeneralArray (so that one could have arbitrarily long sequences of generators like so);
+	// ^ put the generalized version in the 'algorithms.array' [after having created it...];
 	// [Maybe] Keep this thing as a nice special case util of that new generalized version;
 	/**
 	 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
@@ -98,18 +110,15 @@ export const number = {
 	 */
 	generate: function (start, end, step = 1, precision = 1) {
 		const generated = []
-		// TODO [general]: GET RID OF 'realAddition'...
-		const upper = realAddition(
-			end,
-			(-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
-		)[0]
+		const upper =
+			end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
 		const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-		for (let i = start; proposition(i); i += step) generated.push(floor(i, precision))
+		for (let i = start; proposition(i); i += step)
+			generated.push(this.floor(i, precision))
 		return generated
 	},
 
-	// TODO: generalize this thing -- make it possible for afterDot < 0; Then, it would truncate even the stuff before the point! (using this, one could get a character-by-character representation of a JS number...)
-	// TODO: write such a function as well for both old api and new api!
+	// TODO: generalize [put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
 	/**
 	 * Floors the given number to the needed level of precision.
@@ -117,225 +126,27 @@ export const number = {
 	 * @param {number} afterDot How many positions after dot should there be.
 	 * @returns {number}
 	 */
-	floor: function (number, afterDot = globalPrecision) {
-		return Number(number.toFixed(afterDot))
-	},
-
-	integer: {
-		// ! ALL OF THIS STUFF - convert to functions of 'True' number types and re-assign to corresponding parts of 'main'; Create functions that'd allow quick one-way conversion from the JS's native 'Number' to True number types;
-		// Then, either:
-		// % 1. make this stuff into aliases of those general versions;
-		// % 2. keep as-is [for the sake of either: 2.1. nostalgia; 2.2. effeciency;]
-		/**
-		 * Factors out a passed number to the prime numbers. Works quite quickly.
-		 * @param {number} num Number, to be factored out.
-		 * @returns {number[]} Prime factors array.
-		 */
-		factorOut: function (number) {
-			const factors = []
-			for (
-				let currDevisor = 2;
-				number !== 1;
-				currDevisor += currDevisor === 2 ? 1 : 2
-			) {
-				while (number % currDevisor === 0) {
-					factors.push(currDevisor)
-					number /= currDevisor
-				}
+	floor: TEMPLATE({
+		defaults: { defacc: variables.libPrecision.get },
+		function: function (number, afterDot = this.template.defacc) {
+			if (afterDot < 0) {
+				afterDot = -afterDot
+				const inted = String(this.function(number, 0)).reverse()
+				// ! use the 'insert' alias here...
+				inted = inted.slice(0, afterDot).concat(".", inted.slice(afterDot))
+				return Number(inted.reverse().split(".")[0])
 			}
-			return factors
-		},
-
-		isPrime: function (x) {
-			return factorOut(x).length === 1
-		},
-
-		primesBefore: function (x) {
-			return generate(1, x).filter(isPrime)
-		},
-
-		// * Brings whatever is given within the given base to base 10;
-		// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-		nbase: function (nstr, alphabet = defaultAlphabet) {
-			return repeatedArithmetic(
-				generate(0, nstr.length - 1).map(
-					(i) => alphabet.indexOf(nstr[i]) * alphabet.length ** i
-				),
-				"+"
-			)
-		},
-
-		// * Brings whatever in base 10 to whatever in whatever base is given...
-		nbasereverse: function (n, base, alphabet = defaultAlphabet) {
-			const coefficients = []
-			// TODO: call this thing nrepresentation(), then use here...
-			// TODO: change this for either one's own implementation of log, or this, as an alias...
-			let i = Math.floor(Math.log(n) / Math.log(base))
-			while (n !== 0) {
-				// TODO: add an operator for that to the defaultTable...
-				n = (n - (n % base ** i)) / base
-				coefficients.push(n)
-				i--
-			}
-			// TODO: create a generalized map() function that would map to both functions, arrays and objects;
-			return coefficients.map((i) => alphabet[i]).join("")
-		},
-
-		baseconvert: function (a, basebeg, baseend) {
-			return nbasereverse(nbase(a, basebeg), baseend)
-		},
-
-		// TODO: let all the non-alias-exports be handled by the export {...} piece of code, instead of it being done on-the-spot, like here...
-		// ? This thing don't include 0. Should it include 0?
-		multiples: function (n, range) {
-			return generate(1, range).map((a) => a * n)
-		},
-
-		// TODO: generalize for negative numbers, pray ['generate' does work with them, actually!]...
-		// ? That is, if that is desired... Is it? Pray think...
-		multiplesBefore: function (n, x) {
-			return multiples(n, floor(x / n))
-		},
-
-		// TODO: generalize to leastCommon when working on the general 'orders' api for 'newapi';
-		// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-		/**
-		 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
-		 * @param {number} firstNum First number.
-		 * @param {number} secondNum Second number.
-		 */
-		leastCommonMultiple: function (...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2)
-				return min(
-					arrIntersections([
-						multiples(nums[0], nums[1]),
-						multiples(nums[1], nums[0])
-					])
-				)
-			return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
-		},
-
-		commonMultiples: function (range, ...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2) {
-				const found = arrIntersections([
-					multiples(nums[0], range[range.length - 1]),
-					multiples(nums[1], nums[range[range.length - 2]])
-				])
-				range.pop()
-				range.pop()
-				return found
-			}
-			const rest = commonMultiples(range, ...nums.slice(1))
-			return arrIntersections([multiples(nums[0], range[range.length - 1]), rest])
-		},
-
-		leastCommonDivisor: function (...nums) {
-			// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-			return ((x) =>
-				typeof x === "number" || typeof x === "undefined" ? x : min(x))(
-				commonDivisors(...nums)
-			)
-		},
-
-		commonDivisors: function (...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2)
-				return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
-			return arrIntersections([
-				factorOut(nums[0]),
-				commonDivisors(...nums.slice(1))
-			])
-		},
-
-		/**
-		 * Checks whether the number passed is perfect or not.
-		 * @param {number} number Number, perfectness of which is to be checked.
-		 */
-		isPerfect: function (number) {
-			return repeatedArithmetic(allFactors(number).map(String), "+") === number
-		},
-
-		/**
-		 * Takes one integer and returns all of its factors (not only primes, but others also).
-		 * @param {number} number An integer, factors for which are to be found.
-		 */
-		allFactors: function (number) {
-			const factors = [1]
-			for (let currFactor = 2; currFactor !== number; currFactor++)
-				if (number % currFactor === 0) factors.push(currFactor)
-			return factors
-		},
-
-		/**
-		 * This function calculates the factorial of a positive integer given.
-		 * @param {number} number A positive integer, factorial for which is to be calculated.
-		 */
-		factorial: function (number = 0) {
-			const numbers = []
-
-			// ? Shall one extend this? [Think about it...]
-			if (number < 0)
-				throw new Error(
-					"factorial() function is not supposed to be used with the negative numbers. "
-				)
-			if (!number) return 1
-
-			for (let i = 1; i <= number; i++) numbers.push(i)
-			return repeatedArithmetic(numbers.map(String), "*")
-		},
-
-		sumRepresentations: function (n, m, minval = 1) {
-			// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
-			const itered = generate(minval, n).map((x) =>
-				generate(minval, m).map((v, i) => (i == 0 ? x : minval))
-			)
-			while (itered.length < n ** m) {
-				for (let i = 0; i < itered.length; i++) {
-					const copied = flatCopy(itered[i])
-					for (let j = 0; j < m; j++) {
-						copied[j]++
-						if (aliases.array.indexesOf().function(itered, copied).length) {
-							copied[j]--
-							continue
-						}
-						itered.push(copied)
-					}
-				}
-			}
-
-			return itered.filter((x) => repeatedArithmetic(x, "+") == n)
-		},
-
-		/**
-		 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
-		 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
-		 * @param {number} n First number (any rational number).
-		 * @param {number} k Second number (integer).
-		 */
-		binomial: function (n, k) {
-			if (
-				(typeof n !== "number" || typeof k !== "number") &&
-				(isNaN(Number(n)) || isNaN(Number(k)))
-			)
-				throw new Error(
-					"Input given to the choose function could not be converted to a number. "
-				)
-
-			// Rounding down just in case.
-			n = Number(n)
-			k = Number(k) | 0
-			return floor(
-				repeatedArithmetic(
-					generate(0, k - 1, 1).map((num) => n - num),
-					"*"
-				) / factorial(k)
-			)
+			return Number(number.toFixed(afterDot))
 		}
+	}),
+	ceil(x = 1) {
+		return this.floor(x) + 1
+	},
+	min(numarr = []) {
+		return Math.min(...numarr)
+	},
+	max(numarr = []) {
+		return Math.max(...numarr)
 	}
 }
 
@@ -658,7 +469,7 @@ export const array = {
 					return result
 			}
 
-			// TODO: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
+			// TODO [general]: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
 			return this.function(arrs[0], this.function(...arrs.slice(1)))
 		}
 	}),
@@ -809,6 +620,7 @@ string.strmethod = wrapper({
 	out: string.atos
 }).function
 
+// ? suggestion: add all the methods of 'array' to string via the 'strmethod'?
 string.sreplaceIndexes = string.strmethod(array.replaceIndexes)
 // * Replace the first occurence of a given value within a string...
 string.sreplaceFirst = string.sreplaceIndexes
@@ -824,7 +636,7 @@ array.replaceIndexesMult = array.multArrsRepApp({
 	f: array.replaceIndex,
 	default: []
 }).function
-string.sreplaceIndexesMult = string.strmethod(array.repalceIndexesMult)
+string.sreplaceIndexesMult = string.strmethod(array.replaceIndexesMult)
 
 // * 2.
 // * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';

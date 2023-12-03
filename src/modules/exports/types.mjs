@@ -5,12 +5,14 @@ import * as variables from "./variables.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
+import * as orders from "./orders.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
-import { StaticThisTransform } from "../instance.mjs"
+import { StaticThisTransform } from "../refactor.mjs"
 
-// TODO: create a proper '.copy' method...
+// TODO [general]: create a proper '.copy' method for each and every class...
+
 export const InfiniteCounter = (() => {
 	const sh1 = (_this, leftovers) =>
 		ensureProperties(leftovers, {
@@ -26,10 +28,9 @@ export const InfiniteCounter = (() => {
 			unacceptable: undefined,
 			initialcheck: comparisons.refCompare
 		},
-		// ? Generalize further! In particular, as one has separated the values for the 'methods', maybe do so for the 'properties' (using a different Macro...)
-		function: function (previous = this.template.unacceptable) {
-			return {
-				value: this.template.initialcheck(previous, this.template.unacceptable)
+		properties: {
+			value: function (previous = this.template.unacceptable) {
+				return this.template.initialcheck(previous, this.template.unacceptable)
 					? this.template.generator()
 					: previous
 			}
@@ -194,6 +195,7 @@ export const InfiniteCounter = (() => {
 					alterCurrent = alterCurrent.next()
 				return alterCurrent
 			},
+			// ! Rewrite and simplify using the 'static.reverse()'; 
 			reverse() {
 				const zero = this.this.class.class()
 				// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
@@ -208,6 +210,10 @@ export const InfiniteCounter = (() => {
 					a = dirfunc(a)
 				}
 				return a
+			},
+			// ? Generalize for the 'refactor.classes'? [Say, using the 'this.this.this.this.class.properties' property? But that has to assume that 'inter: cdieach' has been used...];
+			copy() {
+				return this.this.this.this.class.class(this.this.this.value)
 			}
 		},
 		recursive: true
@@ -1152,9 +1158,7 @@ export function UnlimitedMap(parentclass) {
 						return this.template.empty
 					})
 				),
-				inter: function (args, i) {
-					return i == 0 ? args : [args[1]]
-				}
+				inter: aliases.cdieach
 			},
 			unfound: undefined
 		},
@@ -1794,16 +1798,12 @@ export const numbers = {
 			defaults: {
 				parentclass: parentclass,
 				names: ["numerator", "denomenator"],
-				// ! appears for the second time, refactor?
-				inter: function (args, i) {
-					if (i === 0) return args
-					return [args[1]]
-				}
+				inter: aliases.cdieach
 			},
 			methods: {
 				// ! defaults...
 				add(addratio) {
-					return this.this.this.this.class.static.simpilfy(
+					return this.this.this.this.class.static.simplified(
 						this.this.this.this.class(
 							this.this.this.numerator
 								.multiply(addratio.denomenator)
@@ -1844,21 +1844,23 @@ export const numbers = {
 			},
 			static: {
 				// ! REWRITE...
-				simplify(ratio) {
-					let x = deepCopy(ratio)
-					const l = minfinite(ratio.value)
+				// * Best do it using the generalization of the 'native' algorithm for the 'multiples'; 
+				// % One does 'for (const x of arrIntersection(multiples(numerator), multiples(denomenator))) { numerator = numerator.divide(x); denomenator = denomenator.divide(x) }'
+				// ! Another issue - the whole division algorithm for TrueInteger is NOT implemented... Work, work, work...
+				// ^ Conclusion: before properly doing the work on the 'types.numbers' submodule, one must finish the generalization of the 'native' module + the module itself (brush up the code, et cetera...); 
+				simplified(ratio) {
+					ratio = ratio.copy()
+					const l = orders.min(ratio.numerator, ratio.denomenator)
 					for (
-						let i = TrueInteger({
-							icclass: this.this.template.icclass
-						}).class();
+						let i = this.this.template.parentclass.class();
 						!i.compare(l);
-						i.value = i.value.next()
+						i = i.add()
 					) {
 						// ! generalize this thing in the condititon... [Basically, this is integer-division with rational output (non-simplified, possibly 'x: x.isWhole()');]
 						while (
-							TrueRatio()
+							this.this
 								.class(
-									x.value[0],
+									ratio.denomenator,
 									this.this.template.icclass.class().next()
 								)
 								.multiply(TrueRatio().class(i.invmult()))
@@ -1890,7 +1892,7 @@ export const numbers = {
 			},
 			transform: StaticThisTransform,
 			recursive: true,
-			// ! work more on this list...Decide if it ought to remain empty for the time being...; 
+			// ! work more on this list...Decide if it ought to remain empty for the time being...;
 			toextend: []
 		})
 	},

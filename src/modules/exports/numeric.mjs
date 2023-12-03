@@ -28,3 +28,36 @@ export const polystring = TEMPLATE({
 		return representation.join(this.template.separator)
 	}
 })
+
+export const native = {
+	// * Brings whatever is given within the given base to base 10;
+	// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
+	nbase: function (nstr, alphabet = defaultAlphabet) {
+		return repeatedArithmetic(
+			generate(0, nstr.length - 1).map(
+				(i) => alphabet.indexOf(nstr[i]) * alphabet.length ** i
+			),
+			"+"
+		)
+	},
+
+	// * Brings whatever in base 10 to whatever in whatever base is given...
+	nbasereverse: function (n, base, alphabet = defaultAlphabet) {
+		const coefficients = []
+		// TODO: call this thing nrepresentation(), then use here...
+		// TODO: change this for either one's own implementation of log, or this, as an alias...
+		let i = Math.floor(Math.log(n) / Math.log(base))
+		while (n !== 0) {
+			// TODO: add an operator for that to the defaultTable...
+			n = (n - (n % base ** i)) / base
+			coefficients.push(n)
+			i--
+		}
+		// TODO: create a generalized map() function that would map to both functions, arrays and objects;
+		return coefficients.map((i) => alphabet[i]).join("")
+	},
+
+	baseconvert: function (a, basebeg, baseend) {
+		return nbasereverse(nbase(a, basebeg), baseend)
+	}
+}

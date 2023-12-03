@@ -48,18 +48,18 @@ export const classes = {
 			this.this.this.firstIndex(element),
 			this.this.this.class.template.unfound
 		)
-	}, 
-	copy: function(f = ID) {
-				const empty = this.this.this.this.class.class()
-				empty.genarr = this.this.this.genarr.copy(f)
-				return empty
-			}, 
-			peek: function() {
-				return this.this.this.genarr.read(this.this.this.genarr.finish())
-			}, 
-			pop: function() {
-				return this.this.this.genarr.delete()
-			}
+	},
+	copy: function (f = ID) {
+		const empty = this.this.this.this.class.class()
+		empty.genarr = this.this.this.genarr.copy(f)
+		return empty
+	},
+	peek: function () {
+		return this.this.this.genarr.read(this.this.this.genarr.finish())
+	},
+	pop: function () {
+		return this.this.this.genarr.delete()
+	}
 }
 
 export const general = {
@@ -77,5 +77,8 @@ export const general = {
 				b.slice(variables.MAX_STRING_LENGTH.get - a.length)
 			]
 		return [a.concat(b)]
+	},
+	StaticThisTransform: (templated) => {
+		templated.static.this = templated
 	}
 }

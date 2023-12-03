@@ -21,6 +21,7 @@
 import { EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
+import * as native from "./native.mjs"
 import { classes } from "../refactor.mjs"
 
 // ! Finish these two, pray [this is a sketch; further design assesment, generalization and work on arguments is needed]
@@ -90,7 +91,7 @@ export function Farey(startRatio, endRatio, iterations = 0) {
 // 		% And while one __could__ leave it to the user to finish... One could also do it by oneself in the following fashion:
 // 			1. Get the set of objects in question;
 // 			2. Connect them using a manner of an InfiniteCounter class [namely, define a generator/inverse/range encomassing them and their connections] and get an order (.compare) based off it;
-// 				* 2.1. The generator would be based off the GeneralArray that the user would give; [use the finiteCounter]; 
+// 				* 2.1. The generator would be based off the GeneralArray that the user would give; [use the finiteCounter];
 // 			3. Finally, use the 'numerics.polystring' with the alphabet given by the user;
 // 			4. Using the order from 2., define the appropriate linear order function predicate (using the 'orders.linear');
 // * So, the whole procedure really just comes down to transforming the objects in question into a defined set of alphabet-described strings! Only then, may the Radix Sort be implemented desireably...;
@@ -326,5 +327,198 @@ export const search = {
 			index = isBigger ? index + copyIndex : index - copyIndex
 		}
 		return -1
+	}
+}
+
+export const integer = {
+	native: {
+		// % This is the current agenda;
+		// ? Suggestion - make a new module - 'integer' for generalization of these algorithms? Then, put those in there under 'native'? [This always fit into the module not quite well... ]
+
+		/**
+		 * Factors out a passed number to the prime numbers. Works quite quickly.
+		 * @param {number} num Number, to be factored out.
+		 * @returns {number[]} Prime factors array.
+		 */
+		factorOut: function (number = 1) {
+			const factors = []
+			for (
+				let currDevisor = 2;
+				number !== 1;
+				currDevisor += 2 - (currDevisor === 2)
+			) {
+				while (number % currDevisor === 0) {
+					factors.push(currDevisor)
+					number /= currDevisor
+				}
+			}
+			return factors
+		},
+
+		isPrime: function (x = 1) {
+			return this.factorOut(x).length === 1
+		},
+
+		primesBefore: function (x = 1) {
+			return native.number.generate(1, x).filter(this.isPrime)
+		},
+
+		multiples: TEMPLATE({
+			defaults: {
+				defrange: 1,
+				includezero: false
+			},
+			function: function (n = 1, range = this.template.defrange) {
+				return native.number
+					.generate(this.template.includezero ? 0 : 1, range)
+					.map((a) => a * n)
+			}
+		}),
+
+		// TODO: extend to negative numbers, pray ('generate' supports this already)...
+		multiplesBefore: function (n, x) {
+			return multiples(n, native.number.floor(x / n))
+		},
+
+		// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
+		/**
+		 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
+		 * @param {number} firstNum First number.
+		 * @param {number} secondNum Second number.
+		 */
+		leastCommonMultiple: function (...nums) {
+			if (nums.length === 0) return undefined
+			if (nums.length === 1) return nums[0]
+			if (nums.length === 2)
+				return native.number.min(
+					native.array.arrIntersections(
+						multiples(nums[0], nums[1]),
+						multiples(nums[1], nums[0])
+					)
+				)
+			return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
+		},
+
+		commonMultiples: function (range, ...nums) {
+			if (nums.length === 0) return undefined
+			if (nums.length === 1) return nums[0]
+			if (nums.length === 2) {
+				const found = arrIntersections([
+					multiples(nums[0], range[range.length - 1]),
+					multiples(nums[1], nums[range[range.length - 2]])
+				])
+				range.pop()
+				range.pop()
+				return found
+			}
+			const rest = commonMultiples(range, ...nums.slice(1))
+			return this.arrIntersections([this.multiples(nums[0], range[range.length - 1]), rest])
+		},
+		
+		// ! continue later... too exhausted now...
+
+		leastCommonDivisor: function (...nums) {
+			// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
+			return ((x) =>
+				typeof x === "number" || typeof x === "undefined" ? x : min(x))(
+				commonDivisors(...nums)
+			)
+		},
+
+		commonDivisors: function (...nums) {
+			if (nums.length === 0) return undefined
+			if (nums.length === 1) return nums[0]
+			if (nums.length === 2)
+				return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
+			return arrIntersections([
+				factorOut(nums[0]),
+				commonDivisors(...nums.slice(1))
+			])
+		},
+
+		/**
+		 * Checks whether the number passed is perfect or not.
+		 * @param {number} number Number, perfectness of which is to be checked.
+		 */
+		isPerfect: function (number) {
+			return repeatedArithmetic(allFactors(number).map(String), "+") === number
+		},
+
+		/**
+		 * Takes one integer and returns all of its factors (not only primes, but others also).
+		 * @param {number} number An integer, factors for which are to be found.
+		 */
+		allFactors: function (number) {
+			const factors = [1]
+			for (let currFactor = 2; currFactor !== number; currFactor++)
+				if (number % currFactor === 0) factors.push(currFactor)
+			return factors
+		},
+
+		/**
+		 * This function calculates the factorial of a positive integer given.
+		 * @param {number} number A positive integer, factorial for which is to be calculated.
+		 */
+		factorial: function (number = 0) {
+			const numbers = []
+
+			// ? Shall one extend this? [Think about it...]
+			if (number < 0)
+				throw new Error(
+					"factorial() function is not supposed to be used with the negative numbers. "
+				)
+			if (!number) return 1
+
+			for (let i = 1; i <= number; i++) numbers.push(i)
+			return repeatedArithmetic(numbers.map(String), "*")
+		},
+
+		sumRepresentations: function (n, m, minval = 1) {
+			// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
+			const itered = generate(minval, n).map((x) =>
+				generate(minval, m).map((v, i) => (i == 0 ? x : minval))
+			)
+			while (itered.length < n ** m) {
+				for (let i = 0; i < itered.length; i++) {
+					const copied = flatCopy(itered[i])
+					for (let j = 0; j < m; j++) {
+						copied[j]++
+						if (aliases.array.indexesOf().function(itered, copied).length) {
+							copied[j]--
+							continue
+						}
+						itered.push(copied)
+					}
+				}
+			}
+
+			return itered.filter((x) => repeatedArithmetic(x, "+") == n)
+		},
+
+		/**
+		 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
+		 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
+		 * @param {number} n First number (any rational number).
+		 * @param {number} k Second number (integer).
+		 */
+		binomial: function (n, k) {
+			if (
+				(typeof n !== "number" || typeof k !== "number") &&
+				(isNaN(Number(n)) || isNaN(Number(k)))
+			)
+				throw new Error(
+					"Input given to the choose function could not be converted to a number. "
+				)
+
+			// Rounding down just in case.
+			n = Number(n)
+			k = Number(k) | 0
+			return floor(
+				repeatedArithmetic(
+					generate(0, k - 1, 1).map((num) => n - num),
+					"*"
+				) / factorial(k)
+			)
+		}
 	}
 }

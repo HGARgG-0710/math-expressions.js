@@ -1,4 +1,9 @@
+// * This module provides an export structure-interface for the user to be able to access different parts of the API in accordance with their theme [also - to be able to consider the package in its generality]; 
+
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
+// * The things would be decompiled from an AST; 
+// ? Out of scope of the library; Do it sometime else, somewhere else?
+
 import { ID, NOMODULE } from "./macros.mjs"
 
 import * as algorithms from "./exports/algorithms.mjs"
@@ -16,20 +21,8 @@ import * as structure from "./exports/structure.mjs"
 import * as types from "./exports/types.mjs"
 import * as variables from "./exports/variables.mjs"
 
-// ! PROBLEM: with the native JS 'getters/setters' - namely, the fact that their copying methods seem to differ from the simple good-old '.bind': one ought to create more of the various copying functions for this stuff...
-// * SOLUTION: replace all the places where they appear with a '.get()/.set() interface...';
-// ^ IDEA: generalize the interface to a macro;
-
 // TODO [generally]: make a one whole new round regarding the workability of the code, when having finished the generalization procedures, fix everything, tune everything totally...
 
-// ? Where to move it? [This is an alias..., to aliases...];
-export const StaticThisTransform = (templated, template) => {
-	templated.static.this = templated
-}
-
-// ? PROBLEM [general]: The user is not able to meaningfully call the '.methods' as they are;
-
-// ? Make a template itself?
 export function instance(transformation = ID) {
 	// * Module instance Export
 	return transformation({	

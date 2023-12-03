@@ -29,7 +29,7 @@ export const defaultTable = VARIABLE({
  */
 // ? create various numeric constants within the library (besides, some of ones functions' definitions may use it;)...
 // ! Make this thing more useful - when using unlimited types, use it to the full extent...
-export const globalPrecision = VARIABLE(16)
+export const libPrecision = VARIABLE(16)
 export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
 export const MAX_INT = VARIABLE(2 ** 53 - 1)
 

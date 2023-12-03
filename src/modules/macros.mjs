@@ -222,6 +222,8 @@ export const PRECLASS = NOREST([
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
+		// ! alias; 
+		function: () => ({}),
 		methods: {},
 		static: {},
 		recursive: false,
@@ -241,6 +243,7 @@ export const CLASS = (ptemplate = {}) => {
 		const p = POSTTF(vtemplate)
 		const POSTF = p[template.template.word]
 		p[template.template.word] = function (...args) {
+			// ! PROOOOBLEEEEM - with the cases, when the 'function()' is missing! By default, it must produce a {};
 			const V = POSTF(...args)
 
 			// ? QUESTION: does one desire for to use the 'ptemplate' in the way that it is used currently?

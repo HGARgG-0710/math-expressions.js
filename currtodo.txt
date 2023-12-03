@@ -42,6 +42,10 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 		3. Fix the inter-references thoroughly, pray...
 		4. Finish TrueNumbers [surprisingly nearly finished already]: 
+			4.0. [BEFORE ALL ELSE]: 
+				The great problem with present advances in their direction are the fact that the contents of the 'native' module are not generalized 
+					to work with TrueIntegers; 
+				So: first, generalize, at the same time as forming the presently lacking parts of the implementation of the TrueIntegers; 
 			4.1. Work on the small details - stuff like 'leftovers'; 
 			4.2. Fix the old issues; Finish old todos; 	
 			4.3. Clean up the code, fix references, refactor; 
