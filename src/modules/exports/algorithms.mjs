@@ -22,6 +22,7 @@ import { EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
+import * as expressions from "./expressions.mjs"
 import { classes } from "../refactor.mjs"
 
 // ! Finish these two, pray [this is a sketch; further design assesment, generalization and work on arguments is needed]
@@ -333,7 +334,8 @@ export const search = {
 export const integer = {
 	native: {
 		// % This is the current agenda;
-		// ? Suggestion - make a new module - 'integer' for generalization of these algorithms? Then, put those in there under 'native'? [This always fit into the module not quite well... ]
+		// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
+		// * Note: work on this also leads to the 'expressions' API;
 
 		/**
 		 * Factors out a passed number to the prime numbers. Works quite quickly.
@@ -366,26 +368,29 @@ export const integer = {
 		multiples: TEMPLATE({
 			defaults: {
 				defrange: 1,
-				includezero: false
+				includezero: false,
+				step: 1
 			},
 			function: function (n = 1, range = this.template.defrange) {
 				return native.number
-					.generate(this.template.includezero ? 0 : 1, range)
+					.generate(
+						this.template.includezero ? 0 : 1,
+						range,
+						this.template.step * (-1) ** (range > 0 || n > 0)
+					)
 					.map((a) => a * n)
 			}
 		}),
 
-		// TODO: extend to negative numbers, pray ('generate' supports this already)...
-		multiplesBefore: function (n, x) {
-			return multiples(n, native.number.floor(x / n))
-		},
+		multiplesBefore: TEMPLATE({
+			defaults: {
+				defrange: 1
+			},
+			function: function (n = 1, x = this.template.defrange) {
+				return multiples(n, native.number.floor(x / n))
+			}
+		}),
 
-		// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-		/**
-		 * Takes three numbers, thwo of which are numbers for which least common multiple shall be found and the third one is a search range for them.
-		 * @param {number} firstNum First number.
-		 * @param {number} secondNum Second number.
-		 */
 		leastCommonMultiple: function (...nums) {
 			if (nums.length === 0) return undefined
 			if (nums.length === 1) return nums[0]
@@ -402,88 +407,86 @@ export const integer = {
 		commonMultiples: function (range, ...nums) {
 			if (nums.length === 0) return undefined
 			if (nums.length === 1) return nums[0]
-			if (nums.length === 2) {
-				const found = arrIntersections([
-					multiples(nums[0], range[range.length - 1]),
-					multiples(nums[1], nums[range[range.length - 2]])
+			if (nums.length === 2)
+				return this.arrIntersections([
+					this.multiples(nums[0], range[range.length - 1]),
+					this.multiples(nums[1], nums[range[range.length - 2]])
 				])
-				range.pop()
-				range.pop()
-				return found
-			}
-			const rest = commonMultiples(range, ...nums.slice(1))
-			return this.arrIntersections([this.multiples(nums[0], range[range.length - 1]), rest])
+			return this.arrIntersections([
+				this.multiples(nums[0], range[0]),
+				commonMultiples(range.slice(1), ...nums.slice(1))
+			])
 		},
-		
-		// ! continue later... too exhausted now...
+
+		areCoprime: function (...args) {
+			return !!native.array.arrIntersections(...args.map(this.factorOut)).length
+		},
 
 		leastCommonDivisor: function (...nums) {
-			// TODO: like this style; rewrite some bits of the library to have it -- replaceing 'const's with nameless (anonymous) functions as a way of "distributing" certain value;
-			return ((x) =>
-				typeof x === "number" || typeof x === "undefined" ? x : min(x))(
-				commonDivisors(...nums)
-			)
+			const x = this.commonDivisors(...nums)
+			return typeof x === "number" || typeof x === "undefined"
+				? x
+				: native.number.min(x)
 		},
 
+		// ? Generlize this and 'commonMultiples' to a native.array algorithm - 'common' (would do the recursive 'arrIntersections');
 		commonDivisors: function (...nums) {
 			if (nums.length === 0) return undefined
 			if (nums.length === 1) return nums[0]
 			if (nums.length === 2)
-				return arrIntersections([factorOut(nums[0]), factorOut(nums[1])])
-			return arrIntersections([
-				factorOut(nums[0]),
-				commonDivisors(...nums.slice(1))
+				return native.array.arrIntersections([
+					this.factorOut(nums[0]),
+					this.factorOut(nums[1])
+				])
+			return native.array.arrIntersections([
+				this.factorOut(nums[0]),
+				this.commonDivisors(...nums.slice(1))
 			])
 		},
 
-		/**
-		 * Checks whether the number passed is perfect or not.
-		 * @param {number} number Number, perfectness of which is to be checked.
-		 */
-		isPerfect: function (number) {
-			return repeatedArithmetic(allFactors(number).map(String), "+") === number
-		},
-
-		/**
-		 * Takes one integer and returns all of its factors (not only primes, but others also).
-		 * @param {number} number An integer, factors for which are to be found.
-		 */
-		allFactors: function (number) {
+		allFactors: function (number = 1) {
 			const factors = [1]
-			for (let currFactor = 2; currFactor !== number; currFactor++)
+			const l = number / 2
+			for (let currFactor = 2; currFactor <= l; currFactor++)
 				if (number % currFactor === 0) factors.push(currFactor)
 			return factors
 		},
 
-		/**
-		 * This function calculates the factorial of a positive integer given.
-		 * @param {number} number A positive integer, factorial for which is to be calculated.
-		 */
-		factorial: function (number = 0) {
-			const numbers = []
+		isPerfect: function (number = 1) {
+			return (
+				expressions
+					.evaluate()
+					.function(
+						expressions.Expression("+", [], this.allFactors(number))
+					) === number
+			)
+		},
 
-			// ? Shall one extend this? [Think about it...]
+		factorial: function (number = 0) {
+			const numbers = [1]
+
 			if (number < 0)
-				throw new Error(
-					"factorial() function is not supposed to be used with the negative numbers. "
+				throw new RangeError(
+					"factorial() library function only accepts values >= 0"
 				)
-			if (!number) return 1
 
 			for (let i = 1; i <= number; i++) numbers.push(i)
-			return repeatedArithmetic(numbers.map(String), "*")
+			return expressions
+				.evaluate()
+				.function(expression.Expression("*", [], numbers))
 		},
 
 		sumRepresentations: function (n, m, minval = 1) {
-			// TODO: generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
+			// ? generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
 			const itered = generate(minval, n).map((x) =>
 				generate(minval, m).map((v, i) => (i == 0 ? x : minval))
 			)
 			while (itered.length < n ** m) {
 				for (let i = 0; i < itered.length; i++) {
-					const copied = flatCopy(itered[i])
+					const copied = native.copy.flatCopy(itered[i])
 					for (let j = 0; j < m; j++) {
 						copied[j]++
-						if (aliases.array.indexesOf().function(itered, copied).length) {
+						if (native.array.indexesOf().function(itered, copied).length) {
 							copied[j]--
 							continue
 						}
@@ -492,32 +495,29 @@ export const integer = {
 				}
 			}
 
-			return itered.filter((x) => repeatedArithmetic(x, "+") == n)
+			return itered.filter(
+				(x) =>
+					expressions.evaluate().function(expressions.Expression("+", [], x)) ==
+					n
+			)
 		},
 
-		/**
-		 * Takes two numbers (one rational and other - integer) and calculates the value of combinatorics choose function for them.
-		 * (What it actually does is it takes their binomial coefficient, but never mind about that. )
-		 * @param {number} n First number (any rational number).
-		 * @param {number} k Second number (integer).
-		 */
 		binomial: function (n, k) {
-			if (
-				(typeof n !== "number" || typeof k !== "number") &&
-				(isNaN(Number(n)) || isNaN(Number(k)))
-			)
-				throw new Error(
-					"Input given to the choose function could not be converted to a number. "
+			if (isNaN(n) || isNaN(k))
+				throw new RangeError(
+					"binomial() function only accepts values that are natively convertible to Number"
 				)
 
-			// Rounding down just in case.
 			n = Number(n)
 			k = Number(k) | 0
 			return floor(
-				repeatedArithmetic(
-					generate(0, k - 1, 1).map((num) => n - num),
-					"*"
-				) / factorial(k)
+				expressions.evaluate()(
+					expressions.Expression(
+						"*",
+						[],
+						native.number.generate(0, k - 1, 1).map((num) => n - num)
+					)
+				) / this.factorial(k)
 			)
 		}
 	}

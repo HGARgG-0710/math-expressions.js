@@ -63,7 +63,12 @@ export const classes = {
 }
 
 export const general = {
-	fix: function (objs, keys, operation = () => {}, setfunc = (o, k, v) => (o[k] = v)) {
+	fix: function (
+		objs = [],
+		keys = [],
+		operation = () => {},
+		setfunc = (o, k, v) => (o[k] = v)
+	) {
 		const remember = objs.map((obj, i) => objs)
 		for (let i = 0; i < objs.length; i++) remember.push(objs[i][keys[i]])
 		const returned = operation()
@@ -80,5 +85,12 @@ export const general = {
 	},
 	StaticThisTransform: (templated) => {
 		templated.static.this = templated
+	},
+	recursiveOperation(opname, binaryver) {
+		return function (...args) {
+			return args.length >= 2
+				? binaryver(args[0], this.get[opname](args.slice(1)))
+				: args[0]
+		}
 	}
 }

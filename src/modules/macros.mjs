@@ -2,6 +2,7 @@
 
 import * as native from "./exports/native.mjs"
 import * as structure from "./exports/structure.mjs"
+import * as aliases from "./exports/aliases.mjs"
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
 // ! In particular - later create a General versions of macros (using unlimited types...);
@@ -26,6 +27,21 @@ export const TYPED_VARIABLE =
 	}
 
 export const VARIABLE = TYPED_VARIABLE()
+export const RECURSIVE_VARIABLE = (x) => {
+	if (x instanceof Object) {
+		const r = {
+			get: {},
+			set(f) {
+				this.get = { ...f }
+				for (const y in this.get)
+					if (aliases.is.fn(this.get[y])) this.get[y] = f[y].bind(this)
+			}
+		}
+		r.set(x)
+		return r
+	}
+	return VARIABLE(x)
+}
 
 export const NAMED_TEMPLATE = (f, dname = undefined, dinstance = undefined, rest = {}) =>
 	TEMPLATE({ defaults: { name: dname, instance: dinstance }, function: f, ...rest })
@@ -222,7 +238,7 @@ export const PRECLASS = NOREST([
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
-		// ! alias; 
+		// ! alias;
 		function: () => ({}),
 		methods: {},
 		static: {},

@@ -150,6 +150,7 @@ export const bi = BigInt
 export const ustr = types.UnlimitedString
 export const genarr = types.GeneralArray
 
+// TODO: work more on the structure of the 'aliases' module; In particular - distribute those ones definitions somehwere more appropriate ['function', for instance?];
 // ! USE THIS ONE ESPECIALLY...
 export const property =
 	(p) =>
@@ -166,6 +167,7 @@ export const paramDecide =
 	(a = ID, b = ID) =>
 	(...args) =>
 		(cond() ? a : b)(...args)
+export const exparr = (f) => (arr) => f(...arr)
 
 export const is = {
 	bool: (x) => x === true || x === false,
@@ -178,7 +180,8 @@ export const is = {
 	arr: (x) => x instanceof Array,
 	fn: (x) => x instanceof Function,
 	fun: (x) => typeof x === "function",
-	bi: (x) => x instanceof BigInt
+	bi: (x) => x instanceof BigInt,
+	nan: isNaN
 }
 
 /**

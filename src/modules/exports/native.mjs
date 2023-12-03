@@ -6,62 +6,64 @@ import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
 
-// ? [name...] How about something related to 'native': native? One'd also add more of the functions for it ('transfer' them from the 'aliases.native', for they are too large to qualify as aliases...);
-// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
-export const copy = TEMPLATE({
-	defaults: {
-		objdefmeth: ID,
-		arrdefmeth: ID,
-		// TODO: make an alias for this...
-		defcontext: () => ({})
-	},
-	function: function (
-		arrmeth = this.template.arrdefmeth,
-		objmeth = this.template.objdefmeth,
-		dcontext = this.template.defcontext
-	) {
-		return {
-			array: (a, method = arrmeth) => a.map(method),
-			object: (a, method = objmeth) => objFmap(a, method),
-			function: (a, context = dcontext()) => a.bind(context),
-			symbol: (a) => Symbol(aliases.trim(7)(aliases.str(a))),
-			arrayFlat: (a) => [...a],
-			objectFlat: (a) => ({ ...a })
+export const copy = {
+	copy: TEMPLATE({
+		defaults: {
+			objdefmeth: ID,
+			arrdefmeth: ID,
+			// TODO: make an alias for this...
+			defcontext: () => ({})
+		},
+		function: function (
+			arrmeth = this.template.arrdefmeth,
+			objmeth = this.template.objdefmeth,
+			dcontext = this.template.defcontext
+		) {
+			return {
+				array: (a, method = arrmeth) => a.map(method),
+				object: (a, method = objmeth) => objFmap(a, method),
+				function: (a, context = dcontext()) => a.bind(context),
+				symbol: (a) => Symbol(aliases.trim(7)(aliases.str(a))),
+				arrayFlat: (a) => [...a],
+				objectFlat: (a) => ({ ...a })
+			}
 		}
-	}
-})
+	}),
 
-// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
-export const copyFunction = TEMPLATE({
-	defaults: { list: [] },
-	function: function (a) {
-		// TODO: do something about that inner one; shouldn't be there...
-		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
-		function typeTransform(x) {
-			if (x === "array" || x === "arrayFlat") return (p) => p instanceof Array
-			if (x === "objectFlat") return (p) => typeof p === "object"
-			return (p) => typeof p === x
+	// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
+	copyFunction: TEMPLATE({
+		defaults: { list: [] },
+		function: function (a) {
+			// TODO: do something about that inner one; shouldn't be there...
+			// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
+			function typeTransform(x) {
+				if (x === "array" || x === "arrayFlat") return (p) => p instanceof Array
+				if (x === "objectFlat") return (p) => typeof p === "object"
+				return (p) => typeof p === x
+			}
+			for (const x of this.template.list)
+				if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
+			return a
 		}
-		for (const x of this.template.list)
-			if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
-		return a
-	}
-})
+	})
+}
 
 // * Copies an object/array deeply...
-export const deepCopy = copyFunction({
+copy.deepCopy = copy.copyFunction({
 	list: ["array", "object", "function", "symbol"]
 })
 
 // * Keeps the functions references intact whilst copying...
-export const dataCopy = copyFunction({
+copy.dataCopy = copy.copyFunction({
 	list: ["array", "object", "symbol"]
 })
 
 // * Does a flat copy of something;
-export const flatCopy = copyFunction({
+copy.flatCopy = copy.copyFunction({
 	list: ["arrayFlat", "objectFlat", "function", "symbol"]
 })
+// ? [name...] How about something related to 'native': native? One'd also add more of the functions for it ('transfer' them from the 'aliases.native', for they are too large to qualify as aliases...);
+// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
 
 // ! Current agenda - work starts here...
 // % Tasks:
@@ -70,10 +72,7 @@ export const flatCopy = copyFunction({
 // 		1.2. Refactor heavily;
 // 		1.3. Make use of aliases;
 // 		1.4. Distribute the definitions onto modules when necessary;
-// 	* 2. Generalize;
-// 	* 3. [most importantly - decide before all else] Consider:
-// 		3.2. whether there are going to be some few to be deleted after all;
-// 		3.2. [MOST ESSENTIAL] - which of the native algorithms get generalized [not all of them are wanted for generalization due to the specifics...];
+// 	* 2. Relocate [when wanted], generalize [all of the ones that are wanted for generalization];
 
 export const number = {
 	// ! Note: this thing, while originally intended for numbers representations, actually is better categorized as an element for the string formatting operations;

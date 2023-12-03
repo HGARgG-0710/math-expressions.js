@@ -57,7 +57,7 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		9. Do the 'sort.radix'; 
 		10. Having finished the work on the 'TrueNumbers', complete the 'algorithms.Farey' implementation; [shall one put this under 'numbers'?]
 		11. Finish the 'search.binary'; Start working on the 'search' subobject of the 'algorithms' module; Once finished, one may call the first sketch of the 'algorithms' complete and go on with the rest of the library...
-		12. Next - work on 'expressions', completing the UnlimitedString sometime in the meanwhile and fulfilling the 'NumberEquation' task;
-		13. Work on 'native' and creating the generalizations of those methods and transformations as well (think on where to put them..., maybe 'algorithms' too...); 
-		14. Think on the Graph from the 'algorithms'; 
-		15. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
+		12. Work on 'native' and creating the generalizations of those methods and transformations as well (think on where to put them..., maybe 'algorithms' too...); 
+			12.1. Some work done, completion needed; 
+		13. Think on the Graph from the 'algorithms'; 
+		14. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 

@@ -2,7 +2,8 @@ import * as comparisons from "./comparisons.mjs"
 
 // * This module defines various basic statistical tests and measures implementations;
 
-// ! Generalize using the TrueNumber(s); 
+// ? Generalize using the TrueNumber(s); 
+// * Don't know if one wants to generalize this after all... [maybe, keep for after the v1.0? Do it during the v1.1? Think. For now - just work on this old finite types code]; 
 
 /**
  * This class represents an assembly of various statistics on the array of numeric data given.
