@@ -82,6 +82,22 @@ export const native = {
 		},
 		arrApply: function (f, arr) {
 			return f(...arr)
+		},
+		noarrs(array = []) {
+			return array.filter(negate(aliases.is.arr))
+		},
+		arrsonly(array = []) {
+			return array.filter(is.arr)
+		},
+		// ? Does one want to keep those?
+		_multmap: function (a, fs) {
+			return multmap([a], fs)[0]
+		},
+		multmap: function (a, fs) {
+			return a.map((el) => fs.map((f) => f(el)))
+		},
+		hasArrays: function (array = []) {
+			return array.any(aliases.is.arr)
 		}
 	},
 
@@ -108,7 +124,6 @@ export const native = {
 	},
 
 	object: {
-		// ! PROBLEM [?is it though? - general]: decide what to do about the default values of functions in cases like these;
 		ensureProperty: function (object, property, value = undefined) {
 			if (!object.hasOwnProperty(property)) object[property] = value
 		},
@@ -211,3 +226,4 @@ export const lesseroe = (a, b) => b.compare(a)
 export const greateroe = (a, b) => a.compare(b)
 
 export const cdieach = (x, i) => [x[i]]
+export const negind = (x, arr) => (x < 0 ? arr.length + x : x)

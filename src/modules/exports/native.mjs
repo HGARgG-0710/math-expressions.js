@@ -5,6 +5,10 @@ import { TEMPLATE } from "./../macros.mjs"
 import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
+import * as expressions from "./expressions.mjs"
+import * as types from "./types.mjs"
+import * as multidim from "./multidim.mjs"
+import * as comparisons from "./comparisons.mjs"
 
 export const copy = {
 	copy: TEMPLATE({
@@ -31,21 +35,22 @@ export const copy = {
 	}),
 
 	// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
-	copyFunction: TEMPLATE({
-		defaults: { list: [] },
-		function: function (a) {
-			// TODO: do something about that inner one; shouldn't be there...
-			// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
-			function typeTransform(x) {
-				if (x === "array" || x === "arrayFlat") return (p) => p instanceof Array
-				if (x === "objectFlat") return (p) => typeof p === "object"
-				return (p) => typeof p === x
-			}
-			for (const x of this.template.list)
-				if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
-			return a
+	copyFunction: (() => {
+		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
+		function typeTransform(x) {
+			if (x === "array" || x === "arrayFlat") return aliases.is.arr
+			if (x === "objectFlat") return aliases.is.obj
+			return (p) => typeof p === x
 		}
-	})
+		return TEMPLATE({
+			defaults: { list: [] },
+			function: function (a) {
+				for (const x of this.template.list)
+					if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
+				return a
+			}
+		})
+	})()
 }
 
 // * Copies an object/array deeply...
@@ -62,17 +67,6 @@ copy.dataCopy = copy.copyFunction({
 copy.flatCopy = copy.copyFunction({
 	list: ["arrayFlat", "objectFlat", "function", "symbol"]
 })
-// ? [name...] How about something related to 'native': native? One'd also add more of the functions for it ('transfer' them from the 'aliases.native', for they are too large to qualify as aliases...);
-// ? Make the list of keys for the object containing the copying methods more flexible? [Create a way for the user to map the default ones to the ones that they desire instead?]
-
-// ! Current agenda - work starts here...
-// % Tasks:
-// 	* 1. Brush up the old code [bring it up to the present standards];
-// 		1.1. Template it, where desired;
-// 		1.2. Refactor heavily;
-// 		1.3. Make use of aliases;
-// 		1.4. Distribute the definitions onto modules when necessary;
-// 	* 2. Relocate [when wanted], generalize [all of the ones that are wanted for generalization];
 
 export const number = {
 	// ! Note: this thing, while originally intended for numbers representations, actually is better categorized as an element for the string formatting operations;
@@ -150,61 +144,53 @@ export const number = {
 }
 
 export const object = {
-	// ! PROBLEM [1]: won't work in the recursive case (exampli gratia: 'const a = {x : a}') [or, namely, will work indefinitely] - fix!
 	subobjects(object = {}, prev = []) {
 		let returned = []
 		if (object instanceof Object && !prev.includes(object)) {
+			prev.push(object)
 			for (const a in object)
-				if (object[a] instanceof Object) {
+				if (aliases.is.obj(object[a])) {
 					returned.push(object[a])
-					prev.push(object)
 					returned = returned.concat(this.subobjects(object[a], prev))
 				}
 		}
 		return returned
 	},
 	subobjectsFlat(object = {}) {
-		return Object.values(object)
-			.filter((x) => x instanceof Object)
-			.map((x) => object[Object.keys(object)[Object.values(object).indexOf(x)]])
+		return aliases.obj.values(object).filter(aliases.is.obj)
 	},
 
-	// ! PROBLEM: this thing [subobjectsFlat]
 	// * Checks if a certain object contains a recursive reference;
 	isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
-		if (!(object instanceof Object)) return false
-		return max(
-			Object.keys(object).map(
-				(x) =>
-					prevobjsarr.includes(object[x]) ||
-					this.isRecursive(object[x], prevobjsarr)
+		if (!aliases.is.obj(object)) return false
+		return number.max(
+			Object.values(object).map(
+				(x) => prevobjsarr.includes(x) || this.isRecursive(x, prevobjsarr)
 			)
 		)
 	},
 
 	objInverse: TEMPLATE({
-		function: function (obj, treatUniversal = this.template.treatUniversal) {
-			return ((a) =>
-				((universal) => a(universal.values, universal.keys))(
-					a(obj, treatUniversal)
-				))(UniversalMap(this.template.notfound))
-		},
 		defaults: {
 			notfound: undefined,
 			treatUniversal: false
+		},
+		function: function (obj = {}, treatUniversal = this.template.treatUniversal) {
+			const umclass = types.UniversalMap(this.template)
+			const objorig = umclass(obj, treatUniversal)
+			return umclass(objorig.values, objorig.keys, false)
 		}
 	}),
-
-	// TODO: for all these things pray do add the infinite counterpart as well [still strong does it stay -- for EACH AND EVERY thing to be an infinite counterpart]...
 
 	obj: OBJECT,
 
 	objMap: function (obj, keys, id = true) {
 		const newobj = {}
 		for (const key in keys) newobj[keys[key]] = obj[key]
-		if (id)
-			for (const key in obj)
-				if (!Object.values(keys).includes(key)) newobj[key] = obj[key]
+		if (id) {
+			const newkeys = aliases.obj.values(keys)
+			for (const key in obj) if (!newkeys.includes(key)) newobj[key] = obj[key]
+		}
 		return newobj
 	},
 
@@ -216,20 +202,19 @@ export const object = {
 
 	objArr: DEOBJECT,
 
-	objSwap: function (obj1, obj2) {
-		;((obj1Copy, obj2Copy) => {
-			objClear(obj1, obj1Copy)
-			objClear(obj2, obj2Copy)
-			objInherit(obj1, obj2Copy)
-			objInherit(obj2, obj1Copy)
-		})(...Array.from(arguments).map(flatCopy))
+	objSwap: function (obj1 = {}, obj2 = {}) {
+		const [obj1Copy, obj2Copy] = Array.from(arguments).map(native.copy.flatCopy)
+		this.objClear(obj1, obj1Copy)
+		this.objClear(obj2, obj2Copy)
+		this.objInherit(obj1, obj2Copy)
+		this.objInherit(obj2, obj1Copy)
 	},
 
-	objClear: function (obj, objCopy = flatCopy(obj)) {
+	objClear: function (obj, objCopy = native.copy.flatCopy(obj)) {
 		for (const dp in objCopy) delete obj[dp]
 	},
 
-	objInherit: function (obj, parObj) {
+	objInherit: function (obj, parObj = {}) {
 		for (const ap in parObj) obj[ap] = parObj[ap]
 	},
 
@@ -240,49 +225,51 @@ export const object = {
 	},
 
 	ismapped: function (...args) {
-		// TODO: create a function for general kind of 'arr-filling'; Similar (special case of) ensureProperty;
-		while (args.length < 2) args.push({})
-		return valueCompare().function(...args.map(Object.keys))
-	},
-
-	// TODO: change this thing (recursiveIndexation and recusiveSetting): make 'fields' a far more complex and powerful argument -- let it be capable of taking the form [a:string,b:string,c:number, ...] with different (and different number of them too!) a,b and c, which would virtiually mean obj[a][b]...(c-2 more times here)[a][b], then proceeding as follows;
-	// * This would allow for a more powerful use of the function generally and lesser memory-time consumption (also, add support for InfiniteCounters...; as everywhere else around this and other librarries)
-	// * May be very useful in parsing of nested things. Used it once for an algorithm to traverse an arbitrary binary operator sequence within a parser...
-	// TODO: extend this thing (add more stuff to it, create powerful extensions)
-	// ! rewrite using the repeatedApplication...
-	recursiveIndexation: function (object = {}, fields = []) {
-		let res = object
-		for (const f of fields) res = res[f]
-		return res
-	},
-
-	recursiveSetting: function (object = {}, fields = [], value = null) {
-		return (recursiveIndexation(object, fields.slice(0, fields.length - 1))[
-			fields[fields.length - 1]
-		] = value)
+		// ? create an aliase for these sorts of things [length-array ensuring of certain same function's call?]; Similar (special case of) ensureProperty;
+		aliases.native.object.ensureProperties(args, [{}, {}])
+		return comparisons.valueCompare().function(...args.map(aliases.obj.keys))
 	}
 }
 
+// ! Current agenda - work starts here...
+// % Tasks:
+// 	* 1. Brush up the old code [bring it up to the present standards];
+// 		1.1. Template it, where desired;
+// 		1.2. Refactor heavily;
+// 		1.3. Make use of aliases;
+// 	* 2. Relocate [when wanted], generalize [all of the ones that are wanted for generalization];
 export const array = {
-	replaceIndex: function (arr, index, value) {
-		return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
+	replace: {
+		replaceIndex: function (arr, index, value) {
+			return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
+		},
+
+		replaceIndexes: function (arr, x, y, indexes = [0]) {
+			return array
+				.splitArr(arr, x)
+				.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
+				.flat()
+		},
+
+		// * Replaces all occurences of 'x' with 'y';
+		replace: function (arr, x, y) {
+			return array.replaceIndexes(arr, x, y, number.generate(1, arr.length))
+		},
+
+		// * Replaces values within an array and returns the obtained copy...
+		replaceArr: function (array, x, y, transformation = (a) => a) {
+			const resArray = [...array]
+			for (let i = 0; i < array.length; i++) {
+				const index = x.indexOf(array[i])
+				if (index !== -1) resArray[i] = transformation(y[index])
+			}
+			return resArray
+		}
 	},
 
-	// TODO: write a generalization for multiple values and index-positions...
-	replaceIndexes: function (arr, x, y, indexes = [0]) {
-		// TODO [here, and generally]: use the 'comparison' properly in 'aliases';
-		return array
-			.splitArr(arr, x)
-			.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
-			.flat()
-	},
-
-	// * Replaces all occurences of 'x' with 'y';
-	replace: function (arr, x, y) {
-		return array.replaceIndexes(arr, x, y, generate(1, arr.length))
-	},
-
+	// ? What is this even? Fit only to be an alias...;
 	multArrsRepApp: TEMPLATE({
+		defaults: { n: 1, default: null },
 		function: function (x = this.template.default) {
 			const args = Array.from(arguments).slice(1, this.template.n + 1)
 			// TODO: generalize this construction somehow conviniently pray...
@@ -294,110 +281,13 @@ export const array = {
 				Math.min(...args.map((a) => a.length)),
 				x
 			)
-		},
-		defaults: { n: 1, default: null }
-	}),
-
-	// ! CURRENT AGENDA: work on this, then hop back forth to the procedure of implementing the UnlimitedString;
-
-	hasArrays: function (array = []) {
-		return !!max(array.map((a) => a instanceof Array))
-	},
-
-	// ! A slight problem; Some of the number-theoretic functions' implementations use that thing, whilst it itself is on to being generalized;
-	// ^ CONCLUSION: use the special case of the generalized version for those [if they don't get generalized themselves...];
-	countAppearences: function (array, element, i = 0, comparison = (a, b) => a === b) {
-		return i < array.length
-			? Number(comparison(array[i], element)) +
-					countAppearences(array, element, i + 1, comparison)
-			: 0
-	},
-
-	// TODO: RENAMAME to 'indexesOf' - far more understandable and general in the sense of naming conventions...;
-	indexesOf: TEMPLATE({
-		defaults: { comparison: refCompare },
-		function: function (array, el) {
-			const indexes = []
-			for (let i = 0; i < array.length; i++)
-				if (this.template.comparison(array[i], el)) indexes.push(i)
-			return indexes
 		}
 	}),
 
-	// * clears all but the first `tokeep` repetition of `el`
-	clearRepetitions: TEMPLATE({
-		defaults: {
-			tokeep: 0,
-			comparison: comparisons.refCompare
-		},
-		function: function (arr, el) {
-			const firstMet = array
-				.indexesOf({ comparison: this.template.comparison })
-				.function(arr, el)
-			return arr.filter(
-				(a, i) => firstMet.indexOf(i) < tokeep || !this.template.comparison(a, el)
-			)
-		}
-	}),
-
-	// TODO: make the 'refCompare' a default comparison in cases like this (lonely utility methods);
-	splitArr: function (arr, el, comparison = refCompare) {
-		const segments = []
-		let begInd = 0
-		let endInd = 0
-		for (let i = 0; i < arr.length; i++)
-			if (comparison(el, arr[i])) {
-				begInd = endInd + (endInd > 0)
-				endInd = i
-				segments.push([begInd, endInd])
-			}
-		return segments.map((seg) => arr.slice(...seg))
-	},
-
-	// ? rewrite via repeatedApplication?
-	// TODO [general]: decide where and for what to use methods 'f(...) {...}', where functions-properties 'f: function(...) {...}' and where arrow-function-parameters 'f: (...) => {...}';
-	joinArrs(arrs = [], separator = null) {
-		let final = []
-		for (const arr of arrs) final = final.concat([...arr, separator])
-		return final
-	},
-
-	// * "guts" the first layer inner arrays into the current one...
-	gutInnerArrs: function (array) {
-		const returned = []
-		for (let i = 0; i < array.length; i++) {
-			if (array[i] instanceof Array) {
-				array[i].forEach(returned.push)
-				continue
-			}
-			returned.push(array[i])
-		}
-		return returned
-	},
-
-	// * Replaces values within an array and returns the obtained copy...
-	replaceArr: function (array, x, y, transformation = (a) => a) {
-		const resArray = [...array]
-		for (let i = 0; i < array.length; i++) {
-			const index = x.indexOf(array[i])
-			if (index !== -1) resArray[i] = transformation(y[index])
-		}
-		return resArray
-	},
-
-	// TODO: Optimize with the use of repeatedApplicationWhilst;
-	// TODO: this thing don't copy an array; It changes the existing one (namely, changes the reference)...
-	// * Rewrite so that it returns a new one...
-	gutInnerArrsRecursive: function (array) {
-		while (hasArrays(array)) array = gutInnerArrs(array)
-		return array
-	},
-
-	// * "reverses" the gutInnerArrs (only once, at a given place)
-	// TODO: generalize; make a version of multiple encirclements;
-	// todo [general]: do that thing to literally every algorithm that there be within the library [that is, all that are wanted to be]; have a more general counterpart which is supposed to work with multiple cases in question; a repetition of the algorithm in question;
-	// ! Allow for negative indexes; Optimize the check of 'i >= from && i <= to' (one thinks it can be done more "elegantly" [read, desireably] with here...)
+	// * "reverses" the "Array.flat()";
 	arrEncircle: function (a, from = 0, to = a.length) {
+		from = aliases.negind(from, a)
+		to = aliases.negind(to, a)
 		const copied = []
 		for (let i = 0; i < a.length; i++) {
 			if (i >= from && i <= to) {
@@ -410,211 +300,67 @@ export const array = {
 		return copied
 	},
 
-	// todo: generalize (using the notion of 'level' -- capability to copy up to an arbitrary level... rest is either referenced or ommited (depends on a flag, for instance?)); Having generalized, pray get rid of this special case...
-	// * copies array's structure deeply without copying the elements
-	// ? create one similar such, except an even largetly generalized? (using the notion of 'objectType' and whether something matches it, for example?)
-	// ! Problem: same as with the isSameStructure - introduce forms; keeps this one separate... also, rename; make the absence of element copying apparent in the name...
-	arrStructureCopy: function (thing) {
-		if (thing instanceof Array) return thing.map(arrStructureCopy)
-		return thing
+	// ! rewrite as an alias for application of 'repeatedApplication' onto this thing...;
+	// ? Generalize such usages of 'repeatedApplication' with some special alias of 'multiple' (works exclusively with arrays, for example?);
+	arrEncircleMult(arr = [], coors = []) {
+		let newarr = [...arr]
+		for (const c of coors) newarr = this.arrEncircle(newarr, ...c)
+		return newarr
 	},
-	// TODO: write the gutInnerObjs function, as well as guttInnerObjsRecursive; principle is same as the array functions;
-	// TODO: the same way, write objEncircle; there'd also be an argument for the key;
-	// TODO: the same way, write "encircle" functions for the UniversalMaps and InfiniteMaps (maybe, make these a method of theirs (too?)?)
-	// TODO: write the same one for the UniversalMap(s) and InfiniteMap(s) (they would differ cruelly...)
-	// TODO: write methods for encircling a piece of an array with an object (also takes the keys array...) and a piece of an object with an array;
-	// * Same permutations for the InfiniteMap and UniversalMap...
-	// TODO : for each and every array/object function available, pray do write the InfiniteMap and UnversalMap versions for them...
-	// TODO: same goes for the old api -- let every single thing from there have an infinite counterpart here...
-	// TODO: add more methods to UniversalMap and InfiniteMap;
-	// * Create the .map methods for them -- let they be ways of mapping one set of keys-values to another one;
 
-	// TODO: think about generalizing the 'comparison' argument to arbitrary number of variables...
-	// ! By repeatedly calling them, one would obtain expressions equivalent to some n number of variables...: func(a)(b)(c) instead of func(a, b, c);
-
-	// TODO: later - use this and other such finite algorithms for the GeneralArray;
-	arrIntersections: TEMPLATE({
-		defaults: {
-			comparison: comparisons.refCompare,
-			preferred: (a, b, c) => a
-		},
-		function: function (...arrs) {
-			switch (arrs.length) {
-				case 0:
-					return []
-				case 1:
-					return arrs[1]
-				case 2:
-					const result = []
-					for (let i = 0; i < arrs[0].length; i++) {
-						for (let j = 0; j < arrs[1].length; j++) {
-							if (
-								this.template.comparison(arrs[0][i], arrs[1][j]) &&
-								!array
-									.indexesOf({
-										comparison: this.template.comparison
-									})
-									.function(result, arrs[0][i])
-							)
-								result.push(
-									this.template.preferred(
-										arrs[0][i],
-										arrs[1][j],
-										this.template.comparison
-									)
-								)
-						}
-					}
-					return result
-			}
-
-			// TODO [general]: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
-			return this.function(arrs[0], this.function(...arrs.slice(1)))
-		}
-	}),
+	// TODO: write the gutInnerObjs function - the object-version of the 'Array.flat()'-kind of method;
+	// 		TODO: the same way, write objEncircle; there'd also be an argument for the key;
+	// 		? the same way, write "encircle" and "flat" methods/algorihtm-implementations for the GeneralArray and InfiniteMaps?
 
 	// * Counts all non-array elements within a multidimensional array passed... [recursively so]
+	// ! rewrite these two (or three?) using 'countRecursive';
 	nonArrElems: function (array = []) {
-		return array instanceof Array
-			? repeatedArithmetic(array.map(nonArrElems), "+")
+		return aliases.is.arr(array)
+			? expressions
+					.evaluate()
+					.function(expressions.Expression("+", [], array.map(nonArrElems)))
 			: 1
 	},
-
-	noarrs(array) {
-		return array.filter((x) => !(x instanceof Array))
-	},
-
-	arrsonly(array) {
-		return array.filter((x) => x instanceof Array)
-	},
-
 	// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-	totalElems: function (array) {
-		return array instanceof Array
-			? array.length + repeatedArithmetic(array.map(totalElems), "+")
+	totalElems: function (array = []) {
+		return aliases.is.arr(array)
+			? array.length +
+					expressions
+						.evaluate()
+						.function(expressions.Expression("+", [], array.map(totalElems)))
 			: 0
 	},
-
-	_multmap: function (a, fs) {
-		return multmap([a], fs)[0]
-	},
-
-	// * Finds use in one's code all the time.
-	// ^ Note: The first index stays for the elements, the second one stays for the function...
-	multmap: function (a, fs) {
-		return a.map((el) => fs.map((f) => f(el)))
-	},
-
-	// TODO: optimize the library in places such as this - where the '.min/.max(.map(somefunc))' actually takes additional steps to check for a thing... Instead, break once having found some such a 'breaking point' (like here); Saves a lot of execution steps in some cases;
-	isSubset: TEMPLATE({
-		function: function (arrsub, arr = this.template.defarr) {
-			for (const x of arrsub)
-				if (!max(arr.map((y) => this.template.comparison(x, y)))) return false
-			return true
-		},
+	countAppearences: TEMPLATE({
 		defaults: {
-			comparison: valueCompare,
-			defarr: []
+			comparison: comparisons.refCompare
+		},
+		function: function (array, element, i = 0) {
+			return i < array.length
+				? this.template.comparison(array[i], element) +
+						this.function(array, element, i + 1)
+				: 0
 		}
 	}),
-
-	// TODO: this should also separate onto findValue and findReference;
-	// * Better just add a "comparison" bit, and default it to (a, b) => a === b like everywhere else with such situations...
-	// TODO: this don't do what one did expect it to do... It should do the next take an array and an arbitrary thing and seek if it is in the array; If it is, return indexes where it is;
-	// TODO: create a findMany function which would return a UniversalMap that would tell how many times and what had been found...
-	/**
-	 * Takes an array(or a string) and a number(or a one-dimensional array of numbers or a substring), that must be found in this array. If the value is found returns true and a count of times this number was found, otherwise false.
-	 * @param {number[] | number[][] | string} searchArr Array in which queried value is being searched.
-	 * @param {number | number[] | string} searchVal Searched value.
-	 * @returns {[boolean, number, number[]]} An array, containig boolean(was the needed number, numeric array or string found in searchArr or not), a number(frequency) and an array of numbers(indexes, where the needed number or string characters were found), but the last one is only when the searchVal is not an array and searchArr is not a two-dimensional array.
-	 */
-	find: function (searchArr, searchVal) {
-		let result = false
-		let foundTimes = 0
-		const foundIndexes = []
-		if (searchVal instanceof Array && searchArr instanceof Array)
-			searchVal.forEach((value) =>
-				searchArr.forEach((arr, index) =>
-					arr.forEach((obj) => {
-						if (value === obj) {
-							result = true
-							foundTimes++
-							if (!foundIndexes.includes(index)) foundIndexes.push(index)
-						}
-					})
-				)
+	countRecursive: TEMPLATE({
+		defaults: {},
+		function: function (array = []) {
+			return (
+				this.template.predicate(array) +
+				(aliases.is.arr(array) ? array.map(this.function) : 0)
 			)
-		else
-			for (let i = 0; i < searchArr.length; i++)
-				searchArr[i] === searchVal
-					? ((result = true), foundTimes++, foundIndexes.push(i))
-					: null
-		return [result, foundTimes, foundIndexes]
-	},
-
-	// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
-	permutations: function (array = []) {
-		if (array.length < 2) return [[...array]]
-
-		const pprev = permutations(array.slice(0, array.length - 1))
-		const l = array[array.length - 1]
-		const pnext = []
-
-		for (let i = 0; i < array.length; i++)
-			for (let j = 0; j < pprev[i].length; j++)
-				pnext.push([
-					...pprev[i].slice(0, j),
-					l,
-					...pprev[i].slice(j, pprev.length)
-				])
-
-		return pnext
-	},
-
-	// * For iteration over an array; this thing is index-free; handles them for the user;
-	// * By taking different permutations of an array, one may cover all the possible ways of accessing a new element from a new one with this class;
-	// ! This thing isn't infinite though. For infinite version, GeneralArray could be used instead...
-	IterableSet: class {
-		curr() {
-			return Array.from(this.elements.values())[this.currindex]
 		}
-		updateIndex(change = 1) {
-			this.currindex = (this.currindex + change) % this.elements.size
-		}
-		prev() {
-			this.updateIndex(-1)
-			return this.curr()
-		}
-		next() {
-			this.updateIndex()
-			return this.curr()
-		}
-		add(x) {
-			return this.elements.add(x)
-		}
-		has(x) {
-			return this.elements.includes(x)
-		}
-		get size() {
-			return this.elements.size
-		}
-		delete(x) {
-			return this.elements.delete(x)
-		}
-		constructor(elems = new Set([])) {
-			this.currindex = 0
-			this.elements = elems
-		}
-	}
+	})
 }
+// ! make heavy usage of 'strmethod' for this thing, pray...;
 export const string = {}
 
 // todo: generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
 // ? Is one really happy with the way this is getting exported?
 // * Gorgeous. Just gorgeous...
-string.UTF16 = (p, l) => generate(0, l).map((x) => aliases.string.fcc(p + x))
+string.UTF16 = (p, l) =>
+	number.generate(0, l).map((x) => aliases.native.string.fcc(p + x))
 
-string.strmethod = wrapper({
+string.strmethod = aliases.wrapper({
 	in: string.stoa,
 	out: string.atos
 }).function

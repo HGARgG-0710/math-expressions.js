@@ -195,7 +195,7 @@ export const InfiniteCounter = (() => {
 					alterCurrent = alterCurrent.next()
 				return alterCurrent
 			},
-			// ! Rewrite and simplify using the 'static.reverse()'; 
+			// ! Rewrite and simplify using the 'static.reverse()';
 			reverse() {
 				const zero = this.this.class.class()
 				// ? Maybe, add a local version of 'this.direction', defined as that thing for an InfiniteCounter 'this'?
@@ -1844,10 +1844,10 @@ export const numbers = {
 			},
 			static: {
 				// ! REWRITE...
-				// * Best do it using the generalization of the 'native' algorithm for the 'multiples'; 
+				// * Best do it using the generalization of the 'native' algorithm for the 'multiples';
 				// % One does 'for (const x of arrIntersection(multiples(numerator), multiples(denomenator))) { numerator = numerator.divide(x); denomenator = denomenator.divide(x) }'
 				// ! Another issue - the whole division algorithm for TrueInteger is NOT implemented... Work, work, work...
-				// ^ Conclusion: before properly doing the work on the 'types.numbers' submodule, one must finish the generalization of the 'native' module + the module itself (brush up the code, et cetera...); 
+				// ^ Conclusion: before properly doing the work on the 'types.numbers' submodule, one must finish the generalization of the 'native' module + the module itself (brush up the code, et cetera...);
 				simplified(ratio) {
 					ratio = ratio.copy()
 					const l = orders.min(ratio.numerator, ratio.denomenator)
@@ -1926,104 +1926,82 @@ export const numbers = {
 		}
 	}
 }
-// ? QUESTION [Extension of native JS Map]: Does one put this thing under the 'aliases' for a special case of UnlimitedMap?;
-export function UniversalMap(template = {}) {
-	return {
-		template: {
-			// ! DECISION: the template properties that are by default 'undefined' still ARE PRESENT; because it allows for things like '.hasOwnProperty' to work in a greater accordance;
-			notfound: undefined,
-			treatUniversal: false,
-			comparison: comparisons.valueCompares,
-			...template
-		},
-		class: function (
-			keys = [],
-			values = [],
-			treatUniversal = this.template.treatUniversal
-		) {
-			// * Conversion from a non-array object...
-			if (!(keys instanceof Array)) {
-				if (keys.keys && keys.values && treatUniversal) {
-					values = values.values
-					keys = keys.keys
-				} else {
-					keys = Object(keys)
-					values = Object.values(keys)
-					keys = Object.keys(keys)
-				}
-			}
-			return {
-				keys: keys,
-				values: values,
-				index: 0,
-				class: this,
-				get(key, number = 1) {
-					const indexes = aliases.native.array
-						.indexesOf({
-							comparison: this.class.template.comparison
-						})
-						.function(this.keys, key)
-					if (indexes.length === 0) return this.class.template.notfound
-					return indexes.slice(0, number).map((i) => this.values[i])
-				},
-				set(key, value) {
-					const index = aliases.native.array.indexesOf(
-						this.keys,
-						key,
-						this.class.template.comparison
-					)
-					if (index.length !== 0)
-						for (const _index of index) this.values[_index] = value
-					else {
-						this.keys.push(key)
-						this.values.push(value)
-					}
-					return value
-				},
-				// TODO: define the [Symbol.iterator] for all the types of all objects;
-				// * Similarly, define 'forin'
-				// ^ Funny, that reminds oneself:
-				// Thorin
-				// Fili
-				// Kili
-				// Oin
-				// Gloin
-				// Forin
-				// Balin
-				// Dwalin
-				// Ori
-				// Dori
-				// Nori
-				// Bifur
-				// Bofur
-				// Bombur
-				// * Noticed anything different? :D
-				// * hahaha!
-				// ? Should it become for_in() or _for_in() or _forin() or forIn() or FOR_IN() or something else instead of 'forin'?
-				[Symbol.iterator]: function* () {
-					for (this.index = 0; this.index < this.keys.length; this.index++)
-						yield this.get(this.keys[this.index])
-				},
-				forin(body) {
-					for (this.index = 0; this.index < this.keys.length; this.index++)
-						body(this.keys[this.index])
-				},
 
-				// TODO: create a method for checking if this kind of conversion is valid; 'isValidObject', for instance...
-				toObject() {
-					const a = {}
-					for (let i = 0; i < this.keys.length; i++)
-						a[
-							(!["symbol", "number"].includes(typeof this.keys[i])
-								? JSON.stringify
-								: id)(this.keys[i])
-						] = this.values[i]
-					return a
+// ! Finish the 'CLASS'-ification of the thing (use the 'methods:' and the 'properties:' more actively);
+export const UniversalMap = CLASS({
+	defaults: {
+		notfound: undefined,
+		treatUniversal: false,
+		comparison: comparisons.valueCompare,
+		defkeys: [],
+		defvals: []
+	},
+	function: function (
+		keys = this.template.defkeys,
+		values = this.template.defvals,
+		// ? Keep this argument or not? [Thiking about removing currently...];
+		treatUniversal = this.template.treatUniversal
+	) {
+		// * Conversion from a non-array object...
+		if (!aliases.is.arr(keys)) {
+			if (keys.keys && keys.values && (treatUniversal || values === true)) {
+				values = keys.values
+				keys = keys.keys
+			} else {
+				values = aliases.obj.values(keys)
+				keys = aliases.obj.keys(keys)
+			}
+		}
+		return {
+			keys: keys,
+			values: values,
+			index: 0,
+			class: this,
+			get(key, number = 1) {
+				const indexes = aliases.native.array
+					.indexesOf({
+						comparison: this.class.template.comparison
+					})
+					.function(this.keys, key)
+				if (indexes.length === 0) return this.class.template.notfound
+				return indexes.slice(0, number).map((i) => this.values[i])
+			},
+			set(key, value) {
+				const index = aliases.native.array.indexesOf(
+					this.keys,
+					key,
+					this.class.template.comparison
+				)
+				if (index.length !== 0)
+					for (const _index of index) this.values[_index] = value
+				else {
+					this.keys.push(key)
+					this.values.push(value)
 				}
+				return value
+			},
+			[Symbol.iterator]: function* () {
+				for (this.index = 0; this.index < this.keys.length; this.index++)
+					yield this.get(this.keys[this.index])
+			},
+			*getkeys() {
+				for (this.index = 0; this.index < this.keys.length; this.index++)
+					yield this.keys[this.index]
+			},
+			// ? create an alias for checking if this kind of conversion is valid, perhaps? 'isValidObj', for instance...
+			toObject() {
+				const a = {}
+				for (let i = 0; i < this.keys.length; i++)
+					a[
+						(!["symbol", "number"].includes(typeof this.keys[i])
+							? JSON.stringify
+							: id)(this.keys[i])
+					] = this.values[i]
+				return a
 			}
 		}
 	}
-}
+})
 
 // Utilizes the fact that JS passes objects by reference;
 export const Pointer = TEMPLATE({
@@ -2242,4 +2220,38 @@ export function Tree(parentclass) {
 		methods: {},
 		recursive: true
 	})
+}
+
+// ? Question: does one want to be using the native JS 'class'es at all even? 
+export class IterableSet {
+	curr() {
+		return Array.from(this.elements.values())[this.currindex]
+	}
+	updateIndex(change = 1) {
+		this.currindex = (this.currindex + change) % this.elements.size
+	}
+	prev() {
+		this.updateIndex(-1)
+		return this.curr()
+	}
+	next() {
+		this.updateIndex()
+		return this.curr()
+	}
+	add(x) {
+		return this.elements.add(x)
+	}
+	has(x) {
+		return this.elements.includes(x)
+	}
+	get size() {
+		return this.elements.size
+	}
+	delete(x) {
+		return this.elements.delete(x)
+	}
+	constructor(elems = new Set([])) {
+		this.currindex = 0
+		this.elements = elems
+	}
 }

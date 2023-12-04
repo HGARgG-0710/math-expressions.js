@@ -6,6 +6,28 @@ import * as counters from "./counters.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as aliases from "./aliases.mjs"
 
+export const native = {
+	// ! rewrite using the repeatedApplication...
+	recursiveIndexation: function (object = {}, fields = []) {
+		let res = object
+		for (const f of fields) res = res[f]
+		return res
+	},
+
+	// ! make the infinite version...
+	recursiveSetting: function (object = {}, fields = [], value = null) {
+		return (recursiveIndexation(object, fields.slice(0, fields.length - 1))[
+			fields[fields.length - 1]
+		] = value)
+	},
+
+	repeatedApplication(initial, times, f, offset = 0, iter = (x) => x + 1) {
+		let r = initial
+		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
+		return r
+	}
+}
+
 export const dim = TEMPLATE({
 	defaults: { comparison: aliases.refCompare },
 	function: function (recarr = this.template.genarrclass.static.empty()) {
@@ -43,7 +65,7 @@ export const repeatedApplication = TEMPLATE({
 		iter = this.template.iter
 	) {
 		let r = initial
-		for (let i = template.icclass.class(); !i.compare(times); i = iter(i))
+		for (let i = this.template.icclass.class(); !i.compare(times); i = iter(i))
 			r = f(r, i.difference(offset))
 		return r
 	}
@@ -100,11 +122,6 @@ export const generalSearch = TEMPLATE({
 	}
 }).function
 
-// ? Question [general]: does one want to put the thematically essential aliases for methods inside their appropriate theme-submodules or into the 'alias'?  Or ought one make a division of the alias? Or make an '.aliases' division inside each thematical one?
-// * Pray consider further reorganization of the library...;
-// ! THESE ONES DON'T CARRY ANY ESSENCE, EXCEPT AS ALIASES... Rethink the way that aliases organization is generally handled throughout the library...;
-// ^ DECISION [1]: about ones such as these - they'll be put in 'refactor.aliases';
-// ? perhaps, one has finally decided on how to abstract those kinds of 'multi-templates'?
 export const findDeepUnfilled = TEMPLATE({
 	defaults: {
 		soughtProp: aliases._const(true),

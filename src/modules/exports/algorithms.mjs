@@ -333,15 +333,6 @@ export const search = {
 
 export const integer = {
 	native: {
-		// % This is the current agenda;
-		// TODO: generalize all the number-theoretic functions implementations that take a particular number of arguments to them taking an arbitrary amount (kind of like here and in the 'arrIntersections')
-		// * Note: work on this also leads to the 'expressions' API;
-
-		/**
-		 * Factors out a passed number to the prime numbers. Works quite quickly.
-		 * @param {number} num Number, to be factored out.
-		 * @returns {number[]} Prime factors array.
-		 */
 		factorOut: function (number = 1) {
 			const factors = []
 			for (
@@ -521,4 +512,130 @@ export const integer = {
 			)
 		}
 	}
+}
+
+export const array = {
+	native: {
+		// ! Clean up these...
+		arrIntersections: TEMPLATE({
+			defaults: {
+				comparison: comparisons.refCompare,
+				preferred: (a, b, c) => a
+			},
+			function: function (...arrs) {
+				switch (arrs.length) {
+					case 0:
+						return []
+					case 1:
+						return arrs[1]
+					case 2:
+						const result = []
+						for (let i = 0; i < arrs[0].length; i++) {
+							for (let j = 0; j < arrs[1].length; j++) {
+								if (
+									this.template.comparison(arrs[0][i], arrs[1][j]) &&
+									!array
+										.indexesOf({
+											comparison: this.template.comparison
+										})
+										.function(result, arrs[0][i])
+								)
+									result.push(
+										this.template.preferred(
+											arrs[0][i],
+											arrs[1][j],
+											this.template.comparison
+										)
+									)
+							}
+						}
+						return result
+				}
+
+				// TODO [general]: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
+				return this.function(arrs[0], this.function(...arrs.slice(1)))
+			}
+		}),
+		// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
+		permutations: function (array = []) {
+			if (array.length < 2) return [[...array]]
+
+			const pprev = permutations(array.slice(0, array.length - 1))
+			const l = array[array.length - 1]
+			const pnext = []
+
+			for (let i = 0; i < array.length; i++)
+				for (let j = 0; j < pprev[i].length; j++)
+					pnext.push([
+						...pprev[i].slice(0, j),
+						l,
+						...pprev[i].slice(j, pprev.length)
+					])
+
+			return pnext
+		},
+		indexesOf: TEMPLATE({
+			defaults: { comparison: comparisons.refCompare },
+			function: function (array, el) {
+				const indexes = []
+				for (let i = 0; i < array.length; i++)
+					if (this.template.comparison(array[i], el)) indexes.push(i)
+				return indexes
+			}
+		}),
+		// * clears all but the first `tokeep` repetition of `el`
+		clearRepetitions: TEMPLATE({
+			defaults: {
+				tokeep: 0,
+				comparison: comparisons.refCompare
+			},
+			function: function (arr, el, tokeep = this.template.tokeep) {
+				const firstMet = array
+					.indexesOf({ comparison: this.template.comparison })
+					.function(arr, el)
+				return arr.filter(
+					(a, i) =>
+						firstMet.indexOf(i) < tokeep || !this.template.comparison(a, el)
+				)
+			}
+		}),
+
+		splitArr: TEMPLATE({
+			defaults: {
+				comparison: comparisons.refCompare
+			},
+			function: function (arr, el) {
+				const segments = []
+				let begInd = 0
+				let endInd = 0
+				for (let i = 0; i < arr.length; i++)
+					if (this.template.comparison(el, arr[i])) {
+						begInd = endInd + (endInd > 0)
+						endInd = i
+						segments.push([begInd, endInd])
+					}
+				return segments.map((seg) => arr.slice(...seg))
+			}
+		}),
+		isSubarr: TEMPLATE({
+			defaults: {
+				comparison: comparisons.valueCompare,
+				defarr: []
+			},
+			function: function (arrsub, arr = this.template.defarr) {
+				for (const x of arrsub)
+					if (!arr.any((y) => this.template.comparison(x, y))) return false
+				return true
+			}
+		})
+	},
+	// ! generalize to multiple 'separators'...
+	joinArrs: TEMPLATE({
+		defaults: { separator: null },
+		function: function (arrs = [], separator = this.template.separator) {
+			return multidim.native.repeatedApplication([], arrs.length, (x, i) =>
+				x.concat([...arrs[i], separator])
+			)
+		}
+	})
 }

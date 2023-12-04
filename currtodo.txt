@@ -61,3 +61,4 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 			12.1. Some work done, completion needed; 
 		13. Think on the Graph from the 'algorithms'; 
 		14. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
+		15. Fix the 'statistics' (style changes; all the other standard improvements, including the making of the code more efficient and preventing waste)
