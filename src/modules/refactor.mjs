@@ -3,41 +3,35 @@ import * as comparisons from "./exports/comparisons.mjs"
 
 export const classes = {
 	finish: function () {
-		return this.this.this.length().get().previous()
+		return this.length().get().previous()
 	},
 	begin: function (go = true) {
-		return this.this.this[go ? "go" : "read"](
-			this.this.this.init(),
-			go ? aliases.TRUTH : undefined
-		)
+		return this[go ? "go" : "read"](this.init(), go ? aliases.TRUTH : undefined)
 	},
 	end: function (go = true) {
-		return this.this.this[go ? "go" : "read"](
-			this.this.this.finish(),
-			go ? aliases.TRUTH : undefined
-		)
+		return this[go ? "go" : "read"](this.finish(), go ? aliases.TRUTH : undefined)
 	},
 	suchthat: function (predicate = aliases.TRUTH) {
 		const subset = this.this.this.this.class.class()
 		for (const element of this.this.this)
 			if (predicate(element)) subset.pushback(element)
-		return (this.this.this = subset)
+		this.this.this = subset
+		return this
 	},
 	any: function (predicate = aliases.TRUTH) {
 		return !this.this.this
 			.init()
-			.compare(this.this.this.copied("suchthat", [predicate]).length().get())
+			.compare(this.copied("suchthat", [predicate]).length().get())
 	},
 	every: function (predicate = aliases.TRUTH) {
 		return this.this.this.class.template.icclass.template.comparison(
-			this.this.this.copied("suchthat", [predicate]).length().get(),
-			this.this.this.length().get()
+			this.copied("suchthat", [predicate]).length().get(),
+			this.length().get()
 		)
 	},
 	forEach: function (method = aliases.VOID) {
-		for (const x of this.this.this.keys())
-			method(this.this.this.read(x), x, this.this.this)
-		return this.this.this
+		for (const x of this.this.this.keys()) method(this.read(x), x, this.this.this)
+		return this
 	},
 	includes: function (element, leftovers = {}) {
 		ensureProperties(leftovers, {
@@ -94,3 +88,9 @@ export const general = {
 		}
 	}
 }
+
+export const sh2 = (_this, leftovers) =>
+	ensureProperties(leftovers, {
+		unfound: _this.this.this.this.class.template.unfound,
+		comparison: _this.this.this.this.class.template.icclass.template.comparison
+	})

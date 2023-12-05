@@ -143,6 +143,9 @@ export const number = {
 	}
 }
 
+// TODO: write the gutInnerObjs function - the object-version of the 'Array.flat()'-kind of method;
+// 		TODO: the same way, write objEncircle; there'd also be an argument for the key;
+// 		? the same way, write "encircle" and "flat" methods/algorihtm-implementations for the GeneralArray and InfiniteMaps?
 export const object = {
 	subobjects(object = {}, prev = []) {
 		let returned = []
@@ -231,7 +234,7 @@ export const object = {
 	}
 }
 
-// ! Current agenda - work starts here...
+// ! Current agenda - work starts here... [the array.replace and the 'string' methods list]; 
 // % Tasks:
 // 	* 1. Brush up the old code [bring it up to the present standards];
 // 		1.1. Template it, where desired;
@@ -240,6 +243,7 @@ export const object = {
 // 	* 2. Relocate [when wanted], generalize [all of the ones that are wanted for generalization];
 export const array = {
 	replace: {
+		// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
 		replaceIndex: function (arr, index, value) {
 			return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 		},
@@ -272,7 +276,7 @@ export const array = {
 		defaults: { n: 1, default: null },
 		function: function (x = this.template.default) {
 			const args = Array.from(arguments).slice(1, this.template.n + 1)
-			// TODO: generalize this construction somehow conviniently pray...
+			// ? generalize this construction somehow conviniently...
 			const defobj = {}
 			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
 			ensureProperties(args, defobj)
@@ -308,49 +312,17 @@ export const array = {
 		return newarr
 	},
 
-	// TODO: write the gutInnerObjs function - the object-version of the 'Array.flat()'-kind of method;
-	// 		TODO: the same way, write objEncircle; there'd also be an argument for the key;
-	// 		? the same way, write "encircle" and "flat" methods/algorihtm-implementations for the GeneralArray and InfiniteMaps?
-
-	// * Counts all non-array elements within a multidimensional array passed... [recursively so]
-	// ! rewrite these two (or three?) using 'countRecursive';
-	nonArrElems: function (array = []) {
-		return aliases.is.arr(array)
-			? expressions
-					.evaluate()
-					.function(expressions.Expression("+", [], array.map(nonArrElems)))
-			: 1
-	},
-	// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-	totalElems: function (array = []) {
-		return aliases.is.arr(array)
-			? array.length +
-					expressions
-						.evaluate()
-						.function(expressions.Expression("+", [], array.map(totalElems)))
-			: 0
-	},
 	countAppearences: TEMPLATE({
 		defaults: {
-			comparison: comparisons.refCompare
+			comparison: comparisons.refCompare,
+			defelem: undefined
 		},
-		function: function (array, element, i = 0) {
-			return i < array.length
-				? this.template.comparison(array[i], element) +
-						this.function(array, element, i + 1)
-				: 0
-		}
-	}),
-	countRecursive: TEMPLATE({
-		defaults: {},
-		function: function (array = []) {
-			return (
-				this.template.predicate(array) +
-				(aliases.is.arr(array) ? array.map(this.function) : 0)
-			)
+		function: function (array = [], element = this.template.defelem) {
+			return array.filter((x) => this.template.comparison(x, element)).length
 		}
 	})
 }
+
 // ! make heavy usage of 'strmethod' for this thing, pray...;
 export const string = {}
 
@@ -373,10 +345,9 @@ string.sreplace = string.strmethod(array.replace)
 
 string.sreplaceIndex = string.strmethod(array.replaceIndex)
 
-// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
 // * 1.
 // * Replaces at 1 index;
-array.replaceIndexesMult = array.multArrsRepApp({
+array.replace.replaceIndexesMult = array.multArrsRepApp({
 	n: 2,
 	f: array.replaceIndex,
 	default: []
@@ -385,7 +356,7 @@ string.sreplaceIndexesMult = string.strmethod(array.replaceIndexesMult)
 
 // * 2.
 // * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
-array.replaceMany = array.multArrsRepApp({
+array.replace.replaceMany = array.multArrsRepApp({
 	n: 2,
 	f: array.replace,
 	default: []

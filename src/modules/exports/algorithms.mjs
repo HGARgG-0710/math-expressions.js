@@ -514,10 +514,12 @@ export const integer = {
 	}
 }
 
+// TODO: work on the names - get rid of the 'arr' part from them;
+// ^ NOTE: the recursive methods (such as countrecursive, arrElems, and so on...) are better fit for the 'multidim' module;
 export const array = {
 	native: {
-		// ! Clean up these...
-		arrIntersections: TEMPLATE({
+		// ! Clean up all of these...
+		intersection: TEMPLATE({
 			defaults: {
 				comparison: comparisons.refCompare,
 				preferred: (a, b, c) => a
@@ -556,6 +558,7 @@ export const array = {
 				return this.function(arrs[0], this.function(...arrs.slice(1)))
 			}
 		}),
+
 		// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
 		permutations: function (array = []) {
 			if (array.length < 2) return [[...array]]
@@ -574,6 +577,7 @@ export const array = {
 
 			return pnext
 		},
+
 		indexesOf: TEMPLATE({
 			defaults: { comparison: comparisons.refCompare },
 			function: function (array, el) {
@@ -583,8 +587,9 @@ export const array = {
 				return indexes
 			}
 		}),
+
 		// * clears all but the first `tokeep` repetition of `el`
-		clearRepetitions: TEMPLATE({
+		norepetitions: TEMPLATE({
 			defaults: {
 				tokeep: 0,
 				comparison: comparisons.refCompare
@@ -600,7 +605,7 @@ export const array = {
 			}
 		}),
 
-		splitArr: TEMPLATE({
+		split: TEMPLATE({
 			defaults: {
 				comparison: comparisons.refCompare
 			},
@@ -617,7 +622,8 @@ export const array = {
 				return segments.map((seg) => arr.slice(...seg))
 			}
 		}),
-		isSubarr: TEMPLATE({
+
+		isSub: TEMPLATE({
 			defaults: {
 				comparison: comparisons.valueCompare,
 				defarr: []
@@ -627,15 +633,23 @@ export const array = {
 					if (!arr.any((y) => this.template.comparison(x, y))) return false
 				return true
 			}
+		}),
+
+		join: TEMPLATE({
+			defaults: { separators: [null] },
+			function: function (arrs = [], separators = this.template.separators) {
+				return multidim.native.repeatedApplication([], arrs.length, (x, i) =>
+					x.concat([...arrs[i], ...separators])
+				)
+			}
 		})
 	},
-	// ! generalize to multiple 'separators'...
-	joinArrs: TEMPLATE({
-		defaults: { separator: null },
-		function: function (arrs = [], separator = this.template.separator) {
-			return multidim.native.repeatedApplication([], arrs.length, (x, i) =>
-				x.concat([...arrs[i], separator])
-			)
-		}
-	})
+	// ! This is to be added to the GeneralArray;
+	// ^ NOTE: all the algorithms from the GeneralArray ought to be generalized [to allow explicit copying/non-copying at the output] and brought here;
+	intersection: function () {},
+	permutations: function () {},
+	indexesOf: function () {},
+	norepetitions: function () {},
+	isSub: function () {},
+	join: function () {}
 }

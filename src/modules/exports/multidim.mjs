@@ -25,7 +25,47 @@ export const native = {
 		let r = initial
 		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
 		return r
-	}
+	},
+
+	countrecursive: TEMPLATE({
+		defaults: {
+			defarr: []
+		},
+		function: function (array = this.template.defarr) {
+			return (
+				this.template.predicate(array) +
+				(aliases.is.arr(array)
+					? expressions
+							.evaluate()
+							.function(
+								expressions.Expression("+", [], array.map(this.function))
+							)
+					: 0)
+			)
+		}
+	})
+}
+
+// Counts all the array-elements within a multi-dimensional array;
+native.arrElems = function (template = {}) {
+	return (x) =>
+		array.native.totalElems(template)(x) - array.native.nonArrElems(template)(x)
+}
+
+// Counts all non-array elements within a multidimensional array passed... [recursively so]
+native.nonArrElems = function (template = {}) {
+	return native.countrecursive({
+		predicate: aliases.negate(aliases.is.arr),
+		...template
+	})
+}
+
+// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+native.totalElems = function (template = {}) {
+	return native.countrecursive({
+		predicate: (x) => (aliases.is.arr(x) ? x.length : 0),
+		...template
+	})
 }
 
 export const dim = TEMPLATE({
