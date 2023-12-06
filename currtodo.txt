@@ -57,8 +57,11 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		9. Do the 'sort.radix'; 
 		10. Having finished the work on the 'TrueNumbers', complete the 'algorithms.Farey' implementation; [shall one put this under 'numbers'?]
 		11. Finish the 'search.binary'; Start working on the 'search' subobject of the 'algorithms' module; Once finished, one may call the first sketch of the 'algorithms' complete and go on with the rest of the library...
-		12. Work on 'native' and creating the generalizations of those methods and transformations as well (think on where to put them..., maybe 'algorithms' too...); 
-			12.1. Some work done, completion needed; 
-		13. Think on the Graph from the 'algorithms'; 
-		14. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
-		15. Fix the 'statistics' (style changes; all the other standard improvements, including the making of the code more efficient and preventing waste)
+		12. Think on the Graph from the 'algorithms'; 
+		13. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
+		14. Fix the 'statistics' (style changes; all the other standard improvements, including the making of the code more efficient and preventing waste)
+		15. Transform the entirety of the GeneralArray by moving all its methods to 'algorithms.array', from there - just use the versions accordingly...; 
+			15.1. Accomplish largely the exactly same thing with the other classes - separate the logic from the context [where desired only...]; 
+			15.2. After having done the 15., return back to all the other things that the library needed; 
+		16. Reform the 'numerics' and 'numeric.native'; 
+		17. Complete the UnlimtedMap implementation; 

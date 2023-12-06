@@ -16,6 +16,7 @@ export const evaluate = TEMPLATE({
 	}
 })
 
+// ? Make into a template to allow for general-types defaults? [another minor general dilemma]
 export const Expression = function (operator, expressions = [], objects = []) {
 	return {
 		operator: operator,
@@ -24,4 +25,20 @@ export const Expression = function (operator, expressions = [], objects = []) {
 	}
 }
 
-// ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself? 
+export const uevaluate = TEMPLATE({
+	// ! make a default table;
+	defaults: {},
+	function: function (expression) {
+		if (
+			expression.expressions.class.template.parentclass.template.icclass
+				.class()
+				.compare(expression.expressions.length().get())
+		)
+			return this.template.table[expression.operator](
+				...expression.expressions.map(this.function)
+			)
+		return this.template.table.read(expression.operator)(expression.objects)
+	}
+})
+
+// ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself?

@@ -623,14 +623,7 @@ export const GeneralArray = (() => {
 						}).function
 					)
 				},
-				// * Note: the 'args' does __not__ have to be a native JS array; (This uses the Symbol.iterator...);
-				multcall(method, args = [], arrs = false, leftovers = {}) {
-					for (const x of args) {
-						if (!arrs) x = [x]
-						this.this.this[method](...x, leftovers)
-					}
-					return this.this.this
-				},
+				multcall: classes.multcall,
 				empty(template = this.this.this.this.class.template) {
 					return this.this.this.this.class.static.empty(template)
 				},
@@ -1105,7 +1098,14 @@ export const arrays = {
 		}
 	}
 }
+
 export function UnlimitedMap(parentclass) {
+	const sh1 = (key, _this, f, args = [], name = "keys") => {
+		const ind = _this.this.this[name].firstIndex(key)
+		if (ind === _this.this.this[name].class.template.unfound)
+			return _this.this.this.this.class.template.unfound
+		return f(ind, ...args)
+	}
 	return EXTENSION({
 		defaults: {
 			names: ["keys", "values"],
@@ -1121,35 +1121,100 @@ export function UnlimitedMap(parentclass) {
 			unfound: undefined
 		},
 		methods: {
-			// ! Issues:
-			// * Methods list outline:
-			// 	% 1. read(key); - obtain a value using the key; [note, if the key is missing - returns the 'this.this.this.this.class.template.unfound'];
-			// 	% 2. write(key, value); - set a value using the key; [note, if the key is unfound, creates a new key and sets the value to it];
-			// ? Operator overloading, maybe?
-			// * PROBLEM [language-related]: there isn't a way to implement it in this case because of diversity of arguments...;
-			// 	% 3. deleteKey(key); - delete a value by its keys;
-			// 	% 4. deleteValues(values); - delete all the key-value pairs that have the given values;
-			// 	% 5. suchthat(predicate); - assigns the 'this.this.this' to a submap, based off the given predicate;
-			// 	% 6. copy(); - copies the present map;
-			// 	% 7. copied(method); same as in 'GeneralArray';
-			// 	% 8. map(); - maps the present UnlimitedMap to the new one, replacing the new one with the present one;
-			// 	% 9. deleteKeys(keys); - a genarray-looped-over version of the deleteKey;
-			// 	todo: pray work more deailedly on the exact list...
+			read(key) {
+				return sh1(key, this, this.this.this.values.read)
+			},
+			write(key, value) {
+				sh1(key, this, this.this.this.values.write, [value])
+				return this
+			},
+			deleteKey(key) {
+				sh1(key, this, this.this.this.values.delete)
+				sh1(key, this, this.this.this.keys.delete)
+				return this
+			},
+			deleteValues(values) {
+				for (const v of values) {
+					const inds = this.this.this.values.indexesOf(v)
+					this.this.this.keys.multcall("delete", inds)
+					this.this.this.keys.multcall("delete", inds)
+				}
+				return this
+			},
+			suchthat(predicates) {
+				this.this.this.keys.suchthat(predicates[0])
+				this.this.this.values.suchthat(predicates[1])
+				return this
+			},
+			copy(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
+				leftovers = {}
+			) {
+				return this.this.this.this.class.class(
+					this.this.this.keys.copy(f, isclass, template, leftovers),
+					this.this.this.values.copy(f, isclass, template, leftovers)
+				)
+			},
+			// ! Problem discovered - the almost-exactly-the-same-but-not-quite kinds of methods methods of distinct classes have to be homogenized and quickly;
+			copied(
+				method,
+				_arguments = [],
+				f = id,
+				template = undefined,
+				isclass = false,
+				leftovers = {}
+			) {
+				const c = this.copy(f, template, isclass, leftovers)
+				if (c.hasOwnProperty(method) && typeof c[method] === "function")
+					c[method](..._arguments)
+				return c
+			},
+			map(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
+
+				leftovers = {}
+			) {
+				this.this.this = this.copy(f, isclass, template, leftovers)
+				return this
+			},
+			deleteKeys(keys) {
+				for (const k of keys) {
+					const inds = this.this.this.keys.indexesOf(k)
+					this.this.this.values.multcall("delete", inds)
+					this.this.this.keys.multcall("delete", inds)
+				}
+				return this
+			},
+			multcall: classes.multcall
+			// ? Adding any more?
 		},
 		static: {
 			fromObject(object = {}, finite = false) {
 				return this.this.class(
 					...DEOBJECT(object).map(
-						finite ? ID : this.this.template.parentclass.static.fromArray
+						finite ? this.this.template.parentclass.static.fromArray : ID
 					)
 				)
 			}
 		},
 		transform: StaticThisTransform,
-		recursive: true
+		recursive: true,
+		// ! Consider the precise list;
+		toextend: []
 	})
 }
 
+// * Currently missing:
+// 	% 1. join();
+// 	% 2. length().set();
 export function UnlimitedString(parent = arrays.LastIndexArray) {
 	// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
 	const ALIAS = (_this) =>
@@ -1168,9 +1233,6 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			currindex: aliases._const(0)
 		},
 		methods: {
-			// * Currently missing:
-			// 	% 1. join();
-			// 	% 2. length().set();
 			split(useparator = "") {
 				const strarr = this.this.this.this.class.template.parentclass.class()
 				if (aliases.is.str(useparator)) {
@@ -1477,13 +1539,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			join(
 				separator,
 				frequency = aliases._const(
-					types
-						.InfiniteCounter(counters.addnumber({ start: -1 }))
-						.class(1)
-						.map(
-							this.this.this.this.class.template.parentclass.template
-								.icclass
-						)
+					this.this.this.this.class.template.parentclass.template.icclass.next()
 				)
 			) {
 				// % Sets every a 'separator' substring every 'frequency()' steps (each time it is inserted, the interval function is called yet again);
@@ -1629,7 +1685,8 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			suchthat: classes.suchthat,
 			any: classes.any,
 			every: classes.every,
-			forEach: classes.forEach
+			forEach: classes.forEach,
+			multcall: classes.multcall
 		},
 		static: {
 			fromString(str = "") {

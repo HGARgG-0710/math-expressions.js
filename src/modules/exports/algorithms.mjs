@@ -331,6 +331,7 @@ export const search = {
 	}
 }
 
+// ! generalize too; 
 export const integer = {
 	native: {
 		factorOut: function (number = 1) {
@@ -591,7 +592,7 @@ export const array = {
 				comparison: comparisons.refCompare
 			},
 			function: function (arr, el, tokeep = this.template.tokeep) {
-				const firstMet = array
+				const firstMet = array.native
 					.indexesOf({ comparison: this.template.comparison })
 					.function(arr, el)
 				return arr.filter(
@@ -640,7 +641,6 @@ export const array = {
 			}
 		})
 	},
-	// ! all the algorithms from the GeneralArray ought to be generalized [to allow explicit copying/non-copying at the output] and brought here;
 	intersection: TEMPLATE({
 		defaults: {
 			comparison: comparisons.valueCompare,
@@ -735,7 +735,20 @@ export const array = {
 			})
 		}
 	}),
-	norepetitions: function () {},
+	norepetitions: TEMPLATE({
+		defaults: { comparison: comparisons.valueCompare, copy: false },
+		function: function (arr, el, tokeep = this.template.tokeep) {
+			const firstMet = array.indexesOf(this.template).function(arr, el)
+			const pred = (a, i) =>
+				!firstMet.firstIndex(i).map(tokeep.class).compare(tokeep) ||
+				!this.template.comparison(a, el)
+			return (
+				this.template.copy
+					? (x) => x.copied("suchthat", [pred])
+					: (x) => x.suchthat(pred)
+			)(arr)
+		}
+	}),
 	isSub: TEMPLATE({
 		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
 		defaults: {
@@ -747,5 +760,17 @@ export const array = {
 			return true
 		}
 	}),
-	join: function () {}
+	join: TEMPLATE({
+		defaults: {},
+		function: function (
+			arrs = this.template.genarrclass.static.empty(),
+			separators = this.template.separators
+		) {
+			return multidim.repeatedApplication(
+				this.template.genarrclass.static.empty(),
+				arrs.length().get(),
+				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
+			)
+		}
+	})
 }

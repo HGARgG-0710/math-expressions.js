@@ -1,4 +1,4 @@
-// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...; 
+// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
@@ -52,6 +52,14 @@ export const classes = {
 	},
 	pop: function () {
 		return this.this.this.genarr.delete()
+	},
+	// * Note: the 'args' does __not__ have to be a native JS array; (This uses the Symbol.iterator...);
+	multcall(method, args = [], arrs = false, leftovers = {}) {
+		for (let x of args) {
+			if (!arrs) x = [x]
+			this.this.this[method](...x, leftovers)
+		}
+		return this
 	}
 }
 
