@@ -1,3 +1,5 @@
+// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...; 
+
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
 
@@ -13,15 +15,12 @@ export const classes = {
 	},
 	suchthat: function (predicate = aliases.TRUTH) {
 		const subset = this.this.this.this.class.class()
-		for (const element of this.this.this)
-			if (predicate(element)) subset.pushback(element)
+		for (const element of this) if (predicate(element)) subset.pushback(element)
 		this.this.this = subset
 		return this
 	},
 	any: function (predicate = aliases.TRUTH) {
-		return !this.this.this
-			.init()
-			.compare(this.copied("suchthat", [predicate]).length().get())
+		return !this.init().compare(this.copied("suchthat", [predicate]).length().get())
 	},
 	every: function (predicate = aliases.TRUTH) {
 		return this.this.this.class.template.icclass.template.comparison(
@@ -30,7 +29,7 @@ export const classes = {
 		)
 	},
 	forEach: function (method = aliases.VOID) {
-		for (const x of this.this.this.keys()) method(this.read(x), x, this.this.this)
+		for (const x of this.keys()) method(this.read(x), x, this)
 		return this
 	},
 	includes: function (element, leftovers = {}) {
@@ -39,7 +38,7 @@ export const classes = {
 			comparison: comparisons.refCompare
 		})
 		return !leftovers.comparison(
-			this.this.this.firstIndex(element),
+			this.firstIndex(element),
 			this.this.this.class.template.unfound
 		)
 	},
@@ -88,9 +87,3 @@ export const general = {
 		}
 	}
 }
-
-export const sh2 = (_this, leftovers) =>
-	ensureProperties(leftovers, {
-		unfound: _this.this.this.this.class.template.unfound,
-		comparison: _this.this.this.this.class.template.icclass.template.comparison
-	})

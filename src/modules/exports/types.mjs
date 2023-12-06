@@ -7,7 +7,7 @@ import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as orders from "./orders.mjs"
 
-import { general, classes, sh2 } from "../refactor.mjs"
+import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
@@ -610,33 +610,10 @@ export const GeneralArray = (() => {
 				},
 				pushfront(x, leftovers = {}) {
 					sh1(this, leftovers)
-					// ! PROBLEM: in cases such as these - does one pass the 'this.this.this', or simply 'this'?
-					return (this.this.this = this.this.this.this.class.static
+					this.this.this = this.this.this.this.class.static
 						.fromArray([x], leftovers)
-						.concat(this.this.this, leftovers))
-				},
-				pushfrontLoop(template = {}) {
-					const origin =
-						this.this.this.this.class.static.pushfrontLoop(template)
-					const T = {
-						template: {
-							target: this.this.this,
-							...origin.template
-						}
-					}
-					T.function = origin.function.bind(T)
-					return T
-				},
-				pushbackLoop(template = {}) {
-					const origin = this.this.this.this.class.static.pushbackLoop(template)
-					const T = {
-						template: {
-							target: this.this.this,
-							...origin.template
-						}
-					}
-					T.function = origin.function.bind(T)
-					return T
+						.concat(this, leftovers)
+					return this
 				},
 				concat(array = this.empty(), leftovers = {}) {
 					sh1(this, leftovers)
@@ -834,32 +811,20 @@ export const GeneralArray = (() => {
 					this.this.this = x
 					return this
 				},
-				// * Just an alias...
 				index(i = this.init(), leftovers = {}) {
 					sh1(this, leftovers)
 					return this.read(i, leftovers)
 				},
-				// ? Write in terms of 'firstIndex' + 'slice'; just collect the indexes from corresponding index (found index) after having pushed it to the GeneralArray of the indexes of the same type, then return the result...
-				// ^ IDEA: for making the implementation of 'indexesOf' more efficient - one gives it two arguments for enabling halting - 'halt (boolean)' [whether to halt] and 'haltAfter (counter)' [length().get() of the final array, after which to halt...]
-				indexesOf(x, leftovers = {}) {
+				indexesOf(x, halt = false, haltAfter = Infinity, leftovers = {}) {
 					sh1(this, leftovers)
-					const indexes = this.empty()
-					this.loop()._full((arr) => {
-						if (leftovers.comparison(arr.object().currelem().get(), x))
-							indexes.pushback(arr.currindex, leftovers)
-					})
-					return indexes
+					// ! ISSUE - with 'THIS'-passing: it must be passed via 'this.this', and also with 'A = {[classref]: {...}, this: {this: A, ...}}' more generally; This way, one won't have to worry about the contexting...;
+					return algorithms.array
+						.indexesOf({ leftovers, halt: halt, haltAfter: haltAfter })
+						.function(this, x)
 				},
 				firstIndex(x, leftovers = {}) {
-					sh2(this, leftovers)
-					let index = leftovers.unfound
-					this.loop()._full((arr) => {
-						if (leftovers.comparison(arr.object().currelem().get(), x)) {
-							index = arr.currindex
-							arr.break()
-						}
-					})
-					return index
+					sh1(this, leftovers)
+					return algorithms.array.firstIndex(leftovers).function(this, x)
 				},
 				shiftForward(times, leftovers = {}) {
 					sh1(this, leftovers)
@@ -931,11 +896,37 @@ export const GeneralArray = (() => {
 				suchthat: classes.suchthat,
 				any: classes.any,
 				every: classes.every,
-				forEach: classes.forEach
+				forEach: classes.forEach,
+				intersection: function (arr = this.empty(), leftovers = {}) {
+					this.this.this = algorithms.array
+						.intersection(leftovers)
+						.function(this, arr)
+					return this
+				},
+				permutations: function (leftovers = {}) {
+					return algorithms.array.permutations({
+						genarrclass: this.this.this.this.class,
+						...leftovers
+					})(this)
+				}
 			}
+			// ! Generalize this construction... [appears several times throughout the library; add to 'refactor'...];
 			for (const x of ["next", "previous"])
 				X[x] = function () {
 					return (this.this.this.currindex = this.this.this.currindex[x]())
+				}
+			for (const x of ["front", "back"])
+				X[x] = function (template = {}) {
+					const origin =
+						this.this.this.this.class.static[`push${x}Loop`](template)
+					const T = {
+						template: {
+							target: this,
+							...origin.template
+						}
+					}
+					T.function = origin.function.bind(T)
+					return T
 				}
 			return X
 		})(),
@@ -1599,7 +1590,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 				const newstr = this.copy()
 				let bigind = this.init()
 				let smallind = 0
-				for (const x of this.this.this) {
+				for (const x of this) {
 					if (smallind == MAX_STRING_LENGTH) {
 						bigind = bigind.next()
 						smallind = 0
@@ -1615,7 +1606,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code;
 			symbolic() {
 				const symstr = this.this.this.this.class()
-				for (const sym of this.this.this) symstr.pushback(sym)
+				for (const sym of this) symstr.pushback(sym)
 				this.this.this = symstr
 				return this
 			},

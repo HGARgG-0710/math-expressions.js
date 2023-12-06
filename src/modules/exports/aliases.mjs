@@ -58,8 +58,11 @@ export const native = {
 		},
 		_last: (arr) => arr[arr.length - 1],
 		_first: (arr) => arr[0],
-		insert: (arr, index, values) =>
-			arr.slice(0, index).concat(values).concat(arr.slice(index)),
+		insert: (arr, index, values, replacing = false) =>
+			arr
+				.slice(0, index)
+				.concat(values)
+				.concat(arr.slice(replacing ? (x) => x + values.length : index)),
 		_insert: (arr, index, val) => insert(arr, index, [val]),
 		remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
 		_remove: (arr, index) => remove(arr, index, index),

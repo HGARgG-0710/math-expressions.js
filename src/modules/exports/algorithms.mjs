@@ -18,7 +18,7 @@
 // 	% 4. Prioritee queue?;
 // ? maybe? [pray think on it...]; Only after having implemented the Queue;
 
-import { EXTENSION } from "../macros.mjs"
+import { TEMPLATE, EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
@@ -518,11 +518,10 @@ export const integer = {
 // ^ NOTE: the recursive methods (such as countrecursive, arrElems, and so on...) are better fit for the 'multidim' module;
 export const array = {
 	native: {
-		// ! Clean up all of these...
 		intersection: TEMPLATE({
 			defaults: {
 				comparison: comparisons.refCompare,
-				preferred: (a, b, c) => a
+				preferred: (fel, sel, comp, farr, sarr) => fel
 			},
 			function: function (...arrs) {
 				switch (arrs.length) {
@@ -546,7 +545,8 @@ export const array = {
 										this.template.preferred(
 											arrs[0][i],
 											arrs[1][j],
-											this.template.comparison
+											this.template.comparison,
+											...arrs
 										)
 									)
 							}
@@ -563,26 +563,22 @@ export const array = {
 		permutations: function (array = []) {
 			if (array.length < 2) return [[...array]]
 
-			const pprev = permutations(array.slice(0, array.length - 1))
+			const pprev = this.permutations(array.slice(0, array.length - 1))
 			const l = array[array.length - 1]
 			const pnext = []
 
 			for (let i = 0; i < array.length; i++)
 				for (let j = 0; j < pprev[i].length; j++)
-					pnext.push([
-						...pprev[i].slice(0, j),
-						l,
-						...pprev[i].slice(j, pprev.length)
-					])
+					pnext.push(aliases.native.array.insert(pprev[i], j, [l]))
 
 			return pnext
 		},
 
 		indexesOf: TEMPLATE({
-			defaults: { comparison: comparisons.refCompare },
-			function: function (array, el) {
+			defaults: { comparison: comparisons.refCompare, defha: Infinity },
+			function: function (array, el, haltAfter = this.template.defha) {
 				const indexes = []
-				for (let i = 0; i < array.length; i++)
+				for (let i = 0; i < array.length && indexes.length < haltAfter; i++)
 					if (this.template.comparison(array[i], el)) indexes.push(i)
 				return indexes
 			}
@@ -644,12 +640,112 @@ export const array = {
 			}
 		})
 	},
-	// ! This is to be added to the GeneralArray;
-	// ^ NOTE: all the algorithms from the GeneralArray ought to be generalized [to allow explicit copying/non-copying at the output] and brought here;
-	intersection: function () {},
-	permutations: function () {},
-	indexesOf: function () {},
+	// ! all the algorithms from the GeneralArray ought to be generalized [to allow explicit copying/non-copying at the output] and brought here;
+	intersection: TEMPLATE({
+		defaults: {
+			comparison: comparisons.valueCompare,
+			preferred: (fel, sel, comp, farr, sarr) => fel
+		},
+		function: function (...arrs) {
+			if (!arrs.length) return this.template.genarrclass.empty()
+			if (arrs.length == 1) return arrs[0]
+			if (arrs.length == 2) {
+				const inter = this.template.genarrclass.class()
+				// ? Q: Does one want to provide indexes at which the elements have been met as well?
+				for (const x of arrs[0])
+					for (const y of arrs[1])
+						if (this.template.comparison(x, y))
+							inter.pushback(
+								this.template.preferred(x, y, comparison, ...arrs)
+							)
+				return inter
+			}
+			return this.function(arrs[0], this.function(arrs.slice(1)))
+		}
+	}),
+	permutations: TEMPLATE({
+		defaults: {},
+		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
+		function: function (array = this.template.genarrclass.static.empty()) {
+			if (array.init().next().compare(array.length().get()))
+				return this.template.genarrclass.fromArray([array.copy()])
+
+			const pprev = this.function(
+				array.copied("slice", array.init(), array.finish().previous())
+			)
+			const l = array.end(false)
+			const pnext = this.template.genarrclass.static.empty()
+
+			for (const i of array.keys())
+				for (const j of pprev.read(i).keys())
+					pnext.pushback(pprev.copied("insert", [j, l]))
+
+			return pnext
+		}
+	}),
+	firstIndex: TEMPLATE({
+		defaults: {
+			unfound: undefined,
+			comparison: comparisons.valueCompare
+		},
+		function: function (array, el) {
+			let index = this.template.unfound
+			array.loop()._full((arr) => {
+				if (this.template.comparison(arr.object().currelem().get(), el)) {
+					index = arr.this.this.currindex
+					arr.break()
+				}
+			})
+			return index
+		}
+	}),
+	indexesOf: TEMPLATE({
+		defaults: {
+			unfound: undefined,
+			comparison: comparisons.valueCompare,
+			halt: false,
+			haltAfter: Infinity
+		},
+		function: function (
+			arr,
+			el,
+			halt = this.template.halt,
+			haltAfter = this.template.haltAfter
+		) {
+			return general.fix([arr.this.this], ["currindex"], () => {
+				const inds = this.empty()
+				const cond = halt
+					? (inds, _this) => {
+							return inds
+								.length()
+								.get()
+								.compare(
+									haltAfter.map(
+										_this.this.this.this.class.template.icclass
+									)
+								)
+					  }
+					: aliases.TRUTH
+				let currind
+				while (currind !== leftovers.unfound && !cond(inds, this)) {
+					currind = array.firstIndex(this.template).function(arr, el)
+					inds.pushback(currind)
+				}
+				return inds
+			})
+		}
+	}),
 	norepetitions: function () {},
-	isSub: function () {},
+	isSub: TEMPLATE({
+		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
+		defaults: {
+			comparison: comparisons.valueCompare
+		},
+		function: function (arrsub, arr = this.template.genarrclass.static.empty()) {
+			for (const x of arrsub)
+				if (!arr.any((y) => this.template.comparison(x, y))) return false
+			return true
+		}
+	}),
 	join: function () {}
 }

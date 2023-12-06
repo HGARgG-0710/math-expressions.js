@@ -67,17 +67,6 @@ For continuation, follow 'privatenotes.txt' [continuation 1]
 
 BREAK 
 
-NOW.... whilst starting the implementation of the LastIndexArray and the DeepArray, one thought whether it would not be better if the algorithms used for them were separate as well... 
-But then, comes the questions of: 
-
-	1. naming and notation; 
-	2. library organization; 
-
-Because: 
-
-	1. one don't want long ugly names like those that are there already and one don't want short uncomprehensible ones [id est, create the single naming convention for this library version...]
-	2. one don't want to clutter the 'infinite' object with them - perhaps, better make a property of it which would be a subobject for 'algorithms', containing those?
-
 So, for example, one could do 'infinite.algorithms.arrays.lastIndexArrConcat(..., ...)'; 
 
 TODO: pray implement...
