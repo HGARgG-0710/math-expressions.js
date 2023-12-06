@@ -90,26 +90,7 @@ export const number = {
 		}
 	}),
 
-	// TODO: generalize this HEAVILY - instead of just numbers [as in addnumber], pray make it possible to do this thing with ANY generator -
-	// * Id est, getting an array of [f(s), f(f(s)), f(f(f(s))), ...] and so on forever; Generalize to a GeneralArray (so that one could have arbitrarily long sequences of generators like so);
-	// ^ put the generalized version in the 'algorithms.array' [after having created it...];
-	// [Maybe] Keep this thing as a nice special case util of that new generalized version;
-	/**
-	 * Takes three numbers: the start position, the end position and the step, generates a numeric array using them and returns it.
-	 * @param {number} start Start number in array(it's supposed to be the least number in it)
-	 * @param {number} end End number in array(the creation of the array is going until end value + 1 number is reached).
-	 * @param {number} step Value, by which the count is incremented every iteration.
-	 * @param {number} precision Precision of a step, by default set to 1. (If your array is of integers, it's not necessary.)
-	 */
-	generate: function (start, end, step = 1, precision = 1) {
-		const generated = []
-		const upper =
-			end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
-		const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-		for (let i = start; proposition(i); i += step)
-			generated.push(this.floor(i, precision))
-		return generated
-	},
+	
 
 	// TODO: generalize [put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
@@ -257,7 +238,7 @@ export const array = {
 
 		// * Replaces all occurences of 'x' with 'y';
 		replace: function (arr, x, y) {
-			return array.replaceIndexes(arr, x, y, number.generate(1, arr.length))
+			return array.replaceIndexes(arr, x, y, number.generate(arr.length))
 		},
 
 		// * Replaces values within an array and returns the obtained copy...

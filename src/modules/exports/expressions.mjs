@@ -1,6 +1,7 @@
 // * The 'Expressions' API module, historically the earliest part of the library to emerge (differs violently from the first prototypes)
 
 import * as variables from "./variables.mjs"
+import { TEMPLATE } from "./../macros.mjs"
 
 // % This is the 'expressions' main expression-evaluation function;
 export const evaluate = TEMPLATE({

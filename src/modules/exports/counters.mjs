@@ -293,9 +293,10 @@ export function orderCounter(template = {}) {
 }
 
 export function stringCounter(template = {}) {
+	// ? Check if nodejs can work with this large a number for array-generation?
 	return orderCounter({
 		type: (x) => typeof x === "string" || x instanceof String,
-		order: generate(1, variables.MAX_INT).map((x) => nbasereverse(x)),
+		order: number.native.generate(variables.MAX_INT).map((x) => nbasereverse(x)),
 		...template
 	})
 }

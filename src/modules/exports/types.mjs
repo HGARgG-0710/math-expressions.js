@@ -6,6 +6,7 @@ import * as comparisons from "./comparisons.mjs"
 import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as orders from "./orders.mjs"
+import * as native from "./native.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
@@ -84,6 +85,9 @@ export const InfiniteCounter = (() => {
 					this.this.class.template.inverse(this.this.this.value)
 				)
 			},
+			direction() {
+				return this.this.this.this.class.static.direction(this)
+			},
 			/**
 			 *
 			 * * DEFINE:
@@ -150,7 +154,7 @@ export const InfiniteCounter = (() => {
 				return d
 					? this.this.this.jumpForward(ic, leftovers)
 					: d === null
-					? this.this.this
+					? this
 					: this.this.this.jumpBackward(ic, leftovers)
 			},
 			jump(x, jumping = (k) => k.next(), leftovers = {}) {
@@ -220,11 +224,6 @@ export const InfiniteCounter = (() => {
 	})
 })()
 
-// 	! ONE MUST ADD THE '.get-.set' construction to the GeneralArray (and CLASSes); IT REALLY DOESN'T WORK... The main problem is that one calls not 'this[method]', but instead 'this.this.this[method]'; So, if one was ALWAYS calling the 'this[method]', then the first 'this' in the 'this.this.this' would always remain the same within the same executional context!
-// 	^ CONCLUSION: one either must introduce the '.get-.set', OR alter the present code to call the 'this[method]', whenever the writing activities [namely, the changing of the 'this.this.this'] is accomplished!
-// * Before proceeding with the generalization of the GeneralArray method, accomplish the implementation of one of the following...
-// % decision: do the 'this.this.this->this' thing; This, however, must first require understanding as to which methods usages must be changed; Thus, the methods must all run within the same one 'this' context;
-
 // TODO: Current list of methods to add to GeneralArray:
 // % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
 // % 	2. join(separator); - A template function, will return an UnlimitedString of the GeneralArray class in question;
@@ -233,6 +232,7 @@ export const InfiniteCounter = (() => {
 // % 	5. splitlen(length); split the array onto subarrays of given length 'length'; If not possible to factor in such a way as to have them all being precisely 'length', then the last one is made shorter...;
 // ? Question: about the 'move' methods... Should all the other datatypes implement the interfaces for their versions?
 // * Current decision [not full]: undeteremined, in later versions one may add them; Presently - not, nor will the '.move' methods will ever be deleted;
+// ! Take all the methods out of the class and put into the 'algorithms.array', generalized, then reference here, whilst getting used on 'this';
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
@@ -1111,7 +1111,7 @@ export function UnlimitedMap(parentclass) {
 			names: ["keys", "values"],
 			parentclass: parentclass,
 			defaults: {
-				constructor: aliases.generate(1, 2).map(
+				constructor: number.native.generate(2).map(
 					aliases._const(function () {
 						return this.template.empty
 					})
@@ -1403,7 +1403,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			write(index, value) {
 				general.fix(
 					[this.this.this.genarr, this.this.this],
-					generate(1, 2).map(aliases._const("currindex")),
+					algorithms.number.native.generate(2).map(aliases._const("currindex")),
 					() => {
 						this.go(index, aliases._const(true))
 						this.currelem().set(value)
@@ -1774,8 +1774,41 @@ export const numbers = {
 				},
 				difference(d) {
 					return this.this.this.add(d.invadd())
+				},
+				divide(d) {
+					let r = this.this.this.this.class.class()
+					let copy = this.copy()
+					while (copy.compare(d)) {
+						copy = copy.difference(d)
+						r = r.add()
+					}
+					return r
+				},
+				copy() {
+					return this.this.this.this.class(
+						native.copy.deepCopy(this.this.this.value.value)
+					)
+				},
+				// TODO [general]: walk the code and fix the old and strange '.comparison' things - make aliases for '.equal()' and so on...
+				// * Additionally, decide the tiny details regarding aspects of implementation of the things in question...
+				equal(x) {
+					return this.this.this.this.class.template.parentclass.template.comparison(
+						this,
+						x
+					)
 				}
 			},
+			static: {
+				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
+				fromNumber: function (num = 1) {
+					return this.this.class(
+						aliases.native.number.iterations({
+							iterated: this.this.template.parentclass.template
+						})(num)
+					)
+				}
+			},
+			transform: StaticThisTransform,
 			recursive: true,
 			toextend: []
 		})

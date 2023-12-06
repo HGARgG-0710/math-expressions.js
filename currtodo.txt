@@ -64,4 +64,3 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 			15.1. Accomplish largely the exactly same thing with the other classes - separate the logic from the context [where desired only...]; 
 			15.2. After having done the 15., return back to all the other things that the library needed; 
 		16. Reform the 'numerics' and 'numeric.native'; 
-		17. Complete the UnlimtedMap implementation; 

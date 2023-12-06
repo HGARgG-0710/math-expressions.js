@@ -1,11 +1,18 @@
 // * Various algorithms and data structure types implementations for the library that one considered potentially useful;
 
-// TODO: extend this thing - create new algorithms implementations for the library...
-// TODO: make the things more efficient, general, implement more algorithms;
-
-// ! problem: in this instance - the usage of finite types;
-// ? When shall it be the preference?
-// * DECISION: yes, generalize them, then make the 'CommonArray'-kind of special cases; [Make such special cases for all of them...];
+// ? After all - decide, whether or not to do the 'wrapping' of the old native code into things like 'addnumber', and 'CommonArray'...
+// 	% Pro:
+// 		1. Makes code FAR more concise, short and less repetitious [for instance - allows one to reduce the 'native' objects merely to the level of aliases];
+// 		2. In consistency with the library's "total-refactor" quality;
+// 		3. Makes the library's general contents noticeably more compact;
+// 		! 4. YET IT IS SO TEMPTING! IT WOULD SIMPLIFY THE CODEBASE ENORMOUSLY!
+// % Con:
+// 		1. Abstraction overhead
+// 			- namely, while it __does__ increase the readability and simplicity of the code in question,
+// 			there is NO benevolent effect on the algorithm implementations themselves; It only adds the unnecessary work needed to complete a task and greatly simplify the lib structure;
+// 		2. Syntax is bulky; No convinient native JS notation;
+// 		3. Most importantly - some of the native methods may have features that the library does not currently as-of-self provide a good enough alias-alternative to [id-est, the user would have to build it themselves from nil];
+// ? Maybe, generalize but only in the v1.1? Before then - use the thing as-is? 
 
 // * List of new abstract types interfaces to be implemented:
 // ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
@@ -15,8 +22,7 @@
 // * Decision: part of 'algorithms';
 //  % 3. N-ary tree (generalization of Binary Tree);
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
-// 	% 4. Prioritee queue?;
-// ? maybe? [pray think on it...]; Only after having implemented the Queue;
+// 	? 4. Prioritee queue? (generalized Qeueu);
 
 import { TEMPLATE, EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
@@ -331,19 +337,19 @@ export const search = {
 	}
 }
 
-// ! generalize too; 
+// ! generalize too;
 export const integer = {
 	native: {
 		factorOut: function (number = 1) {
 			const factors = []
 			for (
-				let currDevisor = 2;
+				let currDivisor = 2;
 				number !== 1;
-				currDevisor += 2 - (currDevisor === 2)
+				currDivisor += 2 - (currDivisor === 2)
 			) {
-				while (number % currDevisor === 0) {
-					factors.push(currDevisor)
-					number /= currDevisor
+				while (number % currDivisor === 0) {
+					factors.push(currDivisor)
+					number /= currDivisor
 				}
 			}
 			return factors
@@ -354,7 +360,7 @@ export const integer = {
 		},
 
 		primesBefore: function (x = 1) {
-			return native.number.generate(1, x).filter(this.isPrime)
+			return native.number.generate(x).filter(this.isPrime)
 		},
 
 		multiples: TEMPLATE({
@@ -364,7 +370,7 @@ export const integer = {
 				step: 1
 			},
 			function: function (n = 1, range = this.template.defrange) {
-				return native.number
+				return array.native
 					.generate(
 						this.template.includezero ? 0 : 1,
 						range,
@@ -382,58 +388,29 @@ export const integer = {
 				return multiples(n, native.number.floor(x / n))
 			}
 		}),
+		
+		// ! Currently stopped the generalization of the 'algorithms.integer' here; 
 
-		leastCommonMultiple: function (...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2)
-				return native.number.min(
-					native.array.arrIntersections(
-						multiples(nums[0], nums[1]),
-						multiples(nums[1], nums[0])
-					)
-				)
-			return leastCommonMultiple(nums[0], leastCommonMultiple(...nums.slice(1)))
+		// * lcm stands for least-common-multiple;
+		lcm: function (...nums) {
+			return native.number.min(this.commonMultiples(...nums))
+		},
+		// * lcd stands for 'least common divisor';
+		lcd: function (...nums) {
+			return native.number.min(this.commonDivisors(...nums))
 		},
 
-		commonMultiples: function (range, ...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2)
-				return this.arrIntersections([
-					this.multiples(nums[0], range[range.length - 1]),
-					this.multiples(nums[1], nums[range[range.length - 2]])
-				])
-			return this.arrIntersections([
-				this.multiples(nums[0], range[0]),
-				commonMultiples(range.slice(1), ...nums.slice(1))
-			])
-		},
+		common: TEMPLATE({
+			defaults: {},
+			function: function (...args) {
+				return native.array
+					.intersections(this.template)
+					.function(args.map(this.template.f))
+			}
+		}),
 
 		areCoprime: function (...args) {
-			return !!native.array.arrIntersections(...args.map(this.factorOut)).length
-		},
-
-		leastCommonDivisor: function (...nums) {
-			const x = this.commonDivisors(...nums)
-			return typeof x === "number" || typeof x === "undefined"
-				? x
-				: native.number.min(x)
-		},
-
-		// ? Generlize this and 'commonMultiples' to a native.array algorithm - 'common' (would do the recursive 'arrIntersections');
-		commonDivisors: function (...nums) {
-			if (nums.length === 0) return undefined
-			if (nums.length === 1) return nums[0]
-			if (nums.length === 2)
-				return native.array.arrIntersections([
-					this.factorOut(nums[0]),
-					this.factorOut(nums[1])
-				])
-			return native.array.arrIntersections([
-				this.factorOut(nums[0]),
-				this.commonDivisors(...nums.slice(1))
-			])
+			return !!native.array.intersection(...args.map(this.factorOut)).length
 		},
 
 		allFactors: function (number = 1) {
@@ -512,8 +489,84 @@ export const integer = {
 				) / this.factorial(k)
 			)
 		}
-	}
+	},
+	factorOut: TEMPLATE({
+		defaults: {},
+		function: function (tint = this.template.tintclass.class()) {
+			const tintc = tint.copy()
+			const factors = this.template.genarrclass.class()
+			const [ZERO, ONE, TWO] = [0, 1, 2].map(tint.class.static.fromNumber)
+			for (
+				let currDivisor = tint.class.static.fromNumber(2);
+				!ONE.compare(tintc);
+				currDivisor = currDivisor.add(
+					TWO.difference(currDivisor.equal(TWO) ? ONE : ZERO)
+				)
+			) {
+				while (number % currDivisor === 0) {
+					factors.pushback(currDivisor)
+					tintc = tintc.divide(currDivisor)
+				}
+			}
+			return factors
+		}
+	}), 
+
+	isPrime: TEMPLATE({
+		defaults: {},
+		function: function (x) {
+			return this.template.genarrclass.class.template.icclass
+				.class()
+				.next()
+				.compare(number.factorOut(this.template)(x).length().get())
+		}
+	}),
+
+	primesBefore: TEMPLATE({
+		defaults: {},
+		function: function (x = this.template.icclass.class()) {
+			return array.generate(this.template)(x).suchthat(number.isPrime)
+		}
+	}),
+	multiples: TEMPLATE({
+		default: { includezero: false },
+		function: function (
+			n = this.template.tintclass.class().add(),
+			range = this.template.tintclass.class().add()
+		) {
+			return array
+				.generate()(
+					(this.template.includezero ? ID : aliases.next)(n.class.class())
+						.value,
+					range.value,
+					this.template.step
+				)
+				.map((a) => this.template.tintclass(a.value).multiply(n))
+		}
+	}),
+	multiplesBefore: TEMPLATE({
+		defaults: {},
+		function: function (
+			n = this.template.tintclass.class().add(),
+			x = this.template.tintclass.class().add()
+		) {
+			return number.multiples(n, x.divide(n))
+		}
+	})
 }
+
+number.native.commonDivisors = function (...nums) {
+	return number.native.common({ f: number.native.factorOut }).function(nums)
+}
+
+number.native.commonMultiples = TEMPLATE({
+	defaults: { range: 100 },
+	function: function (...nums) {
+		return number.native
+			.common({ f: (x) => number.native.multiples(x, this.template.range) })
+			.function(nums)
+	}
+})
 
 // TODO: work on the names - get rid of the 'arr' part from them;
 // ^ NOTE: the recursive methods (such as countrecursive, arrElems, and so on...) are better fit for the 'multidim' module;
@@ -560,7 +613,8 @@ export const array = {
 			}
 		}),
 
-		// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(1, n)).length";
+		// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(n)).length";
+		// ! Think on that - which of the two would be quicker;
 		permutations: function (array = []) {
 			if (array.length < 2) return [[...array]]
 
@@ -639,7 +693,22 @@ export const array = {
 					x.concat([...arrs[i], ...separators])
 				)
 			}
-		})
+		}),
+
+		generate: function (start, end, step = 1, precision = 1) {
+			// ! perform this operation throughout the package's code;
+			if (arguments.length === 1) {
+				end = start
+				start = 1
+			}
+			const generated = []
+			const upper =
+				end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
+			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
+			for (let i = start; proposition(i); i += step)
+				generated.push(this.floor(i, precision))
+			return generated
+		}
 	},
 	intersection: TEMPLATE({
 		defaults: {
@@ -771,6 +840,23 @@ export const array = {
 				arrs.length().get(),
 				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
 			)
+		}
+	}),
+	generate: TEMPLATE({
+		defaults: { ic: false },
+		function: function (start, end, step = this.template.icclass.class().next()) {
+			if (arguments.length === 1) {
+				end = start
+				start = this.template.icclass.class().next()
+			}
+			const generated = this.genarrclass.static.empty()
+			const proposition = step.direction()
+				? (i) => end.compare(i)
+				: (i) => i.compare(end)
+			const wrap = this.template.ic ? ID : (x) => x.value
+			for (let i = start; proposition(i); i = i.jumpDirection(step))
+				generated.pushback(wrap(i))
+			return generated
 		}
 	})
 }

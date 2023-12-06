@@ -6,6 +6,7 @@
 
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
+import * as multidim from "./multidim.mjs"
 import { ID } from "./../macros.mjs"
 
 // ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
@@ -20,6 +21,17 @@ export const native = {
 					.InfiniteCounter(counters.addnumber(this.template))
 					.class(x)
 					.map(this.template.icclass)
+			}
+		}),
+
+		iterations: TEMPLATE({
+			defaults: { iterated: counters.arrayCounter(), defnum: 1 },
+			function(n = this.template.defnum) {
+				return multidim.native.repeatedApplication(
+					undefined,
+					nneg(n),
+					this.template.iterated[n > 0 ? "generator" : "inverse"]
+				)
 			}
 		})
 	},
@@ -230,3 +242,6 @@ export const greateroe = (a, b) => a.compare(b)
 
 export const cdieach = (x, i) => [x[i]]
 export const negind = (x, arr) => (x < 0 ? arr.length + x : x)
+export const nneg = (x) => (x < 0 ? -x : x)
+
+export const next = (x) => x.next()
