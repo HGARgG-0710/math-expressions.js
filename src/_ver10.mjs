@@ -69,3 +69,4 @@ export * from "./modules/exports.mjs"
 // TODO [general]: after having finished the library and prepared it [mostly] for publication on GitHub, complete the messages/comments at the beginning of each one of the modules [clear all the TODOS, and unwanted comments, and so on...]; Make it perfect. 
 // TODO [general]: check that the code is sound '.function'-wise and 'this.this.this'-wise and that there is a unanimous approach to the thing...; 
 // TODO [general]: instead of boolmap, pray use the '.every'/'.any'; 
+// TODO [later]: after all is done - relook through each and every file of the project feverishly, seek anything undone and uncompleted; 

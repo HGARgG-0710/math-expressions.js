@@ -12,7 +12,7 @@
 // 			there is NO benevolent effect on the algorithm implementations themselves; It only adds the unnecessary work needed to complete a task and greatly simplify the lib structure;
 // 		2. Syntax is bulky; No convinient native JS notation;
 // 		3. Most importantly - some of the native methods may have features that the library does not currently as-of-self provide a good enough alias-alternative to [id-est, the user would have to build it themselves from nil];
-// ? Maybe, generalize but only in the v1.1? Before then - use the thing as-is? 
+// ? Maybe, generalize but only in the v1.1? Before then - use the thing as-is?
 
 // * List of new abstract types interfaces to be implemented:
 // ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
@@ -388,8 +388,6 @@ export const integer = {
 				return multiples(n, native.number.floor(x / n))
 			}
 		}),
-		
-		// ! Currently stopped the generalization of the 'algorithms.integer' here; 
 
 		// * lcm stands for least-common-multiple;
 		lcm: function (...nums) {
@@ -400,17 +398,8 @@ export const integer = {
 			return native.number.min(this.commonDivisors(...nums))
 		},
 
-		common: TEMPLATE({
-			defaults: {},
-			function: function (...args) {
-				return native.array
-					.intersections(this.template)
-					.function(args.map(this.template.f))
-			}
-		}),
-
 		areCoprime: function (...args) {
-			return !!native.array.intersection(...args.map(this.factorOut)).length
+			return !!this.commonDivisors(...args).length
 		},
 
 		allFactors: function (number = 1) {
@@ -442,15 +431,20 @@ export const integer = {
 			for (let i = 1; i <= number; i++) numbers.push(i)
 			return expressions
 				.evaluate()
-				.function(expression.Expression("*", [], numbers))
+				.function(expressions.Expression("*", [], numbers))
 		},
 
+		// ! Currently stopped the generalization of the 'algorithms.integer' here;
+
+		// * Re-look through this;
+		// Finds for some 'k' an array of all representations 'a = [a1, ..., an]', such that: a1+...+an with given minimum value 'al>=minval', for all n>=l>=1; (without the 'minval', the set is infinite due to the fact that Z is an abelian group over +);
 		sumRepresentations: function (n, m, minval = 1) {
 			// ? generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
 			const itered = generate(minval, n).map((x) =>
 				generate(minval, m).map((v, i) => (i == 0 ? x : minval))
 			)
-			while (itered.length < n ** m) {
+
+			while (itered.length < n ** m)
 				for (let i = 0; i < itered.length; i++) {
 					const copied = native.copy.flatCopy(itered[i])
 					for (let j = 0; j < m; j++) {
@@ -462,7 +456,6 @@ export const integer = {
 						itered.push(copied)
 					}
 				}
-			}
 
 			return itered.filter(
 				(x) =>
@@ -479,7 +472,7 @@ export const integer = {
 
 			n = Number(n)
 			k = Number(k) | 0
-			return floor(
+			return (
 				expressions.evaluate()(
 					expressions.Expression(
 						"*",
@@ -490,6 +483,7 @@ export const integer = {
 			)
 		}
 	},
+
 	factorOut: TEMPLATE({
 		defaults: {},
 		function: function (tint = this.template.tintclass.class()) {
@@ -510,7 +504,7 @@ export const integer = {
 			}
 			return factors
 		}
-	}), 
+	}),
 
 	isPrime: TEMPLATE({
 		defaults: {},
@@ -528,6 +522,7 @@ export const integer = {
 			return array.generate(this.template)(x).suchthat(number.isPrime)
 		}
 	}),
+
 	multiples: TEMPLATE({
 		default: { includezero: false },
 		function: function (
@@ -544,6 +539,7 @@ export const integer = {
 				.map((a) => this.template.tintclass(a.value).multiply(n))
 		}
 	}),
+
 	multiplesBefore: TEMPLATE({
 		defaults: {},
 		function: function (
@@ -552,18 +548,125 @@ export const integer = {
 		) {
 			return number.multiples(n, x.divide(n))
 		}
+	}),
+
+	commonDivisors: TEMPLATE({
+		defaults: {},
+		function: function (...tints) {
+			return array
+				.common({ f: integer.factorOut, ...this.template })
+				.function(tints)
+		}
+	}),
+
+	commonMultiples: TEMPLATE({
+		defaults: {},
+		function: function (...nums) {
+			return array
+				.common({ f: (x) => integer.native.multiples(x, this.template.range) })
+				.function(nums)
+		}
+	}),
+
+	lcm: TEMPLATE({
+		defaults: {},
+		function: function (...nums) {
+			return orders.min(this.template).function(integer.commonMultiples(...nums))
+		}
+	}),
+
+	lcd: TEMPLATE({
+		defaults: {},
+		function: function (...nums) {
+			return orders
+				.min(this.template)
+				.function(integer.commonDivisors(this.template)(...nums))
+		}
+	}),
+
+	areCoprime: TEMPLATE({
+		defaults: {},
+		function: function (...tints) {
+			return this.template.genarrclass.static
+				.empty()
+				.length()
+				.get()
+				.compare(
+					integer.commonDivisors(this.template).function(tints).length().get()
+				)
+		}
+	}),
+
+	allFactors: TEMPLATE({
+		defaults: {},
+		function: function (number = this.template.tintclass.class()) {
+			// ! These reappear throughout the code extremely often; Pray do something in this regard...
+			const ZERO = () => this.template.tintclass()
+			const ONE = () => ZERO().add()
+			const TWO = () => ONE().add()
+
+			const z = ZERO()
+			const o = ONE()
+
+			const factors = [o]
+			const l = number.divide(TWO())
+			for (let currFactor = TWO(); l.compare(currFactor); currFactor.add())
+				if (number.modulo(currFactor).equal(z)) factors.push(currFactor)
+			return factors
+		}
+	}),
+
+	isPerfect: TEMPLATE({
+		defaults: {},
+		function: function (number = this.template.tintclass.class()) {
+			return expressions
+				.uevaluate()
+				.function(
+					expressions.Expression(
+						"+",
+						[],
+						integer.allFactors(this.template)(number)
+					)
+				)
+				.equal(number)
+		}
+	}),
+
+	factorial: TEMPLATE({
+		defaults: {},
+		function: function (tint = this.template.tintclass.class()) {
+			const numbers = this.template.genarrclass.static.fromArray([
+				this.template.tintclass.class().add()
+			])
+
+			if (!tint.compare(this.template.tintclass.class()))
+				throw new RangeError(
+					"factorial() library function only accepts non-negative values"
+				)
+
+			for (
+				let i = this.template.tintclass.class().add();
+				tint.compare(i);
+				i = i.add()
+			)
+				numbers.pushback(i)
+
+			return expressions
+				.uevaluate()
+				.function(expressions.Expression("*", [], numbers))
+		}
 	})
 }
 
-number.native.commonDivisors = function (...nums) {
-	return number.native.common({ f: number.native.factorOut }).function(nums)
+integer.native.commonDivisors = function (...nums) {
+	return array.common({ f: integer.native.factorOut }).function(nums)
 }
 
-number.native.commonMultiples = TEMPLATE({
+integer.native.commonMultiples = TEMPLATE({
 	defaults: { range: 100 },
 	function: function (...nums) {
-		return number.native
-			.common({ f: (x) => number.native.multiples(x, this.template.range) })
+		return array
+			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
 			.function(nums)
 	}
 })
@@ -857,6 +960,14 @@ export const array = {
 			for (let i = start; proposition(i); i = i.jumpDirection(step))
 				generated.pushback(wrap(i))
 			return generated
+		}
+	}),
+	common: TEMPLATE({
+		defaults: {},
+		function: function (...args) {
+			return native.array
+				.intersections(this.template)
+				.function(args.map(this.template.f))
 		}
 	})
 }

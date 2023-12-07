@@ -5,7 +5,8 @@ import * as native from "./native.mjs"
 import { general } from "./../refactor.mjs"
 
 // ? More methods?
-const fdtobj = {
+// ? Add aliases for those commonly used binary-operator functions?
+export const deftable = RECURSIVE_VARIABLE({
 	"+": general.recursiveOperation("+", (a, b) => a + b),
 	"-": function (...args) {
 		return this.get["+"](
@@ -25,8 +26,25 @@ const fdtobj = {
 	"%": general.recursiveOperation("%", (a, b) => a % b),
 	"&&": general.recursiveOperation("&&", (a, b) => a && b),
 	"||": general.recursiveOperation("||", (a, b) => a || b)
-}
-export const defaultTable = RECURSIVE_VARIABLE(fdtobj)
+})
+// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation, and all the corresponding methods-algorithms implementations];
+export const udeftable = RECURSIVE_VARIABLE({
+	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
+	"-": function (...args) {
+		return this.get["+"](
+			...(args.length ? [args[0]].concat(args.slice(1).map((x) => x.invadd())) : [])
+		)
+	},
+	// ! the '/' division must return a True-Rational value;
+	"#": function (...args) {
+		return (args.length >= 2 ? (x) => x.divide(this.get["*"](...args.slice(1))) : ID)(
+			args[0]
+		)
+	},
+	"*": general.recursiveOperation("*", (a, b) => a.multiply(b)),
+	"**": general.recursiveOperation("**", (a, b) => a.power(b)),
+	"%": general.recursiveOperation("%", (a, b) => a.modulo(b))
+})
 
 export const libPrecision = VARIABLE(16)
 export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)

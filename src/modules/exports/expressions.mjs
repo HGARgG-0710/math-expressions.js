@@ -6,7 +6,7 @@ import { TEMPLATE } from "./../macros.mjs"
 // % This is the 'expressions' main expression-evaluation function;
 export const evaluate = TEMPLATE({
 	defaults: {
-		table: variables.defaultTable.get
+		table: variables.deftable.get
 	},
 	function: function (expression) {
 		if (expression.expressions.length)
@@ -27,19 +27,20 @@ export const Expression = function (operator, expressions = [], objects = []) {
 }
 
 export const uevaluate = TEMPLATE({
-	// ! make a default table;
-	defaults: {},
+	defaults: {
+		deftable: variables.udeftable
+	},
 	function: function (expression) {
 		if (
 			expression.expressions.class.template.parentclass.template.icclass
 				.class()
 				.compare(expression.expressions.length().get())
 		)
-			return this.template.table[expression.operator](
-				...expression.expressions.map(this.function)
+			return this.template.table.read(expression.operator)(
+				expression.expressions.map(this.function)
 			)
 		return this.template.table.read(expression.operator)(expression.objects)
 	}
 })
 
-// ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself?
+// ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself? [so as to be able to build recursive Expressions from various user-given data quickly and not by-hand?]
