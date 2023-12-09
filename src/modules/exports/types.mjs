@@ -817,7 +817,7 @@ export const GeneralArray = (() => {
 				},
 				firstIndex(x, leftovers = {}) {
 					sh1(this, leftovers)
-					return algorithms.array.firstIndex(leftovers).function(this, x)
+					return algorithms.search.linear(leftovers).function(this, x)
 				},
 				shiftForward(times, leftovers = {}) {
 					sh1(this, leftovers)
@@ -1815,6 +1815,9 @@ export const numbers = {
 							iterated: this.this.template.parentclass.template
 						})(num)
 					)
+				},
+				fromCounter: function (ic) {
+					return number.TrueInteger(ic.class)(ic.value)
 				}
 			},
 			transform: StaticThisTransform,

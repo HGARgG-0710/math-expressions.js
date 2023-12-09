@@ -1,4 +1,5 @@
 // ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
+// ? Later - generalize and tidy all this stuff up? 
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
@@ -103,5 +104,23 @@ export const general = {
 		for (const x in names)
 			newobj[names[x]] = f(target[names[x]], outtransform[x], insequences[x])
 		return newobj
+	},
+	counterFrom: function (_labels = []) {
+		return TEMPLATE({
+			defaults: {},
+			function: function (icclass) {
+				const X = {
+					range: icclass.is
+				}
+				const labels = {
+					generator: [_labels[0], "jforth"],
+					inverse: [_labels[1], "jback"]
+				}
+				for (const x in labels)
+					X[x] = (x = this.template.start) =>
+						icclass.class(x)[label[x][0]](this.template[labels[x][1]])
+				return X
+			}
+		})
 	}
 }

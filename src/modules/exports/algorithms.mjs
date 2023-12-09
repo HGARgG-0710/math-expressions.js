@@ -304,9 +304,94 @@ export const sort = {
 	// todo: more sorting algorithms;
 }
 
-// ! Finish! [alg list: sentinel (sentinel linear search), metabinary, ternary, interpolation, exponential, fibonacci?]
-// * Little sense in keeping the native versions un-finited...
+// ! Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
+// * Little sense in keeping the native versions "un-finite"d...
 export const search = {
+	sentinel: TEMPLATE({
+		defaults: { defelem: undefined, unfound: undefined },
+		function: function (
+			sought = this.template.defelem,
+			garr = this.template.genarrclass.static.empty()
+		) {
+			const c = garr.copied("pushback", [sought])
+			for (
+				let i = garr.init();
+				!this.template.comparison(c.read(i), sought);
+				i = i.next()
+			) {}
+			return this.template.comparison(garr.length().get(), i)
+				? this.template.unfound
+				: i
+		}
+	}),
+	exponential: TEMPLATE({
+		// ! set the 'defaults' to have the 'factor' as '.fromNumber(2)' by default;
+		defaults: {
+			defelem: undefined
+		},
+		function: function (
+			sought = this.template.defelem,
+			garr = this.template.genarrclass.static.empty()
+		) {
+			let i = this.template.tintclass.class()
+			let p
+			for (
+				;
+				!i.value.compare(garr.length().get());
+				p = i, i = i.multiply(this.template.factor)
+			)
+				if (this.predicate(garr.read(i), sought)) break
+			return search
+				.binary(this.template)
+				.function(sought, garr.copied("slice", [p.value, i.value]))
+		}
+	}),
+	interpolation: TEMPLATE({
+		defaults: {
+			defelem: undefined,
+			comparison: comparisons.valueCompare,
+			unfound: undefined
+		},
+		function: function (
+			sought = this.template.defelem,
+			garr = this.template.genarrclass.static.empty(),
+			original = true
+		) {
+			const ZERO = this.template.tintclass.class()
+			if (ZERO.compare(garr.length().get())) return this.template.unfound
+
+			// ! Issue - with using the 'value' for the TrueInteger; Pray consider more carefully its design in regard to cases like these...;
+			const initint = this.template.tintlclass.class(garr.init().value)
+			const finishint = this.template.tintclass.class(garr.finish().value)
+
+			const interpolated = initint.add(
+				finishint
+					.difference(initint)
+					.divide(
+						this.template
+							.predicate(garr.read(finishint))
+							.difference(this.template.predicate(garr.read()))
+					)
+					.multiply(this.template.predicate(sought).difference(garr.read()))
+			)
+			const inelem = garr.index(interpolated)
+			if (this.template.comparison(inelem, sought)) return interpolated
+			return (original ? (x) => x.value : ID)(
+				interpolated.add(
+					this.function(
+						sought,
+						garr.copied(
+							"slice",
+							this.template.predicate(inelem, sought)
+								? [garr.init(), interpolated.previous()]
+								: [interpolated.next()]
+						),
+						false
+					)
+				)
+			)
+		}
+	}),
 	jump: (() => {
 		const FORBIDDEN = {}
 		return TEMPLATE({
@@ -357,7 +442,8 @@ export const search = {
 		}
 	}),
 	// ! Issue [potential]: the 'defaults' often are in need of having the ability to do things like 'default.x = this.template.genarrclass.class()'; However, the JS object notation does not, as of self permit that;
-	// ? how about defaults orders? Conditional defaults?
+	// ? how about defaults orders? Conditional defaults?	
+	// ? Generalize? (can be generalized to an 'n-ary' search); Consider...
 	binary: TEMPLATE({
 		defaults: {
 			defelem: undefined,
@@ -367,11 +453,12 @@ export const search = {
 		function: function (
 			sought = this.template.defelem,
 			garr = this.template.genarrclass.static.empty(),
-			original = false
+			original = true
 		) {
-			if (ZERO.compare(garr.length().get())) return this.template.unfound
+			const ZERO = this.template.tintclass.class
+			if (ZERO().compare(garr.length().get())) return this.template.unfound
 			const lenint = this.template.tintclass.class(garr.length().get().value)
-			const ONE = this.template.tintclass.class().add
+			const ONE = ZERO().add
 			const TWO = ONE().add
 			const middleind = lenint.modulo(TWO).equal(ONE)
 				? lenint.divide(TWO).add()
@@ -387,7 +474,8 @@ export const search = {
 							this.template.predicate(midelem, sought)
 								? [garr.init(), middleind.previous()]
 								: [middleind.next()]
-						)
+						),
+						false
 					)
 				)
 			)
@@ -913,22 +1001,6 @@ export const array = {
 			return pnext
 		}
 	}),
-	firstIndex: TEMPLATE({
-		defaults: {
-			unfound: undefined,
-			comparison: comparisons.valueCompare
-		},
-		function: function (array, el) {
-			let index = this.template.unfound
-			array.loop()._full((arr) => {
-				if (this.template.comparison(arr.object().currelem().get(), el)) {
-					index = arr.this.this.currindex
-					arr.break()
-				}
-			})
-			return index
-		}
-	}),
 	indexesOf: TEMPLATE({
 		defaults: {
 			unfound: undefined,
@@ -958,7 +1030,7 @@ export const array = {
 					: aliases.TRUTH
 				let currind
 				while (currind !== leftovers.unfound && !cond(inds, this)) {
-					currind = array.firstIndex(this.template).function(arr, el)
+					currind = search.linear(this.template).function(el, arr)
 					inds.pushback(currind)
 				}
 				return inds

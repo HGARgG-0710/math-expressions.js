@@ -3,6 +3,7 @@ import * as comparisons from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as multidim from "./multidim.mjs"
 import * as aliases from "./aliases.mjs"
+import { general } from "../refactor.mjs"
 
 export const number = GENERATOR({
 	defaults: { start: 0 },
@@ -357,9 +358,15 @@ export const finiteCounter = (() => {
 		}
 	return GENERATOR({
 		defaults: {},
-		...F, 	
+		...F,
 		range(x) {
 			return this.template.values.includes(x)
-		},
+		}
 	})
 })()
+
+// * Constructs a counter from an InfiniteClass;
+export const fromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
+
+// * Constructs a counter from a TrueInteger class (additive);
+export const tintAdditive = general.counterFrom(["add", "difference"])

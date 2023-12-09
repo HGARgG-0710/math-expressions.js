@@ -86,23 +86,21 @@ It gets changed actively.
     sequence of "layers" to get called, each allowing for an extension of the thing in question;
     For example, one such is used to generate different "classes" (in truth, constructor functions...)
 
-10. Rename the _ver10.mjs into "math-expressions.js" after having tested it properly; Replace the old file; 
+10. Pray add a good descripttion to the GitHub repository...
+11. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
 
-11. Pray add a good descripttion to the GitHub repository...
-12. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
-
-13. Add the tests to the 'test' folder
+12. Add the tests to the 'test' folder
 
     Update the old examples (make them more comprehensible) and create (much) more new ones; 
 	Use the examples as tests [id est, here they're equivalent]; 
     
-14. Conduct regular note-cleanups, checking if anything has become redundant.
+13. Conduct regular note-cleanups, checking if anything has become redundant.
 
-15. IDEA: change the argument order for many of the functions (make them more intuitive;)
+14. IDEA: change the argument order for many of the functions (make them more intuitive;)
 
     For starters -- the new api, repeatedApplication, for example.
 
-16. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
+15. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
 
 	Continuation-passing style. 
 	JS programs with infinite stack. 
@@ -122,14 +120,14 @@ It gets changed actively.
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
 	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
 
-17. TODO: cleanup; 
+16. TODO: cleanup; 
 	
 	Do a major file cleanup within the project's tree...
 
 	1. delete the 'images.txt' [after having completed all inside it]
 	2. delete the local 'privatenotes.txt' [only after having completed them... Until then - let they stay '.gitignored'...]
 
-18. Code cleanup + refactor + optimization + semantic optimization...: 
+17. Code cleanup + refactor + optimization + semantic optimization...: 
 
 	Optimize the code [that being, efficiency] and optimize the code [that being, semantics]; 
 
@@ -138,7 +136,7 @@ It gets changed actively.
 	
 	DO NOT ATTEMPT TO GENERALIZE WHAT CANNOT BE GENERALIZED...
 
-19. [NOTE] On documentation....
+18. [NOTE] On documentation....
 
 	One really ought to think of a way to document this general stuff properly....
 	Due to it, any manner of a 'use-case based' manner of a description would not work generally....
@@ -158,16 +156,21 @@ It gets changed actively.
 			2.1. Document the things like before, but more thouroughly and one's style; 
 			2.2. Document all the possible bugs; ALSO: let there be a disclaimer advising against using versions pre-1.0 [part of the BUGS disclaimer]; 
 
-20. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
+19. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
 
 	As one had suspected, the latter don't actually work in the cases when the 'undefined' is used as a value...
 
-21. [REMINDER] Finish the README.md...
+20. [REMINDER] Finish the README.md...
 
 	Along with all the other small organization-related stuff: 
 		This includes 'package.json', and all the other yada yada yada...
 
-22. IDEA: for the package.json and 'npm run test', of the package make the following work:
+21. IDEA: for the package.json and 'npm run test', of the package make the following work:
 	Let the 'test' script that is being run accept an argument of an array of test files/cases to be executed, 
 	which will then be used to produce the appropriate testing procedure [namely, run the appropriate files]; 
 	If none are passed, then all the tests are executed in the alphabetic order...; 
+
+22. IDEA [for the project's future] - expand it with more different abstractions imlementations;
+	They all would either be built upon the exatly same types as currently, or serve as such types themselves; 
+	Examples: number sequences [such as general construction of Lucas numbers with the user's beginning], linear algebra, 
+	[maybe even?] theorems/axioms/properties (for automatic theorem prover software implementations); 
