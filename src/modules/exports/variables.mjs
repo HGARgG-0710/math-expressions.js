@@ -27,7 +27,7 @@ export const deftable = RECURSIVE_VARIABLE({
 	"&&": general.recursiveOperation("&&", (a, b) => a && b),
 	"||": general.recursiveOperation("||", (a, b) => a || b)
 })
-// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation, and all the corresponding methods-algorithms implementations];
+// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation (or its generalization NAryArray), and all the corresponding methods-algorithms implementations];
 export const udeftable = RECURSIVE_VARIABLE({
 	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
 	"-": function (...args) {

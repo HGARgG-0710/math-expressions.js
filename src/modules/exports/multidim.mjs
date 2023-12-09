@@ -43,7 +43,7 @@ export const native = {
 					: 0)
 			)
 		}
-	})
+	}), 
 }
 
 // Counts all the array-elements within a multi-dimensional array;

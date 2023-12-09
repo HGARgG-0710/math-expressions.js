@@ -90,8 +90,6 @@ export const number = {
 		}
 	}),
 
-	
-
 	// TODO: generalize [put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
 	/**
@@ -215,7 +213,7 @@ export const object = {
 	}
 }
 
-// ! Current agenda - work starts here... [the array.replace and the 'string' methods list]; 
+// ! Current agenda - work starts here... [the array.replace and the 'string' methods list];
 // % Tasks:
 // 	* 1. Brush up the old code [bring it up to the present standards];
 // 		1.1. Template it, where desired;
@@ -343,3 +341,25 @@ array.replace.replaceMany = array.multArrsRepApp({
 	default: []
 }).function
 string.sreplaceMany = string.strmethod(array.replaceMany)
+
+export const finite = TEMPLATE({
+	defaults: {
+		definseq: [false],
+		defout: false
+	},
+	function: function (f, out = this.template.defout, inseq = this.template.definseq) {
+		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
+		const tin = (out) => (out ? native.number.fromNumber : types.arrays.CommonArray())
+		const tout = (out) =>
+			out
+				? (x) => x.map(types.InfiniteCounter(counters.addnumber()))
+				: (x) => x.copied("switchclass", [types.arrays.CommonArray()])
+		return native.function
+			.wrapper({
+				out: tout(out),
+				in: inseq.map(tin),
+				inarr: true
+			})
+			.function(f)
+	}
+})

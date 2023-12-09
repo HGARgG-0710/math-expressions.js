@@ -7,6 +7,7 @@
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
 import * as multidim from "./multidim.mjs"
+import * as native from "./native.mjs"
 import { ID } from "./../macros.mjs"
 
 // ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
@@ -121,16 +122,18 @@ export const native = {
 		void: () => {},
 		bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
 		// TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
-		compose: (fs = []) => {
-			if (!fs.length) return undefined
-			return fs[fs.length - 1](compose(fs.slice(0, fs.length - 1)))
+		compose: (fc, args = []) => {
+			return this.composition(fc)(...args)
 		},
 		// ! Use this one extensively...
 		wrapper: TEMPLATE({
 			function: function (f = this.template.deff) {
-				return (x) => this.template.out(f(this.template.in(x)))
+				return this.template.inarr
+					? (x) => this.template.out(f(...this.template.in(x)))
+					: (x) => this.template.out(f(this.template.in(x)))
 			},
 			defaults: {
+				inarr: false,
 				in: id,
 				out: id,
 				deff: id

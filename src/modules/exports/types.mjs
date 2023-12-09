@@ -1707,6 +1707,7 @@ export const numbers = {
 			_this.this.this.this.class(
 				_this.this.this.this.class.template.icclass.class().next()
 			)
+		const TWO = (_this) => ONE(_this).add()
 		return EXTENSION({
 			defaults: {
 				parenclass: parentclass,
@@ -1772,7 +1773,7 @@ export const numbers = {
 						compared.map(this.this.this.this.class.template.icclass).value
 					)
 				},
-				difference(d) {
+				difference(d = ONE(this)) {
 					return this.this.this.add(d.invadd())
 				},
 				divide(d) {
@@ -1796,6 +1797,14 @@ export const numbers = {
 						this,
 						x
 					)
+				},
+				// ! NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
+				root(x = TWO(this), ceil = false) {
+					let r = this.this.this.this.class()
+					let temp
+					while (!(temp = r.power(x)).compare(this)) r = r.add()
+					if (temp.equal(this) || ceil) return r
+					return r.difference()
 				}
 			},
 			static: {

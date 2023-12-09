@@ -1,6 +1,8 @@
 // * The 'Expressions' API module, historically the earliest part of the library to emerge (differs violently from the first prototypes)
 
 import * as variables from "./variables.mjs"
+import * as algorithms from "./algorithms.mjs"
+import * as native from "./native.mjs"
 import { TEMPLATE } from "./../macros.mjs"
 
 // % This is the 'expressions' main expression-evaluation function;
@@ -42,5 +44,29 @@ export const uevaluate = TEMPLATE({
 		return this.template.table.read(expression.operator)(expression.objects)
 	}
 })
+
+// * Generalization of the 'Expression':
+export const composition = function (fcall) {
+	return (...args) => {
+		return fcall.f(
+			...algorithms.integer.native
+				.generate(native.number.max([fcall.functions.length, fcall.args.length]))
+				.map((x) => {
+					// ! PROBLEM - does ___not__ currently allow for things like: (a,b,c) => d(a, e(b, f, g(c))); Fix that...
+					if (fcall.functions[x] !== undefined) return this.composition(x)()
+					if (!fcall.args) return args[x]
+					return fcall.args[x]
+				})
+		)
+	}
+}
+
+export const FunctionCall = function (f, functions = [], args = []) {
+	return {
+		f: f,
+		functions: functions,
+		args: args
+	}
+}
 
 // ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself? [so as to be able to build recursive Expressions from various user-given data quickly and not by-hand?]

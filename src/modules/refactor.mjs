@@ -2,6 +2,7 @@
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
+import * as native from "./exports/native.mjs"
 
 export const classes = {
 	finish: function () {
@@ -93,5 +94,14 @@ export const general = {
 				? binaryver(args[0], this.get[opname](args.slice(1)))
 				: args[0]
 		}
+	},
+
+	// ? Does oneself want this, pray? [if no in-lib application, delete...];
+	finiteobj: function (target, names = [], insequences = [], outtransform = []) {
+		const newobj = {}
+		const f = native.finite().function
+		for (const x in names)
+			newobj[names[x]] = f(target[names[x]], outtransform[x], insequences[x])
+		return newobj
 	}
 }

@@ -78,3 +78,8 @@ export function max(template = {}) {
 		...template
 	})
 }
+
+// * Constructs an infinte order from given Infinite Counter class; 
+export function fromIcc(icclass) {
+	return (x, y) => icclass.class(x).compare(icclass.class(y))
+}

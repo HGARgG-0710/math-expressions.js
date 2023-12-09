@@ -1,18 +1,8 @@
 // * Various algorithms and data structure types implementations for the library that one considered potentially useful;
 
-// ? After all - decide, whether or not to do the 'wrapping' of the old native code into things like 'addnumber', and 'CommonArray'...
-// 	% Pro:
-// 		1. Makes code FAR more concise, short and less repetitious [for instance - allows one to reduce the 'native' objects merely to the level of aliases];
-// 		2. In consistency with the library's "total-refactor" quality;
-// 		3. Makes the library's general contents noticeably more compact;
-// 		! 4. YET IT IS SO TEMPTING! IT WOULD SIMPLIFY THE CODEBASE ENORMOUSLY!
-// % Con:
-// 		1. Abstraction overhead
-// 			- namely, while it __does__ increase the readability and simplicity of the code in question,
-// 			there is NO benevolent effect on the algorithm implementations themselves; It only adds the unnecessary work needed to complete a task and greatly simplify the lib structure;
-// 		2. Syntax is bulky; No convinient native JS notation;
-// 		3. Most importantly - some of the native methods may have features that the library does not currently as-of-self provide a good enough alias-alternative to [id-est, the user would have to build it themselves from nil];
-// ? Maybe, generalize but only in the v1.1? Before then - use the thing as-is?
+// % Plan for removal of unwanted finite method instances:
+// 		1. Create the general versions for each and every single one of them [generalizaion];
+// 		2. Seek out those that are used in places of the library that are considered desired/essential, keep them. The rest - replace with 'finite()' call;
 
 // * List of new abstract types interfaces to be implemented:
 // ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
@@ -314,27 +304,95 @@ export const sort = {
 	// todo: more sorting algorithms;
 }
 
-// ! work on that too... [make a list of algorithms...]
+// ! Finish! [alg list: sentinel (sentinel linear search), metabinary, ternary, interpolation, exponential, fibonacci?]
+// * Little sense in keeping the native versions un-finited...
 export const search = {
-	binary: function (array, number) {
-		// * For getting the middle index of the array.
-		const middle = (arr) => floor(median(arr.map((_a, i) => i)), 0)
-		const copyArray = Sort.bubble(array)
-		let index = middle(copyArray)
-		let copyArr = copy(copyArray)
-		let copyIndex = index
-		for (let i = 0; ; i++) {
-			if (number === copyArray[index]) return index
-			if (copyArr.length === 1) break
-			const isBigger = number > copyArray[index]
-			copyArr = isBigger
-				? copyArr.slice(copyIndex + 1, copyArr.length)
-				: copyArr.slice(0, copyIndex)
-			copyIndex = middle(copyArr)
-			index = isBigger ? index + copyIndex : index - copyIndex
+	jump: (() => {
+		const FORBIDDEN = {}
+		return TEMPLATE({
+			defaults: { defelem: undefined },
+			function: function (
+				sought = this.template.defelem,
+				garr = this.template.tenarrclass.static.empty()
+			) {
+				const sqrtlen = this.template.tintclass.class(garr.length().get()).root()
+				let tempres = FORBIDDEN
+				for (
+					let i = this.tintclass.class();
+					!i.compare(garr.length().get());
+					i = i.add(sqrtlen)
+				) {
+					const curr = garr.read(i)
+					// ! make an alias; (was requested already somewhere...);
+					if (
+						((x) =>
+							this.template.predicate(x) || this.template.comparison(x))(
+							curr,
+							sought
+						)
+					) {
+						tempres = i
+						break
+					}
+				}
+				if (tempres === FORBIDDEN) return this.template.unfound
+				return search.linear(this.template)(
+					garr.copied(
+						"slice",
+						[i.difference(sqrtlen), i].map((x) => x.value)
+					)
+				)
+			}
+		})
+	})(),
+	linear: TEMPLATE({
+		defaults: { defelem: undefined, unfound: undefined },
+		function: function (
+			sought = this.template.defelem,
+			garr = this.template.genarrclass.static.empty()
+		) {
+			for (const a of garr.keys())
+				if (this.template.comparison(garr.read(a), sought)) return a
+			return this.template.unfound
 		}
-		return -1
-	}
+	}),
+	// ! Issue [potential]: the 'defaults' often are in need of having the ability to do things like 'default.x = this.template.genarrclass.class()'; However, the JS object notation does not, as of self permit that;
+	// ? how about defaults orders? Conditional defaults?
+	binary: TEMPLATE({
+		defaults: {
+			defelem: undefined,
+			comparison: comparisons.valueCompare,
+			unfound: undefined
+		},
+		function: function (
+			sought = this.template.defelem,
+			garr = this.template.genarrclass.static.empty(),
+			original = false
+		) {
+			if (ZERO.compare(garr.length().get())) return this.template.unfound
+			const lenint = this.template.tintclass.class(garr.length().get().value)
+			const ONE = this.template.tintclass.class().add
+			const TWO = ONE().add
+			const middleind = lenint.modulo(TWO).equal(ONE)
+				? lenint.divide(TWO).add()
+				: lenint.divide(TWO)
+			const midelem = garr.index(middleind)
+			if (this.template.comparison(midelem, sought)) return middleind
+			return (original ? (x) => x.value : ID)(
+				middleind.add(
+					this.function(
+						sought,
+						garr.copied(
+							"slice",
+							this.template.predicate(midelem, sought)
+								? [garr.init(), middleind.previous()]
+								: [middleind.next()]
+						)
+					)
+				)
+			)
+		}
+	})
 }
 
 // ! generalize too;
