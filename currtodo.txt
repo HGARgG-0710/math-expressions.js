@@ -41,10 +41,6 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 				2.3. Small details like the 'leftovers', 
 
 		3. Finish TrueRatio and InfiniteSum [surprisingly nearly finished already]: 
-			3.1. Work on the small details - stuff like 'leftovers'; 
-			3.2. Fix the old issues; Finish old todos; 	
-			3.3. Clean up the code, fix references, refactor; 
-			3.4. Finish the places that were left undecided, solve any new problems that may occurr...
 		4. Finish the Tree data-structure implementation; [METHODS FOR IT, THE METHODS...]; 
 		5. Create the implementation for the NTree; 
 		6. On 6., base the Heap; 
@@ -53,10 +49,6 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		9. Having finished the work on the 'TrueNumbers', complete the 'algorithms.Farey' implementation; [shall one put this under 'numbers'?]
 		10. Think on the Graph from the 'algorithms'; 
 		11. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
-		12. Fix the 'statistics' (style changes; all the other standard improvements, including the making of the code more efficient and preventing waste)
-		13. Transform the entirety of the GeneralArray by moving all its methods to 'algorithms.array', from there - just use the versions accordingly...; 
-			13.1. Accomplish largely the exactly same thing with the other classes - separate the logic from the context [where desired only...]; 
-			13.2. After having done the 13., return back to all the other things that the library needed; 
-		14. Reform the 'numerics' and 'numeric.native'; 
+		12. Reform the 'numerics' and 'numeric.native'; 
 	
-		15. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);
+		13. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);

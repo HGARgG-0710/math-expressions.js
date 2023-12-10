@@ -138,7 +138,8 @@ export const native = {
 				out: id,
 				deff: id
 			}
-		})
+		}),
+		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval
 	},
 
 	object: {

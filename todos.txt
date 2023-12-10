@@ -1,66 +1,17 @@
 This is a temporary todo list. 
 It gets changed actively. 
 
-1. math-expressions.js 1.0: 
-
-    Current Idea for a list of kinds of things to add (create more things for it): 
-    1. types - everything related to types [includes all insofar added and all yet planned]; 
-        has got statistics, numeral-related stuff, counters, orders, linear algebra stuff, infinite types, extension of the oldapi to infinite types (everything)
-        ? question: should one not create sub-divisions inside it?
-    2. util - various utils; 
-    3. ... (perhaps, something related to equation-parsing? some in-built things?)
-    4. algorithms - as says, different algorithms; 
-        Has in itself sorting algorithms, other interesting ones...
-        ? again: question about sub-namespaces...
-    5. ... (something that is an extension of the idea of drawing and the current concept for the Surface class)  
-    
-    // TODO: rework this part of the first TODO...
-    New things to add: 
-
-        1. ideas of TrueInteger and all other "True" number classes (those that are capable of theoretically storing arbitrarily large values -- user's machine is the only limit) from an unpublished project;
-        2. ideas of Order[s], OrderedArray, IterableSet, generators; note: TypeScript is bad for these things representation, its got Generics, but no templates;
-        3. new sorting algorithms, for generalized versions of orders; more new funny/interesting algorithms; 
-        4. The previous log, logHack functions (they are quite nice...) and other stuff from 'that other project'
-
-    Old things to (maybe?) delete/rework: 
-
-        1. Tests class (change the naming convention, add Wikipedia links so that one could understand which test is meant, some have such similar names; maybe add a few more interesting things there...)
-
-            note: 
-
-        2. arrayEquality -- rework, generalize to being &&-composition of equality of each of the given arrays pair-wise...
-    
-    The published thing should be useable as a Deno dependency (via `import`) -- check that it does, indeed, work like one (just in case)...
-        
+1. Ensure the possibility of the thing to work with both Deno and NodeJS;        
 2. Documentation
 
-    Rewrite the introduction; 
     Separate it onto different versions, including <= 0.8 (for each one separate, maybe based on the old readme.md files)
+    Change immensely the general style of the in-editor JSDoc documentation...
 
-    (Suggestion?) Separate both old and new ones onto classes and functions; 
+3. [REMINDER] Finish the package.json and the rest of the package-organization related things; 
 
-    Change the in-editor JSDoc documentation...
+	This includes the GitHub repository organization (things like description, for instance...); 
 
-3. New things: 
-
-    Create a great deal of new definitions; 
-// TODO: create ideas for what new stuff to add...
-
-4. Finish the package.json (particular: fix the keywords); 
-
-	Add more keywords related to what kind of stuff does the library actually have: 
-
-		1. primes; 
-		2. infinite; 
-		3. [after the 1.1 version] 'returnless' and also 'continuation[-style]'; 
-		4. numbers; 
-		5. vectors; 
-		6. graphics; 
-		[and so on...]
-
-	Maybe pick some better words, dunno...
-
-5. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
+4. (IDEA; Under question for an implementation) Develop a shorthand-language for various syntax algorithmical syntax constructs ; 
 
     Make it a part of a library...
 
@@ -69,38 +20,33 @@ It gets changed actively.
     Write it using one's (for now unpublished) library for parsing things...
 
 
-6. (reminder) Before the 1.0 release, pray clear all the TODOs, ?sand !s; 
+5. (reminder) Before the 1.0 release, pray clear all the TODOs, ?sand !s; 
 
     All the privatenotes, as well as this very list...
 	Also, the "^ IDEA" notes [once they've been implemented and all saved within some particular commit...]; 
 
 	ALSO: the *s - check them all out, take out all the unwanted ones, perhaps make others into something else? 
 
-7. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
+6. Change the comments for the introduction ("this is the source code and copyright" bit at the beginnings of both files); 
 
-8. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
+7. Decide the look of the comments... (Stars, no stars? other symbols/colors there...) And which ones to keep (so that the code looks navigable...)
 
-9. Change all the desired so JS-classes for the function-object combinations: 
+8. Change all the desired so JS-classes for the function-object combinations: 
 
     This is mimicking the behaviour of templates: the abstraction turns into a 
     sequence of "layers" to get called, each allowing for an extension of the thing in question;
     For example, one such is used to generate different "classes" (in truth, constructor functions...)
 
-10. Pray add a good descripttion to the GitHub repository...
-11. Create each new version of the library in such a fashion as for it to be complete: there is not one thing that could not be done with it and which would want to be done by oneself...;
-
-12. Add the tests to the 'test' folder
+9. Add the tests to the 'test' folder
 
     Update the old examples (make them more comprehensible) and create (much) more new ones; 
 	Use the examples as tests [id est, here they're equivalent]; 
-    
-13. Conduct regular note-cleanups, checking if anything has become redundant.
 
-14. IDEA: change the argument order for many of the functions (make them more intuitive;)
+10. IDEA: change the argument order for many of the functions (make them more intuitive;)
 
     For starters -- the new api, repeatedApplication, for example.
 
-15. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
+11. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
 
 	Continuation-passing style. 
 	JS programs with infinite stack. 
@@ -120,57 +66,30 @@ It gets changed actively.
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
 	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
 
-16. TODO: cleanup; 
-	
-	Do a major file cleanup within the project's tree...
+12. TODO: project tree cleanup; 
 
 	1. delete the 'images.txt' [after having completed all inside it]
 	2. delete the local 'privatenotes.txt' [only after having completed them... Until then - let they stay '.gitignored'...]
 
-17. Code cleanup + refactor + optimization + semantic optimization...: 
-
-	Optimize the code [that being, efficiency] and optimize the code [that being, semantics]; 
-
-	Generalize the generalizable things, use labels/varnames/constants where it'd help shorten the expressions and so on...
-	Rely on these things within the code heavily. 
-	
-	DO NOT ATTEMPT TO GENERALIZE WHAT CANNOT BE GENERALIZED...
-
-18. [NOTE] On documentation....
-
-	One really ought to think of a way to document this general stuff properly....
-	Due to it, any manner of a 'use-case based' manner of a description would not work generally....
-
-	A reference to the source code would do it, of course...
-	Does one want that???
-	But if one does that, then it'd mean [in the first place] creating a private version of this repo on GH, for development process only. 
-	Then, 'push' the thing into the public repo's version... 
-
-	CONCLUSION: DO NOT do the complete documentation; 
-	Instead, just: 
-
-		1. List all the things for the new versions (>=v1.0); 
-			1.1. If it's general, just provide the headline of the definition ['head'] + a reference inside the source code...
-			1.2. If it's not general, then also provide the reference and headline, but also a brief JSDoc description; 
-		2. Take the old code [old README.md documentation] (<=v0.8) + make a notice about buggy code and: 
-			2.1. Document the things like before, but more thouroughly and one's style; 
-			2.2. Document all the possible bugs; ALSO: let there be a disclaimer advising against using versions pre-1.0 [part of the BUGS disclaimer]; 
-
-19. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
+13. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
 
 	As one had suspected, the latter don't actually work in the cases when the 'undefined' is used as a value...
 
-20. [REMINDER] Finish the README.md...
-
-	Along with all the other small organization-related stuff: 
-		This includes 'package.json', and all the other yada yada yada...
-
-21. IDEA: for the package.json and 'npm run test', of the package make the following work:
+14. IDEA: for the package.json and 'npm run test', of the package make the following work:
 	Let the 'test' script that is being run accept an argument of an array of test files/cases to be executed, 
 	which will then be used to produce the appropriate testing procedure [namely, run the appropriate files]; 
 	If none are passed, then all the tests are executed in the alphabetic order...; 
 
-22. IDEA [for the project's future] - expand it with more different abstractions imlementations;
-	They all would either be built upon the exatly same types as currently, or serve as such types themselves; 
-	Examples: number sequences [such as general construction of Lucas numbers with the user's beginning], linear algebra, 
-	[maybe even?] theorems/axioms/properties (for automatic theorem prover software implementations); 
+15. Later - add better support for platform- and standard-dependent aspects of the library. 
+	For instance, the native ecmascript String uses the UTF-16 standard. 
+	The JS has within the String class methods for more intimate working with it.
+
+16. Things to add to the library [for the later versions]: 
+
+	16.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and skinny to be added. 
+		Even though that is (historically), is also the origin of the library, it must be first properly revised and (especially) finished - new methods, new things; 
+	16.2. Number sequences; 
+		Amongst them - fibonacci, Lucas numbers, primes, and so on...
+	16.3. Linear algebra; 
+	16.4. (Possibly, possibly not, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
+	16.5. (Possibly?) Combinatorics? 

@@ -5,7 +5,6 @@ import * as variables from "./variables.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
-import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
 
 import { general, classes } from "../refactor.mjs"
@@ -232,7 +231,6 @@ export const InfiniteCounter = (() => {
 // % 	5. splitlen(length); split the array onto subarrays of given length 'length'; If not possible to factor in such a way as to have them all being precisely 'length', then the last one is made shorter...;
 // ? Question: about the 'move' methods... Should all the other datatypes implement the interfaces for their versions?
 // * Current decision [not full]: undeteremined, in later versions one may add them; Presently - not, nor will the '.move' methods will ever be deleted;
-// ! Take all the methods out of the class and put into the 'algorithms.array', generalized, then reference here, whilst getting used on 'this';
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
@@ -1861,7 +1859,6 @@ export const numbers = {
 						this.denomenator
 					)
 				},
-				// ! PROBLEM [general]: pray consider carefully the copying of the objects passed - when and where to copy...;
 				invmult() {
 					return this.this.this.this.class(
 						this.this.this.numerator,
@@ -1873,54 +1870,27 @@ export const numbers = {
 						this.this.this.denomenator,
 						this.this.this.this.class.template.parentclass().add()
 					)
+				},
+				copy() {
+					return this.this.this.this.class(
+						this.this.this.numerator,
+						this.this.this.denomenator
+					)
 				}
 			},
 			static: {
-				// ! REWRITE...
-				// * Best do it using the generalization of the 'native' algorithm for the 'multiples';
-				// % One does 'for (const x of arrIntersection(multiples(numerator), multiples(denomenator))) { numerator = numerator.divide(x); denomenator = denomenator.divide(x) }'
-				// ! Another issue - the whole division algorithm for TrueInteger is NOT implemented... Work, work, work...
-				// ^ Conclusion: before properly doing the work on the 'types.numbers' submodule, one must finish the generalization of the 'native' module + the module itself (brush up the code, et cetera...);
 				simplified(ratio) {
 					ratio = ratio.copy()
-					const l = orders.min(ratio.numerator, ratio.denomenator)
-					for (
-						let i = this.this.template.parentclass.class();
-						!i.compare(l);
-						i = i.add()
-					) {
-						// ! generalize this thing in the condititon... [Basically, this is integer-division with rational output (non-simplified, possibly 'x: x.isWhole()');]
-						while (
-							this.this
-								.class(
-									ratio.denomenator,
-									this.this.template.icclass.class().next()
-								)
-								.multiply(TrueRatio().class(i.invmult()))
-								.isWhole() &&
-							TrueRatio()
-								.class(
-									x.value[1],
-									this.this.template.icclass.class().next()
-								)
-								.multiply(TrueRatio().class(i.invmult()))
-								.isWhole()
-						) {
-							x.value[0] = TrueRatio()
-								.class(
-									x.value[0],
-									this.this.template.icclass.class().next()
-								)
-								.multiply(TrueRatio().class(i.invmult())).value[0]
-							x.value[1] = TrueRatio()
-								.class(
-									x.value[1],
-									this.this.template.icclass.class().next()
-								)
-								.multiply(TrueRatio().class(i.invmult())).value[0]
+					const m = ratio.numerator.compare(ratio.denomenator)
+						? "numerator"
+						: "denomenator"
+					const l = m === ratio.numerator ? "denomenator" : "numerator"
+					for (const x of algorithms.integer.allFactors().function(m))
+						if (this.this.class().equal(ratio[l].modulo(x))) {
+							ratio[m] = ratio[m].divide(x)
+							ratio[l] = ratio[l].divide(x)
 						}
-					}
-					return x
+					return ratio
 				}
 			},
 			transform: StaticThisTransform,
@@ -1960,7 +1930,7 @@ export const numbers = {
 	}
 }
 
-// ! Finish the 'CLASS'-ification of the thing (use the 'methods:' and the 'properties:' more actively);
+// ? Finish the 'CLASS'-ification of the thing (use the 'methods:' and the 'properties:' more actively);
 export const UniversalMap = CLASS({
 	defaults: {
 		notfound: undefined,
@@ -2255,7 +2225,7 @@ export function Tree(parentclass) {
 	})
 }
 
-// ? Question: does one want to be using the native JS 'class'es at all even?
+// ? Question: generalize [replace with a GeneralArray-based 'UnlimitedSet']?
 export class IterableSet {
 	curr() {
 		return Array.from(this.elements.values())[this.currindex]

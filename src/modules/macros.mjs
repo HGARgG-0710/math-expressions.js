@@ -299,6 +299,7 @@ export const CLASS = (ptemplate = {}) => {
 				O[p] = this.properties[pr].bind(this)(...args)
 			return V
 		}.bind(p)
+		// ? Idea: replace this thing with 'Symbol.hasInstance'? 
 		p[p.isname] = function (x) {
 			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is'];
 			return (

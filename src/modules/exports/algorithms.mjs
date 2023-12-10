@@ -305,7 +305,7 @@ export const sort = {
 }
 
 // ! Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
-// * Little sense in keeping the native versions "un-finite"d...
+// ? Does one want the finite versions for those? 
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
@@ -817,8 +817,6 @@ integer.native.commonMultiples = TEMPLATE({
 	}
 })
 
-// TODO: work on the names - get rid of the 'arr' part from them;
-// ^ NOTE: the recursive methods (such as countrecursive, arrElems, and so on...) are better fit for the 'multidim' module;
 export const array = {
 	native: {
 		intersection: TEMPLATE({
