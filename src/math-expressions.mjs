@@ -70,3 +70,4 @@ export * from "./modules/exports.mjs"
 // TODO [general]: check that the code is sound '.function'-wise and 'this.this.this'-wise and that there is a unanimous approach to the thing...; 
 // TODO [general]: instead of boolmap, pray use the '.every'/'.any'; 
 // TODO [later]: after all is done - relook through each and every file of the project feverishly, seek anything undone and uncompleted; 
+// TODO [later]: do some micro-optimizations of the library; Choose more memory- and time- performant solutions and native types, where possible; 

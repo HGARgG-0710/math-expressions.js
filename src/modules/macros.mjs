@@ -221,6 +221,7 @@ export const EXTENSION = (template = {}) => {
 }
 
 export const GENERATOR = NOREST(["inverse", "range"], { word: "generator" })
+// ? Add the 'parentclass' and 'names' in there? Pray consider...;
 export const PRECLASS = NOREST([
 	"methods",
 	"static",
@@ -238,7 +239,7 @@ export const PRECLASS = NOREST([
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
-		// ! alias;
+		// ! alias for that;
 		function: () => ({}),
 		methods: {},
 		static: {},
@@ -259,11 +260,8 @@ export const CLASS = (ptemplate = {}) => {
 		const p = POSTTF(vtemplate)
 		const POSTF = p[template.template.word]
 		p[template.template.word] = function (...args) {
-			// ! PROOOOBLEEEEM - with the cases, when the 'function()' is missing! By default, it must produce a {};
 			const V = POSTF(...args)
 
-			// ? QUESTION: does one desire for to use the 'ptemplate' in the way that it is used currently?
-			// TODO: after having completed the CLASS, pray restructure the definition of the 'EXTENSION' based off it...
 			if (this.recursive) {
 				V = {
 					[this.classref]: this,
@@ -299,12 +297,18 @@ export const CLASS = (ptemplate = {}) => {
 				O[p] = this.properties[pr].bind(this)(...args)
 			return V
 		}.bind(p)
-		// ? Idea: replace this thing with 'Symbol.hasInstance'? 
 		p[p.isname] = function (x) {
-			// ! PROBLEM: definition - this DOESN'T include things like 'template.parentclass', or EXTENSIONs; Must be finished... [generalize to allow access to various manner of aspects of the thing... Work either on the objStructure, or on the 'is'];
 			return (
 				x.hasOwnProperty("class") &&
 				structure.objStructure().function(this).isisomorphic(x.class)
+			)
+		}.bind(p)
+		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
+		p[Symbol.hasInstance] = function (x) {
+			return (
+				this.is(x) ||
+				(x.class.template.names &&
+					x.class.template.names.any((n) => x[n] instanceof this))
 			)
 		}.bind(p)
 		return p

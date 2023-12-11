@@ -40,15 +40,14 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 				2.2. Add the missing GeneralArray methods to it... [those that became to be as a part of UnlimitedString in the implementation in question originally]; 
 				2.3. Small details like the 'leftovers', 
 
-		3. Finish TrueRatio and InfiniteSum [surprisingly nearly finished already]: 
+		3. Keep working on TrueRatio and InfiniteSum; 
 		4. Finish the Tree data-structure implementation; [METHODS FOR IT, THE METHODS...]; 
 		5. Create the implementation for the NTree; 
 		6. On 6., base the Heap; 
 		7. From 7., work on the sort.heap(); 
 		8. Do the 'sort.radix'; 
-		9. Having finished the work on the 'TrueNumbers', complete the 'algorithms.Farey' implementation; [shall one put this under 'numbers'?]
-		10. Think on the Graph from the 'algorithms'; 
-		11. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
-		12. Reform the 'numerics' and 'numeric.native'; 
+		9. Think on the Graph from the 'algorithms'; 
+		10. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
+		11. Reform the 'numerics' and 'numeric.native'; 
 	
 		13. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);

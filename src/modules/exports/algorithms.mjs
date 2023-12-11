@@ -53,36 +53,7 @@ export function Queue(parentclass) {
 	})
 }
 
-// ! Unfinished. Requires work with TrueRatio(s);
-/**
- * Runs the Farey Algorithm with given ratios and number of iterations. Returns the resulting array of ratios.
- * @param {Ratio} startRatio Ratio, from which the Farey Algorithm should start.
- * @param {Ratio} endRatio Ratio, that is used as an upper bound in the algorithm.
- * @param {number} iterations Number of iterations (integer).
- */
-export function Farey(startRatio, endRatio, iterations = 0) {
-	// ? Add a 'fareyAddition' general function?
-	function formNewRatio(first, second) {
-		return new Ratio(
-			first.numerator + second.numerator,
-			first.denomenator + second.denomenator
-		)
-	}
-	const gotten = [[startRatio, endRatio]]
-	for (let i = 0; i < iterations; i++) {
-		gotten.push([])
-		for (let j = 0; j < gotten[i].length; j++) {
-			gotten[i + 1].push(gotten[i][j])
-			if (j !== gotten[i].length - 1)
-				gotten[i + 1].push(formNewRatio(gotten[i][j], gotten[i][j + 1]))
-		}
-	}
-	return gotten
-}
-
-// ! Finish! [wanted: heap!, radix!];
-// ! Check that the algorithms are implemented correctly and efficiently, when testing... [in particular, pay attention to the memory-efficiency... - get rid of undue copying];
-// TODO: pray make sure that the usage of 'this.predicate' (or, to be more precise, the 'arguments')
+// TODO: pray make sure of the singular order of arguments throughout the library usage of 'this.predicate'; Generally, ensure such small things and standards;
 // ^ About Radix Sort Implementation;
 // 	* For one to be capable of arbitrary objects sorting using it, necessity arises for the implementation of a 'toAlphabet' function;
 // 		% And while one __could__ leave it to the user to finish... One could also do it by oneself in the following fashion:
@@ -305,7 +276,7 @@ export const sort = {
 }
 
 // ! Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
-// ? Does one want the finite versions for those? 
+// ? Does one want the finite versions for those?
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
@@ -442,7 +413,7 @@ export const search = {
 		}
 	}),
 	// ! Issue [potential]: the 'defaults' often are in need of having the ability to do things like 'default.x = this.template.genarrclass.class()'; However, the JS object notation does not, as of self permit that;
-	// ? how about defaults orders? Conditional defaults?	
+	// ? how about defaults orders? Conditional defaults?
 	// ? Generalize? (can be generalized to an 'n-ary' search); Consider...
 	binary: TEMPLATE({
 		defaults: {
@@ -1096,6 +1067,41 @@ export const array = {
 			return native.array
 				.intersections(this.template)
 				.function(args.map(this.template.f))
+		}
+	})
+}
+
+export const number = {
+	farey: TEMPLATE({
+		defaults: {},
+		function: function (
+			startRatio = this.template.tratio.class(),
+			endRatio = this.template.tratio.class(),
+			iterations = this.template.icclass.class()
+		) {
+			const gotten = this.template.genarrclass.fromArray([
+				this.template.genarrclass.fromArray([startRatio, endRatio])
+			])
+			for (let i = this.template.icclass.class(); i < iterations; i = i.next()) {
+				gotten.pushback(this.template.genarrclass.fromArray([]))
+				for (
+					let j = this.template.icclass.class();
+					!j.compare(gotten.read(i).length().get());
+					j = j.next()
+				) {
+					gotten.read(i.next()).pushback(gotten.read(i).read(j))
+					if (!j.compare(gotten.read(i).length().get().previous()))
+						gotten
+							.read(i.next())
+							.push(
+								gotten
+									.read(i)
+									.read(j)
+									.naivesum(gotten.read(i).read(j.next()))
+							)
+				}
+			}
+			return gotten
 		}
 	})
 }

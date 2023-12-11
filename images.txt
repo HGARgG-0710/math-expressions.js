@@ -102,6 +102,6 @@ One could add signs for this sort of stuff, as well as dot-positions;
 The thing itself would be defined as an infinite (that being, unlimited) GeneralArray instance, with addition, multiplication, inverses [both additive and multiplicative] implemented on it; 
 Indexes used would [could, that being] also be unlimited; 
 
-// ! The only Problem with this is such: the defined sequences always have the maximum being one defined by the function (i) => (n-1), where 'n' is the number of symbols used for the representation of the sequences...
+// Note: the defined sequences always have the maximum being one defined by the function (i) => (n-1), where 'n' is the number of symbols used for the representation of the sequences...
 
 [for example, for decimal with symbols 0123456789, it'd be: 999999999999....]
