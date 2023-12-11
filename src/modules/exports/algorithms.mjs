@@ -1083,7 +1083,7 @@ export const number = {
 				this.template.genarrclass.fromArray([startRatio, endRatio])
 			])
 			for (let i = this.template.icclass.class(); i < iterations; i = i.next()) {
-				gotten.pushback(this.template.genarrclass.fromArray([]))
+				gotten.pushback(this.template.genarrclass.static.empty())
 				for (
 					let j = this.template.icclass.class();
 					!j.compare(gotten.read(i).length().get());

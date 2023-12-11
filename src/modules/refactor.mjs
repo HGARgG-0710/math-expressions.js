@@ -1,5 +1,5 @@
 // ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
-// ? Later - generalize and tidy all this stuff up? 
+// ? Later - generalize and tidy all this stuff up?
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
@@ -44,9 +44,16 @@ export const classes = {
 			this.this.this.class.template.unfound
 		)
 	},
-	copy: function (f = ID) {
+	copy: function (
+		f = ID,
+		isclass = false,
+		template = isclass
+			? this.this.this.this.class
+			: this.this.this.this.class.template,
+		leftovers = {}
+	) {
 		const empty = this.this.this.this.class.class()
-		empty.genarr = this.this.this.genarr.copy(f)
+		empty.genarr = this.this.this.genarr.copy(f, isclass, template, leftovers)
 		return empty
 	},
 	peek: function () {

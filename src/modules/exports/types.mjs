@@ -1529,8 +1529,15 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 					}
 				}
 			},
-			copied(method, _arguments = [], f = ID) {
-				const acopy = this.copy(f)
+			copied(
+				method,
+				_arguments = [],
+				f = id,
+				template = this.this.this.this.class.template.parentclass.template,
+				isclass = false,
+				leftovers = {}
+			) {
+				const acopy = this.copy(f, template, isclass, leftovers)
 				if (
 					acopy.this.hasOwnProperty(method) &&
 					typeof acopy[method] === "function"
@@ -2240,19 +2247,118 @@ export function TreeNode(parentclass) {
 			}
 		},
 		methods: {
-			// * Already has all the methods of GeneralArray, so - the things to implement are:
-			// % 1. getall() - recursively walk the tree, gaining any '.node' values, then return the GeneralArray of all of them;
-			// % 2. getpart(a, b) - 'this.this.this.this.class(this.this.this.children.copied("slice", [a, b]), undefined).getall().slice([this.this.this.children.init().next()])'; Gets the part of the tree (based off the children's nodes);
-			// % 3. firstIndex(x) - recursively applies the 'firstIndex' upon each and every '.children' element of each and every single one Tree-child of the Tree in question; Returns the GeneralArray of indexes; (note: the 'firstIndex' is given a special comparison that checks for the '.node');
-			// % 4. copy();
-			// % 5. copied();
-			// % 6. insert(multindex, elem) - inserts the new element at the given GeneralArray of indexes;
-			// % 7. prune(multindex) - deletes the node at the desired multindex;
-			// % 8. delval(v) - works like '.delval' in '.children', but uses the '.node' (just use a special 'comparison' for it and that'll be all...);
-			// % 9. findRoots(value) - recursively finds the roots for every node value 'value', then returns them in a GeneralArray;
-			// % 10. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
-			// % 11. pushback() - same as 'GeneralArray.pushback', but creates a 'TreeNode' child instead;
-			// % 12. pushfront();
+			getall() {
+				const f = this.this.this.this.class.template.parentclass.static.fromArray(
+					[this.this.this.node]
+				)
+				for (const x of this.this.this.children) f.concat(x.getall())
+				return f
+			},
+			getpart(beg, end) {
+				return this.this.this.this
+					.class(this.this.this.children.copied("slice", [beg, end]), undefined)
+					.getall()
+					.slice([this.this.this.children.init().next()])
+			},
+			// ! Generalize these kinds of methods [both for the 'TreeNode' and the 'macros.mjs'];
+			pushback(v) {
+				this.this.this.children.pushback(
+					this.this.this.this.class(undefined, v, this)
+				)
+				return this
+			},
+			pushfront(v) {
+				this.this.this.children.pushfront(
+					this.this.this.this.class(undefined, v, this)
+				)
+				return this
+			},
+			firstIndex(
+				v,
+				prarr = this.this.this.this.class.template.parentclass.static.fromArray()
+			) {
+				const currarr = prarr
+				for (const x of this.this.this.children.keys()) {
+					if (
+						// ! INSTEAD OF THIS THING... Use the 'leftovers' argument (generally): Also, add a separate 'comparison' template field for the GeneralArray [defaults to the 'this.template.icclass.comparison']; There'll be a difference between the comparison used by the array and that of the InfiniteCounter;
+						this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
+							this.this.this.children.read(x).node,
+							v
+						)
+					) {
+						currarr.pushback(x)
+						return currarr
+					}
+					const temp = this.this.this.firstIndex(
+						v,
+						currarr.copied("pushback", [x])
+					)
+					if (temp) {
+						currarr = temp
+						return currarr
+					}
+				}
+				// ! REPLACE with some special value [user-defined];
+				return false
+			},
+			copy(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class.template.parentclass
+					: this.this.this.this.class.template.parentclass.template,
+				leftovers = {}
+			) {
+				// ! Issue - should one copy the 'node' value as well? [One ought at least allow the option...];
+				return this.this.this.this.class(
+					this.this.this.this.children.copy(
+						function (x) {
+							return f(x.node, ...arguments)
+						},
+						isclass,
+						template,
+						leftovers
+					),
+					this.this.this.node,
+					this.this.this.root
+				)
+			},
+			copied(
+				method,
+				_arguments = [],
+				f = id,
+				template = this.this.this.this.class.template.parentclass.template,
+				isclass = false,
+				leftovers = {}
+			) {
+				const c = this.copy(f, template, isclass, leftovers)
+				if (c.hasOwnProperty(method) && typeof c[method] === "function")
+					c[method](..._arguments)
+				return c
+			},
+			map(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class.template.parentclass
+					: this.this.this.this.class.template.parentclass.template,
+				leftovers = {}
+			) {
+				this.this.this = this.copy(f, isclass, template, leftovers)
+				return this
+			}
+			// * Methods list:
+			// % 1. insert(multindex, elem) - inserts the new element at the given GeneralArray of indexes;
+			// % 2. prune(multindex) - deletes the node at the desired multindex;
+			// % 3. delval(v) - works like '.delval' in '.children', but uses the '.node' (just use a special 'comparison' for it and that'll be all...);
+			// % 4. findRoots(value) - recursively finds the roots for every node value 'value', then returns them in a GeneralArray;
+			// % 5. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
+			// % 6. slice(a,b);
+			// % 7. indexesOf(v, halt, haltAfter);
+			// ? 8. [Symbol.iterator]; 
+			// ? 9. keys(); 
+			// ! Note: the 'indexesOf' must work in the fashion that'd allow for the further rewriting of the 'firstIndex' in terms of it;
+			// * Note: the thing must always return/use internally a TreeNode;
 		},
 		recursive: true
 	})
