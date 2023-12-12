@@ -1,16 +1,6 @@
 This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
 
-1 [main]. Generalize the old finite-type methods; 
-
-	1.1. For that, first finish all the work related to the infinite types ('types', 'macros', 'counters' modules and all the related...); 
-
-2 [side]. Code-brushing; Read code as you go along doing other things, make it 'tidier' and more liked; 
-	2.1. Finish all the great amount of 'small' TODOs written all over the source code file; 
-	2.2. Finish the finite methods; Create the stuff that was desired/planned but was not as of yet implemented within the library in question; 
-	2.3. Re-view the older code, fix the leftover stuff from previous versions of the 'v1.0' version of the 'math-expressions.js'; 
-	2.4. Fix the known bugs in advance; Look for them; 
-
-3. DIRECTIONS: project is slowly entering a halting phase of development (again); 
+1. DIRECTIONS: project is slowly entering a halting phase of development (again); 
 	LIST OF CURRENTLY PURSUED TODOS: 
 		[First off - the method of choice; The ones considered presently will all be of finishing/reparing/patching/fixing/generalizing/templatizing nature]
 		1. Finish NumberEquation (based off the old Equation); 	
@@ -48,6 +38,21 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		8. Do the 'sort.radix'; 
 		9. Think on the Graph from the 'algorithms'; 
 		10. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
-		11. Reform the 'numerics' and 'numeric.native'; 
+		11. Reform the 'numerics' and 'numeric.native' [NEEDED FOR NumberEquation DEFAULT PARSING PROCEDURE]; 
 	
-		13. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);
+		12. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);
+	
+2. Side: Testing; 
+	The library's approaching the v1.0 release; 
+	Before it, one desires to first conduct proper (and not like the other times!) testing operations; 
+
+	For this: 
+
+		-1. Do the testing in small pieces of code, rapidly; 
+		0. Before testing a particular method, pray first re-look through its code most carefully and think of the design decisions made in it (namely, whether one was satisfied with them insofar or not...); 
+		1. Write extensive tests for each and every single thing; 
+		2. Test; 
+		3. Upon failure, rewrite and return to 2.; 
+		4. Upon success, go on to the next piece of code (next method); 
+
+	The entire process oughtn't take more than a few days of dedicated work...

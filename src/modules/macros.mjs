@@ -189,11 +189,7 @@ export const EXTENSION = (template = {}) => {
 											args,
 											this[name.classref].template.defaults[a]
 										)
-									// ? Question: does one want the individual treatment of each and every parentclass method in regard of whether they should be bound to
-									// ! PROBLEM [1]: with 'recursive' classes and the way that '.bind' works for them - the separate '.bind' must be implemented for these kinds of methods, seemingly... [namely], one must have the thing attributed to the right part of it... - not the '{classref: ..., selfname: ...}' part, but the '.selfname: {...}' part...;
-									// ! PROBLEM [2]: with the referencing of the 'recursive' class properties, namely the fact that the '[...]' operator doesn't universally work in the desired fashion with the properties of the thing...
-									// ^ IDEA [for a solution]: implement the '.get(...)' method for the classes objects [namely, in the { classref: ..., selfname?: ... } part], which'd resolve this uncertainty [for non-recursive classes would return a thing as-is, whereas for the recursive ones - it'd do the '[.selfname][x]' thing...];
-									// * For this thing to work properly, the '.get' method must be present and used in all the CLASSes and macros related to CLASSes;
+									// ! This is not general. Reconsider deeply. First - should be ability to return arbitrary 'this'-bound expression (including 'this' itself); Second - think of whether this does the job for recursive classes as well [test, in other words...]; Third - look through the code and consider some powerful generalization cases which would be desired by one's code...
 									return this[
 										this[name.classref].template.names[name.index]
 									][a](...args)

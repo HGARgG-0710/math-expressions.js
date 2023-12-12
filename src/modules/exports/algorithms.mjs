@@ -6,11 +6,9 @@
 
 // * List of new abstract types interfaces to be implemented:
 // ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
-// 	% 1. Heap;
-// * DECISION: This stays in 'algorithms';
-// 	% 2. Graph?
-// * Decision: part of 'algorithms';
-//  % 3. N-ary tree (generalization of Binary Tree);
+// 	% 1. Heap <- types.TreeNode; 
+// 	% 2. Graph; 
+//  % 3. NTreeNode <- types.TreeNode; 
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
 // 	? 4. Prioritee queue? (generalized Qeueu);
 

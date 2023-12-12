@@ -226,13 +226,11 @@ export const InfiniteCounter = (() => {
 	})
 })()
 
-// TODO: Current list of methods to add to GeneralArray:
+// TODO: Add to GeneralArray (methods):
 // % 	1. split(separator); - GeneralArray of GeneralArrays; [here - separator is an arbitrary object]
 // % 	2. splice(index, times); Same as Array.splice();
 // % 	3. spliceMult(indexes, ntimes); repeated spliceMult [both args are arrays...];
 // % 	4. splitlen(length); split the array onto subarrays of given length 'length'; If not possible to factor in such a way as to have them all being precisely 'length', then the last one is made shorter...;
-// ? Question: about the 'move' methods... Should all the other datatypes implement the interfaces for their versions?
-// * Current decision [not full]: undeteremined, in later versions one may add them; Presently - not, nor will the '.move' methods will ever be deleted;
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
 	const sh1 = (_this, leftovers) =>
@@ -2067,16 +2065,7 @@ export function TypedArray(template = {}) {
 	return C
 }
 
-// ^ CONCLUSION: the NumberEquation requires a more general construct to be implemented in the first place to be operable within the chosen path of development.
-// * One ought to implement the EquationParser, which would be a very configurable function, purpose of which would be to interpret UnlimitedString(s), then
-// 	return the Expression executable via the 'Expression' API (or fullExp function);
-// % The UnlimitedString wihtin the question is governed by the EquationForm object class
-// ! PRAY DEFINE IT... [Generally, templated, so that the user is able to make their own forms];
-// * Tasks list before continuing with the NumberEquation:
-// 		1. Finish (fix) the fullExp [AND FIND IT ITS OWN SPACE...];
-// 		2. Finish the UnlimitedString implementation;
-// 		3. Genereralize the '.static.ParseEquation' to a user-defined function;
-
+// ! Genereralize the '.static.ParseEquation' to a user-defined function (note: after having completed the appropriate npm-module for creating parsers, refactor using it...), then finish this (use the new version of 'expressions' and the UnlimitedString);
 export function NumberEquation(template = {}) {
 	const X = {
 		template: {
@@ -2235,7 +2224,8 @@ export function TreeNode(parentclass) {
 		defaults: {
 			parentclass: parentclass,
 			names: ["children"],
-			defaultnode: undefined
+			defaultnode: undefined,
+			unfound: undefined
 		},
 		properties: {
 			// ! Generalize these functions/make aliases [ID_n, or some such... - returns the n'th arguments value as-is];
@@ -2247,11 +2237,15 @@ export function TreeNode(parentclass) {
 			}
 		},
 		methods: {
-			getall() {
+			getall(nodes = true) {
+				const transform = nodes ? (x) => x.node : ID
 				const f = this.this.this.this.class.template.parentclass.static.fromArray(
-					[this.this.this.node]
+					[transform(this.this.this)]
 				)
-				for (const x of this.this.this.children) f.concat(x.getall())
+				for (const x of this.this.this.children) {
+					f.pushback(transform(x))
+					f.concat(x.getall(nodes))
+				}
 				return f
 			},
 			getpart(beg, end) {
@@ -2260,7 +2254,7 @@ export function TreeNode(parentclass) {
 					.getall()
 					.slice([this.this.this.children.init().next()])
 			},
-			// ! Generalize these kinds of methods [both for the 'TreeNode' and the 'macros.mjs'];
+			// ! Generalize these kinds of methods [both for the 'TreeNode' and the CLASSes in 'macros.mjs'];
 			pushback(v) {
 				this.this.this.children.pushback(
 					this.this.this.this.class(undefined, v, this)
@@ -2293,13 +2287,12 @@ export function TreeNode(parentclass) {
 						v,
 						currarr.copied("pushback", [x])
 					)
-					if (temp) {
+					if (temp !== this.this.this.this.class.template.unfound) {
 						currarr = temp
 						return currarr
 					}
 				}
-				// ! REPLACE with some special value [user-defined];
-				return false
+				return this.this.this.this.class.template.unfound
 			},
 			copy(
 				f = ID,
@@ -2346,25 +2339,70 @@ export function TreeNode(parentclass) {
 			) {
 				this.this.this = this.copy(f, isclass, template, leftovers)
 				return this
+			},
+			insert(multindex, v) {
+				if (
+					multindex.length().get().equal(this.this.this.children.init().next())
+				) {
+					this.this.this.children.insert(
+						multindex.read(),
+						this.this.this.this.class.class(undefined, v, this)
+					)
+					return this
+				}
+				this.this.this.children
+					.read(multindex.read())
+					.insert(multindex.slice(multindex.init().next()), v)
+				return this
+			},
+			delval(v, leftovers = {}) {
+				return this.this.this.children.delval(v, {
+					comparison: (x, y) => leftovers.comparison(x.node, y)
+				})
+			},
+			prune(multindex) {
+				if (
+					multindex.length().get().equal(this.this.this.children.init().next())
+				) {
+					this.this.this.children.delete(multindex.read())
+					return this
+				}
+				this.this.this.children
+					.read(multindex.read())
+					.prune(multindex.slice(multindex.init().next()), v)
+				return this
+			},
+			*[Symbol.iterator]() {
+				for (const x of this.keys()) yield this.read(x)
+			},
+			*keys() {
+				for (const x of this.getall().keys()) yield x
+			},
+			// This one's especially useful for things like NTreeNode;
+			read(index = this.this.this.children.init(), multi = false, nodes = true) {
+				if (!multi) return this.getall(nodes).read(index)
+				const r = this.this.this.children.read(index.read())
+				if (index.length().get().compare(index.init().next().next()))
+					return r.read(index.slice(index.init().next()))
+				return r
+			},
+			// ! CONFLICT OF INTEREST [general]: this is a very beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
+			findRoots(v) {
+				return this.indexesOf(v).map((x) => this.read(x).root)
 			}
 			// * Methods list:
-			// % 1. insert(multindex, elem) - inserts the new element at the given GeneralArray of indexes;
-			// % 2. prune(multindex) - deletes the node at the desired multindex;
-			// % 3. delval(v) - works like '.delval' in '.children', but uses the '.node' (just use a special 'comparison' for it and that'll be all...);
-			// % 4. findRoots(value) - recursively finds the roots for every node value 'value', then returns them in a GeneralArray;
-			// % 5. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
-			// % 6. slice(a,b);
-			// % 7. indexesOf(v, halt, haltAfter);
-			// ? 8. [Symbol.iterator]; 
-			// ? 9. keys(); 
+			// % 1. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
+			// % 2. indexesOf(v, halt, haltAfter);
+			// % 3. write(index, value);
 			// ! Note: the 'indexesOf' must work in the fashion that'd allow for the further rewriting of the 'firstIndex' in terms of it;
 			// * Note: the thing must always return/use internally a TreeNode;
+			// ? Suggestion: write a 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes?
 		},
 		recursive: true
 	})
 }
 
-// ? Question: generalize [replace with a GeneralArray-based 'UnlimitedSet']?
+// ? Question: the UnlimitedSet has been decided to be a part of the library's 'types' module. What to do with this? [Planned for removal/re-implementation currently...]; 
 export class IterableSet {
 	curr() {
 		return Array.from(this.elements.values())[this.currindex]
@@ -2396,4 +2434,16 @@ export class IterableSet {
 		this.currindex = 0
 		this.elements = elems
 	}
+}
+
+export function UnlimitedSet(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass
+		}, 
+		methods: {
+			// ! Make a methods list...
+		}, 
+		recursive: true
+	})
 }
