@@ -2215,9 +2215,60 @@ export function NumberEquation(template = {}) {
 }
 
 // TODO: implement those three [they are *truly* infinite, given by a finite user-expression...]
-export function InfiniteString() {}
-export function InfiniteArray() {}
-export function InfiniteNumber() {}
+export const InfiniteArray = CLASS({
+	defaults: {
+		index: ID
+	},
+	properties: {
+		f: function (arrfunc = this.template.index) {
+			return arrfunc
+		}
+	},
+	methods: {
+		// * Methods list:
+		// % 1. read(i) - returns f(i);
+		// % 2. index(i) - alias of 'read';
+		// % 3. write(i, v) - changes the 'f' to the new function, for which all the values are the same except for 'i';
+		// % 4. copy() - copies the InfiniteArray;
+		// % 5. subarr(predicate) - changes the current array to the one that is defined by the 'predicate'; Transformation upon 'f' - to get the item, one gets to the 'i'th' element of the "f"'s values that is in possession of 'predicate', then return it...;
+		// % 6. copied(method) - same as GeneralArray;
+		// % 7. map(f) - replaces the 'this.f' with '(x) => f(this.f(x))';
+		// % 8. slice(a, b) - returns a finite subset of the InfiniteArray;
+	},
+	recursive: false
+})
+// ? Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
+export function InfiniteString(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass, 
+			names: ["infarr"]
+		},
+		methods: {
+			// * Methods list: 
+			// % 0. 'toextend: - same as InfiniteArray, BUT, with either a '.toString()[0]' or 'UnlimitedString' wrappers  for each and every element of 'f';'
+			// 		! Do work on the EXTENSION for that, pray... [to allow wrappers and more complex structures for inherited methods...]; 
+		},
+		recursive: false
+	})
+}
+// ! On this, base the Real - the unlimited-precision decimal; [Pray do some derivation work on the matter of infinite digit sums formulas - may come in handy later...];
+export function InfiniteNumber(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass, 
+			names: ["infarr"]
+		},
+		methods: {
+			// * Methods list: 
+			// % 1. add (in): changes the 'this.f' with '(x) => this.f(x).add(...)'
+			// 		! ... IS WHERE THE DERIVATION OF THE INFINITE-DECIMAL SUMS GO...!
+			// ! 2. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS... 
+			// % 3. multiply(in): THINK ABOUT THIS ONE ESPECIALLY INTENTLY...
+		},
+		recursive: false
+	})
+}
 
 export function TreeNode(parentclass) {
 	return EXTENSION({
@@ -2389,6 +2440,24 @@ export function TreeNode(parentclass) {
 			// ! CONFLICT OF INTEREST [general]: this is a very beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
 			findRoots(v) {
 				return this.indexesOf(v).map((x) => this.read(x).root)
+			},
+			depth() {
+				// ! use this one with a somewhat greater frequency;
+				if (this.this.this.children.isEmpty())
+					return this.this.this.children.init()
+				// ! problem here is the default 'uevaluate' table, which doesn't currently have any predefined operations on the infinite Counters (add them, pray...);
+				return this.this.this.children
+					.init()
+					.next()
+					.jumpForward(
+						expressions.uevaluate(
+							expressions.Expression(
+								"jumpForward",
+								this.this.this.this.class.parentclass.static.empty(),
+								this.this.this.children.copy((x) => x.depth())
+							)
+						)
+					)
 			}
 			// * Methods list:
 			// % 1. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
@@ -2402,7 +2471,7 @@ export function TreeNode(parentclass) {
 	})
 }
 
-// ? Question: the UnlimitedSet has been decided to be a part of the library's 'types' module. What to do with this? [Planned for removal/re-implementation currently...]; 
+// ? Question: the UnlimitedSet has been decided to be a part of the library's 'types' module. What to do with this? [Planned for removal/re-implementation currently...];
 export class IterableSet {
 	curr() {
 		return Array.from(this.elements.values())[this.currindex]
@@ -2440,10 +2509,23 @@ export function UnlimitedSet(parentclass) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass
-		}, 
+		},
 		methods: {
-			// ! Make a methods list...
-		}, 
-		recursive: true
+			// * Architecture: GeneralArray-based (has an underlying GeneralArray, on which the whole thing is based - to ensure uniqueness, one checks for it);
+			// * Methods list:
+			// % 0. The properties list! [Hence, the constructor...];
+			// % 1. includes(el); [the set's 'in' relation reversed];
+			// % 2. ni(el): [alias for 'includes'];
+			// % 3. add(el); [adds the element to the set if it doesn't already belong there, else does nothing];
+			// % 4. delete(el); [deletes an element from the set];
+			// % 5. copy(f, ...) - copies the set;
+			// % 6. copied(f, method, ...) - same as GeneralArray;
+		},
+		static: {
+			// % 1. fromGenArray() - returns the value of a set for a given GeneralArray;
+		},
+		recursive: true,
+		// ? Consider whether this remains empty, or some things get to be added here after all...
+		extends: []
 	})
 }
