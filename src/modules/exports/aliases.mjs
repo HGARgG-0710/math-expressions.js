@@ -249,3 +249,13 @@ export const negind = (x, arr) => (x < 0 ? arr.length + x : x)
 export const nneg = (x) => (x < 0 ? -x : x)
 
 export const next = (x) => x.next()
+
+// ! Generalize this to a context, pray...; 
+export const adddefaults =
+	(f) =>
+	(defaults = []) => {
+		return (...args) => {
+			for (const x in defaults) if (!(x in args)) args[x] = defaults[x]
+			return f(...args)
+		}
+	}

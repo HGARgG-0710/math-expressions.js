@@ -2225,15 +2225,56 @@ export const InfiniteArray = CLASS({
 		}
 	},
 	methods: {
-		// * Methods list:
-		// % 1. read(i) - returns f(i);
-		// % 2. index(i) - alias of 'read';
-		// % 3. write(i, v) - changes the 'f' to the new function, for which all the values are the same except for 'i';
-		// % 4. copy() - copies the InfiniteArray;
-		// % 5. subarr(predicate) - changes the current array to the one that is defined by the 'predicate'; Transformation upon 'f' - to get the item, one gets to the 'i'th' element of the "f"'s values that is in possession of 'predicate', then return it...;
-		// % 6. copied(method) - same as GeneralArray;
-		// % 7. map(f) - replaces the 'this.f' with '(x) => f(this.f(x))';
-		// % 8. slice(a, b) - returns a finite subset of the InfiniteArray;
+		read: function (i = this.class.template.icclass.class()) {
+			return this.f(i)
+		},
+		index: function (i) {
+			return this.read(i)
+		},
+		write(i, v) {
+			const x = this.f
+			this.f = function (I) {
+				if (I.equal(i)) return v
+				return x(I)
+			}
+			return this
+		},
+		subarr(predicate = aliases.TRUTH) {
+			x = this.f
+			this.f = function (i = this.class.template.icclass.class()) {
+				let subind = this.class.template.icclass.class()
+				let fi = this.class.template.icclass.class()
+				while (!subind.equal(i)) {
+					if (predicate(x(i))) subind = subind.next()
+					fi = fi.next()
+				}
+				return this.f(fi)
+			}
+			return this
+		},
+		copy() {
+			return this.class.class(this.f)
+		},
+		copied(method) {
+			const c = this.copy()
+			return c.hasOwnProperty(method) && typeof c[method] === "function"
+				? c[method]()
+				: c
+		},
+		map(g) {
+			const x = this.f
+			this.f = function (i) {
+				return g(x(i))
+			}
+			return this
+		},
+		slice(inind, enind) {
+			const genarr = this.class.template.genarrclass.static.empty()
+			for (let i = inind; !i.compare(enind); i = i.next())
+				genarr.pushback(this.f(i))
+			return genarr
+		}
+		// ? Any more things to add?
 	},
 	recursive: false
 })
@@ -2241,13 +2282,13 @@ export const InfiniteArray = CLASS({
 export function InfiniteString(parentclass) {
 	return EXTENSION({
 		defaults: {
-			parentclass: parentclass, 
+			parentclass: parentclass,
 			names: ["infarr"]
 		},
 		methods: {
-			// * Methods list: 
+			// * Methods list:
 			// % 0. 'toextend: - same as InfiniteArray, BUT, with either a '.toString()[0]' or 'UnlimitedString' wrappers  for each and every element of 'f';'
-			// 		! Do work on the EXTENSION for that, pray... [to allow wrappers and more complex structures for inherited methods...]; 
+			// 		! Do work on the EXTENSION for that, pray... [to allow wrappers and more complex structures for inherited methods...];
 		},
 		recursive: false
 	})
@@ -2256,14 +2297,14 @@ export function InfiniteString(parentclass) {
 export function InfiniteNumber(parentclass) {
 	return EXTENSION({
 		defaults: {
-			parentclass: parentclass, 
+			parentclass: parentclass,
 			names: ["infarr"]
 		},
 		methods: {
-			// * Methods list: 
+			// * Methods list:
 			// % 1. add (in): changes the 'this.f' with '(x) => this.f(x).add(...)'
 			// 		! ... IS WHERE THE DERIVATION OF THE INFINITE-DECIMAL SUMS GO...!
-			// ! 2. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS... 
+			// ! 2. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS...
 			// % 3. multiply(in): THINK ABOUT THIS ONE ESPECIALLY INTENTLY...
 		},
 		recursive: false
@@ -2506,26 +2547,61 @@ export class IterableSet {
 }
 
 export function UnlimitedSet(parentclass) {
+	// ! Put outside the "UnlimitedSet"'s scope.
+	function ensureUnique(genarr = this.template.genarrclass.static.empty()) {
+		const final = genarr.empty()
+		for (const x of genarr) if (!final.includes(x)) final.pushback(x)
+		return final
+	}
 	return EXTENSION({
 		defaults: {
-			parentclass: parentclass
+			parentclass: parentclass,
+			names: ["genarr"],
+			defaults: {
+				inter: ensureUnique
+			}
 		},
 		methods: {
-			// * Architecture: GeneralArray-based (has an underlying GeneralArray, on which the whole thing is based - to ensure uniqueness, one checks for it);
-			// * Methods list:
-			// % 0. The properties list! [Hence, the constructor...];
-			// % 1. includes(el); [the set's 'in' relation reversed];
-			// % 2. ni(el): [alias for 'includes'];
-			// % 3. add(el); [adds the element to the set if it doesn't already belong there, else does nothing];
-			// % 4. delete(el); [deletes an element from the set];
-			// % 5. copy(f, ...) - copies the set;
-			// % 6. copied(f, method, ...) - same as GeneralArray;
-		},
-		static: {
-			// % 1. fromGenArray() - returns the value of a set for a given GeneralArray;
+			ni(el) {
+				return this.includes(el)
+			},
+			add(el) {
+				if (!this.includes(el)) this.this.this.genarr.pushback(el)
+				return this
+			},
+			delete(el) {
+				return this.this.this.genarr.delval(el)
+			},
+			copy(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
+				leftovers = {}
+			) {
+				return this.this.this.this.class.class(
+					this.this.this.genarr.copy(f, isclass, template, leftovers)
+				)
+			},
+			copied(
+				method,
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
+				leftovers = {}
+			) {
+				const c = this.copy(f, isclass, template, leftovers)
+				return c.hasOwnProperty(method) && typeof c[method] === "function"
+					? c[method]()
+					: c
+			}
+			// ? Anything else?
 		},
 		recursive: true,
 		// ? Consider whether this remains empty, or some things get to be added here after all...
-		extends: []
+		toextend: ["includes"]
 	})
 }

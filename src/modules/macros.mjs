@@ -151,7 +151,7 @@ export const EXTENSION = (template = {}) => {
 					let i = 0
 					for (const y of this.template.names)
 						X[y] = this.template.parentclass.class(
-							this.template.defaults.inter(...args, i++)
+							this.template.defaults.inter.bind(this)(...args, i++)
 						)
 					return X
 				},
