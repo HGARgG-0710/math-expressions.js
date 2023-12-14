@@ -17,7 +17,8 @@ export const classes = {
 	},
 	suchthat: function (predicate = aliases.TRUTH) {
 		const subset = this.this.this.this.class.class()
-		for (const element of this) if (predicate(element)) subset.pushback(element)
+		for (const key of this.keys())
+			if (predicate(this.read(key), key, this, subset)) subset.pushback(key)
 		this.this.this = subset
 		return this
 	},

@@ -1,7 +1,7 @@
-// * This module provides an export structure-interface for the user to be able to access different parts of the API in accordance with their theme [also - to be able to consider the package in its generality]; 
+// * This module provides an export structure-interface for the user to be able to access different parts of the API in accordance with their theme [also - to be able to consider the package in its generality];
 
 // ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
-// * The things would be decompiled from an AST; 
+// * The things would be decompiled from an AST;
 // ? Out of scope of the library; Do it sometime else, somewhere else?
 
 import { ID, NOMODULE } from "./macros.mjs"
@@ -15,6 +15,7 @@ import * as multidim from "./exports/multidim.mjs"
 import * as native from "./exports/native.mjs"
 import * as numeric from "./exports/numeric.mjs"
 import * as orders from "./exports/orders.mjs"
+import * as predicates from "./exports/predicates.mjs"
 import * as printing from "./exports/printing.mjs"
 import * as statistics from "./exports/statistics.mjs"
 import * as structure from "./exports/structure.mjs"
@@ -25,7 +26,7 @@ import * as variables from "./exports/variables.mjs"
 
 export function instance(transformation = ID) {
 	// * Module instance Export
-	return transformation({	
+	return transformation({
 		algorithms: NOMODULE(algorithms),
 		aliases: NOMODULE(aliases),
 		comparisons: NOMODULE(comparisons),
@@ -35,6 +36,7 @@ export function instance(transformation = ID) {
 		native: NOMODULE(native),
 		numeric: NOMODULE(numeric),
 		orders: NOMODULE(orders),
+		predicates: NOMODULE(predicates), 
 		printing: NOMODULE(printing),
 		statistics: NOMODULE(statistics),
 		structure: NOMODULE(structure),

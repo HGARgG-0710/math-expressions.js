@@ -72,7 +72,7 @@ A brief repository organization guide:
         -   transforms.mjs - module containing some transforms, that can be used with the 'instance' function's structure, so as to ease the user's experience in its structure manipulation
     -   test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
 -   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library, there is an individual test script (the examples.mjs)
--   README.mjs - this file
+-   README.md - this file
 -   LICENSE - the MIT license
 
 For examples of library's usage, one may want to see the 'tests' directory or the documentation.

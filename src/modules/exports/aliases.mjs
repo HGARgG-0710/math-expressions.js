@@ -237,13 +237,6 @@ export const FALLACY = native.function._concat(false)
 export const F = FALLACY
 export const VOID = native.function.void
 
-// ! use these four a lot...
-// ! use the aliases even in the aliases definitions... Refactor very greatly indeed...
-export const lesser = (a, b) => !a.compare(b)
-export const greater = (a, b) => !b.compare(a)
-export const lesseroe = (a, b) => b.compare(a)
-export const greateroe = (a, b) => a.compare(b)
-
 export const cdieach = (x, i) => [x[i]]
 export const negind = (x, arr) => (x < 0 ? arr.length + x : x)
 export const nneg = (x) => (x < 0 ? -x : x)
