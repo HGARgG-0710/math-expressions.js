@@ -274,7 +274,7 @@ export const sort = {
 }
 
 // ! Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
-// ? Does one want the finite versions for those?
+// ? Does one want the finite versions for those? [Current answer: nay]
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },

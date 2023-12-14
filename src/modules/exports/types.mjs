@@ -9,7 +9,7 @@ import * as native from "./native.mjs"
 import * as predicates from "./predicates.mjs"
 
 import { general, classes } from "../refactor.mjs"
-import { CLASS, TEMPLATE, EXTENSION, DEOBJECT } from "../macros.mjs"
+import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
 // TODO [general]: create a proper '.copy' method for each and every class...
@@ -804,9 +804,12 @@ export const GeneralArray = (() => {
 					})
 				},
 				sort(predicate) {
-					return (this.this.this = algorithms.Sort.merge({
-						predicate: predicate
-					}).function(this.this.this))
+					this.this.this = algorithms.sort
+						.merge({
+							predicate: predicate
+						})
+						.function(this.this.this)
+					return this
 				},
 				isSorted(predicate, leftovers = {}) {
 					sh1(this, leftovers)
@@ -844,58 +847,38 @@ export const GeneralArray = (() => {
 						.join(separator)
 				}
 			}
-			// ! Generalize this construction... [appears several times throughout the library; add to 'refactor'...];
-			for (const x of ["next", "previous"])
-				X[x] = function () {
-					return (this.this.this.currindex = this.this.this.currindex[x]())
-				}
-			for (const x of ["front", "back"])
-				X[x] = function (template = {}) {
-					const origin =
-						this.this.this.this.class.static[`push${x}Loop`](template)
-					const T = {
-						template: {
-							target: this,
-							...origin.template
+			// ? Destructurize this further?
+			OFDKL(
+				X,
+				(name) =>
+					function () {
+						return (this.this.this.currindex =
+							this.this.this.currindex[name]())
+					},
+				["next", "previous"]
+			)
+			OFDKL(
+				X,
+				(name) =>
+					function (template = {}) {
+						const origin =
+							this.this.this.this.class.static[`push${name}Loop`](template)
+						const T = {
+							template: {
+								target: this,
+								...origin.template
+							}
 						}
-					}
-					T.function = origin.function.bind(T)
-					return T
-				}
+						T.function = origin.function.bind(T)
+						return T
+					},
+				["front", "back"]
+			)
 			return X
 		})(),
 		recursive: true
 	})
 })()
-
-// ! Highly dubious. Planned for removal or harsh rethinking...
-export function MultiInfiniteCounter(template = {}) {
-	// ? Question: does one really want just a SINGLE ONE comparison? One does have multiple generators...
-	// * Perhaps, one would have multiple comparisons assigned to each and every one index of the array in question? [But, that'd require using the same manner of array-templates for them...]
-	// ! Pray think and decide...
-	return {
-		template: {
-			comparison: valueCompre,
-			...template
-		},
-		class: function (previous, index, generators = this.template.generators) {
-			return {
-				class: this,
-				generators: generators,
-				value: previous
-					? this.generator(index)(previous.value)
-					: this.generator(index)(),
-				generator(index) {
-					return this.generators.read(index)
-				},
-				next(index) {
-					return this.generator(index)(this)
-				}
-				// ! Think about this...
-			}
-		}
-	}
-}
 
 // ? What about the submodules of modules? [shall they stay as-is?];
 export const arrays = {
@@ -1315,7 +1298,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			write(index, value) {
 				general.fix(
 					[this.this.this.genarr, this.this.this],
-					algorithms.number.native.generate(2).map(aliases._const("currindex")),
+					algorithms.array.native.generate(2).map(aliases._const("currindex")),
 					() => {
 						this.go(index, aliases._const(true))
 						this.currelem().set(value)
@@ -1953,156 +1936,170 @@ export function TypedArray(template = {}) {
 	return C
 }
 
+// * Architecture plan: 
+// 		1. Recieve input in the UnlimitedString desired; 
+// 		2. Parse it (using the user-defined function) to obtain the Expression; 
+// 		3. Using the 'uevaluate()', approximate the Expression's values (using the user-defined table of operators); 
+// 	  * 4. Add methods for ANALYSIS of the result of 'approximation'
+// ^ Idea for a new name: From 'NumberEquation', it becomes 'ApproximableEquality', because the purpose of its is to provide user with means of approximation of solutions (assuming continuity of operators given on their respective domains, that is...)
+export const ApproximableEquality = CLASS({
+	defaults: {},
+	properties: {}, 
+	methods: {
+		// * Methods list: 
+	},
+	static: {}, 
+	recursive: true
+})
 // ! Genereralize the '.static.ParseEquation' to a user-defined function (note: after having completed the appropriate npm-module for creating parsers, refactor using it...), then finish this (use the new version of 'expressions' and the UnlimitedString);
-export function NumberEquation(template = {}) {
-	const X = {
-		template: {
-			operators: variables.defaultAlphabet.get,
-			// ! make a default variable...
-			brackets: [
-				["(", ")"],
-				["[", "]"],
-				["{", "}"]
-			],
-			// ! make a default variable...
-			// ! generalize, make more user- and format- friendly...
-			separator: ",",
-			...template
-		},
-		static: {
-			/**
-			 * A static method for parsing an equation with various mappings applied.
-			 * @param {string} equationLine A line, containing an equation.
-			 * @param {VarMapping} mappings A mapping of variables to their values.
-			 * @param {string[]} variables Additional variable names.
-			 */
-			ParseEquation(eqline = this.this.template.ustrclass.template.empty) {
-				const brackets = this.this.template.brackets
-				const ops = Object.keys(this.this.template.operators)
-				const separator = this.this.template.separator
+// export function NumberEquation(template = {}) {
+// 	const X = {
+// 		template: {
+// 			operators: variables.defaultAlphabet.get,
+// 			// ! make a default variable...
+// 			brackets: [
+// 				["(", ")"],
+// 				["[", "]"],
+// 				["{", "}"]
+// 			],
+// 			// ! make a default variable...
+// 			// ! generalize, make more user- and format- friendly...
+// 			separator: ",",
+// 			...template
+// 		},
+// 		static: {
+// 			/**
+// 			 * A static method for parsing an equation with various mappings applied.
+// 			 * @param {string} equationLine A line, containing an equation.
+// 			 * @param {VarMapping} mappings A mapping of variables to their values.
+// 			 * @param {string[]} variables Additional variable names.
+// 			 */
+// 			ParseEquation(eqline = this.this.template.ustrclass.template.empty) {
+// 				const brackets = this.this.template.brackets
+// 				const ops = Object.keys(this.this.template.operators)
+// 				const separator = this.this.template.separator
 
-				const result = [
-					this.this.template.genarrclass.static.empty(),
-					this.this.template.genarrclass.static.empty()
-				]
+// 				const result = [
+// 					this.this.template.genarrclass.static.empty(),
+// 					this.this.template.genarrclass.static.empty()
+// 				]
 
-				eqline = aliases.native.string.sreplace(eqline, " ", "")
-				// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
-				eqline = eqline.split("=")
-				// ? QUESTION: enable arbitrary user-defined syntaxes?
+// 				eqline = aliases.native.string.sreplace(eqline, " ", "")
+// 				// TODO: make an alias for the previously intended operation ['partial' str/arr-splitting: 'x = x.split(y); x = [...x.slice(0, t), x.slice(t)];']
+// 				eqline = eqline.split("=")
+// 				// ? QUESTION: enable arbitrary user-defined syntaxes?
 
-				// TODO: redefine the 'looping' method for the UnlimitedString class...
-				// ! Complete the sketch of the parsing method [after tuning the stuff, and so on...];
-				// 		% In particular:
-				// 			1. Make it safer [working even when invalid strings are provided];
-				// 			2. Ensure it working [to each and every small detail see...];
-				// ! Generalize, make the decided parsing method a default, establish the requirements for a user-created parsing method for an equation...;
-				eqline.loop()._full((side) => {
-					while (true) {
-						let i = side.firstIndex(op[0])
-						let co = op[0]
-						let cb = brackets[0]
+// 				// TODO: redefine the 'looping' method for the UnlimitedString class...
+// 				// ! Complete the sketch of the parsing method [after tuning the stuff, and so on...];
+// 				// 		% In particular:
+// 				// 			1. Make it safer [working even when invalid strings are provided];
+// 				// 			2. Ensure it working [to each and every small detail see...];
+// 				// ! Generalize, make the decided parsing method a default, establish the requirements for a user-created parsing method for an equation...;
+// 				eqline.loop()._full((side) => {
+// 					while (true) {
+// 						let i = side.firstIndex(op[0])
+// 						let co = op[0]
+// 						let cb = brackets[0]
 
-						for (const o of ops.slice(1)) {
-							let pi = i
-							i = min([i, side.firstIndex(o)])
-							cb = min([cb[0], side.firstIndex(cb)])
-							if (pi != i) co = o
-						}
+// 						for (const o of ops.slice(1)) {
+// 							let pi = i
+// 							i = min([i, side.firstIndex(o)])
+// 							cb = min([cb[0], side.firstIndex(cb)])
+// 							if (pi != i) co = o
+// 						}
 
-						result[0].pushback(co)
-						// TODO: perform corresponding transformations to the ic-format of the .genarrclass;
-						side = side.slice(co.length)
-						side = side.slice(cb[0].length)
-						side = side.slice(0, side.length - cb[1].length)
-						side = side.split(separator)
+// 						result[0].pushback(co)
+// 						// TODO: perform corresponding transformations to the ic-format of the .genarrclass;
+// 						side = side.slice(co.length)
+// 						side = side.slice(cb[0].length)
+// 						side = side.slice(0, side.length - cb[1].length)
+// 						side = side.split(separator)
 
-						// * Sketch: look for operators symbols, followed by one of the 'brackets' symbols;
-					}
-				})
+// 						// * Sketch: look for operators symbols, followed by one of the 'brackets' symbols;
+// 					}
+// 				})
 
-				return result
-			},
-			// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
-			plug(origparsed, varname, varvalue) {
-				const parsed = [...origparsed]
-				for (const pparsed of parsed)
-					for (let i = 0; i < pparsed.length; i++)
-						if (pparsed[i] === varname)
-							pparsed = aliases.native.string.sreplaceIndex(
-								pparsed,
-								i,
-								varvalue
-							)
-				return parsed
-			}
-		},
-		class: function (equationText = this.this.template.ustrclass.empty, vars = {}) {
-			return {
-				class: this,
-				equation: equationText || this.this.template.ustrclass.empty,
-				variables: vars || {},
-				parse(mappings = this.variables) {
-					return this.class.static.ParseEquation(this.equation, mappings)
-				},
-				/**
-				 * This method searches for the solution of an equation it's invoked onto.
-				 *
-				 * ! WARNING 1 !
-				 *
-				 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
-				 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
-				 * (However, if the root is rational, then it could even be exactly it.)
-				 *
-				 * ! WARNING 2 !
-				 *
-				 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
-				 *
-				 * PARAMETRES
-				 *
-				 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
-				 * @param {string} varname Name of the variable for which search is invoked.
-				 * @param {number} startvalue Value, from which search is invoked.
-				 * @param {number} pathlength The length of the search path.
-				 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
-				 */
-				searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
-					// ? What to do with this now? [The thing has mutiple sides of the equation...];
-					// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
-					// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data];
-					function diffs(mappings, varname, varvalue) {
-						// ! PROBLEM: not thought through well enough;
-						// * Now, the present process shall be such:
-						// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN];
-						// 	2. Plugging in [on a number-by-number basis...];
-						// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
-						// 	4. Returning the list;
-						// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user];
-						// const plugged = this.parse(mappings)
-						// return plugged
-					}
-					const differences = generate(
-						startvalue,
-						startvalue + pathlength,
-						floor(10 ** -precision, precision),
-						precision
-					).map((i) => {
-						return Math.abs(diffs(mappings, varname, i))
-					})
-					return (
-						startvalue +
-						differences.indexOf(min(differences)) *
-							floor(10 ** -precision, precision)
-					)
-				}
-			}
-		}
-	}
-	X.static.this = X
-	return X
-}
+// 				return result
+// 			},
+// 			// TODO: Currently, plugging works correctly only with variables of length 1. Fix it.
+// 			plug(origparsed, varname, varvalue) {
+// 				const parsed = [...origparsed]
+// 				for (const pparsed of parsed)
+// 					for (let i = 0; i < pparsed.length; i++)
+// 						if (pparsed[i] === varname)
+// 							pparsed = aliases.native.string.sreplaceIndex(
+// 								pparsed,
+// 								i,
+// 								varvalue
+// 							)
+// 				return parsed
+// 			}
+// 		},
+// 		class: function (equationText = this.this.template.ustrclass.empty, vars = {}) {
+// 			return {
+// 				class: this,
+// 				equation: equationText || this.this.template.ustrclass.empty,
+// 				variables: vars || {},
+// 				parse(mappings = this.variables) {
+// 					return this.class.static.ParseEquation(this.equation, mappings)
+// 				},
+// 				/**
+// 				 * This method searches for the solution of an equation it's invoked onto.
+// 				 *
+// 				 * ! WARNING 1 !
+// 				 *
+// 				 * This method performs only numerical search, i.e. it doesn't search for the precise solution.
+// 				 * Just an approximation. (Namely, the one number of all given that is the closest to the solution.)
+// 				 * (However, if the root is rational, then it could even be exactly it.)
+// 				 *
+// 				 * ! WARNING 2 !
+// 				 *
+// 				 * DO NOT set the precision to be more than 5 or 6, because otherwise the JavaScript stack won't handle it (unless, you extended it).
+// 				 *
+// 				 * PARAMETRES
+// 				 *
+// 				 * @param {VarMapping} mappings Mapping for all the variables in the equation except one for which search is invoked.
+// 				 * @param {string} varname Name of the variable for which search is invoked.
+// 				 * @param {number} startvalue Value, from which search is invoked.
+// 				 * @param {number} pathlength The length of the search path.
+// 				 * @param {number} precision The depth of the search, i.e. how accurate the final result shall be.
+// 				 */
+// 				searchSolution(mappings, varname, startvalue, pathlength, precision = 4) {
+// 					// ? What to do with this now? [The thing has mutiple sides of the equation...];
+// 					// * Pray consider alternative [more complex, general, universally useful] strategies to numeric approximation of an equation of the given sorts...
+// 					// ^ IDEA [for a solution]: let the user choose the function using which the arrays from the 'diffs' output will be ordered by value [this way, the user themselves decides the precise output of the function, the way to handle the post-computation data];
+// 					function diffs(mappings, varname, varvalue) {
+// 						// ! PROBLEM: not thought through well enough;
+// 						// * Now, the present process shall be such:
+// 						// 	1. Parsing [DOES NOT INCLUDE PLUGGING IN];
+// 						// 	2. Plugging in [on a number-by-number basis...];
+// 						// 	3. Finding the list of differences [ordered in the same way as the sides of the equality in the originally given equation];
+// 						// 	4. Returning the list;
+// 						// 	5. Have the thing decide the priority of returned lists based off user's function [returnsa an array of arrays of values based off differences chosen by the user];
+// 						// const plugged = this.parse(mappings)
+// 						// return plugged
+// 					}
+// 					const differences = generate(
+// 						startvalue,
+// 						startvalue + pathlength,
+// 						floor(10 ** -precision, precision),
+// 						precision
+// 					).map((i) => {
+// 						return Math.abs(diffs(mappings, varname, i))
+// 					})
+// 					return (
+// 						startvalue +
+// 						differences.indexOf(min(differences)) *
+// 							floor(10 ** -precision, precision)
+// 					)
+// 				}
+// 			}
+// 		}
+// 	}
+// 	X.static.this = X
+// 	return X
+// }
 
-// TODO: implement those three [they are *truly* infinite, given by a finite user-expression...]
 export const InfiniteArray = CLASS({
 	defaults: {
 		index: ID

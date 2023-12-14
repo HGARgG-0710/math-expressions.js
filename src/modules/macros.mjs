@@ -122,7 +122,7 @@ export const HIERARCHY = function (hierarr = []) {
 // ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
 // 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
-// ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass']; 
+// ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
 export const EXTENSION = (template = {}) => {
 	// TODO: refactor this piece of code, pray...
 	ensureProperties(template, {
@@ -339,4 +339,10 @@ export const OBJECT = function (keys = [], values = []) {
 
 export const NOMODULE = function (moduleobj) {
 	return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
+}
+
+// ! Use throughout...Maybe, pick a more plausible name...
+// * Stands for 'Obj-Func-Def-Key-List'
+export function OFDKL(obj, f, keylist = [], bind = false) {
+	for (const x of keylist) obj[x] = (bind ? (x) => x.bind(obj) : ID)(f(x))
 }

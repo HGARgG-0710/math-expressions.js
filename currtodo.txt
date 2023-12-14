@@ -4,43 +4,45 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 	LIST OF CURRENTLY PURSUED TODOS: 
 		[First off - the method of choice; The ones considered presently will all be of finishing/reparing/patching/fixing/generalizing/templatizing nature]
 		1. Finish NumberEquation (based off the old Equation); 	
-			1.1. First, simply understand the old method of work in detail, clean up, basic refactor, reconstruct it anew (with newly decided code practices); 
-				1.1.1. The gist of it has been such - given a string being a sentence in a given language, the langauge is parsed and then converted to a two-side equation. 
-						Then, one finds the difference of two sides and finds the values for variables that cause the difference to equal zero; 
-						NOTE [1]: the thing works only with 1 sought variable - fix it? 
-						The search is numerical purely and is done via manual substitution and decimal approximation; 
-						NOTE [2]: this can only be limitedly useful and accurate. One ought to create and implement a class for unlimited decimals and decimal arithmetic; 
-						After having computed an array of desired depth of accuracy and found the point of greatest accuracy, it is returned as an approximation for a solution; 
-						NOTE [3]: doesn't seem to be taking account of the case of multiple possible answers; [If the case is that there are 2 or more equal smallest differences]
-							So instead, return the array of them instaed;  
-						NOTE [4]: two sides of the equation; 
-							Approximation is currently taken via 'indexof(min|r-l|)'; 
-							This strips the method of some degree of accuracy; 
-							QUESTION: Make it so that it is possible to calulate it for both the sides [that is - there is the *signed* difference], or not? 
-							ANSWER: currently - no; It doesn't give new information in regards of the minimal difference sought;  
-						NOTE [5]: It appears to be using eval; Let it use library's 'op' API instead...
 
-						NOTE [6]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray;]
+		1.1. Finish: 
+			1.1.1. NumberEquation; 
+			
+				1.1.1.1. First, simply understand the old method of work in detail, clean up, basic refactor, reconstruct it anew (with newly decided code practices); 
+					1.1.1.1.1. The gist of it has been such - given a string being a sentence in a given language, the langauge is parsed and then converted to a two-side equation. 
+							Then, one finds the difference of two sides and finds the values for variables that cause the difference to equal zero; 
+							NOTE [1]: the thing works only with 1 sought variable - fix it? 
+							The search is numerical purely and is done via manual substitution and decimal approximation; 
+							NOTE [2]: this can only be limitedly useful and accurate. One ought to create and implement a class for unlimited decimals and decimal arithmetic; 
+							After having computed an array of desired depth of accuracy and found the point of greatest accuracy, it is returned as an approximation for a solution; 
+							NOTE [3]: doesn't seem to be taking account of the case of multiple possible answers; [If the case is that there are 2 or more equal smallest differences]
+								So instead, return the array of them instaed;  
+							NOTE [4]: two sides of the equation; 
+								Approximation is currently taken via 'indexof(min|r-l|)'; 
+								This strips the method of some degree of accuracy; 
+								QUESTION: Make it so that it is possible to calulate it for both the sides [that is - there is the *signed* difference], or not? 
+								ANSWER: currently - no; It doesn't give new information in regards of the minimal difference sought;  
+							NOTE [5]: It appears to be using eval; Let it use library's 'op' API instead...
 
-			1.2. Then, generalize; 
+							NOTE [6]: The usage of finite strings; Again, as always with finite types - generalize to UnlimitedString [once having finally connected and defined it as an EXTENSION of the GeneralArray;]
+
+				1.1.1.1.2. Then, generalize; 
+			
+			1.1.2. TrueRatio
+			1.1.3. InfiniteSum
+			1.1.4. TreeNode
+
+		1.2. Implement: 
+			1.2.1. NTree
+			1.2.2. Heap
+			1.2.3. sort.heap()
+			1.2.4. sort.radix()
+			1.2.5. Graph 
 		
-		2. Finish the UnlimitedString [mostly done]; 
-			2.1. Main: 
-				2.1. Finish the missing methods from the UnlimiedString [this involves working with TrueNumbers, and also working with the .length().set()...]; 
-				2.2. Add the missing GeneralArray methods to it... [those that became to be as a part of UnlimitedString in the implementation in question originally]; 
-				2.3. Small details like the 'leftovers', 
-
-		3. Keep working on TrueRatio and InfiniteSum; 
-		4. Finish the Tree data-structure implementation; [METHODS FOR IT, THE METHODS...]; 
-		5. Create the implementation for the NTree; 
-		6. On 6., base the Heap; 
-		7. From 7., work on the sort.heap(); 
-		8. Do the 'sort.radix'; 
-		9. Think on the Graph from the 'algorithms'; 
-		10. Start working on the small todos. Do multiple in one go...; Uncover new things to be done in the meanwhile; 
-		11. Reform the 'numerics' and 'numeric.native' [NEEDED FOR NumberEquation DEFAULT PARSING PROCEDURE]; 
-	
-		12. IDEA: only do the 'small walk-through-the-code' things once the testing stage has been inititated... (namely, one has completed all the stuff that one desired...);
+		1.3. Code polishing: 
+			1.3.1. Reform the 'numerics' and 'numeric.native' [NEEDED FOR NumberEquation DEFAULT PARSING PROCEDURE]; 
+			1.3.2. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
+				1.3.2.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
 	
 2. Side: Testing; 
 	The library's approaching the v1.0 release; 

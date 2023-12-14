@@ -93,3 +93,4 @@ It gets changed actively.
 	16.3. Linear algebra; 
 	16.4. (Possibly, possibly not, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
 	16.5. (Possibly?) Combinatorics? 
+	16.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
