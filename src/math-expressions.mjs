@@ -71,3 +71,4 @@ export * from "./modules/exports.mjs"
 // TODO [general]: instead of boolmap, pray use the '.every'/'.any'; 
 // TODO [later]: after all is done - relook through each and every file of the project feverishly, seek anything undone and uncompleted; 
 // TODO [later]: do some micro-optimizations of the library; Choose more memory- and time- performant solutions and native types, where possible; 
+// TODO [general]: create a proper '.copy' method for each and every class...
