@@ -2114,7 +2114,7 @@ export function TreeNode(parentclass) {
 					.getall()
 					.slice([this.this.this.children.init().next()])
 			},
-			// ! Generalize these kinds of methods [both for the 'TreeNode' and the CLASSes in 'macros.mjs'];
+			// ! Generalize these (see, '.pushfront' and '.pushback') kinds of methods [both for the 'TreeNode' and the CLASSes in 'macros.mjs'];
 			pushback(v) {
 				this.this.this.children.pushback(
 					this.this.this.this.class(undefined, v, this)
@@ -2127,32 +2127,23 @@ export function TreeNode(parentclass) {
 				)
 				return this
 			},
-			firstIndex(
-				v,
-				prarr = this.this.this.this.class.template.parentclass.static.fromArray()
-			) {
-				const currarr = prarr
-				for (const x of this.this.this.children.keys()) {
-					if (
-						// ! INSTEAD OF THIS THING... Use the 'leftovers' argument (generally): Also, add a separate 'comparison' template field for the GeneralArray [defaults to the 'this.template.icclass.comparison']; There'll be a difference between the comparison used by the array and that of the InfiniteCounter;
-						this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
-							this.this.this.children.read(x).node,
-							v
-						)
-					) {
-						currarr.pushback(x)
-						return currarr
-					}
-					const temp = this.this.this.firstIndex(
-						v,
-						currarr.copied("pushback", [x])
-					)
-					if (temp !== this.this.this.this.class.template.unfound) {
-						currarr = temp
-						return currarr
-					}
+			firstIndex(v) {
+				return this.indexesOf(v, true, this.init().next())
+			},
+			indexesOf(v, halt = false, haltAfter = Infinity, leftovers = {}) {
+				if (this.this.this.children.isEmpty())
+					return leftovers.comparison(this.this.this.node, v)
+						? this.this.this.children.empty()
+						: false
+				const indexes = this.this.this.children.empty()
+				for (x of this.this.this.children) {
+					const ci = indexes.read()
+					const r = x.indexesOf(ci.copied("slice", [this.init().next()]))
+					if (r) indexes.concat(r.pushfront(ci))
 				}
-				return this.this.this.this.class.template.unfound
+				return (halt ? (x) => x.slice(this.init(), haltAfter.previous()) : ID)(
+					indexes
+				)
 			},
 			copy(
 				f = ID,
@@ -2239,16 +2230,22 @@ export function TreeNode(parentclass) {
 				for (const x of this.getall().keys()) yield x
 			},
 			// This one's especially useful for things like NTreeNode;
-			read(index = this.this.this.children.init(), multi = false, nodes = true) {
+			read(
+				index = this.this.this.children.init(),
+				multi = false,
+				nodes = true,
+				first = true
+			) {
+				if (first) index = index.copy()
 				if (!multi) return this.getall(nodes).read(index)
 				const r = this.this.this.children.read(index.read())
 				if (index.length().get().compare(index.init().next().next()))
 					return r.read(index.slice(index.init().next()))
 				return r
 			},
-			// ! CONFLICT OF INTEREST [general]: this is a very beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
-			findRoots(v) {
-				return this.indexesOf(v).map((x) => this.read(x).root)
+			// ! CONFLICT OF INTEREST [general]: this is a extremely beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
+			findRoots(v, leftovers = {}) {
+				return this.indexesOf(v, leftovers).map((x) => this.read(x).root)
 			},
 			depth() {
 				// ! use this one with a somewhat greater frequency;
@@ -2267,14 +2264,40 @@ export function TreeNode(parentclass) {
 							)
 						)
 					)
+			},
+			write(mindex, value) {
+				if (mindex.length().get().equal(mindex.init().next()))
+					return this.this.this.children.write(
+						mindex.read(),
+						this.this.this.this.class.class(
+							this.this.this.this.class.template.parentclass.static.empty(),
+							value,
+							this.this.this
+						)
+					)
+				return this.this.this.children
+					.read(mindex.read())
+					.write(mindex.slice(mindex.init().next()), value)
+			},
+			// ? Generalize this thing? 
+			findAncestors(x, leftovers = {}) {
+				const froots = this.this.this.children.empty()
+				let currroots = this.findRoots(x, leftovers)
+				while (!currroots.every((x) => x === null)) {
+					currroots = currroots.copy((x) => this.findRoots(x, leftovers))
+					froots.concat(currroots)
+				}
+				return froots
+			},
+			// ! This thing is a special case of 'algorithms.array.common'; Use that (AGAIN!); 
+			commonAncestors(values, leftovers = {}) {
+				return algorithms.array
+					.intersection(leftovers)
+					.function(values.copy((x) => this.findAncestors(x, leftovers)))
 			}
-			// * Methods list:
-			// % 1. commonAncestors(values) - finds and retuns (in a GeneralArray) the values of all the common ancestors of the nodes in possession of given GeneralArray of 'values'; [One value in the output for each repeated occurence of theirs];
-			// % 2. indexesOf(v, halt, haltAfter);
-			// % 3. write(index, value);
-			// ! Note: the 'indexesOf' must work in the fashion that'd allow for the further rewriting of the 'firstIndex' in terms of it;
-			// * Note: the thing must always return/use internally a TreeNode;
-			// ? Suggestion: write a 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes?
+		},
+		static: {
+			// ? Suggestion [idea]: write a (static) 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes?
 		},
 		recursive: true
 	})

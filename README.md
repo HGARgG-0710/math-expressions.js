@@ -2,7 +2,7 @@
 
 math-expressions.js is a general-purpose abstract-type JavaScript programming library with a vast variety of covered areas of interest.
 
-Amongst them are: very handy utilities, basic statistics, abstract objects,
+Amongst them are: very handy utilities, abstract objects, large aliases space of common expressions, 
 orders, multi-dimensional arrays, equation parsing, unlimited recursion-based (including numeric) types
 and highly configurable macros for elementary representations of powerful in-program
 types based off the native JavaScript Objects;
@@ -62,6 +62,7 @@ A brief repository organization guide:
             -   native.mjs - module with methods purposed for usage with the JS elementary types and abstractions
             -   numeric.mjs - short list of simple functions and utilities for working with different numeric writing systems and number-strings
             -   orders.mjs - set of methods for rapid and effective creation and property manipulation of order predicates and array-orders based off user arguments
+			-	predicates.mjs - module of predicates, frequently used throughout the library's code and in various applications of its contents (made largely for refactoring and repetitious code simplification/refactoring purposes); 
             -   printing.mjs - general printing utilities for unlimited types
             -   structure.mjs - module for 'structures', recursive object-based user-defined structures useful for checking for different kinds of object-isomorphicity and immediate object-construction
             -   types.mjs - the main library module, contains types definitions
@@ -81,8 +82,7 @@ For examples of library's usage, one may want to see the 'tests' directory or th
 
 The package uses ES modules.
 
-<!-- ? Why only them? It could also support the CommonJS modules...; -->
-<!-- TODO: add support for those - after finishing the testing procedures, compile to CJS with tsc and then add the appropriate 'export-require' fields in the 'package.json', decide which extensions one'd rather use... -->
+<!-- TODO: add support for CommonJS modules - after testing, compile to CJS with tsc and add the appropriate 'export-require' fields into the 'package.json' file, decide which extensions one'd rather use... -->
 
 ## Current Status
 

@@ -6,7 +6,6 @@ GeneralArray<> (array) {
 	entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
 }
 
-// Later, pray work further on a more complete concept of the UnlimitedMap
 UnlimitedMap<
 	entries<generator>() // like Object.entries()
 	map((value, key, obj) => [newvalue, newkey]) // Maps a map to a map. 
@@ -29,20 +28,6 @@ then just 'seek' in the same fashion.
 So long as the infinite string in question can be represented with the use of the elementary functions of the counter model in question, one can store it in a finite amount of memory! 
 Beautiful! [note also, that the InfiniteCounters in question must also be programmatically unlimited, so doing this stuff with finite integers won't really work; one only gets the usual string]; 
 
-So, [idea] rename the what is currently the 'InfiniteString' within the library into 'UnlimitedString', and 'InfiniteString' will then be this thing! 
-
-? Question: Do something similar about the matter of the InfiniteCounters [they become UnlimitedCounters]? 
-But, then... What is an 'infinite' counter? Here, an 'infinite' string means that it has [literally] got an infinite length;
-* Current decision: no; 
-
-? Question: about InfiniteArrays -- why, one could do just the same thing there, no? 
-Have it set by a function, changing an index via some 'comparison' means re-initializing the function into the wrapping of the thing in question into another function; 
-! Problem: Stack; This would work if it was done in continuation-passing style, but as [currently] the library isn't, this wouldn't really work to allow infinite change of the thing...; 
-* Current decision: add the thing described here, think about the name a bit more 
-[either add it under this name only into the continuation-passing style version of the library, or in the other version make a disclaimer that it's a 'mostly read'-kind-of structure]; 
-
-? Question: same-same-same about the InfiniteMap -- have one function for the keys, one function for the values and one index generator; 
-
 The user could always change the Array's function, of course...
 but the library has no way of doing it the same way as the user -- that'd require [at least]
 parsing the function, then putting in the new AST at its beginning, 
@@ -55,6 +40,7 @@ or one does everything in a continuation-passing style [+ corresponding structur
 one has no way to allow infinite change of the infinite string/infinite array/infinite map 
 [which is 'sort of' different from a finite string [they don't change, JS just creates new ones]; and is completely different from ]; 
 
+
 NOTICED ANOTHER PROBLEM: the 'Infinite' types within the library, that are based on recursive array/object types depend on the size of the JS stack; 
 As it isn't [by default] infinite [one writes the implementation separately], they aren't REALLY unlimited 
 [or, more precisely, though the types themselves ARE unlimited, they can't be USED as types that are, in fact, unlimited]; 
@@ -65,30 +51,8 @@ AGAIN, the question of library-management and 'how-to-import-best?';
 Pray think on it; 
 For continuation, follow 'privatenotes.txt' [continuation 1]
 
+
 BREAK 
-
-So, for example, one could do 'infinite.algorithms.arrays.lastIndexArrConcat(..., ...)'; 
-
-TODO: pray implement...
-// ? Question: should the GeneralArray thingy even HAVE all that separation onto 2 indexgenerator systems???
-// * Current decision: no, they are [in the class case, that being the general one] united. But, in special cases [like .map, for instance...], instead allows for this kind of diversity.
-
-// ? Question: what about the conversions? Which element of this structure should they relate to? 
-// * Pray think on it... [Then, implement?] 
-
-IDEA [about conversions]: 'conversion' (or 'convert') would, too, become a general algorithm. 
-It would work like so: takes in corresponding read()/write() + the other arguments for the GeneralArray and then 're-creates' the array using it. 
-Returns the re-created version with the new structure defined specifically by these two. 
-
-IDEA : about the UnlimitedString; 
-One doesn't like the in-strings and all that work with them. 
-One'd like it to be done in terms of something else. 
-The UnlimitedString could work like so, for instance, have an UnlimitedMap of some objects [numbers, for intance] to "characters" [1-lengthed strings within a given encoding or any other things...], 
-a 'comparison' by which to '.get()' them, and an UnlimitedArray of the symbols from the UnlimitedMap.keys(); 
-Then, one has the 'read' and 'write' procedures + all the stuff from the UnlimitedArray, which would work just the same except for 1 difference - the input and output are converted using the 
-string's unlimited map in question. 
-TODO: wonderful! pray implement...
-
 
 IDEA: the InfiniteNumber: as a math-expression.js-type generator-function defining an infinite sequence of objects with a defined order on them in terms of the index of the position, 
 wrapped into a templated object, which itself is a result of an InfiniteNumber() function call;  
@@ -98,7 +62,7 @@ So, for instance, one would have something like:
 10089704590434750296493034024059...
 
 The last one being greater. 
-One could add signs for this sort of stuff, as well as dot-positions; 
+One could add signs for this sort of stuff, as well as dot-positions [proper Real numbers implementation]; 
 The thing itself would be defined as an infinite (that being, unlimited) GeneralArray instance, with addition, multiplication, inverses [both additive and multiplicative] implemented on it; 
 Indexes used would [could, that being] also be unlimited; 
 

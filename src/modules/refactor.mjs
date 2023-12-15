@@ -1,5 +1,5 @@
 // ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
-// ? Later - generalize and tidy all this stuff up?
+// ? Later - try to redistribute all this somewhere accordingly?
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
