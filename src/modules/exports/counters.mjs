@@ -3,6 +3,7 @@ import * as comparisons from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as multidim from "./multidim.mjs"
 import * as aliases from "./aliases.mjs"
+import * as types from "./types.mjs"
 import { general } from "../refactor.mjs"
 
 export const number = GENERATOR({
@@ -350,18 +351,30 @@ export const finiteCounter = (() => {
 	const F = {}
 	const keys = ["generator", "inverse"]
 	const labels = ["next", "previous"]
-	for (const x of keys)
-		F[x] = function (item) {
+	for (const x in keys)
+		F[keys[x]] = function (item) {
 			return this.template.values.read(
-				this.template.values.firstIndex(item)[labels]()
+				this.template.values.firstIndex(item)[labels[x]]()
 			)
 		}
 	return GENERATOR({
-		defaults: {},
+		defaults: [
+			function () {
+				return {
+					genarrclass: general.DEFAULT_GENARRCLASS
+				}
+			},
+			function () {
+				return {
+					values: this.template.genarrclass.static.empty()
+				}
+			}
+		],
 		...F,
 		range(x) {
 			return this.template.values.includes(x)
-		}
+		},
+		isthis: true
 	})
 })()
 
@@ -369,4 +382,8 @@ export const finiteCounter = (() => {
 export const fromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
 
 // * Constructs a counter from a TrueInteger class (additive);
-export const tintAdditive = general.counterFrom(["add", "difference"])
+// ! Create more examples of 'tint'-based counters;
+export const tintAdditive = general.counterFrom(
+	["add", "difference"],
+	types.numbers.TrueInteger().static.fromCounter
+)

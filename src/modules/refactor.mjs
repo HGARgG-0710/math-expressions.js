@@ -3,7 +3,15 @@
 
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
+import { arrayCounter } from "./exports/counters.mjs"
 import * as native from "./exports/native.mjs"
+import {
+	TrueInteger,
+	arrays,
+	InfiniteCounter,
+	UnlimitedString,
+	TreeNode
+} from "./exports/types.mjs"
 
 export const classes = {
 	finish: function () {
@@ -104,7 +112,6 @@ export const general = {
 				: args[0]
 		}
 	},
-
 	// ? Does oneself want this, pray? [if no in-lib application, delete...];
 	finiteobj: function (target, names = [], insequences = [], outtransform = []) {
 		const newobj = {}
@@ -113,22 +120,40 @@ export const general = {
 			newobj[names[x]] = f(target[names[x]], outtransform[x], insequences[x])
 		return newobj
 	},
-	counterFrom: function (_labels = []) {
+	counterFrom: function (_labels = [], wrapper = aliases.ID) {
 		return TEMPLATE({
-			defaults: {},
-			function: function (icclass) {
+			defaults: [
+				aliases.function._const({ icclass: InfiniteCounter(arrayCounter) }),
+				function () {
+					return {
+						forth: wrapper(this.template.icclass.class().next()),
+						back: wrapper(this.template.icclass.class.class().previous())
+					}
+				}
+			],
+			function: function (icclass = general.DEFAULT_ICCLASS) {
 				const X = {
 					range: icclass.is
 				}
 				const labels = {
-					generator: [_labels[0], "jforth"],
-					inverse: [_labels[1], "jback"]
+					generator: [_labels[0], "forth"],
+					inverse: [_labels[1], "back"]
 				}
 				for (const x in labels)
 					X[x] = (x = this.template.start) =>
-						icclass.class(x)[label[x][0]](this.template[labels[x][1]])
+						icclass.class(x)[labels[x][0]](this.template[labels[x][1]])
 				return X
 			}
 		})
-	}
+	},
+	DEFAULT_ICCLASS: InfiniteCounter(),
+	DEFAULT_GENARRCLASS: arrays.LastIndexArray()
 }
+
+general.DEFAULT_USTRCLASS = UnlimitedString()
+general.DEFAULT_TREENODECLASS = TreeNode()
+general.DEFAULT_INFARR = InfiniteArray()
+general.DEFAULT_TINTCLASS = TrueInteger()
+
+// TODO: make the object of defaults that is to be used throughout the library...; 
+export const defaults = {}

@@ -3,8 +3,6 @@
 
 import * as aliases from "./aliases.mjs"
 
-// TODO [general]: wherever possible, choose the 'genarrclass' defaults; Choose the 'preferred' GeneralArray class;
-
 export const linear = TEMPLATE({
 	defaults: {
 		reflexive: true
@@ -15,7 +13,7 @@ export const linear = TEMPLATE({
 	) {
 		return reflexive
 			? (a, b) => array.firstIndex(b).compare(array.firstIndex(a))
-			: (a, b) => !array.firstIndex(a).compare(array.indexOf(b))
+			: (a, b) => !array.firstIndex(a).compare(array.firstIndex(b))
 	}
 })
 
@@ -53,12 +51,14 @@ export const nonlinear = TEMPLATE({
 
 // * Generally, where does one want to put the aliases that are based off the 'main' types? [As of now, had been decided it'll be just the '.aliases'...]
 export const most = TEMPLATE({
-	defaults: {},
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS, 
+	},
 	function: function (
 		garr = this.template.genarrclass.static.empty(),
 		comparison = this.template.comparison
 	) {
-		let most = garr.read(garr.init())
+		let most = garr.read()
 		// TODO [general]: where possible, prefer for-of against '.loop()'; '.loop()' can be used, but it's better fit for more complex cases...
 		for (const x of garr) if (comparison(x, most)) most = x
 		return most
@@ -79,7 +79,7 @@ export function max(template = {}) {
 	})
 }
 
-// * Constructs an infinte order from given Infinite Counter class; 
+// * Constructs an infinte order from given Infinite Counter class;
 export function fromIcc(icclass) {
 	return (x, y) => icclass.class(x).compare(icclass.class(y))
 }

@@ -1,10 +1,13 @@
+import { general } from "../refactor.mjs"
 import { TEMPLATE } from "./../macros.mjs"
+import { max, min } from "./orders.mjs"
 
 // * Stuff related to number systems and alphabets;
 // here, various predefined string-functions for representations of numbers would go;
 export const polystring = TEMPLATE({
 	defaults: {
 		alphabet: variables.defaultAlphabet.get,
+		ustrclass: general.DEFAULT_USTRCLASS,
 		separator: ""
 	},
 	function: function (counter = this.template.icclass.class()) {
@@ -29,10 +32,70 @@ export const polystring = TEMPLATE({
 	}
 })
 
+export const fromPolystring = TEMPLATE({
+	defaults: [
+		function () {
+			return {
+				ustrclass: general.DEFAULT_USTRCLASS,
+				tintclass: general.DEFAULT_TINTCLASS,
+				genarrclass: general.DEFAULT_GENARRCLASS
+			}
+		},
+		function () {
+			return { alphabet: this.template.genarrclass.static.empty() }
+		}
+	],
+	function: function (ustr = this.template.ustrclass.class()) {
+		const r = this.template.tintclass.class()
+		let i = ustr.init()
+		for (k of ustr.keys())
+			r.add(
+				this.tintclass.static
+					.fromCounter(this.template.alphabet.firstIndex(ustr.read(k)))
+					.multiply(
+						this.template.tintclass.static
+							.fromCounter(k)
+							.power(
+								this.template.tintclass.static
+									.fromCounter(ustr.length().get())
+									.difference(i)
+							)
+					)
+			)
+		return r
+	},
+	isthis: true
+})
+
+export const sameLength = TEMPLATE({
+	defaults: [
+		function () {
+			return {
+				ustrclass: general.DEFAULT_USTRCLASS,
+				tintclass: general.DEFAULT_TINTCLASS,
+				genarrclass: general.DEFAULT_GENARRCLASS,
+				shrink: false
+			}
+		},
+		function () {
+			return { alphabet: this.template.genarrclass.static.empty() }
+		}
+	],
+	function: function (strs = this.template.genarrclass.static.empty()) {
+		const endsize = (this.template.shrink ? min : max)().function(
+			strs.copy((str) => str.length().get())
+		)
+		for (const str of strs)
+			str.length().set(endsize, { basestr: this.template.alphabet.read() })
+		return endsize
+	},
+	isthis: true
+})
+
 export const native = {
 	// * Brings whatever is given within the given base to base 10;
 	// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-	nbase: function (nstr, alphabet = defaultAlphabet) {
+	fromPolystring: function (nstr, alphabet = defaultAlphabet) {
 		return repeatedArithmetic(
 			generate(0, nstr.length - 1).map(
 				(i) => alphabet.indexOf(nstr[i]) * alphabet.length ** i
@@ -42,7 +105,7 @@ export const native = {
 	},
 
 	// * Brings whatever in base 10 to whatever in whatever base is given...
-	nbasereverse: function (n, base, alphabet = defaultAlphabet) {
+	polystring: function (n, base, alphabet = defaultAlphabet) {
 		const coefficients = []
 		// TODO: call this thing nrepresentation(), then use here...
 		// TODO: change this for either one's own implementation of log, or this, as an alias...

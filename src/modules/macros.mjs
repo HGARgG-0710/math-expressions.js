@@ -79,10 +79,16 @@ export const TEMPLATE = function (template = {}) {
 					: this.template.isthis
 					? x.bind(this.template.this ? this.template.this : _class)()
 					: x
+			// ! refactor! [again, the native.object methods for immidiate object-property inheritance procedures accomplishment]
+			if (this.template.defaults instanceof Array)
+				for (const x in this.template.defaults) {
+					const k = K(this.template.defaults, x)
+					for (const y of k) _class[this.template.templateword][y] = k[y]
+					for (const y of template)
+						_class[this.template.tepmlateword][y] = template[y]
+				}
 			_class[this.template.templateword] = {
 				...K(this.template.defaults),
-				...template,
-				...K(this.template.defaults, 1),
 				...template
 			}
 			_class[this.template.word] = (

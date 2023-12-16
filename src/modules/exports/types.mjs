@@ -1,4 +1,4 @@
-// * The most essential part of the library - the types definitions;
+// * The (presently) largest most essential part of the library - the types definitions;
 
 import * as aliases from "./aliases.mjs"
 import * as comparisons from "./comparisons.mjs"
@@ -12,6 +12,7 @@ import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
+// ^ IDEA: create a class 'Comparable', which would be set by means of the orders and (consequently), can be converted to 'InfiniteCounter'; This way, one would be able to create InfiniteCounters from '.compare' orders!
 export const InfiniteCounter = (() => {
 	// ? Get rid of the 'leftovers', just use the good old 'comparison' instead here?
 	const sh1 = (_this, leftovers) =>
@@ -21,7 +22,8 @@ export const InfiniteCounter = (() => {
 		defaults: {
 			comparison: comparisons.valueCompare,
 			unacceptable: undefined,
-			initialcheck: comparisons.refCompare
+			initialcheck: comparisons.refCompare,
+			...counters.arrayCounter()
 		},
 		properties: {
 			value: function (previous = this.template.unacceptable) {
@@ -163,6 +165,18 @@ export const InfiniteCounter = (() => {
 			},
 			equal(x) {
 				return this.compare(x) && x.compare(this)
+			},
+			*[Symbol.iterator]() {
+				const predicate = this.direction()
+					? predicates.lesser
+					: predicates.greater
+				const change = this.direction() ? (x) => x.next() : (x) => x.previous()
+				for (
+					let i = this.this.this.this.class.class();
+					predicate(this);
+					i = change(i)
+				)
+					yield i
 			}
 		},
 		recursive: true
@@ -185,7 +199,7 @@ export const GeneralArray = (() => {
 			unfound: undefined,
 			treatfinite: false,
 			default: aliases._const(undefined),
-			icclass: InfiniteCounter(counters.arrayCounter),
+			icclass: general.DEFAULT_ICCLASS,
 			comparison: comparisons.refCompare
 		},
 		properties: {
@@ -483,13 +497,8 @@ export const GeneralArray = (() => {
 						},
 						set: (value, leftovers = {}) => {
 							sh1(this, leftovers)
-
-							if (leftovers.comparison(this.object().length().get(), value))
-								return
-
-							return this.length()
-								.get()
-								.compare(value, undefined, _const(true))
+							if (this.object().length().get().equal(value)) return
+							return this.length().get().compare(value)
 								? this.deleteMult(
 										this.init(),
 										this.length()
@@ -788,7 +797,7 @@ export const GeneralArray = (() => {
 				sort(predicate) {
 					this.this.this = algorithms.sort
 						.merge({
-							predicate: predicate
+							predicate
 						})
 						.function(this.this.this)
 					return this
@@ -898,7 +907,7 @@ export const arrays = {
 	LastIndexArray(template = {}, garrtemplate = {}) {
 		const A = {
 			template: {
-				icclass: InfiniteCounter(counters.numberCounter()),
+				icclass: general.DEFAULT_ICCLASS,
 				maxarrlen: constants.MAX_ARRAY_LENGTH,
 				filling: null,
 				...template,
@@ -1068,7 +1077,7 @@ export const arrays = {
 	}
 }
 
-export function UnlimitedMap(parentclass) {
+export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 	const sh1 = (key, _this, f, args = [], name = "keys") => {
 		const ind = _this.this.this[name].firstIndex(key)
 		if (ind === _this.this.this[name].class.template.unfound)
@@ -1181,14 +1190,9 @@ export function UnlimitedMap(parentclass) {
 	})
 }
 
-export function UnlimitedString(parent = arrays.LastIndexArray) {
+export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 	// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
 	// ! THIS IS BROKEN! Pray fix the thing so that it could work based of the passed 'icclass' and not instance of UnlimitedString;
-	const ALIAS = (_this) =>
-		aliases.native.number.fromNumber({
-			icclass: _this.this.this.this.class.template.parentclass.template.icclass,
-			start: -1
-		}).function
 	return EXTENSION({
 		defaults: {
 			parentclass: parent,
@@ -1298,7 +1302,6 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 				ind = this.this.this.genarr.currindex,
 				subind = this.this.this.currindex
 			) {
-				const _ALIAS = ALIAS(this)
 				let final = this.init()
 				for (const x of this.this.this.genarr
 					.copied("slice", [this.init(), ind.previous()])
@@ -1312,7 +1315,9 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 							)(genarr.read(x).length)
 							.map(final.class)
 					)
-				return final.jumpForward(_ALIAS(subind))
+				return final.jumpForward(
+					aliases.native.number.fromNumber().function(subind)
+				)
 			},
 			finish: classes.finish,
 			go(index) {
@@ -1428,16 +1433,16 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 							this.this.this.genarr.read(this.this.this.genarr.finish())
 						)
 					},
-					set: (newlen) => {
-						// ? Does one want to enforce this 'basestr[0]'? Or allow the user to create non-standard, weird and (potentially confusing) behaviour that easily? Technically, this isn't what the 'length().set()' is asking for even...
+					set: (newlen, leftovers = {}) => {
+						ensureProperty(
+							leftovers,
+							"basestr",
+							this.this.this.this.class.template.basestr[0]
+						)
 						if (newlen.compare(this.length().get())) {
 							newlen
 								.difference(this.length().get().map(newlen.class))
-								.loop(() =>
-									this.pushback(
-										this.this.this.this.class.template.basestr[0]
-									)
-								)
+								.loop(() => this.pushback(leftovers.basestr))
 							return this
 						}
 
@@ -1651,10 +1656,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 }
 
 export const numbers = {
-	// TODO: do some great generalizational work on this thing... [add 'leftovers'; same for the rest of this stuff...]; also, complete it properly... add all the desired stuff...
-	// TODO [GENERALLY] : first, whenever working on some one thing, pray first just implement the rawest simplest version of it, then do the 'leftovers' and hardcore generalizations...
-	// ! The 'numbers' API (and ALL THE OTHER ONES in 'types') must be independent of the underlying InfiniteCounter classes and generators [meaning, one uses '.map' MOST extensively];
-	TrueInteger: (function (parentclass) {
+	TrueInteger: (function (parentclass = general.DEFAULT_ICCLASS) {
 		const ONE = (_this) =>
 			_this.this.this.this.class.class(
 				_this.this.this.this.class.template.icclass.class().next()
@@ -1730,6 +1732,7 @@ export const numbers = {
 				difference(d = ONE(this)) {
 					return this.this.this.add(d.invadd())
 				},
+				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA!]
 				divide(d) {
 					let r = this.this.this.this.class.class()
 					let copy = this.copy()
@@ -1775,7 +1778,7 @@ export const numbers = {
 			toextend: []
 		})
 	})(),
-	TrueRatio: function (parentclass) {
+	TrueRatio: function (parentclass = general.DEFAULT_TINTCLASS) {
 		return EXTENSION({
 			defaults: {
 				parentclass: parentclass,
@@ -2018,7 +2021,7 @@ export const InfiniteArray = CLASS({
 	recursive: false
 })
 // ? Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
-export function InfiniteString(parentclass) {
+export function InfiniteString(parentclass = general.DEFAULT_INFARR) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2033,7 +2036,7 @@ export function InfiniteString(parentclass) {
 	})
 }
 // ! On this, base the Real - the unlimited-precision decimal; [Pray do some derivation work on the matter of infinite digit sums formulas - may come in handy later...];
-export function InfiniteNumber(parentclass) {
+export function InfiniteNumber(parentclass = general.DEFAULT_INFARR) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2050,7 +2053,7 @@ export function InfiniteNumber(parentclass) {
 	})
 }
 
-export function TreeNode(parentclass) {
+export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2274,7 +2277,7 @@ export function TreeNode(parentclass) {
 	})
 }
 
-export function UnlimitedSet(parentclass) {
+export function UnlimitedSet(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2331,7 +2334,7 @@ export function UnlimitedSet(parentclass) {
 }
 
 export const InfiniteSet = (template = {}) => {
-	const x = InfiniteArray(template).class()
+	const x = InfiniteArray.function(template).class()
 	const y = x.copy()
 	return y.subarr((el, i) => !x.slice(x.init(), i.previous()).includes(el))
 }

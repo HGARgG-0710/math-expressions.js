@@ -9,19 +9,24 @@
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
 // 	? 2. Prioritee queue? (generalized Qeueu);
 
-import { TEMPLATE, EXTENSION, CLASS } from "../macros.mjs"
+import { TEMPLATE, EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
 import * as expressions from "./expressions.mjs"
-import { classes } from "../refactor.mjs"
+import * as numeric from "./numeric.mjs"
 
-// ! Finish these two, pray [this is a sketch; further design assesment, generalization and work on arguments is needed]
-export function Stack(parentclass) {
+import { classes, general } from "../refactor.mjs"
+import { finiteCounter } from "./counters.mjs"
+import { InfiniteCounter } from "./types.mjs"
+
+// ? Add anything more to the Stack, and Queue? [These, basically, do the required job...]
+export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: { parentclass: parentclass, names: ["genarr"] },
 		toextend: [],
 		methods: {
+			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
 			push(element) {
 				return this.this.this.genarr.pushback(element)
 			},
@@ -32,7 +37,7 @@ export function Stack(parentclass) {
 		recursive: true
 	})
 }
-export function Queue(parentclass) {
+export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: { parentclass: parentclass, names: ["genarr"] },
 		toextend: [],
@@ -49,7 +54,7 @@ export function Queue(parentclass) {
 }
 
 // Extends 'TreeNode';
-export function NTreeNode(parentclass) {
+export function NTreeNode(parentclass = general.DEFAULT_TREENODECLASS) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -67,8 +72,7 @@ export function NTreeNode(parentclass) {
 	})
 }
 
-// ! Rewrite this as a GeneralArray EXTENSION (it is, in truth, over the 'edges');
-export function Graph(parentclass) {
+export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -87,31 +91,23 @@ export function Graph(parentclass) {
 			// 2. addvertex(value); - adds a new vertex with a given value 'value';
 			// 3. addedge(indexfrom, indexto);
 			// 4. computevertex(indexv, indexe); - adds the vertex value of 'indexv.edges.read(indexe)'
-			// 5. write(index, value); - gives the value to a vertex at the index 'index'; 
-			// 6. read(index); - returns the '.value' of the vertex at the index 'index'; 
-			// 7. deledge(indv, inde); - deletes the edge ; 
+			// 5. write(index, value); - gives the value to a vertex at the index 'index';
+			// 6. read(index); - returns the '.value' of the vertex at the index 'index';
+			// 7. deledge(indv, inde); - deletes the edge ;
 			// 8. delete(index); - deletes the vertex at the index 'index' and all the edges that connect with it...
 			// ? 9. deledgeval(index, value) - deletes the edge of vertex at index 'index' by its value?
-			// ^ NOTE: this class allows for infinitely large graphs (namely, those that use the recursive objects); 
+			// ^ NOTE: this class allows for infinitely large graphs (namely, those that use the recursive objects);
 		},
 		recursive: true
 	})
 }
 
-// ! Generalize this - work on defaults, make a proper methodless class...
+// ? Generalize this - work on defaults, remake into a proper methodless class...
 export const Vertex = (value, edges) => {
 	return { value, edges }
 }
 
 // TODO: pray make sure of the universally chosen order of arguments throughout the library usage of 'this.template.predicate'; Generally, ensure such small things and standards;
-// ^ About Radix Sort Implementation;
-// 	* For one to be capable of arbitrary objects sorting using it, necessity arises for the implementation of a 'toAlphabet' function;
-// 		% And while one __could__ leave it to the user to finish... One could also do it by oneself in the following fashion:
-// 			1. Get the set of objects in question;
-// 			2. Connect them using a manner of an InfiniteCounter class [namely, define a generator/inverse/range encomassing them and their connections] and get an order (.compare) based off it;
-// 				* 2.1. The generator would be based off the GeneralArray that the user would give; [use the finiteCounter];
-// 			3. Finally, use the 'numerics.polystring' with the alphabet given by the user;
-// 			4. Using the order from 2., define the appropriate linear order function predicate (using the 'orders.linear');
 // * So, the whole procedure really just comes down to transforming the objects in question into a defined set of alphabet-described strings! Only then, may the Radix Sort be implemented desireably...;
 // ^ About Heap Sort Implementation:
 // * First, one must implement the Heap itself:
@@ -120,9 +116,40 @@ export const Vertex = (value, edges) => {
 // 			B.1. 'n' - the 'n', on which the 'n'-ary Tree, on which the Heap is based upon will be built [By default, equals to 2 in the appropriate InfiniteCounter class - the one used by the Tree-parent's GeneralArray 'parentclass' is used];
 //	* Only then, may one finish the implementation of the thing in question...;
 export const sort = {
+	// ! PROBLEM [with the 'radix' sort] - in order for the thing to be [appropriately...] converted to a polystring, it must ALREADY be sorted [so, it HAS to be an InfiniteCounter... of sorts];
+	radix: TEMPLATE({
+		defaults: [
+			function () {
+				return {
+					ustrclass: general.DEFAULT_USTRCLASS,
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					tintclass: general.DEFAULT_TINTCLASS
+				}
+			},
+			function () {
+				return { alphabet: this.template.genarrclass.static.empty() }
+			}
+		],
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			const polyconverted = garr
+				.copy(this.template.tintclass.static.fromCounter)
+				.map(numeric.toPolystring(this.template).function)
+			const maxsize = numeric.sameLength(this.template).function(polyconverted)
+			const toorder = (ordered, i) => this.template.alphabet
+				.copy((l) => ordered.suchthat((y) => y.read(i) === l))
+				.suchthat((x) => !x.isEmpty()).join()
+			let ordered = polyconverted.copy()
+			for (const x of maxsize) 
+				ordered = toorder(ordered, x)
+			return ordered
+		},
+		isthis: true
+	}),
 	// ! Complete;
 	bucket: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.this.this.genarrclass.static.empty()) {
 			// ! must be refactored [same as the thing in the 'sort.counting'];
 			const k = this.template.hasOwnProperty("maxkey")
@@ -142,7 +169,9 @@ export const sort = {
 		}
 	}),
 	counting: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
 			const k = this.template.hasOwnProperty("maxkey")
@@ -179,7 +208,9 @@ export const sort = {
 		}
 	}),
 	quick: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// ? DOES ONE WANT TO BE MAKING THESE MANNER OF MARKINGS ANYWHERE???
 			// * Consider this small question in some detail...
@@ -218,7 +249,9 @@ export const sort = {
 		}
 	}),
 	insertion: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
 			for (

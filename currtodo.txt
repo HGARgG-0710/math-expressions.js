@@ -1,6 +1,6 @@
 This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
 
-1. DIRECTIONS: project is slowly entering a halting phase of development (again); 
+1. DIRECTIONS; 
 	LIST OF CURRENTLY PURSUED TODOS: 
 		[First off - the method of choice; The ones considered presently will all be of finishing/reparing/patching/fixing/generalizing/templatizing nature]
 		1. Finish NumberEquation (based off the old Equation); 	
@@ -45,6 +45,7 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 				1.3.2.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
 			1.3.3. Refactoring all the TrueInteger and InfiniteCounter code that uses elementary objects like '.next().next()...', or '.add().add()...'; 
 				Look into that generally pray...
+			1.3.4. Complete ALL the TEMPLATEs' defaults; 
 	
 2. Side: Testing; 
 	The library's approaching the v1.0 release; 
