@@ -171,23 +171,22 @@ export const InfiniteCounter = (() => {
 
 export const GeneralArray = (() => {
 	// * Shortcuts [for refactoring...];
-	const sh1 = (_this, leftovers) =>
-		ensureProperties(leftovers, {
-			fast: false,
-			comparison: _this.this.this.this.class.template.icclass.template.comparison
-		})
 	const sh1static = (_this, leftovers) =>
 		ensureProperties(leftovers, {
 			fast: false,
 			comparison: _this.this.template.icclass.template.comparison
 		})
+	const sh1 = (_this, leftovers) =>
+		sh1static(_this.this.this.this.class.static, leftovers)
 
 	return CLASS({
 		defaults: {
 			empty: [],
 			unfound: undefined,
 			treatfinite: false,
-			default: aliases._const(undefined)
+			default: aliases._const(undefined),
+			icclass: InfiniteCounter(counters.arrayCounter),
+			comparison: comparisons.refCompare
 		},
 		properties: {
 			array: function (array = this.template.empty) {
@@ -888,7 +887,8 @@ export const GeneralArray = (() => {
 			)
 			return X
 		})(),
-		recursive: true
+		recursive: true,
+		isthis: true
 	})
 })()
 
@@ -967,7 +967,7 @@ export const arrays = {
 			isEnd: function (array) {
 				return !!this.elem(array, undefined, true)[0]
 			},
-			icclass: A.template.icclass, 
+			icclass: A.template.icclass,
 			...garrtemplate
 		})
 		return A
@@ -989,17 +989,17 @@ export const arrays = {
 				newvalue: function (array, value) {
 					let e = this.elem(array, true)[0]
 					if (e == undefined) {
-						if (e === null) 
-							return general.fix([array], ["currindex"], () => {	
+						if (e === null)
+							return general.fix([array], ["currindex"], () => {
 								array.currindex = array.currindex.previous()
-								e = this.elem(array, true)[0]	
+								e = this.elem(array, true)[0]
 								if (e[0].length < this.template.maxarrlen) {
 									e.push(value)
 									return value
 								}
-								// ! Complete the algorithm implementation for the addition of new element to the current end of the DeepArray (the 'unconvinient' case, that requries finite-array 'dim' recursion...)	
+								// ! Complete the algorithm implementation for the addition of new element to the current end of the DeepArray (the 'unconvinient' case, that requries finite-array 'dim' recursion...)
 							})
-						
+
 						// ! Add the case for creating the new value in the DeepArray;
 					}
 					return (e[0][e[1]] = value)
@@ -1039,7 +1039,7 @@ export const arrays = {
 				isEnd(array) {
 					return this.elem(array)[0] == undefined
 				},
-				icclass: this.template.icclass, 
+				icclass: this.template.icclass,
 				...garrtemplate
 			})
 		}
@@ -1365,7 +1365,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 					[this.this.this.genarr, this.this.this],
 					algorithms.array.native.generate(2).map(aliases._const("currindex")),
 					() => {
-						this.go(index, aliases._const(true))
+						this.go(index)
 						this.currelem().set(value)
 					}
 				)

@@ -1,3 +1,6 @@
+import { general } from "../refactor.mjs"
+import * as types from "./types.mjs"
+
 export { TEMPLATE, HIERARCHY } from "./../macros.mjs"
 
 // ! implement the 'printi' for generalarrays and ic-s;
@@ -36,10 +39,8 @@ export const constrolprint = HIERARCHY([
 				let final = ""
 				let broken = false
 				let handle = null
-				// ! PROBLEM [general] : how does one pass the general arrays around? Is it via the {this: ...(the actual array)} reference, or just the '...(the actual array)'; One would desire it greater had it been unified...;
-				// * Current decision: via the '...(the actual array)' part;
 				toprint.loop().full((x) => {
-					return main
+					return types
 						.CommonArray()
 						.class({ treatfinite: true })
 						.class([
@@ -52,7 +53,7 @@ export const constrolprint = HIERARCHY([
 								) {
 									k.break()
 									broken = true
-									// * The 'full()' erases data regarding the current index from the handle in question;
+									// * Without copying, the 'full()' erases data regarding the current index from the handle in question;
 									handle = deepCopy(k)
 								}
 							},
@@ -62,19 +63,21 @@ export const constrolprint = HIERARCHY([
 				if (broken) return this.template.function.control(final, handle)
 				return this.template.function.pfun(final)
 			}
-			this.template.ishandle = false
-			const r = this.template.this.function(
-				toprint.object().slice(toprint.counter.next())
-			)
-			this.template.ishandle = true
-			return r
+			return general.fix([this.template], ["ishandle"], () => {
+				this.template.ishandle = false
+				return this.template.this.function(
+					toprint.object().slice(toprint.counter.next())
+				)
+			})
 		},
-		defaults: (_this) => ({
-			ishandle: false,
-			function: _this
-		}),
+		defaults: function () {
+			return {
+				ishandle: false,
+				function: this
+			}
+		},
 		// TODO: make an alias for that one (it's used quite frequently...);
-		transform: (templated, template) => {
+		transform: (templated) => {
 			templated.template.this = templated
 		},
 		isthis: true

@@ -90,8 +90,9 @@ It is currently in development, so many things may (and most probably will) chan
 
 The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...).
 
-From version 1.0 onwards, one explicitly breaks backward compatibility for versions <=0.8, as well as all the future ones.
+From version 1.0 onwards, oneself explicitly breaks backward compatibility for versions <=0.8, as well as all the future ones.
 Each and every version is independent from all the others (so, one has to be extremely specific regarding the version of the package).
 
 This way, one would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of
-experementation and new ideas.
+experementation, new ideas, refactoring and code simplification. It also permits one to fix the elements of the library that are [for whatever reasons]
+no longer seem as fit for further presence in it and generally stimulates a more fluid and creative development process.

@@ -213,13 +213,6 @@ export const object = {
 	}
 }
 
-// ! Current agenda - work starts here... [the array.replace and the 'string' methods list];
-// % Tasks:
-// 	* 1. Brush up the old code [bring it up to the present standards];
-// 		1.1. Template it, where desired;
-// 		1.2. Refactor heavily;
-// 		1.3. Make use of aliases;
-// 	* 2. Relocate [when wanted], generalize [all of the ones that are wanted for generalization];
 export const array = {
 	replace: {
 		// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...

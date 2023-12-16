@@ -78,10 +78,10 @@ export const general = {
 		objs = [],
 		keys = [],
 		operation = () => {},
+		readfunc = (o, k) => o[k],
 		setfunc = (o, k, v) => (o[k] = v)
 	) {
-		const remember = objs.map((obj, i) => objs)
-		for (let i = 0; i < objs.length; i++) remember.push(objs[i][keys[i]])
+		const remember = objs.map((obj, i) => readfunc(obj, keys[i]))
 		const returned = operation()
 		for (let i = 0; i < remember.length; i++) setfunc(objs[i], keys[i], remember[i])
 		return returned

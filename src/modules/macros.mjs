@@ -69,20 +69,26 @@ export const TEMPLATE = function (template = {}) {
 			...template
 		},
 		function: function (template = this.template.deftemplate) {
-			const _class = {
-				[this.template.templateword]: {
-					...(this.template.isthis
-						? this.template.defaults(this.template.this)
-						: this.template.defaults),
-					...template
-				},
-				...this.template.rest
+			let _class = {}
+			// ? Do something about this - don't just leave hanging...;
+			const K = (x, i = 0) =>
+				x instanceof Array
+					? this.template.isthis
+						? x[i].bind(this.template.this)()
+						: x[i]
+					: this.template.isthis
+					? x.bind(this.template.this ? this.template.this : _class)()
+					: x
+			_class[this.template.templateword] = {
+				...K(this.template.defaults),
+				...template,
+				...K(this.template.defaults, 1),
+				...template
 			}
 			_class[this.template.word] = (
-				this.template.isthis
-					? this.template.function(this.template.this)
-					: this.template.function
-			).bind(_class)
+				this.template.isthis ? (x) => x(this.template.this) : ID
+			)(this.template.function).bind(_class)
+			for (const x in this.template.rest) _class[x] = { ...this.template.rest[x] }
 			return this.template.transform(_class, template)
 		}
 	}
@@ -151,7 +157,7 @@ export const EXTENSION = (template = {}) => {
 					let i = 0
 					for (const y of this.template.names)
 						X[y] = this.template.parentclass.class(
-							this.template.defaults.inter.bind(this)(...args, i++)
+							this.template.defaults.inter.bind(this)(args, i++)
 						)
 					return X
 				},
@@ -163,7 +169,7 @@ export const EXTENSION = (template = {}) => {
 			names: ["sub"],
 			defaults: {
 				constructor: [],
-				inter: ID,
+				inter: aliases.cdieach,
 				...template.defaults.defaults
 			},
 			...template.defaults

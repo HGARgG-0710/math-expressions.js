@@ -5,32 +5,11 @@
 // 		2. Seek out those that are used in places of the library that are considered desired/essential, keep them. The rest - replace with 'finite()' call;
 
 // * List of new abstract types interfaces to be implemented:
-// ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
-// 	% 1. Heap <- types.NTreeNode; 
-// 	% 2. Graph; 
+// 	% 1. Heap <- types.NTreeNode;
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
-// 	? 3. Prioritee queue? (generalized Qeueu);
+// 	? 2. Prioritee queue? (generalized Qeueu);
 
-// Extends 'TreeNode'; 
-export function NTreeNode(parentclass) {
-	return EXTENSION({
-		defaults: {
-			parentclass: parentclass, 
-			names: ["treenode"]
-		}, 
-		methods: {
-			// ! Make a list; 
-		}, 
-		properties: {
-			// ! Make a list; 
-		}, 
-		recursive: true, 
-		// ! Decide this! 
-		toextend: [], 
-	})
-}
-
-import { TEMPLATE, EXTENSION } from "../macros.mjs"
+import { TEMPLATE, EXTENSION, CLASS } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
@@ -69,7 +48,62 @@ export function Queue(parentclass) {
 	})
 }
 
-// TODO: pray make sure of the singular order of arguments throughout the library usage of 'this.predicate'; Generally, ensure such small things and standards;
+// Extends 'TreeNode';
+export function NTreeNode(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass,
+			names: ["treenode"]
+		},
+		methods: {
+			// ! Make a list;
+		},
+		properties: {
+			// ! Make a list;
+		},
+		recursive: true,
+		// ! Decide this!
+		toextend: []
+	})
+}
+
+// ! Rewrite this as a GeneralArray EXTENSION (it is, in truth, over the 'edges');
+export function Graph(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass,
+			names: ["verticies"],
+			defaults: {
+				constructor: [this.template.parentclass.static.empty],
+				inter: function (args, i) {
+					if (!i) return edges
+					return args[0].copy((x, i) => Vertex(x, args[1].read(i)))
+				}
+			}
+		},
+		methods: {
+			// * Methods list:
+			// 1. getAdjacent(index); - returns the adjacent verticies to the 'verticies.read(index)';
+			// 2. addvertex(value); - adds a new vertex with a given value 'value';
+			// 3. addedge(indexfrom, indexto);
+			// 4. computevertex(indexv, indexe); - adds the vertex value of 'indexv.edges.read(indexe)'
+			// 5. write(index, value); - gives the value to a vertex at the index 'index'; 
+			// 6. read(index); - returns the '.value' of the vertex at the index 'index'; 
+			// 7. deledge(indv, inde); - deletes the edge ; 
+			// 8. delete(index); - deletes the vertex at the index 'index' and all the edges that connect with it...
+			// ? 9. deledgeval(index, value) - deletes the edge of vertex at index 'index' by its value?
+			// ^ NOTE: this class allows for infinitely large graphs (namely, those that use the recursive objects); 
+		},
+		recursive: true
+	})
+}
+
+// ! Generalize this - work on defaults, make a proper methodless class...
+export const Vertex = (value, edges) => {
+	return { value, edges }
+}
+
+// TODO: pray make sure of the universally chosen order of arguments throughout the library usage of 'this.template.predicate'; Generally, ensure such small things and standards;
 // ^ About Radix Sort Implementation;
 // 	* For one to be capable of arbitrary objects sorting using it, necessity arises for the implementation of a 'toAlphabet' function;
 // 		% And while one __could__ leave it to the user to finish... One could also do it by oneself in the following fashion:

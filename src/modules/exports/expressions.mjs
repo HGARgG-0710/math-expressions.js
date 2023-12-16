@@ -19,13 +19,10 @@ export const evaluate = TEMPLATE({
 	}
 })
 
+// ? Generalize within the library's context the objects of n-properties?
 // ? Make into a template to allow for general-types defaults? [another minor general dilemma]
-export const Expression = function (operator, expressions = [], objects = []) {
-	return {
-		operator: operator,
-		expressions: expressions,
-		objects: objects
-	}
+export const Expression = function (operator = "", expressions = [], objects = []) {
+	return { operator, expressions, objects }
 }
 
 export const uevaluate = TEMPLATE({
@@ -62,11 +59,7 @@ export const composition = function (fcall) {
 }
 
 export const FunctionCall = function (f, functions = [], args = []) {
-	return {
-		f: f,
-		functions: functions,
-		args: args
-	}
+return { f, functions, args }
 }
 
 // ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself? [so as to be able to build recursive Expressions from various user-given data quickly and not by-hand?]
