@@ -1,9 +1,5 @@
 // * This module provides an export structure-interface for the user to be able to access different parts of the API in accordance with their theme [also - to be able to consider the package in its generality];
 
-// ^ MARVELOUS IDEA: create methods for creation of methods via 'String/UnlimitedString' patterns + 'eval'; This'll work in any interpreted JS environments that impelement this function accordingly...
-// * The things would be decompiled from an AST;
-// ? Out of scope of the library; Do it sometime else, somewhere else?
-
 import { ID, NOMODULE } from "./macros.mjs"
 
 import * as algorithms from "./exports/algorithms.mjs"
@@ -21,8 +17,6 @@ import * as statistics from "./exports/statistics.mjs"
 import * as structure from "./exports/structure.mjs"
 import * as types from "./exports/types.mjs"
 import * as variables from "./exports/variables.mjs"
-
-// TODO [generally]: make a one whole new round regarding the workability of the code, when having finished the generalization procedures, fix everything, tune everything totally...
 
 export function instance(transformation = ID) {
 	// * Module instance Export

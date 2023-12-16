@@ -16,12 +16,12 @@ export const native = {
 	number: {
 		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
 
+		// ? Make this a '.static' of the InfiniteCounter? 
 		fromNumber: TEMPLATE({
 			function(x = this.template.start) {
-				return main
-					.InfiniteCounter(counters.addnumber(this.template))
-					.class(x)
-					.map(this.template.icclass)
+				return (this.template.icclass ? (x) => x.map(this.template.icclass) : ID)(
+					main.InfiniteCounter(counters.addnumber(this.template)).class(x)
+				)
 			}
 		}),
 
@@ -243,7 +243,7 @@ export const nneg = (x) => (x < 0 ? -x : x)
 
 export const next = (x) => x.next()
 
-// ! Generalize this to a context, pray...; 
+// ! Generalize this to a context, pray...;
 export const adddefaults =
 	(f) =>
 	(defaults = []) => {

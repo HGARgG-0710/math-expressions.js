@@ -76,3 +76,9 @@ It gets changed actively.
 	11.4. (Possibly, possibly not, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
 	11.5. (Possibly?) Combinatorics? 
 	11.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
+
+12. MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
+
+	Most of them make use of the predefined defaults only, forcing the user to either rewrite the code manually for this trivial matter, 
+	or to use the default package code convention; Not good at all. 
+	(Note: one can do it using further 'templates'; Additionally, fix the default recurring template names like 'genarrclass', 'tintclass', 'icclass', 'comparison' and so on...);

@@ -2,6 +2,7 @@
 
 import * as aliases from "./aliases.mjs"
 import * as comparisons from "./comparisons.mjs"
+import * as variables from "./variables.mjs"
 import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as native from "./native.mjs"
@@ -12,11 +13,9 @@ import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
 export const InfiniteCounter = (() => {
+	// ? Get rid of the 'leftovers', just use the good old 'comparison' instead here?
 	const sh1 = (_this, leftovers) =>
-		ensureProperties(leftovers, {
-			comparison: _this.this.class.template.comparison,
-			unfound: _this.this.class.template.unfound
-		})
+		ensureProperty(leftovers, "comparison", _this.this.class.template.comparison)
 	// * Note: a minor 'trick' about the entire thing is that the value that is assigned to 'template.unacceptable' is thrown out of the function's value scopes [because that is the value from which it starts to count]; However, there are several ways of going around it. One is also replacing the value for the 'template.initialcheck';
 	return CLASS({
 		defaults: {
@@ -37,8 +36,6 @@ export const InfiniteCounter = (() => {
 				return ic.compare(this.this.class())
 			},
 			// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-			// * Pray make it work generally, put all the methods into this one form;
-			// TODO [general]: ensure the use of 'leftover' argument objects across the library...
 			whileloop(
 				end,
 				each,
@@ -55,7 +52,6 @@ export const InfiniteCounter = (() => {
 				}
 				return curr
 			},
-			// ! Pray think a little more on the details of implementation of this static method [namely, the "generator"'s definition]...;
 			reverse() {
 				const _this = this
 				return InfiniteCounter({
@@ -63,26 +59,25 @@ export const InfiniteCounter = (() => {
 						if (x === undefined) return _this.this.template.generator()
 						return _this.this.template.inverse(x)
 					},
-					inverse: this.this.template.generator(x)
+					inverse: this.this.template.generator
 				})
 			}
 		},
 		methods: {
 			next: function () {
 				// * An observation: this is one of the ways to be able to reference a function from within itself...
-				return this.this.this.class.class(
-					this.this.class.template.generator(this.this.this.value)
+				return this.this.this.this.class.class(
+					this.this.this.this.class.template.generator(this.this.this.value)
 				)
 			},
 			previous: function () {
-				return this.this.this.class.class(
+				return this.this.this.this.class.class(
 					this.this.class.template.inverse(this.this.this.value)
 				)
 			},
 			direction() {
 				return this.this.this.this.class.static.direction(this)
 			},
-			// ! Think deeply on this method - whether parts of it ought be reconsidered and generalized slightly;
 			compare(ic, leftovers = {}) {
 				sh1(this, leftovers)
 				ic = ic.map(this.this.this.this.class)
@@ -105,13 +100,13 @@ export const InfiniteCounter = (() => {
 				const next = aliases.property(
 					ic.compare(this.this.this, leftovers) ? "previous" : "next"
 				)
-				this.this.class.static.whileloop(
+				this.this.this.this.class.static.whileloop(
 					this.this.this.copy(),
 					(current) => next(current)(),
 					ic,
 					(x) => next(x)(),
 					leftovers.comparison,
-					this.this.class.class()
+					this.this.this.this.class.class()
 				)
 				return current
 			},
@@ -122,7 +117,7 @@ export const InfiniteCounter = (() => {
 					: this.this.this.jumpBackward(ic, leftovers)
 			},
 			jump(x, jumping = (k) => k.next(), counterclass = this.this.this.this.class) {
-				returnthis.this.class.static.whileloop(
+				return this.this.this.this.class.static.whileloop(
 					x,
 					jumping,
 					counterclass.class(),
@@ -131,8 +126,8 @@ export const InfiniteCounter = (() => {
 					deepCopy(this.this.this)
 				)
 			},
-			loop(body = () => {}, start = this.this.class.class()) {
-				return this.this.this.class.static.whileloop(
+			loop(body = () => {}, start = this.this.this.this.class.class()) {
+				return this.this.this.this.class.static.whileloop(
 					this.this.this,
 					body,
 					start,
@@ -141,7 +136,6 @@ export const InfiniteCounter = (() => {
 					undefined
 				)
 			},
-			// ? QUESTION [general]: should one make it as 'this.this.class', or 'this.this.this.this.class'? In the former of the cases, the '.class' doesn't change with the 'this.this.this', whereas in the latter it does...
 			jumpForward(x, leftovers = {}) {
 				sh1(this, leftovers)
 				return this.jump(x, (a) => a.next(), leftovers)
@@ -152,7 +146,7 @@ export const InfiniteCounter = (() => {
 			},
 			map(icClass = this.class, leftovers = {}) {
 				sh1(this, leftovers)
-				let current = this.this.class.class()
+				let current = this.this.this.this.class.class()
 				let alterCurrent = icClass.class()
 				while (!leftovers.comparison(current, this.this.this))
 					alterCurrent = alterCurrent.next()
@@ -164,7 +158,6 @@ export const InfiniteCounter = (() => {
 				this.loop(() => revres.next())
 				return revres
 			},
-			// ? Generalize for the 'refactor.classes'? [Say, using the 'this.this.this.this.class.properties' property? But that has to assume that 'inter: cdieach' has been used...];
 			copy() {
 				return this.this.this.this.class.class(this.this.this.value)
 			},
@@ -221,9 +214,7 @@ export const GeneralArray = (() => {
 				fromCounter(counter, leftovers = {}) {
 					sh1static(this, leftovers)
 					const narr = this.empty()
-					counter.loop(() =>
-						narr.pushback(this.this.this.class.template.default())
-					)
+					counter.loop(() => narr.pushback(this.this.class.template.default()))
 					return narr
 				}
 			}
@@ -272,7 +263,7 @@ export const GeneralArray = (() => {
 							indexiter: (x) => x.object().next(),
 							end: (x) => x.object().this.class.template.isEnd(x.object()),
 							begin: (x) => x.object().begin(),
-							icclass: this.this.class.template.icclass,
+							icclass: this.this.this.this.class.template.icclass,
 							after: ID,
 							...template
 						},
@@ -509,7 +500,7 @@ export const GeneralArray = (() => {
 											)
 								  )
 								: this.concat(
-										this.this.this.class.static.fromCounter(
+										this.this.this.this.class.static.fromCounter(
 											this.length().get().difference(value)
 										)
 								  )
@@ -901,10 +892,10 @@ export const GeneralArray = (() => {
 	})
 })()
 
-// ? What about the submodules of modules? [shall they stay as-is?];
+// ! Refactor those heavily...; Also, consider the optimizations matter...
+// ? Question: does one want to allow the user to tweak the minimum implementation details for this one, pray?
 export const arrays = {
-	// TODO [general]: polish [look for small issues and solve them] and tidy [make the thing as of itself look more liked by oneself]...
-	LastIndexArray(template = {}) {
+	LastIndexArray(template = {}, garrtemplate = {}) {
 		const A = {
 			template: {
 				icclass: InfiniteCounter(counters.numberCounter()),
@@ -917,7 +908,6 @@ export const arrays = {
 				...template
 			}
 		}
-
 		A.class = GeneralArray({
 			this: A,
 			elem: function (
@@ -977,29 +967,83 @@ export const arrays = {
 			isEnd: function (array) {
 				return !!this.elem(array, undefined, true)[0]
 			},
-			icclass: A.template.icclass
+			icclass: A.template.icclass, 
+			...garrtemplate
 		})
-
 		return A
 	},
-	// * This is the 'arr.length > MAXLENGTH -> arr = [arr] ELSE arr.push([recursively, until hitting the 'min-depth']) THEN arr.push(newvalue)'-kind of an array [the one that is very resourceful and with slowly growin layers...]
-	// ! finish
-	// ? Just how complex does one want this to be, pray?
-	DeepArray(template = {}) {
-		// TODO: provide the template;
+	DeepArray(template = {}, garrtemplate = {}) {
+		// ? Is this a form (like in 'structure.mjs')? If so, do generalize...
+		// ! Refactor this - add as a common expression for the 'structure.mjs' lib module...;
+		const IDENTIFIER = {}
+		const ARRFORM = (x = []) => ({ arr: x, TOKEN: IDENTIFIER })
+		const isArr = (arr) => arr.TOKEN === IDENTIFIER
 		return {
 			template: {
-				icclass: InfiniteCounter(counters.numberCounter())
+				icclass: InfiniteCounter(counters.numberCounter()),
+				maxlen: variables.MAX_ARRAY_LENGTH.get,
+				...template
 			},
 			class: GeneralArray({
-				newvalue: function (array, value) {},
-				elem(array) {},
-				icclass: this.template.icclass
+				empty: ARRFORM(),
+				newvalue: function (array, value) {
+					let e = this.elem(array, true)[0]
+					if (e == undefined) {
+						if (e === null) 
+							return general.fix([array], ["currindex"], () => {	
+								array.currindex = array.currindex.previous()
+								e = this.elem(array, true)[0]	
+								if (e[0].length < this.template.maxarrlen) {
+									e.push(value)
+									return value
+								}
+								// ! Complete the algorithm implementation for the addition of new element to the current end of the DeepArray (the 'unconvinient' case, that requries finite-array 'dim' recursion...)	
+							})
+						
+						// ! Add the case for creating the new value in the DeepArray;
+					}
+					return (e[0][e[1]] = value)
+				},
+				elem(array, pointer = false) {
+					let i = array.init()
+					let fi = 0
+					let prevarrs = arrays.LastIndexArray().class()
+					let currarray = array.array
+					for (; !i.compare(array.currindex); fi++) {
+						if (currarray === array.array && fi === array.array.arr.length)
+							return [
+								i.equal(array.currindex.previous()) ? null : undefined
+							]
+						const isfibelow = fi < currarray.length
+						if (isfibelow) {
+							while (isArr(currarray.arr[fi])) {
+								prevarrs.pushback(currarray)
+								currarray = currarray.arr[fi]
+								continue
+							}
+							i = i.jumpForward(
+								aliases.native.number.fromNumber(
+									native.number.min([
+										this.this.template.maxlen,
+										currarray.arr.length
+									])
+								)
+							)
+						}
+						fi = isfibelow ? fi : 0
+						currarray = prevarrs.read(prevarrs.finish())
+						prevarrs.delete()
+					}
+					return pointer ? [[currarray, fi]] : [[currarray[fi]]]
+				},
+				isEnd(array) {
+					return this.elem(array)[0] == undefined
+				},
+				icclass: this.template.icclass, 
+				...garrtemplate
 			})
 		}
 	},
-	// ! ANOTHER SUCH CASE - how does one want to generalize the usage of 'template' outside the '.template' field?
-	// * More thought regarding the generalization procedures of the library is required...
 	CommonArray(template = {}) {
 		return {
 			template: { offset: -1, ...template },
@@ -1491,7 +1535,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 				const indexes = this.this.this.this.class.template.parentclass.class()
 				if (aliases.is.str(ustring))
 					return this.indexesOf(this.this.this.this.class.class(ustring))
-				if (this.this.this.class.is(ustring)) {
+				if (this.this.this.this.class.is(ustring)) {
 					// ! NOTE: (partially) the same code as in the 'split'; Pray, after further work on it - refactor...
 					let currcounter = this.init()
 					let backupcounter = this.init()
@@ -1512,8 +1556,8 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 								useparator
 									.tototalindex()
 									.map(
-										this.this.this.class.template.parentclass.template
-											.icclass
+										this.this.this.this.class.template.parentclass
+											.template.icclass
 									)
 							)
 						) {
@@ -1569,7 +1613,7 @@ export function UnlimitedString(parent = arrays.LastIndexArray) {
 			// The precise opposite of 'order': minimizes the length of each and every string available within the underlying GeneralArray;
 			// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code;
 			symbolic() {
-				const symstr = this.this.this.this.class()
+				const symstr = this.this.this.this.class.class()
 				for (const sym of this) symstr.pushback(sym)
 				this.this.this = symstr
 				return this
@@ -1612,7 +1656,7 @@ export const numbers = {
 	// ! The 'numbers' API (and ALL THE OTHER ONES in 'types') must be independent of the underlying InfiniteCounter classes and generators [meaning, one uses '.map' MOST extensively];
 	TrueInteger: (function (parentclass) {
 		const ONE = (_this) =>
-			_this.this.this.this.class(
+			_this.this.this.this.class.class(
 				_this.this.this.this.class.template.icclass.class().next()
 			)
 		const TWO = (_this) => ONE(_this).add()
@@ -1674,7 +1718,9 @@ export const numbers = {
 					return TrueRatio(this.this.this.this.class)(ONE(this), this.this.this)
 				},
 				map(icclass = this.this.this.this.class.template.icclass) {
-					return this.this.this.this.class(this.this.this.value.map(icclass))
+					return this.this.this.this.class.class(
+						this.this.this.value.map(icclass)
+					)
 				},
 				compare(compared) {
 					return this.this.this.value.compare(
@@ -1694,7 +1740,7 @@ export const numbers = {
 					return r
 				},
 				copy() {
-					return this.this.this.this.class(
+					return this.this.this.this.class.class(
 						native.copy.deepCopy(this.this.this.value.value)
 					)
 				},
@@ -1704,7 +1750,7 @@ export const numbers = {
 				},
 				// ! NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
 				root(x = TWO(this), ceil = false) {
-					let r = this.this.this.this.class()
+					let r = this.this.this.this.class.class()
 					let temp
 					while (!(temp = r.power(x)).compare(this)) r = r.add()
 					if (temp.equal(this) || ceil) return r
@@ -1745,7 +1791,7 @@ export const numbers = {
 				// ! add the defaults...
 				add(addratio) {
 					return this.this.this.this.class.static.simplified(
-						this.this.this.this.class(
+						this.this.this.this.class.class(
 							this.this.this.numerator
 								.multiply(addratio.denomenator)
 								.add(
@@ -1770,7 +1816,7 @@ export const numbers = {
 					)
 				},
 				invmult() {
-					return this.this.this.this.class(
+					return this.this.this.this.class.class(
 						this.this.this.numerator,
 						this.this.this.denomenator
 					)
@@ -1782,13 +1828,13 @@ export const numbers = {
 					)
 				},
 				copy() {
-					return this.this.this.this.class(
+					return this.this.this.this.class.class(
 						this.this.this.numerator,
 						this.this.this.denomenator
 					)
 				},
 				naivesum(ratio) {
-					return this.this.this.this.class(
+					return this.this.this.this.class.class(
 						this.this.this.numerator.add(ratio.numerator),
 						this.this.this.denomenator.add(ratio.denomenator)
 					)
@@ -1846,82 +1892,6 @@ export const numbers = {
 	}
 }
 
-// ? Does one want this in the library even, pray tell? [consider...]
-export const UniversalMap = CLASS({
-	defaults: {
-		notfound: undefined,
-		treatUniversal: false,
-		comparison: comparisons.valueCompare,
-		defkeys: [],
-		defvals: []
-	},
-	function: function (
-		keys = this.template.defkeys,
-		values = this.template.defvals,
-		// ? Keep this argument or not? [Thiking about removing currently...];
-		treatUniversal = this.template.treatUniversal
-	) {
-		// * Conversion from a non-array object...
-		if (!aliases.is.arr(keys)) {
-			if (keys.keys && keys.values && (treatUniversal || values === true)) {
-				values = keys.values
-				keys = keys.keys
-			} else {
-				values = aliases.obj.values(keys)
-				keys = aliases.obj.keys(keys)
-			}
-		}
-		return {
-			keys: keys,
-			values: values,
-			index: 0,
-			class: this,
-			get(key, number = 1) {
-				const indexes = aliases.native.array
-					.indexesOf({
-						comparison: this.class.template.comparison
-					})
-					.function(this.keys, key)
-				if (indexes.length === 0) return this.class.template.notfound
-				return indexes.slice(0, number).map((i) => this.values[i])
-			},
-			set(key, value) {
-				const index = aliases.native.array.indexesOf(
-					this.keys,
-					key,
-					this.class.template.comparison
-				)
-				if (index.length !== 0)
-					for (const _index of index) this.values[_index] = value
-				else {
-					this.keys.push(key)
-					this.values.push(value)
-				}
-				return value
-			},
-			[Symbol.iterator]: function* () {
-				for (this.index = 0; this.index < this.keys.length; this.index++)
-					yield this.get(this.keys[this.index])
-			},
-			*getkeys() {
-				for (this.index = 0; this.index < this.keys.length; this.index++)
-					yield this.keys[this.index]
-			},
-			// ? create an alias for checking if this kind of conversion is valid, perhaps? 'isValidObj', for instance...
-			toObject() {
-				const a = {}
-				for (let i = 0; i < this.keys.length; i++)
-					a[
-						(!["symbol", "number"].includes(typeof this.keys[i])
-							? JSON.stringify
-							: id)(this.keys[i])
-					] = this.values[i]
-				return a
-			}
-		}
-	}
-})
-
 // Utilizes the fact that JS passes objects by reference;
 export const Pointer = TEMPLATE({
 	defaults: { label: "", nullptr: undefined },
@@ -1930,6 +1900,7 @@ export const Pointer = TEMPLATE({
 	},
 	word: "class"
 })
+
 // * This thing will allow to create function-based types on top of an Array;
 // Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
 // Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
@@ -2117,13 +2088,13 @@ export function TreeNode(parentclass) {
 			// ! Generalize these (see, '.pushfront' and '.pushback') kinds of methods [both for the 'TreeNode' and the CLASSes in 'macros.mjs'];
 			pushback(v) {
 				this.this.this.children.pushback(
-					this.this.this.this.class(undefined, v, this)
+					this.this.this.this.class.class(undefined, v, this)
 				)
 				return this
 			},
 			pushfront(v) {
 				this.this.this.children.pushfront(
-					this.this.this.this.class(undefined, v, this)
+					this.this.this.this.class.class(undefined, v, this)
 				)
 				return this
 			},
@@ -2154,7 +2125,7 @@ export function TreeNode(parentclass) {
 				leftovers = {}
 			) {
 				// ! Issue - should one copy the 'node' value as well? [One ought at least allow the option...];
-				return this.this.this.this.class(
+				return this.this.this.this.class.class(
 					this.this.this.this.children.copy(
 						function (x) {
 							return f(x.node, ...arguments)
@@ -2279,7 +2250,7 @@ export function TreeNode(parentclass) {
 					.read(mindex.read())
 					.write(mindex.slice(mindex.init().next()), value)
 			},
-			// ? Generalize this thing? 
+			// ? Generalize this thing?
 			findAncestors(x, leftovers = {}) {
 				const froots = this.this.this.children.empty()
 				let currroots = this.findRoots(x, leftovers)
@@ -2289,7 +2260,7 @@ export function TreeNode(parentclass) {
 				}
 				return froots
 			},
-			// ! This thing is a special case of 'algorithms.array.common'; Use that (AGAIN!); 
+			// ! This thing is a special case of 'algorithms.array.common'; Use that (AGAIN!);
 			commonAncestors(values, leftovers = {}) {
 				return algorithms.array
 					.intersection(leftovers)

@@ -1,4 +1,3 @@
-// TODO: finish this introduction note [later...]; Plus, write new ones for each and every piece of the thing in question...
 /**
  * * math-expressions.js API source code main file, version 1.0 alpha (in work).
  * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
@@ -12,8 +11,6 @@ export * from "./modules/exports.mjs"
 
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;
 // * This way, for this thing, pray separate the 'returnless' version COMPLETELY into a different file [so that, one has the definition of it being one according...]
-
-// ! OLD GENERAL NOTES [previously within the 'instance' function...]:
 
 // TODO: later, consider deeply the use of each and every type of abstraction/notation; Think through how things are affected by it...
 // 		* Example: use of '() => {}' (arrow-functions), or 'function () {}' (plain anonymous functions); Or, use of 'class' or 'function'; Degree and cases of use of native JS 'this' variable...
@@ -72,3 +69,4 @@ export * from "./modules/exports.mjs"
 // TODO [later]: after all is done - relook through each and every file of the project feverishly, seek anything undone and uncompleted; 
 // TODO [later]: do some micro-optimizations of the library; Choose more memory- and time- performant solutions and native types, where possible; 
 // TODO [general]: create a proper '.copy' method for each and every class...
+// TODO [generally]: make a one whole new round regarding the workability of the code, when having finished the generalization procedures, fix everything, tune everything totally...

@@ -1,4 +1,8 @@
-// TODO: pray finish the sketch for the 'Structure' API... (used for extended work with native JS object/array-forms...)
+// * This is the 'Structure API' part of the package - it contains means of working with arbitrary multilayered recursive forms, the shape of which is defined by the user;
+
+import * as algorithms from "./algorithms.mjs"
+
+// ! Use this extensively! [scan the code for any places where forms are used implicitly and refactoring is in place...]
 export function objStructure(template = {}) {
 	return {
 		template: {
@@ -39,9 +43,7 @@ export function objStructure(template = {}) {
 					const keys = Object.keys(object)
 					return (
 						valueCompare(keys, Object.keys(current)) &&
-						!!min(
-							keys.map((k) => this.isisomorphic(object[k], current[k]))
-						)
+						!!min(keys.map((k) => this.isisomorphic(object[k], current[k])))
 					)
 				}
 			}
@@ -54,4 +56,14 @@ export function arrStructure(template = {}) {
 		form: aliases.is.arr,
 		...template
 	})
+}
+
+// * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'comparisons.refCompare' and the out-of-scope object constant;
+export function typeConst(f, n = 1) {
+	const TCONST = {}
+	// ! make an alias for the function in the map;
+	const arr = [TCONST].append(
+		algorithms.array.native.generate(n - 1).map(() => ({ ...TCONST }))
+	)
+	return f(Object.freeze(arr))
 }

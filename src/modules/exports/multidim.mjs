@@ -43,7 +43,7 @@ export const native = {
 					: 0)
 			)
 		}
-	}), 
+	})
 }
 
 // Counts all the array-elements within a multi-dimensional array;
@@ -68,10 +68,11 @@ native.totalElems = function (template = {}) {
 	})
 }
 
+// ! CREATE THE FINITE-ARRAY VERSION OF 'dim' (still uses InfiniteCounters, lest not useful) (add the generalization for forms to the 'structure.mjs'); 
 export const dim = TEMPLATE({
 	defaults: { comparison: aliases.refCompare },
 	function: function (recarr = this.template.genarrclass.static.empty()) {
-		if (this.template.comparison(recarr.class, this.template.genarrclass))
+		if (this.template.genarrclass.is(recarr))
 			return this.template.icclass
 				.class()
 				.next()

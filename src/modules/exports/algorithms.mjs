@@ -6,11 +6,29 @@
 
 // * List of new abstract types interfaces to be implemented:
 // ! First, however, 1.,3. require individual work on the 'Tree' and 4. may require some additional work on the Queue;
-// 	% 1. Heap <- types.TreeNode; 
+// 	% 1. Heap <- types.NTreeNode; 
 // 	% 2. Graph; 
-//  % 3. NTreeNode <- types.TreeNode; 
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
-// 	? 4. Prioritee queue? (generalized Qeueu);
+// 	? 3. Prioritee queue? (generalized Qeueu);
+
+// Extends 'TreeNode'; 
+export function NTreeNode(parentclass) {
+	return EXTENSION({
+		defaults: {
+			parentclass: parentclass, 
+			names: ["treenode"]
+		}, 
+		methods: {
+			// ! Make a list; 
+		}, 
+		properties: {
+			// ! Make a list; 
+		}, 
+		recursive: true, 
+		// ! Decide this! 
+		toextend: [], 
+	})
+}
 
 import { TEMPLATE, EXTENSION } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
