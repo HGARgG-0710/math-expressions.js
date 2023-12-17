@@ -1053,7 +1053,7 @@ export const arrays = {
 			})
 		}
 	},
-	CommonArray(template = {}) {
+	CommonArray(template = {}, garrtemplate = {}) {
 		return {
 			template: { offset: -1, ...template },
 			class: GeneralArray({
@@ -1071,7 +1071,7 @@ export const arrays = {
 						start: this.template.offset
 					})
 				),
-				...template
+				...garrtemplate
 			})
 		}
 	}
@@ -1863,35 +1863,6 @@ export const numbers = {
 			// ! work more on this list...Decide if it ought to remain empty for the time being...;
 			toextend: []
 		})
-	},
-	InfiniteSum(template = {}) {
-		return {
-			template: { ...template },
-			class: function (f = template.f) {
-				return {
-					f: f,
-					// * Sums up to a given point 'point'; The 'template' has an index-'generator' in it... That's used for index-generation, and 'point' is of the same icounter-type...
-					// uses 'f' for it...
-					sum(point) {
-						let added = TrueInteger(this.template.icclass).class()
-						this.template.icclass.static.whileloop(
-							this.template.icclass.class(),
-							point,
-							(i) => {
-								added = added.add(this.f(i))
-							}
-						)
-						return added
-					},
-					add(is) {
-						return InfiniteSum(this.class.template).class((i) =>
-							this.f(i).add(is.f(i))
-						)
-					}
-					// ? Does one want to implement anything else for this thing???
-				}
-			}
-		}
 	}
 }
 

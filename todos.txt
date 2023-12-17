@@ -76,6 +76,11 @@ It gets changed actively.
 	11.4. (Possibly, possibly not, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
 	11.5. (Possibly?) Combinatorics? 
 	11.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
+	11.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
+		Things that are elementary, give a way for their composition production; 
+		Then, allow for such infinite composition, and consequently - partial computation of them too...; 
+		
+		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 
 
 12. MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
 

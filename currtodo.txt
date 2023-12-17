@@ -29,23 +29,28 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 				1.1.1.1.2. Then, generalize; 
 			
 			1.1.2. TrueRatio
-			1.1.3. InfiniteSum
-			1.1.4. DeepArray [proritee N1]
-			1.1.5. NTreeNode [prioritee N1]; 	
-			1.1.6. Graph [prioritee N2]
+			
+			1.1.3. DeepArray (the new element addition for a general case faraway-index) [proritee N1]
+
+			1.1.4. NTreeNode [prioritee N1]; 	
+			1.1.5. Graph [prioritee N2]
+
+			1.1.6. InfiniteNumber [prioritee N1]
+			1.1.7. InfiniteString [prioritee N1]
 
 		1.2. Implement: 
 			1.2.1. Heap [prioritee N1]; 
 			1.2.2. sort.heap() [prioritee N2]
-			1.2.3. sort.radix() [prioritee N1]
+			1.2.3. Real [prioritee N2] - make a very brisk sketch that only features the abstract '.'-dot-position + implementations of binary versions of elementary arithmetic operations; 
+
 		
 		1.3. Code polishing: 
-			1.3.1. Reform the 'numerics' and 'numeric.native' [NEEDED FOR NumberEquation DEFAULT PARSING PROCEDURE]; 
+			1.3.1. Reform the 'numeric.native' and extend the general version of 'numeric' [NEEDED FOR NumberEquation DEFAULT PARSING PROCEDURE]; 
 			1.3.2. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
 				1.3.2.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
 			1.3.3. Refactoring all the TrueInteger and InfiniteCounter code that uses elementary objects like '.next().next()...', or '.add().add()...'; 
 				Look into that generally pray...
-			1.3.4. Complete ALL the TEMPLATEs' defaults; 
+			1.3.4. Complete ALL the TEMPLATEs' defaults and use the 'refactor.defaults' for storing the repeating defaults and referencing them...; 
 	
 2. Side: Testing; 
 	The library's approaching the v1.0 release; 

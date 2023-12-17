@@ -5,7 +5,7 @@
 // 		2. Seek out those that are used in places of the library that are considered desired/essential, keep them. The rest - replace with 'finite()' call;
 
 // * List of new abstract types interfaces to be implemented:
-// 	% 1. Heap <- types.NTreeNode;
+// 	% 1. Heap <- NTreeNode;
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
 // 	? 2. Prioritee queue? (generalized Qeueu);
 
@@ -135,12 +135,13 @@ export const sort = {
 				.copy(this.template.tintclass.static.fromCounter)
 				.map(numeric.toPolystring(this.template).function)
 			const maxsize = numeric.sameLength(this.template).function(polyconverted)
-			const toorder = (ordered, i) => this.template.alphabet
-				.copy((l) => ordered.suchthat((y) => y.read(i) === l))
-				.suchthat((x) => !x.isEmpty()).join()
+			const toorder = (ordered, i) =>
+				this.template.alphabet
+					.copy((l) => ordered.suchthat((y) => y.read(i) === l))
+					.suchthat((x) => !x.isEmpty())
+					.join()
 			let ordered = polyconverted.copy()
-			for (const x of maxsize) 
-				ordered = toorder(ordered, x)
+			for (const x of maxsize) ordered = toorder(ordered, x)
 			return ordered
 		},
 		isthis: true

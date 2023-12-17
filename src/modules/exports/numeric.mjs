@@ -1,34 +1,40 @@
+// * Function definitions related to different number systems representations and alphabets;
+
 import { general } from "../refactor.mjs"
 import { TEMPLATE } from "./../macros.mjs"
 import { max, min } from "./orders.mjs"
 
-// * Stuff related to number systems and alphabets;
-// here, various predefined string-functions for representations of numbers would go;
 export const polystring = TEMPLATE({
 	defaults: {
 		alphabet: variables.defaultAlphabet.get,
 		ustrclass: general.DEFAULT_USTRCLASS,
-		separator: ""
+		tintclass: general.DEFAULT_TINTCLASS,
+		icclass: general.DEFAULT_ICCLASS
 	},
 	function: function (counter = this.template.icclass.class()) {
-		// ? Consider - does one really want these things to be saved into a variable...
-		const TIClass = TrueInteger(this.template.icclass).class
-		// ? Make this thing an 'alias'?
-		const iccmap = (x) => x.map(this.template.icclass)
-		const converted = TIClass(iccmap(this.template.alphabet.length))
+		const converted = this.template.tintclass.fromCounter(
+			this.template.alphabet.length().get()
+		)
 
-		let copy = deepCopy(counter)
-		let index = this.template.ustrclass.template.icclass()
+		let copy = counter.copy()
 		const representation = this.template.ustrclass.class()
 		const copyZero = copy.class.class()
 
-		for (; copy.compare(copyZero); index = index.next()) {
-			const modulo = copy.modulo(converted.power(TIClass(iccmap(index))))
+		for (
+			let index = this.template.icclass.class();
+			copy.compare(copyZero);
+			index = index.next()
+		) {
+			const modulo = this.template.tintclass.static
+				.fromCounter(copy)
+				.modulo(
+					converted.power(this.template.tintclass.static.fromCounter(index))
+				)
 			representation.write(index, this.template.alphabet.read(modulo))
 			copy = copy.add(modulo.invadd())
 		}
 
-		return representation.join(this.template.separator)
+		return representation
 	}
 })
 
@@ -92,6 +98,7 @@ export const sameLength = TEMPLATE({
 	isthis: true
 })
 
+// ! Rework this, pray... [either delete completely, or look through the code, fix it...]; 
 export const native = {
 	// * Brings whatever is given within the given base to base 10;
 	// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
