@@ -2,7 +2,9 @@ This is a temporary general project todos list.
 It gets changed actively. 
 
 1. Ensure the possibility of the thing to work with both Deno and NodeJS;
+
 	Similarly, ensure the presence of CommonJS modules... (distinction upon '.mjs' and '.cjs' extensions + TypeScript...); 
+	The thing ought to be a NodeJS module which is runnable by Deno (meaning, adhereing to the Node16 standard, at least); 
 
 2. Documentation
 

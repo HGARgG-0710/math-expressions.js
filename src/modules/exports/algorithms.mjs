@@ -9,7 +9,7 @@
 // * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
 // 	? 2. Prioritee queue? (generalized Qeueu);
 
-import { TEMPLATE, EXTENSION } from "../macros.mjs"
+import { TEMPLATE, EXTENSION, ID } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
@@ -54,9 +54,14 @@ export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
 }
 
 // Extends 'TreeNode';
+// ! Problem - with the way that it currently works...; 
+// * The NTree must ensure that each and every layer of it has no more than n entries (children); This way, 
+// ^ CONCLUSION: the way for this to be implemented is the following - create a function 'ensureN', then proceed with improvements and extension of the CLASS and EXTENSION macros, 
+// ^ 	so as to allow for making extensions, that have the methods being 'wrapped' into an 'out'-function; 
 export function NTreeNode(parentclass = general.DEFAULT_TREENODECLASS) {
 	return EXTENSION({
 		defaults: {
+			n: 2,
 			parentclass: parentclass,
 			names: ["treenode"]
 		},
@@ -66,37 +71,109 @@ export function NTreeNode(parentclass = general.DEFAULT_TREENODECLASS) {
 		properties: {
 			// ! Make a list;
 		},
-		recursive: true,
-		// ! Decide this!
-		toextend: []
+		recursive: true
 	})
 }
 
+// * NOTE: as the Graph allows for dynamically defined graphs (namely, the graphs with different values of 'edges', this doesn't necessarily always make sense);
+// ^ NOTE: this class also allows for finite computation of infinitely large graphs (namely, those that use the recursive objects);
 export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
 			names: ["verticies"],
-			defaults: {
-				constructor: [this.template.parentclass.static.empty],
-				inter: function (args, i) {
-					if (!i) return edges
-					return args[0].copy((x, i) => Vertex(x, args[1].read(i)))
+			defaults: function () {
+				return {
+					constructor: [this.template.parentclass.static.empty],
+					inter: function (args, i) {
+						if (!i) return edges
+						return args[0].copy((x, i) => Vertex(x, args[1].read(i)))
+					}
 				}
 			}
 		},
 		methods: {
-			// * Methods list:
-			// 1. getAdjacent(index); - returns the adjacent verticies to the 'verticies.read(index)';
-			// 2. addvertex(value); - adds a new vertex with a given value 'value';
-			// 3. addedge(indexfrom, indexto);
-			// 4. computevertex(indexv, indexe); - adds the vertex value of 'indexv.edges.read(indexe)'
-			// 5. write(index, value); - gives the value to a vertex at the index 'index';
-			// 6. read(index); - returns the '.value' of the vertex at the index 'index';
-			// 7. deledge(indv, inde); - deletes the edge ;
-			// 8. delete(index); - deletes the vertex at the index 'index' and all the edges that connect with it...
-			// ? 9. deledgeval(index, value) - deletes the edge of vertex at index 'index' by its value?
-			// ^ NOTE: this class allows for infinitely large graphs (namely, those that use the recursive objects);
+			getAdjacent(index) {
+				return this.this.this.verticies.read(index).edges.copy(aliases.call)
+			},
+			addvertex(
+				value,
+				edges = this.this.this.this.class.template.parentclass.static.empty()
+			) {
+				this.pushback(Vertex(value, edges))
+				return this
+			},
+			addedge(
+				index = this.init(),
+				edge = aliases.function._const(this.this.this.verticies.read(index))
+			) {
+				this.this.this.verticies.read(index).edges.pushback(edge)
+				return this
+			},
+			computevertex(indexv, indexe) {
+				return this.pushback(
+					this.this.this.verticies.read(indexv).edges.read(indexe)
+				)
+			},
+			write(index, value) {
+				this.this.this.verticies.read(index).value = value
+				return this
+			},
+			read(index = this.init()) {
+				return this.this.this.verticies.read(index).value()
+			},
+			deledge(indv, inde) {
+				return this.this.this.verticies.read(indv).edges.delete(inde)
+			},
+			delete(index, leftovers = {}) {
+				const deleted = this.this.this.verticies.read(index)
+				this.this.this.verticies.delete(index)
+				const todelete =
+					this.this.this.this.class.template.paretnclass.static.empty()
+				for (const x of this.this.this.verticies.keys()) {
+					const read = this.this.this.verticies.read(x)
+					for (const e of read.edges.keys())
+						if (leftovers.comparison(deleted, read.edges.read(e)()))
+							todelete.pushback([x, e])
+				}
+				for (const td of todelete)
+					this.this.this.verticies.read(td[0]).edges.delete(td[1])
+				return this
+			},
+			copy(
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template,
+				leftovers = {}
+			) {
+				return this.this.this.this.class.class(
+					this.this.this.verticies.copy(f, isclass, template, leftovers)
+				)
+			},
+			suchthat(predicate = aliases.TRUTH) {
+				return this.this.this.this.class(
+					this.this.this.verticies.copied("suchthat", [
+						(x) =>
+							predicate(x.value()) &&
+							x.edges().every((y) => predicate(y().value()))
+					])
+				)
+			},
+			*[Symbol.iterator]() {
+				for (const x of this.keys()) yield this.read(x)
+			},
+			deledgeval(index, value, leftovers = {}) {
+				const todelinds =
+					this.this.this.this.class.template.parentclass.static.empty()
+				const edges = this.this.this.verticies.read(index).edges()
+				for (const x of edges.keys())
+					if (leftovers.comparison(x().value(), value)) todelinds.pushback(x)
+				for (const ind of todelinds) edges.delete(ind)
+				return this
+			}
+			// ? Add any more methods?
 		},
 		recursive: true
 	})
@@ -116,7 +193,6 @@ export const Vertex = (value, edges) => {
 // 			B.1. 'n' - the 'n', on which the 'n'-ary Tree, on which the Heap is based upon will be built [By default, equals to 2 in the appropriate InfiniteCounter class - the one used by the Tree-parent's GeneralArray 'parentclass' is used];
 //	* Only then, may one finish the implementation of the thing in question...;
 export const sort = {
-	// ! PROBLEM [with the 'radix' sort] - in order for the thing to be [appropriately...] converted to a polystring, it must ALREADY be sorted [so, it HAS to be an InfiniteCounter... of sorts];
 	radix: TEMPLATE({
 		defaults: [
 			function () {
@@ -359,8 +435,7 @@ export const sort = {
 	// todo: more sorting algorithms;
 }
 
-// ! Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
-// ? Does one want the finite versions for those? [Current answer: nay]
+// ? Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
@@ -538,7 +613,7 @@ export const search = {
 	})
 }
 
-// ! generalize too;
+// ! finish;
 export const integer = {
 	native: {
 		factorOut: function (number = 1) {
@@ -665,6 +740,10 @@ export const integer = {
 			)
 		},
 
+		// ! Issue - this is a general binomial (not necessarily Integral!); Difficulties with generalizing this, as well...
+		// ^ IDEAs for current directions: 
+		// 	1. Delete it from the library [for the moment, return back and implement properly for the Real numbers] (in the v1.1.); 
+		//  2. Make an integer-only version, keep this (as a bonus, works with native JS float); [currently chosen]
 		binomial: function (n, k) {
 			if (isNaN(n) || isNaN(k))
 				throw new RangeError(
@@ -856,7 +935,7 @@ export const integer = {
 				.uevaluate()
 				.function(expressions.Expression("*", [], numbers))
 		}
-	})
+	}), 
 }
 
 integer.native.commonDivisors = function (...nums) {
@@ -1146,7 +1225,9 @@ export const array = {
 		}
 	}),
 	common: TEMPLATE({
-		defaults: {},
+		defaults: {
+			f: ID
+		},
 		function: function (...args) {
 			return native.array
 				.intersections(this.template)

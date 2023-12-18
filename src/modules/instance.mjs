@@ -13,7 +13,6 @@ import * as numeric from "./exports/numeric.mjs"
 import * as orders from "./exports/orders.mjs"
 import * as predicates from "./exports/predicates.mjs"
 import * as printing from "./exports/printing.mjs"
-import * as statistics from "./exports/statistics.mjs"
 import * as structure from "./exports/structure.mjs"
 import * as types from "./exports/types.mjs"
 import * as variables from "./exports/variables.mjs"
@@ -32,7 +31,6 @@ export function instance(transformation = ID) {
 		orders: NOMODULE(orders),
 		predicates: NOMODULE(predicates), 
 		printing: NOMODULE(printing),
-		statistics: NOMODULE(statistics),
 		structure: NOMODULE(structure),
 		types: NOMODULE(types),
 		variables: NOMODULE(variables)

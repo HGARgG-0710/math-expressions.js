@@ -252,3 +252,5 @@ export const adddefaults =
 			return f(...args)
 		}
 	}
+
+export const call = (x) => x()

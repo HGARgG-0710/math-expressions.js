@@ -2224,7 +2224,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 					.read(mindex.read())
 					.write(mindex.slice(mindex.init().next()), value)
 			},
-			// ? Generalize this thing?
+			// ? Generalize?
 			findAncestors(x, leftovers = {}) {
 				const froots = this.this.this.children.empty()
 				let currroots = this.findRoots(x, leftovers)
@@ -2234,11 +2234,10 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 				}
 				return froots
 			},
-			// ! This thing is a special case of 'algorithms.array.common'; Use that (AGAIN!);
 			commonAncestors(values, leftovers = {}) {
 				return algorithms.array
-					.intersection(leftovers)
-					.function(values.copy((x) => this.findAncestors(x, leftovers)))
+					.common({ f: (x) => this.findAncestors(x, leftovers), ...leftovers })
+					.function(values)
 			}
 		},
 		static: {

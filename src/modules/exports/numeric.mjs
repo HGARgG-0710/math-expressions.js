@@ -3,6 +3,8 @@
 import { general } from "../refactor.mjs"
 import { TEMPLATE } from "./../macros.mjs"
 import { max, min } from "./orders.mjs"
+import * as expressions from "./expressions.mjs"
+import * as variables from "./variables.mjs"
 
 export const polystring = TEMPLATE({
 	defaults: {
@@ -98,36 +100,92 @@ export const sameLength = TEMPLATE({
 	isthis: true
 })
 
-// ! Rework this, pray... [either delete completely, or look through the code, fix it...]; 
+export const baseconvert = TEMPLATE({
+	defaults: function () {
+		return {
+			ustrclass: general.DEFAULT_USTRCLASS,
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			shrink: false
+		}
+	},
+	function() {
+		return {
+			alphabetfrom: this.template.genarrclass.static.empty(),
+			alphabetto: this.template.genarrclass.static.empty(),
+			empty: this.template.ustrclass.class()
+		}
+	},
+	function: function (numstr = this.tepmlate.empty) {
+		return polystring({
+			...this.template,
+			alphabet: this.template.alphabettos
+		}).function(
+			fromPolystring({
+				...this.template,
+				alphabet: this.template.alphabetfrom
+			}).function(numstr)
+		)
+	}
+})
+
 export const native = {
 	// * Brings whatever is given within the given base to base 10;
-	// TODO: generalize this "alphabet" thing... Put this as a default of some kind somewhere...
-	fromPolystring: function (nstr, alphabet = defaultAlphabet) {
-		return repeatedArithmetic(
-			generate(0, nstr.length - 1).map(
-				(i) => alphabet.indexOf(nstr[i]) * alphabet.length ** i
-			),
-			"+"
-		)
-	},
+	fromPolystring: TEMPLATE({
+		defaults: {
+			alphabet: variables.defaultAlphabet.get,
+			defstr: ""
+		},
+		function: function (nstr = this.template.defstr) {
+			return expressions.evaluate(
+				expressions.Expression(
+					"+",
+					[],
+					generate(0, nstr.length - 1).map(
+						(i) =>
+							this.template.alphabet.indexOf(nstr[i]) * alphabet.length ** i
+					)
+				)
+			)
+		}
+	}),
 
 	// * Brings whatever in base 10 to whatever in whatever base is given...
-	polystring: function (n, base, alphabet = defaultAlphabet) {
-		const coefficients = []
-		// TODO: call this thing nrepresentation(), then use here...
-		// TODO: change this for either one's own implementation of log, or this, as an alias...
-		let i = Math.floor(Math.log(n) / Math.log(base))
-		while (n !== 0) {
-			// TODO: add an operator for that to the defaultTable...
-			n = (n - (n % base ** i)) / base
-			coefficients.push(n)
-			i--
+	polystring: TEMPLATE({
+		defaults: {
+			alphabet: variables.defaultAlphabet
+		},
+		function: function (n, base = this.template.base) {
+			const coefficients = []
+			const base = this.template.alphabet.length
+			let i = Math.floor(Math.log(n) / Math.log(base))
+			while (n !== 0) {
+				const k = (n - (n % base ** i)) / base ** i
+				n -= k * base ** i
+				coefficients.push(k)
+				i--
+			}
+			return coefficients.map((i) => this.template.alphabet[i]).join("")
 		}
-		// TODO: create a generalized map() function that would map to both functions, arrays and objects;
-		return coefficients.map((i) => alphabet[i]).join("")
-	},
+	}),
 
-	baseconvert: function (a, basebeg, baseend) {
-		return nbasereverse(nbase(a, basebeg), baseend)
-	}
+	// * Convert a numeric string in one base to a base string in another;
+	baseconvert: TEMPLATE({
+		defaults: {
+			alphabet: variables.defaultAlphabet,
+			from: 2,
+			to: 16
+		},
+		function: function (a, basefrom = this.template.from, baseto = this.template.to) {
+			return native
+				.polystring({ alphabet: this.template.alphabet })
+				.function(
+					native.fromPolystring({ alphabet: this.template.alphabet })(
+						a,
+						basefrom
+					),
+					baseto
+				)
+		}
+	})
 }
