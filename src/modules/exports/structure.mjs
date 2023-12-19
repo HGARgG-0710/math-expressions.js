@@ -24,12 +24,9 @@ export function objStructure(template = {}) {
 				},
 				equivalent: function () {
 					const o = {}
-					// ? Just what arguments instead of 'this.template.template' does one desire for the objStructure in this one case, pray tell?
 					for (const x in this.template.object)
 						o[x] = this.template.form(this.template.obj[x])
-							? objStructure(this.template.template)
-									.function(this.template.obj[x])
-									.equivalent()
+							? this.function(this.template.obj[x]).equivalent()
 							: this.template.compequiv(obj[x])
 					return o
 				},
@@ -41,6 +38,7 @@ export function objStructure(template = {}) {
 						)
 					}
 					const keys = Object.keys(object)
+					// ! Not sufficiently general - need ability to set arbitary comparisons (for instance, 'refCompare...', so that one could check for typeConst results... - INFINITE POTENTIAL FOR COMPARISON-CONSTANT CREATION...)
 					return (
 						valueCompare(keys, Object.keys(current)) &&
 						!!min(keys.map((k) => this.isisomorphic(object[k], current[k])))
@@ -52,7 +50,7 @@ export function objStructure(template = {}) {
 }
 
 export function arrStructure(template = {}) {
-	return this.objStructure({
+	return objStructure({
 		form: aliases.is.arr,
 		...template
 	})

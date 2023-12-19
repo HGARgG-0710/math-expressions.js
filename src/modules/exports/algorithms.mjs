@@ -4,11 +4,6 @@
 // 		1. Create the general versions for each and every single one of them [generalizaion];
 // 		2. Seek out those that are used in places of the library that are considered desired/essential, keep them. The rest - replace with 'finite()' call;
 
-// * List of new abstract types interfaces to be implemented:
-// 	% 1. Heap <- NTreeNode;
-// * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
-// 	? 2. Prioritee queue? (generalized Qeueu);
-
 import { TEMPLATE, EXTENSION, ID } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
@@ -120,8 +115,8 @@ export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
 				return {
 					constructor: [this.template.parentclass.static.empty],
 					inter: function (args, i) {
-						if (!i) return edges
-						return args[0].copy((x, i) => Vertex(x, args[1].read(i)))
+						if (!i) return [edges]
+						return [args[0].copy((x, i) => Vertex(x, args[1].read(i)))]
 					}
 				}
 			}
@@ -216,6 +211,84 @@ export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
 // ? Generalize this - work on defaults, remake into a proper methodless class...
 export const Vertex = (value, edges) => {
 	return { value, edges }
+}
+
+// ! General issue [1] - the thing must [somehow] ensure the Heap property for the given 'template.predicate', passed array and a root node value...
+// * Oneself has written a solution that touches the PairingHeap, now the matter comes down to the making generalization of its own...
+// ! General issue [2; small] - currently, the niether TreeNode nor Heaps support the empty '.value'; Pray think more on it... (implement a solution)
+export const heaps = {
+	PairingHeap(parentclass = general.DEFAULT_TREENODECLASS) {
+		return EXTENSION({
+			defaults: {
+				check: true,
+				parentclass: parentclass,
+				names: ["treenode"],
+				defaults: {
+					inter: function (args) {
+						aliases.native.object.ensureProperty(args, 2, this.template.check)
+						if (args[2]) {
+							const tempcopy = args[1].copied("concat", [args[0]])
+							const m = orders
+								.most({
+									comparison: (x, y) => this.template.predicate(x, y)
+								})
+								.function(tempcopy)
+							return [m, tempcopy.delval(m)]
+						}
+						return [args[0], args[1]]
+					}
+				}
+			},
+			methods: {
+				merge(
+					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
+				) {
+					if (heaps.length().get().compare(heaps.init().next())) {
+						if (!heaps.init().next().compare(heaps.length))
+							return this.merge(
+								this.this.this.this.class.template.parentclass.template.parentclass.static.fromArray(
+									[heaps.read()]
+								)
+							).merge(heaps.slice(heaps.init().next()))
+						function X(ac, a, b, checked = false) {
+							if (
+								checked ||
+								this.template.predicate(
+									[a, b].map((x) => x.treenode.value)
+								)
+							) {
+								const t = a.treenode.value
+								// ? A copying procedure of sorts? [namely - how safe/general is it to do this kind of direct referencing?]
+								ac.treenode.value = b.treenode.value
+								ac.pushback(t)
+								return ac
+							}
+							return X(ac, b, a, true)
+						}
+						return X(this, this.this.this, heaps[0])
+					}
+					return this
+				},
+				top() {
+					return this.this.this.treenode.value
+				},
+				add(elem) {
+					return this.merge(this.this.this.this.class.class(elem))
+				},
+				topless() {
+					return this.merge(this.this.this.treenode.children)
+				}, 
+				// ? Add anything else here? 
+			},
+			recursive: true
+		})
+	}
+	// ! List
+	// 		1.1. Fibonacci Heap;
+	// 		1.2. NAry heap (generalization of binary heap);
+	// 		1.3. Binomial heap;
+	// * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
+	// 	! Make Prioritee queue - requires a 'heapclass' template variable;
 }
 
 // TODO: pray make sure of the universally chosen order of arguments throughout the library usage of 'this.template.predicate'; Generally, ensure such small things and standards;

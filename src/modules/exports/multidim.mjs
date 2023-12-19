@@ -5,7 +5,7 @@ import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as aliases from "./aliases.mjs"
-import * as order from "./orders.mjs"
+import * as orders from "./orders.mjs"
 
 export const native = {
 	// ! rewrite using the repeatedApplication...
@@ -65,8 +65,7 @@ export const native = {
 
 // Counts all the array-elements within a multi-dimensional array;
 native.arrElems = function (template = {}) {
-	return (x) =>
-		array.native.totalElems(template)(x) - array.native.nonArrElems(template)(x)
+	return (x) => native.totalElems(template)(x) - native.nonArrElems(template)(x)
 }
 
 // Counts all non-array elements within a multidimensional array passed... [recursively so]
@@ -196,6 +195,7 @@ export const findDeepUnfilled = TEMPLATE({
 		}).function
 	}
 }).function()
+
 // * all of these things ought to have aliases...
 export const findDeepUnfilledArr = TEMPLATE({
 	defaults: { type: aliases.is.arr, comparison: (a, b) => a <= b.length, self: true },
@@ -206,6 +206,7 @@ export const findDeepUnfilledArr = TEMPLATE({
 		})
 	}
 }).function()
+
 export const findDeepLast = TEMPLATE({
 	defaults: {
 		reversed: true

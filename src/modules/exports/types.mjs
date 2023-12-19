@@ -1922,11 +1922,9 @@ export const Pointer = TEMPLATE({
 	word: "class"
 })
 
-// * Architecture plan:
-// 		1. Recieve input in the UnlimitedString desired;
-// 		2. Parse it (using the user-defined function) to obtain the Expression;
-// 		3. Using the 'uevaluate()', approximate the Expression's values (using the user-defined table of operators);
-// 	  * 4. Add methods for ANALYSIS of the result of 'approximation'
+// Plan leftovers:
+// 		1. Using the 'uevaluate()', approximate the Expression's values (using the user-defined table of operators);
+// 	  * 2. Add methods for ANALYSIS of the result of 'approximation'
 export const NumericEquality = CLASS({
 	// ! Add a parsing default! [And a format for its result - that too is crucial for the implementation details...];
 	defaults: {},
@@ -2049,6 +2047,19 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 		defaults: {
 			parentclass: parentclass,
 			names: ["children"],
+			defaults: {
+				inter: function (args, _i, instance) {
+					return [
+						args[0].copy((x) =>
+							this.class(
+								this.template.parentclass.static.empty(),
+								x,
+								instance
+							)
+						)
+					]
+				}
+			},
 			defaultnode: undefined,
 			unfound: undefined
 		},
@@ -2274,7 +2285,7 @@ export function UnlimitedSet(parentclass = general.DEFAULT_GENARRCLASS) {
 			names: ["genarr"],
 			defaults: {
 				inter: function (genarr = this.template.genarrclass.static.empty()) {
-					return genarr.copied("suchthat", [predicates.allUnique])
+					return [genarr.copied("suchthat", [predicates.allUnique])]
 				}
 			}
 		},
