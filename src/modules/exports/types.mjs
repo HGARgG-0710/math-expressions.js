@@ -7,6 +7,7 @@ import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as native from "./native.mjs"
 import * as predicates from "./predicates.mjs"
+import * as multidim from "./multidim.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
@@ -981,35 +982,43 @@ export const arrays = {
 		})
 		return A
 	},
+	// * Note: this one requires another GeneralArray class to be used;
 	DeepArray(template = {}, garrtemplate = {}) {
 		// ? Is this a form (like in 'structure.mjs')? If so, do generalize...
 		// ! Refactor this - add as a common expression for the 'structure.mjs' lib module...;
 		const IDENTIFIER = {}
 		const ARRFORM = (x = []) => ({ arr: x, TOKEN: IDENTIFIER })
 		const isArr = (arr) => arr.TOKEN === IDENTIFIER
-		return {
+		const X = {
 			template: {
 				icclass: InfiniteCounter(counters.numberCounter()),
 				maxlen: variables.MAX_ARRAY_LENGTH.get,
+				genarrclass: general.DEFAULT_GENARRCLASS,
+				filling: null,
 				...template
 			},
 			class: GeneralArray({
 				empty: ARRFORM(),
 				newvalue: function (array, value) {
-					let e = this.elem(array, true)[0]
-					if (e == undefined) {
-						if (e === null)
-							return general.fix([array], ["currindex"], () => {
-								array.currindex = array.currindex.previous()
-								e = this.elem(array, true)[0]
-								if (e[0].length < this.template.maxarrlen) {
-									e.push(value)
-									return value
-								}
-								// ! Complete the algorithm implementation for the addition of new element to the current end of the DeepArray (the 'unconvinient' case, that requries finite-array 'dim' recursion...)
-							})
+					let e = this.elem(array, true)
+					if (e[0] == undefined) {
+						if (e[0] === null) {
+							const flayer = firstUnfilledLayer(array.array)
+							if (flayer) {
+								let p = array.array
+								for (const x of flayer) p = p[x].arr
+								p.push(value)
+								return value
+							}
+						}
 
-						// ! Add the case for creating the new value in the DeepArray;
+						for (const y of e[1].previous())
+							general.fix([array], ["currindex"], () => {
+								array.currindex = array.currindex.jumpBackward(
+									e[1].previous().jumpBackWard(y)
+								)
+								this.newvalue(array, X.template.filling)
+							})
 					}
 					return (e[0][e[1]] = value)
 				},
@@ -1019,10 +1028,10 @@ export const arrays = {
 					let prevarrs = arrays.LastIndexArray().class()
 					let currarray = array.array
 					for (; !i.compare(array.currindex); fi++) {
-						if (currarray === array.array && fi === array.array.arr.length)
-							return [
-								i.equal(array.currindex.previous()) ? null : undefined
-							]
+						if (currarray === array.array && fi === array.array.arr.length) {
+							const rx = array.currindex.difference(i)
+							return [rx.equal(array.init().next()) ? null : undefined, rx]
+						}
 						const isfibelow = fi < currarray.length
 						if (isfibelow) {
 							while (isArr(currarray.arr[fi])) {
@@ -1052,6 +1061,25 @@ export const arrays = {
 				...garrtemplate
 			})
 		}
+
+		// ! ISSUE [GENERAL]: generalize the multidim API to work with structures;
+		// ? Suggestion: generalize, then merge the newly made 'multidim' into 'structure'? (they'd go along excellently)
+		function firstUnfilledLayer(
+			arrform,
+			indexes = X.template.genarrclass.static.empty()
+		) {
+			for (const x in arrform.arr) {
+				if (arrform.arr[x].length < X.template.maxlen) return indexes
+				const rrec = firstUnfilledLayer(
+					arrform.arr[x],
+					indexes.copied("pushback", [x])
+				)
+				if (rrec) return rrec
+			}
+			return false
+		}
+
+		return X
 	},
 	CommonArray(template = {}, garrtemplate = {}) {
 		return {
@@ -1074,7 +1102,26 @@ export const arrays = {
 				...garrtemplate
 			})
 		}
-	}
+	},
+	// * This thing will allow to create function-based types on top of an Array;
+	// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
+	// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
+	TypedArray: CLASS({
+		defaults: {
+			empty: [],
+			typefunction: aliases._const(true)
+		},
+		function: function (array = C.template.empty) {
+			const X = this
+			return GeneralArray({
+				...this.template,
+				newvalue: function (arr, val) {
+					if (X.template.typefunction(val)) return X.template.newval(arr, val)
+					return X.template.typefail(arr, val)
+				}
+			}).class(array)
+		}
+	})
 }
 
 export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
@@ -1873,26 +1920,6 @@ export const Pointer = TEMPLATE({
 		return { [this.template.label]: value }
 	},
 	word: "class"
-})
-
-// * This thing will allow to create function-based types on top of an Array;
-// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
-// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
-export const TypedArray = CLASS({
-	defaults: {
-		empty: [],
-		typefunction: aliases._const(true)
-	},
-	function: function (array = C.template.empty) {
-		const X = this
-		return GeneralArray({
-			...this.template,
-			newvalue: function (arr, val) {
-				if (X.template.typefunction(val)) return X.template.newval(arr, val)
-				return X.template.typefail(arr, val)
-			}
-		}).class(array)
-	}
 })
 
 // * Architecture plan:
