@@ -17,8 +17,7 @@ import * as expressions from "./expressions.mjs"
 import * as numeric from "./numeric.mjs"
 
 import { classes, general } from "../refactor.mjs"
-import { finiteCounter } from "./counters.mjs"
-import { InfiniteCounter } from "./types.mjs"
+import { Ensurer } from "./predicates.mjs"
 
 // ? Add anything more to the Stack, and Queue? [These, basically, do the required job...]
 export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
@@ -54,26 +53,61 @@ export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
 }
 
 // Extends 'TreeNode';
-// ! Problem - with the way that it currently works...; 
-// * The NTree must ensure that each and every layer of it has no more than n entries (children); This way, 
-// ^ CONCLUSION: the way for this to be implemented is the following - create a function 'ensureN', then proceed with improvements and extension of the CLASS and EXTENSION macros, 
-// ^ 	so as to allow for making extensions, that have the methods being 'wrapped' into an 'out'-function; 
-export function NTreeNode(parentclass = general.DEFAULT_TREENODECLASS) {
-	return EXTENSION({
-		defaults: {
-			n: 2,
-			parentclass: parentclass,
-			names: ["treenode"]
+// * Usage: NTree().treenode;
+// ^ CONCLUSION: in regard to the implementation - one needs an additional class for that;
+// ^ IDEA: Ensurer(class, predicate, responses) - each and every call of the class's methods listed in 'responses' will check for presence of the property 'predicate'; If !preciate, then it will execute the corresponding response upon the 'this'; Using this construction, one can chain (recursively) different methods and thus ensure properties on recursive objects;
+export const NTreeNode = TEMPLATE({
+	defaults: [
+		function () {
+			return {
+				parentclass: general.DEFAULT_TREENODECLASS,
+				icclass: general.DEFAULT_ICCLASS
+			}
 		},
-		methods: {
-			// ! Make a list;
-		},
-		properties: {
-			// ! Make a list;
-		},
-		recursive: true
-	})
-}
+		function () {
+			return {
+				n: this.template.icclass.class().next().next()
+			}
+		}
+	],
+	function: function (parentclass = general.DEFAULT_TREENODECLASS) {
+		return Ensurer(
+			parentclass,
+			(_r, _this) =>
+				this.template.n.compare(_this.this.this.children.length().get()),
+			{
+				// ! Methods list [the 'this-modifying' ones]:
+				pushback(_r, _t, args) {
+					this.this.this.children.delete()
+					// ^ ISSUE: how to choose the index for the child, to which the element from 'args' is pushed?
+					// ? Give a 'leftovers' to the thing in question?
+					this.this.this.children.read().pushback(args[0])
+					return this
+				},
+				// ! again, the same issue as with the '.pushback' - choice of node to '.pushfront' this under...;
+				pushfront(_r, _t, args) {
+					this.this.this.children.delete(this.init())
+					this.this.this.children.read().pushfront(args[0])
+					return this
+				},
+				// ! SSAAAMMEE... [how to provide a possibility for child-choice to the user...]
+				insert(_r, _t, args) {
+					const ind = args[0].copied("delete")
+					const lastind = args[0].read(args[0].finish())
+					const x = this.read(ind, false, false)
+					x.delete(lastind)
+					x.read(lastind).insert(
+						x.class.template.parentclass.staic.fromArray([x.init()]),
+						args[1]
+					)
+					return this
+				}
+			}
+		)
+	},
+	word: "class",
+	isthis: true
+})
 
 // * NOTE: as the Graph allows for dynamically defined graphs (namely, the graphs with different values of 'edges', this doesn't necessarily always make sense);
 // ^ NOTE: this class also allows for finite computation of infinitely large graphs (namely, those that use the recursive objects);
@@ -741,8 +775,8 @@ export const integer = {
 		},
 
 		// ! Issue - this is a general binomial (not necessarily Integral!); Difficulties with generalizing this, as well...
-		// ^ IDEAs for current directions: 
-		// 	1. Delete it from the library [for the moment, return back and implement properly for the Real numbers] (in the v1.1.); 
+		// ^ IDEAs for current directions:
+		// 	1. Delete it from the library [for the moment, return back and implement properly for the Real numbers] (in the v1.1.);
 		//  2. Make an integer-only version, keep this (as a bonus, works with native JS float); [currently chosen]
 		binomial: function (n, k) {
 			if (isNaN(n) || isNaN(k))
@@ -935,7 +969,7 @@ export const integer = {
 				.uevaluate()
 				.function(expressions.Expression("*", [], numbers))
 		}
-	}), 
+	})
 }
 
 integer.native.commonDivisors = function (...nums) {
@@ -1229,9 +1263,7 @@ export const array = {
 			f: ID
 		},
 		function: function (...args) {
-			return native.array
-				.intersections(this.template)
-				.function(args.map(this.template.f))
+			return array.intersection(this.template).function(args.map(this.template.f))
 		}
 	})
 }

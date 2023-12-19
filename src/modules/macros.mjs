@@ -5,8 +5,8 @@ import * as structure from "./exports/structure.mjs"
 import * as aliases from "./exports/aliases.mjs"
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
-// ! In particular - later create a General versions of macros (using unlimited types...);
-// ! In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
+// ? In particular - later create a General versions of macros (using unlimited types...);
+// ? In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
 
 // TODO [general; leave for the test-tune period]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
 // TODO [general; leave for tidying-up period]: pray walk through all of code and inspect the desireability of all the elements of the style (ranges from [kinds of functions used in places it does not, as such, matter] to [variable names and conventions used for them] to [whether to use one-time constants for the sake of memory-efficiency or not] to [chosen orders of properties/elements within objects/arrays])
@@ -135,6 +135,7 @@ export const HIERARCHY = function (hierarr = []) {
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
 // 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
 // ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
+// ! ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
 export const EXTENSION = (template = {}) => {
 	// TODO: refactor this piece of code, pray...
 	ensureProperties(template, {
@@ -162,8 +163,11 @@ export const EXTENSION = (template = {}) => {
 					const X = {}
 					let i = 0
 					for (const y of this.template.names)
-						X[y] = this.template.parentclass.class(
-							this.template.defaults.inter.bind(this)(args, i++)
+						X[y] = this.template.defauls.outer(
+							this.template.parentclass.class(
+								this.template.defaults.inter.bind(this)(args, i)
+							),
+							i++
 						)
 					return X
 				},
@@ -176,6 +180,7 @@ export const EXTENSION = (template = {}) => {
 			defaults: {
 				constructor: [],
 				inter: aliases.cdieach,
+				outer: ID,
 				...template.defaults.defaults
 			},
 			...template.defaults

@@ -32,10 +32,8 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 			
 			1.1.3. DeepArray (the new element addition for a general case faraway-index) [proritee N1]
 
-			1.1.4. NTreeNode [prioritee N1]; 	
-
-			1.1.5. InfiniteNumber [prioritee N1]
-			1.1.6. InfiniteString [prioritee N1]
+			1.1.4. InfiniteNumber [prioritee N1]
+			1.1.5. InfiniteString [prioritee N1]
 
 		1.2. Implement: 
 			1.2.1. Heap [prioritee N1]; 

@@ -1878,29 +1878,22 @@ export const Pointer = TEMPLATE({
 // * This thing will allow to create function-based types on top of an Array;
 // Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
 // Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
-export function TypedArray(template = {}) {
-	const C = {
-		template: {
-			empty: [],
-			typefunction: aliases._const(true),
-			...template
-		}
-	}
-
-	C.class = function (array = C.template.empty) {
+export const TypedArray = CLASS({
+	defaults: {
+		empty: [],
+		typefunction: aliases._const(true)
+	},
+	function: function (array = C.template.empty) {
+		const X = this
 		return GeneralArray({
-			this: C,
-			...C.template,
+			...this.template,
 			newvalue: function (arr, val) {
-				if (this.this.template.typefunction(val))
-					return this.this.template.newval(arr, val)
-				return this.this.template.typefail(arr, val)
+				if (X.template.typefunction(val)) return X.template.newval(arr, val)
+				return X.template.typefail(arr, val)
 			}
 		}).class(array)
 	}
-
-	return C
-}
+})
 
 // * Architecture plan:
 // 		1. Recieve input in the UnlimitedString desired;
@@ -2174,7 +2167,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 			*keys() {
 				for (const x of this.getall().keys()) yield x
 			},
-			// This one's especially useful for things like NTreeNode;
+			// This one's especially useful for things like NTreeNode (due to 'multi' and known indicies distribution...);
 			read(
 				index = this.this.this.children.init(),
 				multi = false,
@@ -2185,8 +2178,8 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 				if (!multi) return this.getall(nodes).read(index)
 				const r = this.this.this.children.read(index.read())
 				if (index.length().get().compare(index.init().next().next()))
-					return r.read(index.slice(index.init().next()))
-				return r
+					return r.read(index.slice(index.init().next()), multi, nodes, false)
+				return (nodes ? (x) => x.node : ID)(r)
 			},
 			// ! CONFLICT OF INTEREST [general]: this is a extremely beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
 			findRoots(v, leftovers = {}) {

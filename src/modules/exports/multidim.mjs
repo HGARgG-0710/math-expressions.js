@@ -5,6 +5,7 @@ import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as aliases from "./aliases.mjs"
+import * as order from "./orders.mjs"
 
 export const native = {
 	// ! rewrite using the repeatedApplication...
@@ -27,6 +28,7 @@ export const native = {
 		return r
 	},
 
+	// ! Generalize
 	countrecursive: TEMPLATE({
 		defaults: {
 			defarr: []
@@ -42,6 +44,21 @@ export const native = {
 							)
 					: 0)
 			)
+		}
+	}),
+
+	// ! Generalize [thing similar to the 'countrecursive'], except, instead of a 'sum', let it be 'max';
+	dim: TEMPLATE({
+		defaults: { comparison: aliases.refCompare },
+		function: function (recarr = this.template.genarrclass.static.empty()) {
+			if (recarr instanceof Array)
+				return this.template.icclass
+					.class()
+					.next()
+					.jumpDirection(
+						orders.max(this.function).function(recarr.map(this.function))
+					)
+			return 0
 		}
 	})
 }
@@ -68,7 +85,6 @@ native.totalElems = function (template = {}) {
 	})
 }
 
-// ! CREATE THE FINITE-ARRAY VERSION OF 'dim' (still uses InfiniteCounters, lest not useful) (add the generalization for forms to the 'structure.mjs'); 
 export const dim = TEMPLATE({
 	defaults: { comparison: aliases.refCompare },
 	function: function (recarr = this.template.genarrclass.static.empty()) {
@@ -76,7 +92,9 @@ export const dim = TEMPLATE({
 			return this.template.icclass
 				.class()
 				.next()
-				.jumpDirection(maxgeneral(recarr.map(this.function)))
+				.jumpDirection(
+					orders.max(this.template).function(recarr.map(this.function))
+				)
 		return this.template.icclass.class()
 	}
 })
