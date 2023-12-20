@@ -64,6 +64,16 @@ export const InfiniteCounter = (() => {
 					},
 					inverse: this.this.template.generator
 				})
+			},
+			// ! Use all over the place, pray...
+			zero() {
+				return this.this.class.class()
+			},
+			one() {
+				return this.zero().next()
+			},
+			two() {
+				return this.one().next()
 			}
 		},
 		methods: {
@@ -1709,25 +1719,20 @@ export const numbers = {
 			_this.this.this.this.class.class(
 				_this.this.this.this.class.template.icclass.class().next()
 			)
-		const TWO = (_this) => ONE(_this).add()
 		return EXTENSION({
 			defaults: {
 				parenclass: parentclass,
 				names: ["value"]
 			},
 			methods: {
-				// * Would return added value;
-				// ? Question: does one add 0, or 1 by default? [if do 0, then it will fit with the other methods defaults in the sense that calling without arguments makes no effect upon it...];
-				// * Current decision: 1;
-				add(added = ONE(this)) {
+				add(added = this.this.this.this.class.static.one()) {
 					return this.this.this.this.class.class(
 						this.this.this.value.jumpDirection(
 							added.map(this.this.this.this.class.template.parentclass)
 						)
 					)
 				},
-				// * Would return multiplied value
-				multiply(multiplied = ONE(this)) {
+				multiply(multiplied = this.this.this.this.class.static.one()) {
 					multiplied = multiplied.map(
 						this.this.this.this.class.template.icclass
 					)
@@ -1741,7 +1746,7 @@ export const numbers = {
 					)
 				},
 				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
-				power(x = ONE(this)) {
+				power(x = this.this.this.this.class.static.one()) {
 					if (!this.class.template.icclass.direction(x))
 						return TrueRatio(this.template.icclass).class([
 							this.class.template.icclass.class().next(),
@@ -1795,12 +1800,14 @@ export const numbers = {
 						native.copy.deepCopy(this.this.this.value.value)
 					)
 				},
-				// ? Wonder whether one'd love to generalize these methods too? [further work on advancing the CLASS macro - would be very useful as a pattern of the library];
-				equal(x) {
-					return this.value.compare(x.value)
+				equal(x = this.this.this.this.class.static.one()) {
+					return (
+						this.this.this.value.compare(x.value) &&
+						x.value.compare(this.this.this.value)
+					)
 				},
-				// ! NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
-				root(x = TWO(this), ceil = false) {
+				// ? NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
+				root(x = this.this.this.this.class.static.two(), ceil = false) {
 					let r = this.this.this.this.class.class()
 					let temp
 					while (!(temp = r.power(x)).compare(this)) r = r.add()
@@ -1810,6 +1817,7 @@ export const numbers = {
 			},
 			static: {
 				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
+				// ? Allow for '.static' extension?
 				fromNumber: function (num = 1) {
 					return this.this.class(
 						aliases.native.number.iterations({
@@ -1819,6 +1827,16 @@ export const numbers = {
 				},
 				fromCounter: function (ic) {
 					return number.TrueInteger(ic.class)(ic.value)
+				},
+				// ! Use those aliases all over the place, pray...
+				zero() {
+					return this.this.class.class()
+				},
+				one() {
+					return this.zero().add()
+				},
+				two() {
+					return this.one().add()
 				}
 			},
 			transform: StaticThisTransform,
@@ -1827,10 +1845,11 @@ export const numbers = {
 		})
 	})(),
 	TrueRatio: function (parentclass = general.DEFAULT_TINTCLASS) {
+		const nameslist = ["numerator", "denomenator"]
 		return EXTENSION({
 			defaults: {
 				parentclass: parentclass,
-				names: ["numerator", "denomenator"],
+				names: nameslist,
 				inter: aliases.cdieach,
 				defaults: {
 					constructor: number.native.generate(2).map(function () {
@@ -1839,8 +1858,7 @@ export const numbers = {
 				}
 			},
 			methods: {
-				// ! add the defaults...
-				add(addratio) {
+				add(addratio = this.this.this.this.class.static.one()) {
 					return this.this.this.this.class.static.simplified(
 						this.this.this.this.class.class(
 							this.this.this.numerator
@@ -1854,41 +1872,41 @@ export const numbers = {
 						)
 					)
 				},
-				multiply(multratio) {
-					return TrueRatio().class(
-						this.value[0].multiply(multratio.value[0]),
-						this.value[1].multiply(multratio.value[1])
+				multiply(multratio = this.this.this.class.static.one()) {
+					return this.this.this.this.class.class(
+						this.numerator.multiply(multratio.numenator),
+						this.denomenator.multiply(multratio.denomenator)
 					)
 				},
 				invadd() {
 					return this.this.this.this.class.class(
-						this.numerator.invadd(),
-						this.denomenator
+						this.this.this.numerator.invadd(),
+						this.this.this.denomenator
 					)
 				},
 				invmult() {
 					return this.this.this.this.class.class(
-						this.this.this.numerator,
-						this.this.this.denomenator
+						...nameslist.map((x) => this.this.this[x]).reverse()
 					)
 				},
 				isWhole() {
-					return this.this.this.this.class.template.parentclass.template.parentclass.template.comparison(
-						this.this.this.denomenator,
-						this.this.this.this.class.template.parentclass().add()
+					return this.this.this.denomenator.equal(
+						this.this.this.this.class.template.parentclass.static.one()
 					)
 				},
 				copy() {
 					return this.this.this.this.class.class(
-						this.this.this.numerator,
-						this.this.this.denomenator
+						...nameslist.map((x) => this.this.this[x])
 					)
 				},
-				naivesum(ratio) {
+				naivesum(ratio = this.this.this.this.class.class()) {
 					return this.this.this.this.class.class(
-						this.this.this.numerator.add(ratio.numerator),
-						this.this.this.denomenator.add(ratio.denomenator)
+						...nameslist.map((x) => this.this.this[x].add(ratio[x]))
 					)
+				},
+				// ? Wonder - how about allowing for extended-methods of this general form [using the parent class variable instances list];
+				equal(ratio = this.this.this.this.class.class()) {
+					return nameslist.every((x) => this.this.this[x].equal(ratio[x]))
 				}
 			},
 			static: {
@@ -2242,7 +2260,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 						)
 					)
 			},
-			// ! Allow for non-multiindex arguments here as well! 
+			// ! Allow for non-multiindex arguments here as well!
 			write(mindex, value) {
 				if (mindex.length().get().equal(mindex.init().next()))
 					return this.this.this.children.write(

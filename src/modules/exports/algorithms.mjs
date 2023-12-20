@@ -315,8 +315,7 @@ export const heaps = {
 		})
 	},
 	// ? Read a little more about it [consider further whether or not to add after all...]
-	FibonacciHeap(parentclass = general.DEFAULT_TREENODECLASS) {
-	}
+	FibonacciHeap(parentclass = general.DEFAULT_TREENODECLASS) {}
 	// ! Implement - Binomial heap;
 }
 
@@ -332,7 +331,6 @@ export function PriorityQueue(heapclass = general.DEFAULT_HEAPCLASS) {
 		recursive: true
 	})
 }
-
 
 export const sort = {
 	heap: TEMPLATE({
@@ -443,21 +441,36 @@ export const sort = {
 			genarrclass: DEFAULT_GENARRCLASS
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
-			// ? DOES ONE WANT TO BE MAKING THESE MANNER OF MARKINGS ANYWHERE???
-			// * Consider this small question in some detail...
-			const ZERO = garr.init()
-			const ONE = ZERO.next()
-			const TWO = ONE.next()
-			if (TWO.next().compare(garr.length().get())) {
-				if (ONE.compare(garr.length().get())) return garr
+			if (
+				this.template.genarrclass.static.two().next().compare(garr.length().get())
+			) {
+				if (this.template.icclass.static.one().compare(garr.length().get()))
+					return garr
 				const X = () => {
-					if (this.template.predicate(garr.read(ONE), garr.read()))
-						garr.swap(ZERO, ONE)
+					if (
+						this.template.predicate(
+							garr.read(this.template.icclass.static.one()),
+							garr.read()
+						)
+					)
+						garr.swap(
+							this.template.icclass.static.zero(),
+							this.template.icclass.one()
+						)
 				}
 				X()
-				if (TWO.compare(garr.length().get())) return garr
-				if (this.template.predicate(garr.read(ONE), garr.read(TWO)))
-					garr.swap(ONE, TWO)
+				if (this.template.icclass.static.two().compare(garr.length().get()))
+					return garr
+				if (
+					this.template.predicate(
+						garr.read(this.template.icclass.static.one()),
+						garr.read(this.template.icclass.static.two())
+					)
+				)
+					garr.swap(
+						this.template.icclass.static.one(),
+						this.template.icclass.static.two()
+					)
 				X()
 				return garr
 			}
@@ -492,7 +505,7 @@ export const sort = {
 			) {
 				for (let j = garr.init(); !j.compare(i); j = j.next()) {
 					if (this.template.predicate(garr.read(i), garr.read(j))) continue
-					garr.insert(garr.read(i), j)
+					garr.insert(j, garr.read(i))
 					break
 				}
 			}
@@ -641,12 +654,12 @@ export const search = {
 			garr = this.template.genarrclass.static.empty(),
 			original = true
 		) {
-			const ZERO = this.template.tintclass.class()
-			if (ZERO.compare(garr.length().get())) return this.template.unfound
+			if (this.template.icclass.static.zero().compare(garr.length().get()))
+				return this.template.unfound
 
 			// ! Issue - with using the 'value' for the TrueInteger; Pray consider more carefully its design in regard to cases like these...;
-			const initint = this.template.tintlclass.class(garr.init().value)
-			const finishint = this.template.tintclass.class(garr.finish().value)
+			const initint = this.template.tintlclass.static.fromCounter(garr.init())
+			const finishint = this.template.tintclass.static.fromCounter(garr.finish())
 
 			const interpolated = initint.add(
 				finishint
@@ -739,14 +752,14 @@ export const search = {
 			garr = this.template.genarrclass.static.empty(),
 			original = true
 		) {
-			const ZERO = this.template.tintclass.class
-			if (ZERO().compare(garr.length().get())) return this.template.unfound
+			if (this.template.icclass.static.zero().compare(garr.length().get()))
+				return this.template.unfound
 			const lenint = this.template.tintclass.class(garr.length().get().value)
-			const ONE = ZERO().add
-			const TWO = ONE().add
-			const middleind = lenint.modulo(TWO).equal(ONE)
-				? lenint.divide(TWO).add()
-				: lenint.divide(TWO)
+			const middleind = lenint
+				.modulo(this.template.icclass.static.two())
+				.equal(this.template.icclass.static.one())
+				? lenint.divide(this.template.icclass.static.two()).add()
+				: lenint.divide(this.template.icclass.static.two())
 			const midelem = garr.index(middleind)
 			if (this.template.comparison(midelem, sought)) return middleind
 			return (original ? (x) => x.value : ID)(
@@ -864,8 +877,8 @@ export const integer = {
 				.function(expressions.Expression("*", [], numbers))
 		},
 
-		// ! Currently stopped the generalization of the 'algorithms.integer' here;
 
+		// ! Generalize; 
 		// * Re-look through this;
 		// Finds for some 'k' an array of all representations 'a = [a1, ..., an]', such that: a1+...+an with given minimum value 'al>=minval', for all n>=l>=1; (without the 'minval', the set is infinite due to the fact that Z is an abelian group over +);
 		sumRepresentations: function (n, m, minval = 1) {
@@ -894,16 +907,7 @@ export const integer = {
 			)
 		},
 
-		// ! Issue - this is a general binomial (not necessarily Integral!); Difficulties with generalizing this, as well...
-		// ^ IDEAs for current directions:
-		// 	1. Delete it from the library [for the moment, return back and implement properly for the Real numbers] (in the v1.1.);
-		//  2. Make an integer-only version, keep this (as a bonus, works with native JS float); [currently chosen]
 		binomial: function (n, k) {
-			if (isNaN(n) || isNaN(k))
-				throw new RangeError(
-					"binomial() function only accepts values that are natively convertible to Number"
-				)
-
 			n = Number(n)
 			k = Number(k) | 0
 			return (
@@ -923,12 +927,17 @@ export const integer = {
 		function: function (tint = this.template.tintclass.class()) {
 			const tintc = tint.copy()
 			const factors = this.template.genarrclass.class()
-			const [ZERO, ONE, TWO] = [0, 1, 2].map(tint.class.static.fromNumber)
 			for (
 				let currDivisor = tint.class.static.fromNumber(2);
-				!ONE.compare(tintc);
+				!this.template.icclass.static.one().compare(tintc);
 				currDivisor = currDivisor.add(
-					TWO.difference(currDivisor.equal(TWO) ? ONE : ZERO)
+					this.template.icclass.static
+						.two()
+						.difference(
+							currDivisor.equal(this.template.icclass.static.two())
+								? this.template.icclass.static.one()
+								: this.template.icclass.static.zero()
+						)
 				)
 			) {
 				while (number % currDivisor === 0) {
@@ -1034,17 +1043,16 @@ export const integer = {
 	allFactors: TEMPLATE({
 		defaults: {},
 		function: function (number = this.template.tintclass.class()) {
-			// ! These reappear throughout the code extremely often; Pray do something in this regard...
-			const ZERO = () => this.template.tintclass()
-			const ONE = () => ZERO().add()
-			const TWO = () => ONE().add()
-
-			const z = ZERO()
-			const o = ONE()
+			const z = this.template.icclass.static.zero()
+			const o = this.template.icclass.static.one()
 
 			const factors = [o]
-			const l = number.divide(TWO())
-			for (let currFactor = TWO(); l.compare(currFactor); currFactor.add())
+			const l = number.divide(this.template.icclass.static.two()())
+			for (
+				let currFactor = this.template.icclass.static.two()();
+				l.compare(currFactor);
+				currFactor.add()
+			)
 				if (number.modulo(currFactor).equal(z)) factors.push(currFactor)
 			return factors
 		}
@@ -1088,6 +1096,25 @@ export const integer = {
 			return expressions
 				.uevaluate()
 				.function(expressions.Expression("*", [], numbers))
+		}
+	}),
+
+	binomial: TEMPLATE({
+		defaults: {
+			tintclass: general.DEFAULT_TINTCLASS
+		},
+		function: function (n, k) {
+			return (
+				expressions.uevaluate()(
+					expressions.Expression(
+						"*",
+						[],
+						array
+							.generate(this.template.tintclass.static.zero(), k.previous())
+							.map((num) => n.difference(num))
+					)
+				) / this.factorial(k)
+			)
 		}
 	})
 }
