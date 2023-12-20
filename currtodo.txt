@@ -35,12 +35,11 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 		1.2. Implement: 
 			1.2.1. FibonacciHeap [prioritee N1]; 
-			1.2.2. NAryHeap [prioritee N1]; 
-			1.2.3. BinomialHeap [prioritee N1]
-			1.2.4. PrioriteeQueue [prioritee N1]
+			1.2.2. BinomialHeap [prioritee N1]
+			1.2.3. PrioriteeQueue [prioritee N1]
 
-			1.2.5. sort.heap() [prioritee N2]
-			1.2.6. Real [prioritee N2] - make a very brisk sketch that only features the abstract '.'-dot-position + implementations of binary versions of elementary arithmetic operations; 
+			1.2.4. sort.heap() [prioritee N2]
+			1.2.5. Real [prioritee N2] - make a very brisk sketch that only features the abstract '.'-dot-position + implementations of binary versions of elementary arithmetic operations; 
 
 		
 		1.3. Code polishing: 

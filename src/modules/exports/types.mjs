@@ -767,7 +767,8 @@ export const GeneralArray = (() => {
 					icclass.static.whileloop(icclass.class(), times, () =>
 						newarr.concat(this, leftovers)
 					)
-					return newarr
+					this.this.this = newarr
+					return this
 				},
 				reverse(leftovers = {}) {
 					const reversedArr = this.empty()
@@ -2241,6 +2242,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 						)
 					)
 			},
+			// ! Allow for non-multiindex arguments here as well! 
 			write(mindex, value) {
 				if (mindex.length().get().equal(mindex.init().next()))
 					return this.this.this.children.write(
@@ -2269,6 +2271,12 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 				return algorithms.array
 					.common({ f: (x) => this.findAncestors(x, leftovers), ...leftovers })
 					.function(values)
+			},
+			swap(ind1, ind2, multi = false) {
+				const n1val = this.read(ind1, multi)
+				this.write(ind1, this.read(ind2, multi))
+				this.write(in2, n1val)
+				return this
 			}
 		},
 		static: {

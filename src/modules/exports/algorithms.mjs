@@ -11,7 +11,7 @@ import * as native from "./native.mjs"
 import * as expressions from "./expressions.mjs"
 import * as numeric from "./numeric.mjs"
 
-import { classes, general } from "../refactor.mjs"
+import { classes, general, defaults } from "../refactor.mjs"
 import { Ensurer } from "./predicates.mjs"
 
 // ? Add anything more to the Stack, and Queue? [These, basically, do the required job...]
@@ -213,32 +213,11 @@ export const Vertex = (value, edges) => {
 	return { value, edges }
 }
 
-// ! General issue [1] - the thing must [somehow] ensure the Heap property for the given 'template.predicate', passed array and a root node value...
-// * Oneself has written a solution that touches the PairingHeap, now the matter comes down to the making generalization of its own...
-// ! General issue [2; small] - currently, the niether TreeNode nor Heaps support the empty '.value'; Pray think more on it... (implement a solution)
+// ! General issue [small] - currently, the niether TreeNode nor Heaps support the empty '.value'; Pray think more on it... (implement a solution)
 export const heaps = {
 	PairingHeap(parentclass = general.DEFAULT_TREENODECLASS) {
 		return EXTENSION({
-			defaults: {
-				check: true,
-				parentclass: parentclass,
-				names: ["treenode"],
-				defaults: {
-					inter: function (args) {
-						aliases.native.object.ensureProperty(args, 2, this.template.check)
-						if (args[2]) {
-							const tempcopy = args[1].copied("concat", [args[0]])
-							const m = orders
-								.most({
-									comparison: (x, y) => this.template.predicate(x, y)
-								})
-								.function(tempcopy)
-							return [m, tempcopy.delval(m)]
-						}
-						return [args[0], args[1]]
-					}
-				}
-			},
+			defaults: defaults.heap(parentclass),
 			methods: {
 				merge(
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
@@ -253,7 +232,7 @@ export const heaps = {
 						function X(ac, a, b, checked = false) {
 							if (
 								checked ||
-								this.template.predicate(
+								this.this.this.this.class.template.predicate(
 									[a, b].map((x) => x.treenode.value)
 								)
 							) {
@@ -276,17 +255,68 @@ export const heaps = {
 					return this.merge(this.this.this.this.class.class(elem))
 				},
 				topless() {
-					return this.merge(this.this.this.treenode.children)
+					const topelem = this.top()
+					this.merge(this.this.this.treenode.children)
+					return topelem
+				}
+				// ? Add anything else here?
+			},
+			recursive: true
+		})
+	},
+	NAryHeap(parentclass = general.DEFAULT_TREENODECLASS) {
+		return EXTENSION({
+			defaults: defaults.heap(parentclass),
+			methods: {
+				top() {
+					return this.this.this.treenode.value
+				},
+				add(elem) {
+					// ! Generalize this, pray... [the 'index'-repetition... + the 'heap-property' restoration];
+					// * note: this ought to be fixed on the level of the constructor (implemented in such a way so as to be compatible with the methods in-usage)
+					let ind =
+						this.this.this.this.class.template.parentclass.template.parentclass.static.fromArray(
+							[this.init()]
+						)
+					ind.repeat(this.this.this.this.treenode.depth())
+					this.this.this.treenode.insert(ind, elem)
+
+					let t
+					while (
+						this.this.this.this.class.template.predicate(
+							elem,
+							this.this.read(
+								(t = ind.copied("slice", [
+									ind.init(),
+									ind.finish().previous()
+								])),
+								true,
+								false
+							)
+						)
+					) {
+						this.swap(ind, t)
+						ind = t
+					}
+
+					return this
+				},
+				topless() {
+					const top = this.top()
+					this.this.this = this.this.this.this.class(
+						this.read(this.init()),
+						this.this.this.treenode.children.slice(this.init().next())
+					)
+					return top
 				}, 
-				// ? Add anything else here? 
+				// ? Anything else here? 
 			},
 			recursive: true
 		})
 	}
 	// ! List
 	// 		1.1. Fibonacci Heap;
-	// 		1.2. NAry heap (generalization of binary heap);
-	// 		1.3. Binomial heap;
+	// 		1.2. Binomial heap;
 	// * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
 	// 	! Make Prioritee queue - requires a 'heapclass' template variable;
 }

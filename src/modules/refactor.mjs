@@ -155,5 +155,26 @@ general.DEFAULT_TREENODECLASS = TreeNode()
 general.DEFAULT_INFARR = InfiniteArray()
 general.DEFAULT_TINTCLASS = TrueInteger()
 
-// TODO: make the object of defaults that is to be used throughout the library...; 
-export const defaults = {}
+// TODO: make the object of defaults that is to be used throughout the library...;
+export const defaults = {
+	heap: (parentclass) => ({
+		check: true,
+		parentclass: parentclass,
+		names: ["treenode"],
+		defaults: {
+			inter: function (args) {
+				aliases.native.object.ensureProperty(args, 2, this.template.check)
+				if (args[2]) {
+					const tempcopy = args[1].copied("concat", [args[0]])
+					const m = orders
+						.most({
+							comparison: this.template.predicate
+						})
+						.function(tempcopy)
+					return [m, tempcopy.delval(m)]
+				}
+				return [args[0], args[1]]
+			}
+		}
+	})
+}
