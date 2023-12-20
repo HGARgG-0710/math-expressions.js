@@ -12,6 +12,8 @@ import {
 	UnlimitedString,
 	TreeNode
 } from "./exports/types.mjs"
+import { heaps } from "./exports/algorithms.mjs"
+import * as predicates from "./exports/predicates.mjs"
 
 export const classes = {
 	finish: function () {
@@ -154,6 +156,7 @@ general.DEFAULT_USTRCLASS = UnlimitedString()
 general.DEFAULT_TREENODECLASS = TreeNode()
 general.DEFAULT_INFARR = InfiniteArray()
 general.DEFAULT_TINTCLASS = TrueInteger()
+general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
 
 // TODO: make the object of defaults that is to be used throughout the library...;
 export const defaults = {
@@ -175,6 +178,7 @@ export const defaults = {
 				}
 				return [args[0], args[1]]
 			}
-		}
+		},
+		predicate: predicates.lesser
 	})
 }

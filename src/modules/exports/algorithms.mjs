@@ -308,28 +308,45 @@ export const heaps = {
 						this.this.this.treenode.children.slice(this.init().next())
 					)
 					return top
-				}, 
-				// ? Anything else here? 
+				}
+				// ? Anything else here?
 			},
 			recursive: true
 		})
+	},
+	// ? Read a little more about it [consider further whether or not to add after all...]
+	FibonacciHeap(parentclass = general.DEFAULT_TREENODECLASS) {
 	}
-	// ! List
-	// 		1.1. Fibonacci Heap;
-	// 		1.2. Binomial heap;
-	// * DECISION: this, unlike Tree, is not too general; It works by means of limiting the size of the GeneralArrays in question; This goes into 'algorithms'; Based off the more general 'types' counterpart;
-	// 	! Make Prioritee queue - requires a 'heapclass' template variable;
+	// ! Implement - Binomial heap;
 }
 
-// TODO: pray make sure of the universally chosen order of arguments throughout the library usage of 'this.template.predicate'; Generally, ensure such small things and standards;
-// * So, the whole procedure really just comes down to transforming the objects in question into a defined set of alphabet-described strings! Only then, may the Radix Sort be implemented desireably...;
-// ^ About Heap Sort Implementation:
-// * First, one must implement the Heap itself:
-// 		% A. Implement the conversion of the given GeneralArray's order to a different one so that the Heap may read it (in accordance with a class template property called 'heappred', or somesuch):
-// 		% B. Apply the conversion onto the given GeneralArray, then read the thing IN ACCORDANCE WITH THE OTHER PROPERTIES OF THE HEAP:
-// 			B.1. 'n' - the 'n', on which the 'n'-ary Tree, on which the Heap is based upon will be built [By default, equals to 2 in the appropriate InfiniteCounter class - the one used by the Tree-parent's GeneralArray 'parentclass' is used];
-//	* Only then, may one finish the implementation of the thing in question...;
+export function PriorityQueue(heapclass = general.DEFAULT_HEAPCLASS) {
+	return EXTENSION({
+		defaults: { parentclass: heapclass, names: ["heap"] },
+		methods: {
+			// ! Create a shorter EXTENSION-based expression for the self-referencing method-aliases;
+			pull() {
+				return this.this.this.heap.topless()
+			}
+		},
+		recursive: true
+	})
+}
+
+
 export const sort = {
+	heap: TEMPLATE({
+		defaults: {
+			heapclass: general.DEFAULT_HEAPCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		function: function (garr = this.template.genarrclass.static.empty()) {
+			const pqueue = PriorityQueue(this.template.heapclass).class(garr)
+			const final = this.template.genarrclass.static.empty()
+			for (const _x of pqueue) final.pushback(pqueue.pull())
+			return final
+		}
+	}),
 	radix: TEMPLATE({
 		defaults: [
 			function () {
