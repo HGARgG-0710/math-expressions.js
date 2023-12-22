@@ -1,7 +1,6 @@
 import { GENERATOR, ID } from "./../macros.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
-import * as multidim from "./multidim.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
 import { general } from "../refactor.mjs"
@@ -303,6 +302,7 @@ export function stringCounter(template = {}) {
 	})
 }
 
+// ! Get rid of the 'multitudes' - replace them with 'forms' from 'structure.mjs'; 
 export const circularCounter = (() => {
 	const final = {
 		defaults: {

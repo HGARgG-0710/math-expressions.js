@@ -7,7 +7,6 @@ import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as native from "./native.mjs"
 import * as predicates from "./predicates.mjs"
-import * as multidim from "./multidim.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
@@ -74,6 +73,9 @@ export const InfiniteCounter = (() => {
 			},
 			two() {
 				return this.one().next()
+			},
+			none() {
+				return this.zero().previous()
 			}
 		},
 		methods: {
@@ -188,6 +190,16 @@ export const InfiniteCounter = (() => {
 					i = change(i)
 				)
 					yield i
+			},
+			// ! refactor these definitions - reappear several times throughout...;
+			zero() {
+				return this.this.this.this.class.static.zero()
+			},
+			one() {
+				return this.zero().next()
+			},
+			two() {
+				return this.one().next()
 			}
 		},
 		recursive: true
@@ -766,14 +778,9 @@ export const GeneralArray = (() => {
 					this.this.this = x.concat(this.this.this, leftovers)
 					return this
 				},
-				// TODO [general]: do proper work on the functions' defaults;
 				shiftBackward(times = this.init(), leftovers = {}) {
 					sh1(this, leftovers)
-					return this.slice(
-						times.map(this.this.this.this.template.class.template.icclass),
-						undefined,
-						leftovers
-					)
+					return this.slice(times, undefined, leftovers)
 				},
 				repeat(
 					times = this.init(),
@@ -886,6 +893,12 @@ export const GeneralArray = (() => {
 						.slice(c.init(), index.previous())
 						.concat(this.slice(index.jumpDirection(times)))
 					return this
+				},
+				one() {
+					return this.init().next()
+				},
+				two() {
+					return this.one().next()
 				}
 			}
 			// ? Destructurize this further?
@@ -1324,24 +1337,14 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 						while (
 							!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
 								backupcounter,
-								useparator
-									.tototalindex()
-									.map(
-										this.this.this.class.template.parentclass.template
-											.icclass
-									)
+								useparator.tototalindex()
 							)
 						) {
 							// ! ISSUE [general]: with the passed instances of recursive classes - decide which parts of them are to be passed, how they should be read, and so on...
 							// * Current decision: by the 'this.this.this->.class' part... [the inner, that is...];
 							if (
 								this.read(currcounter.jumpForward(backupcounter)) !=
-								useparator.read(
-									backupcounter.map(
-										useparator.this.class.template.parenclass.template
-											.icclass
-									)
-								)
+								useparator.read(backupcounter)
 							) {
 								hasBroken = true
 								break
@@ -1374,13 +1377,7 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 					.copied("slice", [this.init(), ind.previous()])
 					.keys())
 					final = final.jumpForward(
-						types
-							.InfiniteCounter(
-								counters.this.this.this.addnumber({
-									start: -1
-								})
-							)(genarr.read(x).length)
-							.map(final.class)
+						aliases.native.number.fromNumber(genarr.read(x).length)
 					)
 				return final.jumpForward(
 					aliases.native.number.fromNumber().function(subind)
@@ -1397,7 +1394,6 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 				const _ALIAS = ALIAS(this)
 				let present = this.init()
 				let inarrind = this.init()
-				index = index.map(present.class)
 				let currstr = ""
 				for (const x of this.genarr.copy((str) => _ALIAS(str.length))) {
 					inarrind = inarrind.next()
@@ -1409,6 +1405,7 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 					inarrind,
 					currstr.length -
 						present.difference(index).map(
+							// ! make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
 							types.InfiniteCounter(
 								counters.addnumber({
 									start: -1
@@ -1508,7 +1505,7 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 						)
 						if (newlen.compare(this.length().get())) {
 							newlen
-								.difference(this.length().get().map(newlen.class))
+								.difference(this.length().get())
 								.loop(() => this.pushback(leftovers.basestr))
 							return this
 						}
@@ -1549,7 +1546,6 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 				),
 				order = false
 			) {
-				const ZERO = this.this.this.this.class.template.tintclass.class()
 				const r = this.this.this.genarr.empty()
 				let inserted = this.init()
 				let cfreq = frequency(inserted)
@@ -1559,7 +1555,9 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 						this.this.this.this.class.template.tintclass.static
 							.fromCounter(i.next())
 							.modulo(cfreq)
-							.equal(ZERO)
+							.equal(
+								this.this.this.this.class.template.tintclass.static.zero()
+							)
 					) {
 						r.pushback(separator)
 						inserted = inserted.next()
@@ -1625,22 +1623,12 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 						while (
 							!this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
 								backupcounter,
-								useparator
-									.tototalindex()
-									.map(
-										this.this.this.this.class.template.parentclass
-											.template.icclass
-									)
+								useparator.tototalindex()
 							)
 						) {
 							if (
 								this.read(currcounter.jumpForward(backupcounter)) !=
-								useparator.read(
-									backupcounter.map(
-										useparator.this.class.template.parenclass.template
-											.icclass
-									)
-								)
+								useparator.read(backupcounter)
 							) {
 								hasBroken = true
 								break
@@ -1736,15 +1724,10 @@ export const numbers = {
 			methods: {
 				add(added = this.this.this.this.class.static.one()) {
 					return this.this.this.this.class.class(
-						this.this.this.value.jumpDirection(
-							added.map(this.this.this.this.class.template.parentclass)
-						)
+						this.this.this.value.jumpDirection(added.value)
 					)
 				},
 				multiply(multiplied = this.this.this.this.class.static.one()) {
-					multiplied = multiplied.map(
-						this.this.this.this.class.template.icclass
-					)
 					return multiplied.value.class.static.whileloop(
 						multiplied.value,
 						(x) => x.add(this.this.this),
@@ -1767,31 +1750,28 @@ export const numbers = {
 						this.this.this
 					)
 				},
-				modulo(d = ONE(this)) {
-					d = d.map(this.value.class.template.icclas)
+				modulo(d = this.this.this.this.class.static.one()) {
 					let curr = this.this.this.this.class.class()
 					while (!(curr = curr.add(d)).compare(this.this.this.value)) {}
 					return curr.difference(this.this.this)
 				},
 				// * Returns the additive inverse
 				invadd() {
-					return this.value.map(this.class.template.icclass.static.reverse())
+					return this.this.this.this.class(
+						this.value.map(this.class.template.icclass.static.reverse()).value
+					)
 				},
 				// * Returns the multiplicative inverse (TrueRatio type);
 				invmult() {
-					return TrueRatio(this.this.this.this.class)(ONE(this), this.this.this)
-				},
-				map(icclass = this.this.this.this.class.template.icclass) {
-					return this.this.this.this.class.class(
-						this.this.this.value.map(icclass)
+					return TrueRatio(this.this.this.this.class)(
+						this.this.this.this.class.static.one(),
+						this.this.this
 					)
 				},
-				compare(compared) {
-					return this.this.this.value.compare(
-						compared.map(this.this.this.this.class.template.icclass).value
-					)
+				compare(compared = this.this.this.this.class.static.zero()) {
+					return this.this.this.value.compare(compared.value)
 				},
-				difference(d = ONE(this)) {
+				difference(d = this.this.this.this.class.static.one()) {
 					return this.this.this.add(d.invadd())
 				},
 				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA!]
@@ -1862,7 +1842,7 @@ export const numbers = {
 				inter: aliases.cdieach,
 				defaults: {
 					constructor: number.native.generate(2).map(function () {
-						return this.template.parentclass.class().add()
+						return this.template.parentclass.static.one()
 					})
 				}
 			},
@@ -2247,7 +2227,6 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 					return r.read(index.slice(index.init().next()), multi, nodes, false)
 				return (nodes ? (x) => x.node : ID)(r)
 			},
-			// ! CONFLICT OF INTEREST [general]: this is a extremely beautiful one-liner, but it could be optimized; Issue is - optimization is far less elegantly looking. Pray consider the general decision in regard to the library's preference over such things...
 			findRoots(v, leftovers = {}) {
 				return this.indexesOf(v, leftovers).map((x) => this.read(x).root)
 			},
@@ -2373,4 +2352,12 @@ export const InfiniteSet = (template = {}) => {
 	const x = InfiniteArray.function(template).class()
 	const y = x.copy()
 	return y.subarr((el, i) => !x.slice(x.init(), i.previous()).includes(el))
+}
+
+// * These are to allow work with 'Array'-based forms and unite them with GeneralArray-based ones (note: I know it's considered a horrible practice);
+Array.prototype.read = function (index) {
+	return this[index]
+}
+Array.prototype.copy = function (f = ID, thisarg = this) {
+	return a.map(f, thisarg)
 }

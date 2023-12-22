@@ -135,8 +135,8 @@ export const general = {
 				aliases.function._const({ icclass: InfiniteCounter(arrayCounter) }),
 				function () {
 					return {
-						forth: wrapper(this.template.icclass.class().next()),
-						back: wrapper(this.template.icclass.class.class().previous())
+						forth: wrapper(this.template.icclass.static.one()),
+						back: wrapper(this.template.icclass.static.none())
 					}
 				}
 			],

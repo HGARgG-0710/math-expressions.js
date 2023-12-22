@@ -58,7 +58,6 @@ A brief repository organization guide:
             -   comparisons.mjs - default comparisons provided by the library (sufficient for the proper handling most of the "casual" cases)
             -   counters.mjs - a file with "counters" definitions, they are 'generator-inverse-range' triples on which the InfiniteCounter type is based
             -   expressions.mjs - module for execution, as well as simple and convinient representation of arbitrary expressions using the user-defined table (historically, the origin of the library)
-            -   multidim.mjs - module for general working with recursion, repeated function calls and multidimensional structures
             -   native.mjs - module with methods purposed for usage with the JS elementary types and abstractions
             -   numeric.mjs - short list of simple functions and utilities for working with different numeric writing systems and number-strings
             -   orders.mjs - set of methods for rapid and effective creation and property manipulation of order predicates and array-orders based off user arguments

@@ -61,7 +61,7 @@ export const NTreeNode = TEMPLATE({
 		},
 		function () {
 			return {
-				n: this.template.icclass.class().next().next()
+				n: this.template.icclass.static.two()
 			}
 		}
 	],
@@ -222,13 +222,13 @@ export const heaps = {
 				merge(
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
 				) {
-					if (heaps.length().get().compare(heaps.init().next())) {
-						if (!heaps.init().next().compare(heaps.length))
+					if (heaps.length().get().compare(heaps.one())) {
+						if (!heaps.one().compare(heaps.length().get()))
 							return this.merge(
 								this.this.this.this.class.template.parentclass.template.parentclass.static.fromArray(
 									[heaps.read()]
 								)
-							).merge(heaps.slice(heaps.init().next()))
+							).merge(heaps.slice(heaps.one()))
 						function X(ac, a, b, checked = false) {
 							if (
 								checked ||
@@ -303,7 +303,7 @@ export const heaps = {
 					const top = this.top()
 					this.this.this = this.this.this.this.class(
 						this.read(this.init()),
-						this.this.this.treenode.children.slice(this.init().next())
+						this.this.this.treenode.children.slice(this.one())
 					)
 					return top
 				}
@@ -314,7 +314,7 @@ export const heaps = {
 	},
 	// ! This thing doesn't possess a verification '.inter' that the trees passed are, INDEED, of possession of heap property...;
 	// ^ idea [for a solution]: let the validation procedure lie on the user; For that, add an implementation of 'ensureHeap' to predicates;
-	// ! problem: the inter-usage; It requires the attached property ensuring operation fulfillment as a part of the class in question; 
+	// ! problem: the inter-usage; It requires the attached property ensuring operation fulfillment as a part of the class in question;
 	// ! add the '.read'-'.write' operations to the implementation;
 	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
 		return EXTENSION({
@@ -328,8 +328,8 @@ export const heaps = {
 					if (heaps.length().get().equal(heaps.class.static.one())) {
 						function mergetree(tree) {
 							// ! PROBLEM: lack of implemented algorithm for finding the order of a binomial tree
-							// * The 'order' is defined recusively as '1 + max(order())'; CONCLUSION: 'order' is just 'dim'; 
-							// ^ conclusion: this requires generalizational work on the 'multidim' methods; 
+							// * The 'order' is defined recusively as '1 + max(order())'; CONCLUSION: 'order' is just 'dim';
+							// ^ conclusion: this requires generalizational work on the 'multidim' methods;
 						}
 						for (const x of heaps.read()) mergetree(x)
 						return this
@@ -439,23 +439,16 @@ export const sort = {
 			const output = garr.copy(aliases.function._const(aliases.udef))
 
 			for (const x of garr) {
-				const j = this.template.predicate(x).map(count.class.template.icclass)
+				const j = this.template.predicate(x)
 				count.write(j, count.read(j).next())
 			}
 
-			for (let i = k.class.init().next(); !i.compare(k.next()); i = i.next()) {
-				const j = i.map(count.class.template.icclass)
-				count.write(j, count.read(j).jump(count.read(j.previous())))
-			}
+			for (let i = k.one(); !i.compare(k.next()); i = i.next())
+				count.write(i, count.read(i).jumpDirection(count.read(i.previous())))
 
 			for (let i = garr.finish(); i.compare(garr.init()); i = i.previous()) {
-				const j = this.template
-					.predicate(garr.read(i))
-					.map(count.class.template.icclass)
-				output.write(
-					count.read(j).previous().map(ouput.class.template.icclass),
-					garr.read(i)
-				)
+				const j = this.template.predicate(garr.read(i))
+				output.write(count.read(j).previous(), garr.read(i))
 			}
 
 			return output
@@ -781,10 +774,14 @@ export const search = {
 				return this.template.unfound
 			const lenint = this.template.tintclass.class(garr.length().get().value)
 			const middleind = lenint
-				.modulo(this.template.icclass.static.two())
-				.equal(this.template.icclass.static.one())
-				? lenint.divide(this.template.icclass.static.two()).add()
-				: lenint.divide(this.template.icclass.static.two())
+				.divide(this.template.icclass.static.two())
+				.add(
+					aliases.btic(
+						lenint
+							.modulo(this.template.icclass.static.two())
+							.equal(this.template.icclass.static.one())
+					)
+				)
 			const midelem = garr.index(middleind)
 			if (this.template.comparison(midelem, sought)) return middleind
 			return (original ? (x) => x.value : ID)(
@@ -993,8 +990,8 @@ export const integer = {
 	multiples: TEMPLATE({
 		default: { includezero: false },
 		function: function (
-			n = this.template.tintclass.class().add(),
-			range = this.template.tintclass.class().add()
+			n = this.template.tintclass.static.one(),
+			range = this.template.tintclass.static.one()
 		) {
 			return array
 				.generate()(
@@ -1010,8 +1007,8 @@ export const integer = {
 	multiplesBefore: TEMPLATE({
 		defaults: {},
 		function: function (
-			n = this.template.tintclass.class().add(),
-			x = this.template.tintclass.class().add()
+			n = this.template.tintclass.static.one(),
+			x = this.template.tintclass.static.one()
 		) {
 			return number.multiples(n, x.divide(n))
 		}
@@ -1102,16 +1099,16 @@ export const integer = {
 		defaults: {},
 		function: function (tint = this.template.tintclass.class()) {
 			const numbers = this.template.genarrclass.static.fromArray([
-				this.template.tintclass.class().add()
+				this.template.tintclass.static.one()
 			])
 
-			if (!tint.compare(this.template.tintclass.class()))
+			if (!tint.compare(this.template.tintclass.static.zero()))
 				throw new RangeError(
 					"factorial() library function only accepts non-negative values"
 				)
 
 			for (
-				let i = this.template.tintclass.class().add();
+				let i = this.template.tintclass.static.one();
 				tint.compare(i);
 				i = i.add()
 			)
@@ -1135,7 +1132,7 @@ export const integer = {
 						[],
 						array
 							.generate(this.template.tintclass.static.zero(), k.previous())
-							.map((num) => n.difference(num))
+							.map(n.difference)
 					)
 				) / this.factorial(k)
 			)
@@ -1354,16 +1351,7 @@ export const array = {
 			return general.fix([arr.this.this], ["currindex"], () => {
 				const inds = this.empty()
 				const cond = halt
-					? (inds, _this) => {
-							return inds
-								.length()
-								.get()
-								.compare(
-									haltAfter.map(
-										_this.this.this.this.class.template.icclass
-									)
-								)
-					  }
+					? (inds) => inds.length().get().compare(haltAfter)
 					: aliases.TRUTH
 				let currind
 				while (currind !== leftovers.unfound && !cond(inds, this)) {

@@ -2,26 +2,19 @@
 
 // todo: work extensively on the precise list of aliases... Also, their names...
 // TODO [general] : perform hardcore alias-reusage ['alias-relinkage'] procedure, thus shortening and simplifying code using newly/previously introduced aliases...
-// ^ DECISION: DO NOT delete the native algorithms implementations; Keep them under 'native' instead [so as to avoid the 'wrapper' conversion, in situations when it would be necessary, the user has the appropriate ability...];
 
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
-import * as multidim from "./multidim.mjs"
 import * as native from "./native.mjs"
 import { ID } from "./../macros.mjs"
 
-// ! Everything here ought to have a generalized version for the Infinite Types in the '.main' part of the library;
-// TODO [general, minor detail] : work on the spacing - all the definition lines must have a 1-spacing between each other [for readability]; The non-definition lines ('a:b' - pure aliases) ought to be 'grouped' without such a spacing;
 export const native = {
 	number: {
 		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
 
-		// ? Make this a '.static' of the InfiniteCounter? 
 		fromNumber: TEMPLATE({
 			function(x = this.template.start) {
-				return (this.template.icclass ? (x) => x.map(this.template.icclass) : ID)(
-					main.InfiniteCounter(counters.addnumber(this.template)).class(x)
-				)
+				return types.InfiniteCounter(counters.addnumber(this.template)).class(x)
 			}
 		}),
 
@@ -231,7 +224,7 @@ export const is = {
 export const negate = wrapper({
 	out: n
 }).function
-// ! Move these to 'predicates': TRUTH, T, FALLACY, F; 
+// ! Move these to 'predicates': TRUTH, T, FALLACY, F;
 export const TRUTH = native.function._const(true)
 export const T = TRUTH
 export const FALLACY = native.function._const(false)
@@ -255,3 +248,4 @@ export const adddefaults =
 	}
 
 export const call = (x) => x()
+export const btic = (x, _class) => _class.static[x ? "one" : "zero"]()

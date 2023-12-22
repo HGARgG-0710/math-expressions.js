@@ -5,9 +5,7 @@ import { TEMPLATE } from "./../macros.mjs"
 import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
-import * as expressions from "./expressions.mjs"
 import * as types from "./types.mjs"
-import * as multidim from "./multidim.mjs"
 import * as comparisons from "./comparisons.mjs"
 
 export const copy = {
@@ -345,8 +343,8 @@ export const finite = TEMPLATE({
 		const tin = (out) => (out ? native.number.fromNumber : types.arrays.CommonArray())
 		const tout = (out) =>
 			out
-				? (x) => x.map(types.InfiniteCounter(counters.addnumber()))
-				: (x) => x.copied("switchclass", [types.arrays.CommonArray()])
+				? (x) => x.map(types.InfiniteCounter(counters.addnumber())).value
+				: (x) => x.copied("switchclass", [types.arrays.CommonArray()]).array
 		return native.function
 			.wrapper({
 				out: tout(out),
