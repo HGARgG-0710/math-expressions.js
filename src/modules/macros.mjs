@@ -121,7 +121,6 @@ export const INHERIT = function (x, X) {
 	}
 }
 
-// TODO: update the previous usages of TEMPLATES in accordance with the new 'templated' templates...
 export const HIERARCHY = function (hierarr = []) {
 	// ? rewrite using the repeatedApplication?
 	// * Add the infinite types version [as a macro - this'll do, for now...];
@@ -314,7 +313,7 @@ export const CLASS = (ptemplate = {}) => {
 		p[p.isname] = function (x) {
 			return (
 				x.hasOwnProperty("class") &&
-				structure.objStructure().function(this).isisomorphic(x.class)
+				structure.structure().function(this).isisomorphic(x.class)
 			)
 		}.bind(p)
 		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';

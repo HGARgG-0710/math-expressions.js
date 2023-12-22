@@ -225,6 +225,15 @@ export const GeneralArray = (() => {
 		transform: StaticThisTransform,
 		static: (() => {
 			const R = {
+				zero() {
+					return this.this.template.icclass.static.zero()
+				},
+				one() {
+					return this.zero().next()
+				},
+				two() {
+					return this.one().next()
+				},
 				empty(template = this.this.template) {
 					return this.this.class(template).class()
 				},

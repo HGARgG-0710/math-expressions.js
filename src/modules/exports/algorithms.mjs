@@ -251,9 +251,7 @@ export const heaps = {
 				top() {
 					return this.this.this.treenode.value
 				},
-				add(elem) {
-					return this.merge(this.this.this.this.class.class(elem))
-				},
+				add: classes.add,
 				topless() {
 					const topelem = this.top()
 					this.merge(this.this.this.treenode.children)
@@ -314,9 +312,36 @@ export const heaps = {
 			recursive: true
 		})
 	},
-	// ? Read a little more about it [consider further whether or not to add after all...]
-	FibonacciHeap(parentclass = general.DEFAULT_TREENODECLASS) {}
-	// ! Implement - Binomial heap;
+	// ! This thing doesn't possess a verification '.inter' that the trees passed are, INDEED, of possession of heap property...;
+	// ^ idea [for a solution]: let the validation procedure lie on the user; For that, add an implementation of 'ensureHeap' to predicates;
+	// ! problem: the inter-usage; It requires the attached property ensuring operation fulfillment as a part of the class in question; 
+	// ! add the '.read'-'.write' operations to the implementation;
+	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
+		return EXTENSION({
+			defaults: {
+				parentclass: parentclass,
+				names: ["trees"]
+			},
+			methods: {
+				add: classes.add,
+				merge(heaps = this.template.parentclass.static.empty()) {
+					if (heaps.length().get().equal(heaps.class.static.one())) {
+						function mergetree(tree) {
+							// ! PROBLEM: lack of implemented algorithm for finding the order of a binomial tree
+							// * The 'order' is defined recusively as '1 + max(order())'; CONCLUSION: 'order' is just 'dim'; 
+							// ^ conclusion: this requires generalizational work on the 'multidim' methods; 
+						}
+						for (const x of heaps.read()) mergetree(x)
+						return this
+					}
+					for (const x of heaps)
+						this.merge(this.template.parentclass.static.fromArray([x]))
+					return this
+				}
+			},
+			recurisve: true
+		})
+	}
 }
 
 export function PriorityQueue(heapclass = general.DEFAULT_HEAPCLASS) {
@@ -877,8 +902,7 @@ export const integer = {
 				.function(expressions.Expression("*", [], numbers))
 		},
 
-
-		// ! Generalize; 
+		// ! Generalize;
 		// * Re-look through this;
 		// Finds for some 'k' an array of all representations 'a = [a1, ..., an]', such that: a1+...+an with given minimum value 'al>=minval', for all n>=l>=1; (without the 'minval', the set is infinite due to the fact that Z is an abelian group over +);
 		sumRepresentations: function (n, m, minval = 1) {

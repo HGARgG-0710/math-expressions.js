@@ -231,9 +231,10 @@ export const is = {
 export const negate = wrapper({
 	out: n
 }).function
+// ! Move these to 'predicates': TRUTH, T, FALLACY, F; 
 export const TRUTH = native.function._const(true)
 export const T = TRUTH
-export const FALLACY = native.function._concat(false)
+export const FALLACY = native.function._const(false)
 export const F = FALLACY
 export const VOID = native.function.void
 

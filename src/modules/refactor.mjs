@@ -80,6 +80,13 @@ export const classes = {
 			this.this.this[method](...x, leftovers)
 		}
 		return this
+	},
+	add: function (elem) {
+		return this.merge(
+			this.this.this.template.parentclass.template.parentclass.static.fromArray([
+				this.this.this.this.class.class(elem)
+			])
+		)
 	}
 }
 
