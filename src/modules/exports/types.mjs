@@ -37,7 +37,7 @@ export const InfiniteCounter = (() => {
 			direction(ic) {
 				return ic.compare(this.this.class())
 			},
-			// TODO: do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+			// ? do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
 			whileloop(
 				end,
 				each,
@@ -64,16 +64,9 @@ export const InfiniteCounter = (() => {
 					inverse: this.this.template.generator
 				})
 			},
-			// ! Use all over the place, pray...
-			zero() {
-				return this.this.class.class()
-			},
-			one() {
-				return this.zero().next()
-			},
-			two() {
-				return this.one().next()
-			},
+			zero: classes.zero,
+			one: classes.one,
+			two: classes.two,
 			none() {
 				return this.zero().previous()
 			}
@@ -191,16 +184,11 @@ export const InfiniteCounter = (() => {
 				)
 					yield i
 			},
-			// ! refactor these definitions - reappear several times throughout...;
 			zero() {
 				return this.this.this.this.class.static.zero()
 			},
-			one() {
-				return this.zero().next()
-			},
-			two() {
-				return this.one().next()
-			}
+			one: classes.one,
+			two: classes.two
 		},
 		recursive: true
 	})
@@ -897,9 +885,7 @@ export const GeneralArray = (() => {
 				one() {
 					return this.init().next()
 				},
-				two() {
-					return this.one().next()
-				}
+				two: classes.two
 			}
 			// ? Destructurize this further?
 			OFDKL(
@@ -1391,11 +1377,12 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 				return this
 			},
 			fromtotalindex(index) {
-				const _ALIAS = ALIAS(this)
 				let present = this.init()
 				let inarrind = this.init()
 				let currstr = ""
-				for (const x of this.genarr.copy((str) => _ALIAS(str.length))) {
+				for (const x of this.genarr.copy((str) =>
+					aliases.native.number.fromNumber(str.length)
+				)) {
 					inarrind = inarrind.next()
 					currstr = x
 					present = present.jumpForward(x)
@@ -1592,8 +1579,8 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 				for (const x of this.this.this.genarr) if (x !== "") return false
 				return true
 			},
-			sort(predicate) {
-				return this.split("").genarr.sort(predicate)
+			sort(predicate, leftovers = {}) {
+				return this.split("").genarr.sort.merge(leftovers).function(predicate)
 			},
 			isSorted(predicate) {
 				return this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
@@ -1712,22 +1699,18 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 
 export const numbers = {
 	TrueInteger: (function (parentclass = general.DEFAULT_ICCLASS) {
-		const ONE = (_this) =>
-			_this.this.this.this.class.class(
-				_this.this.this.this.class.template.icclass.class().next()
-			)
 		return EXTENSION({
 			defaults: {
 				parenclass: parentclass,
 				names: ["value"]
 			},
 			methods: {
-				add(added = this.this.this.this.class.static.one()) {
+				add(added = this.one()) {
 					return this.this.this.this.class.class(
 						this.this.this.value.jumpDirection(added.value)
 					)
 				},
-				multiply(multiplied = this.this.this.this.class.static.one()) {
+				multiply(multiplied = this.one()) {
 					return multiplied.value.class.static.whileloop(
 						multiplied.value,
 						(x) => x.add(this.this.this),
@@ -1738,7 +1721,7 @@ export const numbers = {
 					)
 				},
 				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
-				power(x = this.this.this.this.class.static.one()) {
+				power(x = this.one()) {
 					if (!this.class.template.icclass.direction(x))
 						return TrueRatio(this.template.icclass).class([
 							this.class.template.icclass.class().next(),
@@ -1750,7 +1733,7 @@ export const numbers = {
 						this.this.this
 					)
 				},
-				modulo(d = this.this.this.this.class.static.one()) {
+				modulo(d = this.one()) {
 					let curr = this.this.this.this.class.class()
 					while (!(curr = curr.add(d)).compare(this.this.this.value)) {}
 					return curr.difference(this.this.this)
@@ -1768,10 +1751,10 @@ export const numbers = {
 						this.this.this
 					)
 				},
-				compare(compared = this.this.this.this.class.static.zero()) {
+				compare(compared = this.zero()) {
 					return this.this.this.value.compare(compared.value)
 				},
-				difference(d = this.this.this.this.class.static.one()) {
+				difference(d = this.one()) {
 					return this.this.this.add(d.invadd())
 				},
 				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA!]
@@ -1789,20 +1772,25 @@ export const numbers = {
 						native.copy.deepCopy(this.this.this.value.value)
 					)
 				},
-				equal(x = this.this.this.this.class.static.one()) {
+				equal(x = this.one()) {
 					return (
 						this.this.this.value.compare(x.value) &&
 						x.value.compare(this.this.this.value)
 					)
 				},
 				// ? NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
-				root(x = this.this.this.this.class.static.two(), ceil = false) {
+				root(x = this.two(), ceil = false) {
 					let r = this.this.this.this.class.class()
 					let temp
 					while (!(temp = r.power(x)).compare(this)) r = r.add()
 					if (temp.equal(this) || ceil) return r
 					return r.difference()
-				}
+				},
+				zero() {
+					return this.this.this.this.class.static.zero()
+				},
+				one: classes.oneadd,
+				two: classes.twoadd
 			},
 			static: {
 				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
@@ -1817,16 +1805,9 @@ export const numbers = {
 				fromCounter: function (ic) {
 					return number.TrueInteger(ic.class)(ic.value)
 				},
-				// ! Use those aliases all over the place, pray...
-				zero() {
-					return this.this.class.class()
-				},
-				one() {
-					return this.zero().add()
-				},
-				two() {
-					return this.one().add()
-				}
+				zero: classes.zero,
+				one: classes.oneadd,
+				two: classes.twoadd
 			},
 			transform: StaticThisTransform,
 			recursive: true,

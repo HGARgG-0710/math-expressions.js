@@ -87,6 +87,21 @@ export const classes = {
 				this.this.this.this.class.class(elem)
 			])
 		)
+	},
+	zero: function () {
+		return this.this.class.class()
+	},
+	one: function () {
+		return this.zero().next()
+	},
+	two: function () {
+		return this.one().next()
+	},
+	oneadd: function () {
+		return this.zero().add()
+	},
+	twoadd: function () {
+		return this.one().add()
 	}
 }
 

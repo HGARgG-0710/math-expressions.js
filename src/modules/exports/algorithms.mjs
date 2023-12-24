@@ -399,12 +399,25 @@ export const sort = {
 		},
 		isthis: true
 	}),
-	// ! Complete;
 	bucket: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: function (garr = this.this.this.genarrclass.static.empty()) {
+		defaults: [
+			function () {
+				return {
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					tintclass: general.DEFAULT_TINTCLASS,
+					sortingf: sort.merge(this.template).function
+				}
+			},
+			function () {
+				return {
+					buckets: this.template.tintclass.static.two()
+				}
+			}
+		],
+		function: function (
+			garr = this.this.this.genarrclass.static.empty(),
+			bucketsnum = this.template.buckets
+		) {
 			// ! must be refactored [same as the thing in the 'sort.counting'];
 			const k = this.template.hasOwnProperty("maxkey")
 				? this.template.maxkey
@@ -412,15 +425,19 @@ export const sort = {
 						garr.copy((x) => this.template.predicate(x))
 				  )
 			const buckets = this.this.this.genarrclass
-				.fromCounter(this.template.buckets)
-				.map(garr.empty)
+				.fromCounter(bucketsnum)
+				.map(garr.empty())
 
-			// ! PROBLEM: what about the index-arithmetic? [IT'S PRESENT IN THE DEFINITION OF BUCKET SORT...]
-			// * To finish this thing, one must first complete the 'TrueNumbers' (AGAIN, one runs into the necessity of finishing them first...); Probably going to do them soon, then...;
-			for (const x of garr) {
-				buckets.write()
-			}
-		}
+			for (const x of garr)
+				buckets.write(
+					this.template.tinclass.static
+						.fromCounter(bucketsnum)
+						.multiply(this.template.predicate(x).divide(k))
+				)
+
+			return array.concat(this.template).function(buckets)
+		},
+		isthis: true
 	}),
 	counting: TEMPLATE({
 		defaults: {
@@ -617,7 +634,6 @@ export const sort = {
 			return merge(split(array))
 		}
 	})
-	// todo: more sorting algorithms;
 }
 
 // ? Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
@@ -1423,6 +1439,21 @@ export const array = {
 		},
 		function: function (...args) {
 			return array.intersection(this.template).function(args.map(this.template.f))
+		}
+	}),
+	concat: TEMPLATE({
+		defaults: {},
+		function: function (arrays = this.template.genarrclass.static.empty()) {
+			if (arrays.two().compare(arrays.length().get()))
+				return (arrays.one().equal(arrays.length().get()) ? (x) => x.read() : ID)(
+					arrays
+				)
+			if (arrays.length().get().equal(arrays.two()))
+				return arrays.read().concat(arrays.read(arrays.one()))
+			let r = arrays.read()
+			for (const x of arrays.slice(arrays.one()))
+				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
+			return r
 		}
 	})
 }
