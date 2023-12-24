@@ -6,7 +6,7 @@ import * as comparisons from "./exports/comparisons.mjs"
 import { arrayCounter } from "./exports/counters.mjs"
 import * as native from "./exports/native.mjs"
 import {
-	TrueInteger,
+	numbers,
 	arrays,
 	InfiniteCounter,
 	UnlimitedString,
@@ -14,6 +14,7 @@ import {
 } from "./exports/types.mjs"
 import { heaps } from "./exports/algorithms.mjs"
 import * as predicates from "./exports/predicates.mjs"
+import * as orders from "./exports/orders.mjs"
 
 export const classes = {
 	finish: function () {
@@ -136,12 +137,22 @@ export const general = {
 				: args[0]
 		}
 	},
-	// ? Does oneself want this, pray? [if no in-lib application, delete...];
-	finiteobj: function (target, names = [], insequences = [], outtransform = []) {
+	// ! FIX [for it to work with 'TEMPLATE's...];
+	finiteobj: function (
+		target = {},
+		names = [],
+		templates = [],
+		insequences = [],
+		outtransform = []
+	) {
 		const newobj = {}
-		const f = native.finite().function
+		const xf = !(template instanceof Array)
+			? (x) => templates[x]
+			: aliases.native.function._const(template)
 		for (const x in names)
-			newobj[names[x]] = f(target[names[x]], outtransform[x], insequences[x])
+			newobj[names[x]] = native
+				.finite(xf(x))
+				.function(target[names[x]], outtransform[x], insequences[x])
 		return newobj
 	},
 	counterFrom: function (_labels = [], wrapper = aliases.ID) {
@@ -170,6 +181,13 @@ export const general = {
 			}
 		})
 	},
+	maxkey(garr) {
+		return this.template.hasOwnProperty("maxkey")
+			? this.template.maxkey
+			: orders.most({ comparison: this.template.predicate })(
+					garr.copy(this.template.predicate)
+			  )
+	},
 	DEFAULT_ICCLASS: InfiniteCounter(),
 	DEFAULT_GENARRCLASS: arrays.LastIndexArray()
 }
@@ -177,8 +195,9 @@ export const general = {
 general.DEFAULT_USTRCLASS = UnlimitedString()
 general.DEFAULT_TREENODECLASS = TreeNode()
 general.DEFAULT_INFARR = InfiniteArray()
-general.DEFAULT_TINTCLASS = TrueInteger()
+general.DEFAULT_TINTCLASS = numbers.TrueInteger()
 general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
+general.DEFAULT_TRATIOCLASS = numbers.TrueRatio()
 
 // TODO: make the object of defaults that is to be used throughout the library...;
 export const defaults = {
@@ -202,5 +221,7 @@ export const defaults = {
 			}
 		},
 		predicate: predicates.lesser
-	})
+	}),
+	basicgenarr: (parentclass) => ({ parentclass: parentclass, names: ["genarr"] }),
+	basicheap: (heapclass) => ({ parentclass: heapclass, names: ["heap"] })
 }

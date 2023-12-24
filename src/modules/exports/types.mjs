@@ -1916,7 +1916,9 @@ export const Pointer = TEMPLATE({
 // 	  * 2. Add methods for ANALYSIS of the result of 'approximation'
 export const NumericEquality = CLASS({
 	// ! Add a parsing default! [And a format for its result - that too is crucial for the implementation details...];
-	defaults: {},
+	defaults: {
+		ustrclass: general.DEFAULT_USTRCLASS
+	},
 	properties: {
 		equality: function (ustring = this.template.ustrclass.class()) {
 			return this.template.parse(ustring)

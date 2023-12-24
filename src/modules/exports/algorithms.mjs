@@ -1,23 +1,19 @@
 // * Various algorithms and data structure types implementations for the library that one considered potentially useful;
 
-// % Plan for removal of unwanted finite method instances:
-// 		1. Create the general versions for each and every single one of them [generalizaion];
-// 		2. Seek out those that are used in places of the library that are considered desired/essential, keep them. The rest - replace with 'finite()' call;
-
 import { TEMPLATE, EXTENSION, ID } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
 import * as expressions from "./expressions.mjs"
 import * as numeric from "./numeric.mjs"
+import * as predicates from "./predicates.mjs"
 
 import { classes, general, defaults } from "../refactor.mjs"
 import { Ensurer } from "./predicates.mjs"
 
-// ? Add anything more to the Stack, and Queue? [These, basically, do the required job...]
 export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
-		defaults: { parentclass: parentclass, names: ["genarr"] },
+		defaults: defaults.basicgenarr(parentclass),
 		toextend: [],
 		methods: {
 			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
@@ -33,7 +29,7 @@ export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
 }
 export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
 	return EXTENSION({
-		defaults: { parentclass: parentclass, names: ["genarr"] },
+		defaults: defaults.basicgenarr(parentclass),
 		toextend: [],
 		methods: {
 			enqueue(element) {
@@ -65,13 +61,12 @@ export const NTreeNode = TEMPLATE({
 			}
 		}
 	],
-	function: function (parentclass = general.DEFAULT_TREENODECLASS) {
+	function: function (parentclass = this.template.parentclass) {
 		return Ensurer(
 			parentclass,
 			(_r, _this) =>
 				this.template.n.compare(_this.this.this.children.length().get()),
 			{
-				// ! Methods list [the 'this-modifying' ones]:
 				pushback(_r, _t, args) {
 					this.this.this.children.delete()
 					// ^ ISSUE: how to choose the index for the child, to which the element from 'args' is pushed?
@@ -208,12 +203,9 @@ export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
 	})
 }
 
-// ? Generalize this - work on defaults, remake into a proper methodless class...
-export const Vertex = (value, edges) => {
-	return { value, edges }
-}
+export const Vertex = (value, edges) => ({ value, edges })
 
-// ! General issue [small] - currently, the niether TreeNode nor Heaps support the empty '.value'; Pray think more on it... (implement a solution)
+// ? General issue [small] - currently, the niether TreeNode nor Heaps support the lacking '.value'; Pray think more on it... (implement a solution)
 export const heaps = {
 	PairingHeap(parentclass = general.DEFAULT_TREENODECLASS) {
 		return EXTENSION({
@@ -257,7 +249,6 @@ export const heaps = {
 					this.merge(this.this.this.treenode.children)
 					return topelem
 				}
-				// ? Add anything else here?
 			},
 			recursive: true
 		})
@@ -346,7 +337,7 @@ export const heaps = {
 
 export function PriorityQueue(heapclass = general.DEFAULT_HEAPCLASS) {
 	return EXTENSION({
-		defaults: { parentclass: heapclass, names: ["heap"] },
+		defaults: defaults.basicheap(heapclass),
 		methods: {
 			// ! Create a shorter EXTENSION-based expression for the self-referencing method-aliases;
 			pull() {
@@ -418,12 +409,7 @@ export const sort = {
 			garr = this.this.this.genarrclass.static.empty(),
 			bucketsnum = this.template.buckets
 		) {
-			// ! must be refactored [same as the thing in the 'sort.counting'];
-			const k = this.template.hasOwnProperty("maxkey")
-				? this.template.maxkey
-				: orders.most({ comparison: this.template.predicate })(
-						garr.copy((x) => this.template.predicate(x))
-				  )
+			const k = general.maxkey.bind(this)(garr)
 			const buckets = this.this.this.genarrclass
 				.fromCounter(bucketsnum)
 				.map(garr.empty())
@@ -432,8 +418,11 @@ export const sort = {
 				buckets.write(
 					this.template.tinclass.static
 						.fromCounter(bucketsnum)
-						.multiply(this.template.predicate(x).divide(k))
+						.multiply(this.template.predicate(x).divide(k), x)
 				)
+
+			for (const b of buckets.keys())
+				buckets.write(b, this.template.sortingf(buckets.read(b)))
 
 			return array.concat(this.template).function(buckets)
 		},
@@ -442,14 +431,12 @@ export const sort = {
 	counting: TEMPLATE({
 		defaults: {
 			genarrclass: DEFAULT_GENARRCLASS
+			// ! ISSUE: what about the default 'predicate'?
+			// ^ DECISION: perhaps, use one of the 'predicates.mjs' - namely, lesser/greater, those...
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
-			const k = this.template.hasOwnProperty("maxkey")
-				? this.template.maxkey
-				: orders.most({ comparison: this.template.predicate })(
-						garr.copy((x) => this.template.predicate(x))
-				  )
+			const k = general.maxkey.bind(this)(garr)
 			const count = this.template.genarrclass.static
 				.fromCounter(k.next())
 				.map(aliases.function_const(k.class.init()))
@@ -548,7 +535,9 @@ export const sort = {
 		}
 	}),
 	bubble: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
 			// ! use the 'lesser/greater' aliases A LOT...; The code uses them all over the place;
@@ -565,11 +554,13 @@ export const sort = {
 		}
 	}),
 	selection: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			const listArr = garr.copy()
 			const sorted = garr.empty()
-			// ! alias this...
+			// ? alias this...
 			const f = orders.most({ comparison: this.template.predicate })
 			for (const _t of garr) {
 				const extreme = f(listArr)
@@ -580,7 +571,9 @@ export const sort = {
 		}
 	}),
 	merge: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (array = this.template.genarrclass.static.empty()) {
 			const CONSTOBJ = {}
 			function split(a) {
@@ -636,7 +629,7 @@ export const sort = {
 	})
 }
 
-// ? Finish! [alg list: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...)];
+// ? Add search algorithms: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...);
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
@@ -818,101 +811,10 @@ export const search = {
 	})
 }
 
-// ! finish;
 export const integer = {
 	native: {
-		factorOut: function (number = 1) {
-			const factors = []
-			for (
-				let currDivisor = 2;
-				number !== 1;
-				currDivisor += 2 - (currDivisor === 2)
-			) {
-				while (number % currDivisor === 0) {
-					factors.push(currDivisor)
-					number /= currDivisor
-				}
-			}
-			return factors
-		},
-
-		isPrime: function (x = 1) {
-			return this.factorOut(x).length === 1
-		},
-
 		primesBefore: function (x = 1) {
-			return native.number.generate(x).filter(this.isPrime)
-		},
-
-		multiples: TEMPLATE({
-			defaults: {
-				defrange: 1,
-				includezero: false,
-				step: 1
-			},
-			function: function (n = 1, range = this.template.defrange) {
-				return array.native
-					.generate(
-						this.template.includezero ? 0 : 1,
-						range,
-						this.template.step * (-1) ** (range > 0 || n > 0)
-					)
-					.map((a) => a * n)
-			}
-		}),
-
-		multiplesBefore: TEMPLATE({
-			defaults: {
-				defrange: 1
-			},
-			function: function (n = 1, x = this.template.defrange) {
-				return multiples(n, native.number.floor(x / n))
-			}
-		}),
-
-		// * lcm stands for least-common-multiple;
-		lcm: function (...nums) {
-			return native.number.min(this.commonMultiples(...nums))
-		},
-		// * lcd stands for 'least common divisor';
-		lcd: function (...nums) {
-			return native.number.min(this.commonDivisors(...nums))
-		},
-
-		areCoprime: function (...args) {
-			return !!this.commonDivisors(...args).length
-		},
-
-		allFactors: function (number = 1) {
-			const factors = [1]
-			const l = number / 2
-			for (let currFactor = 2; currFactor <= l; currFactor++)
-				if (number % currFactor === 0) factors.push(currFactor)
-			return factors
-		},
-
-		isPerfect: function (number = 1) {
-			return (
-				expressions
-					.evaluate()
-					.function(
-						expressions.Expression("+", [], this.allFactors(number))
-					) === number
-			)
-		},
-
-		factorial: function (number = 0) {
-			const numbers = [1]
-
-			if (number < 0)
-				throw new RangeError(
-					"factorial() library function only accepts values >= 0"
-				)
-
-			for (let i = 1; i <= number; i++) numbers.push(i)
-			return expressions
-				.evaluate()
-				.function(expressions.Expression("*", [], numbers))
+			return array.generate(x).filter(this.isPrime)
 		},
 
 		// ! Generalize;
@@ -942,30 +844,19 @@ export const integer = {
 					expressions.evaluate().function(expressions.Expression("+", [], x)) ==
 					n
 			)
-		},
-
-		binomial: function (n, k) {
-			n = Number(n)
-			k = Number(k) | 0
-			return (
-				expressions.evaluate()(
-					expressions.Expression(
-						"*",
-						[],
-						native.number.generate(0, k - 1, 1).map((num) => n - num)
-					)
-				) / this.factorial(k)
-			)
 		}
 	},
 
 	factorOut: TEMPLATE({
-		defaults: {},
+		defaults: {
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (tint = this.template.tintclass.class()) {
 			const tintc = tint.copy()
 			const factors = this.template.genarrclass.class()
 			for (
-				let currDivisor = tint.class.static.fromNumber(2);
+				let currDivisor = this.template.tintclass.static.two();
 				!this.template.icclass.static.one().compare(tintc);
 				currDivisor = currDivisor.add(
 					this.template.icclass.static
@@ -987,19 +878,20 @@ export const integer = {
 	}),
 
 	isPrime: TEMPLATE({
-		defaults: {},
+		defaults: {
+			icclass: general.DEFAULT_ICCLASS
+		},
 		function: function (x) {
-			return this.template.genarrclass.class.template.icclass
-				.class()
-				.next()
-				.compare(number.factorOut(this.template)(x).length().get())
+			return this.template.icclass.static
+				.two()
+				.compare(integer.factorOut(this.template)(x).length().get())
 		}
 	}),
 
 	primesBefore: TEMPLATE({
-		defaults: {},
+		defaults: { icclass: general.DEFAULT_ICCLASS },
 		function: function (x = this.template.icclass.class()) {
-			return array.generate(this.template)(x).suchthat(number.isPrime)
+			return array.generate(this.template)(x).suchthat(integer.isPrime)
 		}
 	}),
 
@@ -1010,7 +902,8 @@ export const integer = {
 			range = this.template.tintclass.static.one()
 		) {
 			return array
-				.generate()(
+				.generate()
+				.function(
 					(this.template.includezero ? ID : aliases.next)(n.class.class())
 						.value,
 					range.value,
@@ -1021,7 +914,9 @@ export const integer = {
 	}),
 
 	multiplesBefore: TEMPLATE({
-		defaults: {},
+		defaults: {
+			tintclass: general.DEFAULT_TINTCLASS
+		},
 		function: function (
 			n = this.template.tintclass.static.one(),
 			x = this.template.tintclass.static.one()
@@ -1078,12 +973,15 @@ export const integer = {
 	}),
 
 	allFactors: TEMPLATE({
-		defaults: {},
+		defaults: {
+			icclass: general.DEFAULT_ICCLASS,
+			tintclass: general.DEFAULT_TINTCLASS
+		},
 		function: function (number = this.template.tintclass.class()) {
+			// ? Question [general]: shall one be 'saving' the time like this, or not? (this way, a little less time is required for the performance due to reduced garbage collection, but the memory occupied gets to be used constantly throughout the function, WITHOUT any de- and re-allocations)
 			const z = this.template.icclass.static.zero()
-			const o = this.template.icclass.static.one()
 
-			const factors = [o]
+			const factors = [othis.template.icclass.static.one()]
 			const l = number.divide(this.template.icclass.static.two()())
 			for (
 				let currFactor = this.template.icclass.static.two()();
@@ -1096,7 +994,9 @@ export const integer = {
 	}),
 
 	isPerfect: TEMPLATE({
-		defaults: {},
+		defaults: {
+			tintclass: general.DEFAULT_TINTCLASS
+		},
 		function: function (number = this.template.tintclass.class()) {
 			return expressions
 				.uevaluate()
@@ -1112,7 +1012,7 @@ export const integer = {
 	}),
 
 	factorial: TEMPLATE({
-		defaults: {},
+		defaults: { tintclass: general.DEFAULT_TINTCLASS },
 		function: function (tint = this.template.tintclass.class()) {
 			const numbers = this.template.genarrclass.static.fromArray([
 				this.template.tintclass.static.one()
@@ -1169,92 +1069,32 @@ integer.native.commonMultiples = TEMPLATE({
 	}
 })
 
+// ! fix the missing in- and out-'sequences' for the determination of the types conversion at the beginning and ending...;
+integer.native = {
+	...integer.native,
+	...general.finiteobj(
+		integer,
+		[
+			"factorOut",
+			"isPrime",
+			"multiples",
+			"multiplesBefore",
+			"lcm",
+			"lcd",
+			"areCoprime",
+			"allFactors",
+			"isPerfect",
+			"factorial",
+			"binomial"
+		],
+		{ integer: true }
+	)
+}
+integer.native.primesBefore = native.finite().function(integer.primesBefore)
+
 export const array = {
 	native: {
-		intersection: TEMPLATE({
-			defaults: {
-				comparison: comparisons.refCompare,
-				preferred: (fel, sel, comp, farr, sarr) => fel
-			},
-			function: function (...arrs) {
-				switch (arrs.length) {
-					case 0:
-						return []
-					case 1:
-						return arrs[1]
-					case 2:
-						const result = []
-						for (let i = 0; i < arrs[0].length; i++) {
-							for (let j = 0; j < arrs[1].length; j++) {
-								if (
-									this.template.comparison(arrs[0][i], arrs[1][j]) &&
-									!array
-										.indexesOf({
-											comparison: this.template.comparison
-										})
-										.function(result, arrs[0][i])
-								)
-									result.push(
-										this.template.preferred(
-											arrs[0][i],
-											arrs[1][j],
-											this.template.comparison,
-											...arrs
-										)
-									)
-							}
-						}
-						return result
-				}
-
-				// TODO [general]: use the 'this.function' recursion feature extensively... [semantically powerful, resourcefully efficient, beautifully looking - it has literally everything];
-				return this.function(arrs[0], this.function(...arrs.slice(1)))
-			}
-		}),
-
-		// * Note: one could implement the 'factorial(n)' for integers as "permutations(generate(n)).length";
-		// ! Think on that - which of the two would be quicker;
-		permutations: function (array = []) {
-			if (array.length < 2) return [[...array]]
-
-			const pprev = this.permutations(array.slice(0, array.length - 1))
-			const l = array[array.length - 1]
-			const pnext = []
-
-			for (let i = 0; i < array.length; i++)
-				for (let j = 0; j < pprev[i].length; j++)
-					pnext.push(aliases.native.array.insert(pprev[i], j, [l]))
-
-			return pnext
-		},
-
-		indexesOf: TEMPLATE({
-			defaults: { comparison: comparisons.refCompare, defha: Infinity },
-			function: function (array, el, haltAfter = this.template.defha) {
-				const indexes = []
-				for (let i = 0; i < array.length && indexes.length < haltAfter; i++)
-					if (this.template.comparison(array[i], el)) indexes.push(i)
-				return indexes
-			}
-		}),
-
-		// * clears all but the first `tokeep` repetition of `el`
-		norepetitions: TEMPLATE({
-			defaults: {
-				tokeep: 0,
-				comparison: comparisons.refCompare
-			},
-			function: function (arr, el, tokeep = this.template.tokeep) {
-				const firstMet = array.native
-					.indexesOf({ comparison: this.template.comparison })
-					.function(arr, el)
-				return arr.filter(
-					(a, i) =>
-						firstMet.indexOf(i) < tokeep || !this.template.comparison(a, el)
-				)
-			}
-		}),
-
+		// ! Generalize;
 		split: TEMPLATE({
 			defaults: {
 				comparison: comparisons.refCompare
@@ -1272,30 +1112,8 @@ export const array = {
 				return segments.map((seg) => arr.slice(...seg))
 			}
 		}),
-
-		isSub: TEMPLATE({
-			defaults: {
-				comparison: comparisons.valueCompare,
-				defarr: []
-			},
-			function: function (arrsub, arr = this.template.defarr) {
-				for (const x of arrsub)
-					if (!arr.any((y) => this.template.comparison(x, y))) return false
-				return true
-			}
-		}),
-
-		join: TEMPLATE({
-			defaults: { separators: [null] },
-			function: function (arrs = [], separators = this.template.separators) {
-				return multidim.native.repeatedApplication([], arrs.length, (x, i) =>
-					x.concat([...arrs[i], ...separators])
-				)
-			}
-		}),
-
 		generate: function (start, end, step = 1, precision = 1) {
-			// ! perform this operation throughout the package's code;
+			// ! find more places for this operation's application (refactor to an alias, mayhaps?)
 			if (arguments.length === 1) {
 				end = start
 				start = 1
@@ -1309,10 +1127,12 @@ export const array = {
 			return generated
 		}
 	},
+	// ? Question [general]: which one should the library prefer the 'GeneralArray'-based multiple arguments, or the spread syntax? (GeneralArray permits unlimited number of arguments for a function that uses it...);
 	intersection: TEMPLATE({
 		defaults: {
 			comparison: comparisons.valueCompare,
-			preferred: (fel, sel, comp, farr, sarr) => fel
+			preferred: (fel, sel, comp, farr, sarr) => fel,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (...arrs) {
 			if (!arrs.length) return this.template.genarrclass.empty()
@@ -1332,7 +1152,9 @@ export const array = {
 		}
 	}),
 	permutations: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
 		function: function (array = this.template.genarrclass.static.empty()) {
 			if (array.init().next().compare(array.length().get()))
@@ -1352,12 +1174,21 @@ export const array = {
 		}
 	}),
 	indexesOf: TEMPLATE({
-		defaults: {
-			unfound: undefined,
-			comparison: comparisons.valueCompare,
-			halt: false,
-			haltAfter: Infinity
-		},
+		defaults: [
+			function () {
+				return {
+					unfound: undefined,
+					comparison: comparisons.valueCompare,
+					halt: false,
+					icclass: general.DEFAULT_ICCLASS
+				}
+			},
+			function () {
+				return {
+					haltAfter: this.template.icclass.static.one()
+				}
+			}
+		],
 		function: function (
 			arr,
 			el,
@@ -1376,10 +1207,25 @@ export const array = {
 				}
 				return inds
 			})
-		}
+		},
+		isthis: true
 	}),
 	norepetitions: TEMPLATE({
-		defaults: { comparison: comparisons.valueCompare, copy: false },
+		defaults: [
+			function () {
+				return {
+					comparison: comparisons.valueCompare,
+					copy: false,
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					icclass: general.DEFAULT_ICCLASS
+				}
+			},
+			function () {
+				return {
+					tokeep: this.template.icclass.static.zero()
+				}
+			}
+		],
 		function: function (arr, el, tokeep = this.template.tokeep) {
 			const firstMet = array.indexesOf(this.template).function(arr, el)
 			const pred = (a, i) =>
@@ -1390,7 +1236,8 @@ export const array = {
 					? (x) => x.copied("suchthat", [pred])
 					: (x) => x.suchthat(pred)
 			)(arr)
-		}
+		},
+		isthis: true
 	}),
 	isSub: TEMPLATE({
 		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
@@ -1404,12 +1251,14 @@ export const array = {
 		}
 	}),
 	join: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (
 			arrs = this.template.genarrclass.static.empty(),
 			separators = this.template.separators
 		) {
-			return multidim.repeatedApplication(
+			return repeatedApplication(
 				this.template.genarrclass.static.empty(),
 				arrs.length().get(),
 				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
@@ -1417,17 +1266,22 @@ export const array = {
 		}
 	}),
 	generate: TEMPLATE({
-		defaults: { ic: false },
+		defaults: {
+			icclass: general.DEFAULT_ICCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			ic: false
+		},
 		function: function (start, end, step = this.template.icclass.class().next()) {
 			if (arguments.length === 1) {
 				end = start
 				start = this.template.icclass.class().next()
 			}
-			const generated = this.genarrclass.static.empty()
-			const proposition = step.direction()
-				? (i) => end.compare(i)
-				: (i) => i.compare(end)
-			const wrap = this.template.ic ? ID : (x) => x.value
+			const generated = this.template.genarrclass.static.empty()
+			const proposition = (
+				(f) => (i) =>
+					f(i, end)
+			)(predicates[step.direction() ? "lesseroe" : "greateroe"])
+			const wrap = this.template.ic ? ID : aliases.native.object.prop("value")
 			for (let i = start; proposition(i); i = i.jumpDirection(step))
 				generated.pushback(wrap(i))
 			return generated
@@ -1442,7 +1296,9 @@ export const array = {
 		}
 	}),
 	concat: TEMPLATE({
-		defaults: {},
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (arrays = this.template.genarrclass.static.empty()) {
 			if (arrays.two().compare(arrays.length().get()))
 				return (arrays.one().equal(arrays.length().get()) ? (x) => x.read() : ID)(
@@ -1458,16 +1314,38 @@ export const array = {
 	})
 }
 
+array.native = {
+	...array.native,
+	...general.finiteobj(
+		array,
+		[
+			"intersection",
+			"permutations",
+			"indexesOf",
+			"norepetitions",
+			"isSub",
+			"join",
+			"common",
+			"concat"
+		],
+		{ integer: true }
+	)
+}
+
 export const number = {
 	farey: TEMPLATE({
-		defaults: {},
+		defaults: {
+			tratioclass: general.DEFAULT_TRATIOCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			icclass: general.DEFAULT_ICCLASS
+		},
 		function: function (
-			startRatio = this.template.tratio.class(),
-			endRatio = this.template.tratio.class(),
+			startRatio = this.template.tratioclass.class(),
+			endRatio = this.template.tratioclass.class(),
 			iterations = this.template.icclass.class()
 		) {
 			const gotten = this.template.genarrclass.fromArray([
-				this.template.genarrclass.fromArray([startRatio, endRatio])
+				this.template.genarrclass.static.fromArray([startRatio, endRatio])
 			])
 			for (let i = this.template.icclass.class(); i < iterations; i = i.next()) {
 				gotten.pushback(this.template.genarrclass.static.empty())

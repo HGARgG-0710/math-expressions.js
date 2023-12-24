@@ -24,7 +24,6 @@ export function instance(transformation = ID) {
 		comparisons: NOMODULE(comparisons),
 		counters: NOMODULE(counters),
 		expressions: NOMODULE(expressions),
-		multidim: NOMODULE(multidim),
 		native: NOMODULE(native),
 		numeric: NOMODULE(numeric),
 		orders: NOMODULE(orders),

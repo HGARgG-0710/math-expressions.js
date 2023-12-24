@@ -41,7 +41,7 @@ export * from "./modules/exports.mjs"
 // 		* let each and every in-editor documentation bit possess a link to the definition of the thing in question [GitHub repo], along with the similar link to the GitHub Wiki-s and a brief unique description of its purpose;
 // 		Wiki, then, would go into greater depths as to the purposes, possible uses, examples, definitions and technicalities of each and every abstraction in the question...
 // 		* The Aliases would have the information going more like 'REFER TO: ...' or something; Just refering to the information from a different definition [not as convinient within the editor, though];
-// TODO: create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
+// ? create a function like (a: [key, value][]) => a.map(([key, value]) => [key, objInverse(value).toObject()]);
 // TODO: generalize further (f, obj, depth) => ... [would with depth 'depth', map 'f' to keys/values of an object...]
 // TODO: generalize the above even further, at 'depth=Infinity', would do a complete recursive mapping;
 // TODO [general]: normalization of recurring name themes;
@@ -65,7 +65,6 @@ export * from "./modules/exports.mjs"
 // ^ Decided: almost all the class methods within the library will return the instance ('return this.this.this'); This way, one is able to do things like 'a.b().c()...' without having to create copies all the time; Instead, they are assigned to the handler and the originals are disposed of;
 // TODO [general]: after having finished the library and prepared it [mostly] for publication on GitHub, complete the messages/comments at the beginning of each one of the modules [clear all the TODOS, and unwanted comments, and so on...]; Make it perfect.
 // TODO [general]: check that the code is sound '.function'-wise and 'this.this.this'-wise and that there is a unanimous approach to the thing...;
-// TODO [general]: instead of boolmap, pray use the '.every'/'.any';
 // TODO [later]: after all is done - relook through each and every file of the project feverishly, seek anything undone and uncompleted;
 // TODO [later]: do some micro-optimizations of the library; Choose more memory- and time- performant solutions and native types, where possible;
 // TODO [general]: create a proper '.copy' method for each and every class...

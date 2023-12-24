@@ -19,7 +19,9 @@ export const linear = TEMPLATE({
 
 // "fixes" a linear order, by means of excluding all the repeating elements from it...
 export const fixLinear = TEMPLATE({
-	defaults: {},
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
 	function: function (array = this.template.genarrclass.static.empty()) {
 		const copy = array.copy()
 		for (let i = copy.init(); !i.compare(copy.length().get()); i = i.next()) {

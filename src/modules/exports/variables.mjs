@@ -27,7 +27,7 @@ export const deftable = RECURSIVE_VARIABLE({
 	"&&": general.recursiveOperation("&&", (a, b) => a && b),
 	"||": general.recursiveOperation("||", (a, b) => a || b)
 })
-// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation (or its generalization NAryArray), and all the corresponding methods-algorithms implementations];
+// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation (or its generalization - an NAryArray), and all the corresponding methods-algorithms implementations];
 export const udeftable = RECURSIVE_VARIABLE({
 	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
 	"-": function (...args) {
@@ -35,7 +35,7 @@ export const udeftable = RECURSIVE_VARIABLE({
 			...(args.length ? [args[0]].concat(args.slice(1).map((x) => x.invadd())) : [])
 		)
 	},
-	// ! the '/' division must return a True-Rational value;
+	// ! the '/' division must return a TrueRation-al value;
 	"#": function (...args) {
 		return (args.length >= 2 ? (x) => x.divide(this.get["*"](...args.slice(1))) : ID)(
 			args[0]
@@ -50,15 +50,17 @@ export const libPrecision = VARIABLE(16)
 export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
 export const MAX_INT = VARIABLE(2 ** 53 - 1)
 
-// ? generalize even further - using the repeatedApplication...;
 const ccf = property("concat")
 export const defaultAlphabet = VARIABLE(
 	ccf("")(
 		[
+			// 0-9
 			[48, 9],
+			// a-z
 			[97, 25],
+			// A-Z
 			[65, 25]
-		].map(aliases.exparr(native.string.UTF16))
+		].map(aliases.native.function.exparr(native.string.UTF16))
 	)
 )
 

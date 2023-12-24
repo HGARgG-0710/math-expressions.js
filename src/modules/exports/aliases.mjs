@@ -5,7 +5,7 @@
 
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
-import * as native from "./native.mjs"
+import * as Native from "./native.mjs"
 import { ID } from "./../macros.mjs"
 
 export const native = {
@@ -13,32 +13,40 @@ export const native = {
 		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
 
 		fromNumber: TEMPLATE({
+			defaults: {
+				icclass: general.DEFAULT_ICCLASS
+			},
 			function(x = this.template.start) {
-				return types.InfiniteCounter(counters.addnumber(this.template)).class(x)
+				return types
+					.InfiniteCounter(counters.addnumber(this.template))
+					.class(x)
+					.map(this.template.icclass)
 			}
 		}),
 
 		iterations: TEMPLATE({
 			defaults: { iterated: counters.arrayCounter(), defnum: 1 },
 			function(n = this.template.defnum) {
-				return multidim.native.repeatedApplication(
+				return repeatedApplication(
 					undefined,
 					nneg(n),
 					this.template.iterated[n > 0 ? "generator" : "inverse"]
 				)
 			}
-		})
+		}),
+
+		negind: (x, arr) => (x < 0 ? arr.length + x : x),
+		nneg: (x) => (x < 0 ? -x : x),
+		call: (x) => x()
 	},
 
 	string: {
 		stoa(x = "") {
 			return x.split("")
 		},
-
 		atos(x = []) {
 			return x.join("")
 		},
-
 		fcc: String.fromCharCode,
 
 		strMap: function (str, symb = ID, isStrOut = false) {
@@ -132,7 +140,27 @@ export const native = {
 				deff: id
 			}
 		}),
-		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval
+		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
+
+		// ? Generalize this to a context (add 'this');
+		adddefaults:
+			(f) =>
+			(defaults = []) => {
+				return (...args) => {
+					for (const x in defaults) if (!(x in args)) args[x] = defaults[x]
+					return f(...args)
+				}
+			},
+		paramDecide:
+			(cond) =>
+			(a = ID, b = ID) =>
+			(...args) =>
+				(cond() ? a : b)(...args),
+
+		index: (i) => (x) => x[i],
+
+		exparr: (f) => (arr) => f(...arr),
+		rexparr: (arr) => (f) => f(...arr)
 	},
 
 	object: {
@@ -142,24 +170,24 @@ export const native = {
 		// * A convinient general-version...
 		ensureProperties: function (object, defaultobj) {
 			for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
-		}
+		},
+		property:
+			(p) =>
+			(x) =>
+			(...args) =>
+				x[p](...args),
+		prop: (p) => (x) => x[p]
 	},
 
 	boolean: {
 		n: (x) => !x,
 		t: true,
-		f: false
+		f: false,
+		btic: (x, _class) => _class.static[x ? "one" : "zero"]()
 	}
 }
 
 // * Identity map (just a nice piece of notation, that's all);
-/**
- * * The identity map;
- *
- * DEFINITION:
- *
- * WIKI:
- */
 export const id = ID
 
 export const bool = Boolean
@@ -177,24 +205,10 @@ export const bi = BigInt
 export const ustr = types.UnlimitedString
 export const genarr = types.GeneralArray
 
-// TODO: work more on the structure of the 'aliases' module; In particular - distribute those ones definitions somehwere more appropriate ['function', for instance?];
-// ! USE THIS ONE ESPECIALLY...
-export const property =
-	(p) =>
-	(x) =>
-	(...args) =>
-		x[p](...args)
 export const trim =
 	(n = 1) =>
 	(x) =>
 		x.slice(0, x.length - n)
-// ! Use throughout the library...;
-export const paramDecide =
-	(cond) =>
-	(a = ID, b = ID) =>
-	(...args) =>
-		(cond() ? a : b)(...args)
-export const exparr = (f) => (arr) => f(...arr)
 
 export const is = {
 	bool: (x) => x === true || x === false,
@@ -208,44 +222,8 @@ export const is = {
 	fn: (x) => x instanceof Function,
 	fun: (x) => typeof x === "function",
 	bi: (x) => x instanceof BigInt,
-	nan: isNaN
+	nan: isNaN,
+	class: (cl) => cl.is
 }
 
-/**
- * * Returns the function returning the logical negation of the output of the function passed relative to the input of the newly passed argument;
- *
- * In short, performs logical negation of a function;
- *
- * DEFINITION:
- *
- * WIKI:
- */
-// * in this case, rewrite this via a wrapper...
-export const negate = wrapper({
-	out: n
-}).function
-// ! Move these to 'predicates': TRUTH, T, FALLACY, F;
-export const TRUTH = native.function._const(true)
-export const T = TRUTH
-export const FALLACY = native.function._const(false)
-export const F = FALLACY
-export const VOID = native.function.void
-
 export const cdieach = (x, i) => [x[i]]
-export const negind = (x, arr) => (x < 0 ? arr.length + x : x)
-export const nneg = (x) => (x < 0 ? -x : x)
-
-export const next = (x) => x.next()
-
-// ! Generalize this to a context, pray...;
-export const adddefaults =
-	(f) =>
-	(defaults = []) => {
-		return (...args) => {
-			for (const x in defaults) if (!(x in args)) args[x] = defaults[x]
-			return f(...args)
-		}
-	}
-
-export const call = (x) => x()
-export const btic = (x, _class) => _class.static[x ? "one" : "zero"]()

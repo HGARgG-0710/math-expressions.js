@@ -7,6 +7,7 @@ import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
 import * as types from "./types.mjs"
 import * as comparisons from "./comparisons.mjs"
+import { general } from "./refactor.mjs"
 
 export const copy = {
 	copy: TEMPLATE({
@@ -32,7 +33,7 @@ export const copy = {
 		}
 	}),
 
-	// TODO: find the definition for the general _switch() from a different library of self's, place in this one, then use here...
+	// ? find the definition for the general _switch() from a different library of self's, place in this one, then use here...
 	copyFunction: (() => {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
@@ -213,21 +214,27 @@ export const object = {
 
 export const array = {
 	replace: {
-		// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
-		replaceIndex: function (arr, index, value) {
+		replaceIndex: function (arr = [], index = 0, value = undefined) {
 			return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 		},
 
+		// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
 		replaceIndexes: function (arr, x, y, indexes = [0]) {
-			return array
-				.splitArr(arr, x)
+			return algorithms.array.native
+				.split()
+				.function(arr, x)
 				.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
 				.flat()
 		},
 
 		// * Replaces all occurences of 'x' with 'y';
 		replace: function (arr, x, y) {
-			return array.replaceIndexes(arr, x, y, number.generate(arr.length))
+			return array.replaceIndexes(
+				arr,
+				x,
+				y,
+				algorithms.integer.generate(arr.length)
+			)
 		},
 
 		// * Replaces values within an array and returns the obtained copy...
@@ -242,6 +249,7 @@ export const array = {
 	},
 
 	// ? What is this even? Fit only to be an alias...;
+	// ! decompose onto aliases, then consider what to do with it...
 	multArrsRepApp: TEMPLATE({
 		defaults: { n: 1, default: null },
 		function: function (x = this.template.default) {
@@ -251,7 +259,8 @@ export const array = {
 			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
 			ensureProperties(args, defobj)
 			return repeatedApplication(
-				(v, i) => this.template.f(v, ...args.map((x) => x[i])),
+				(v, i) =>
+					this.template.f(v, ...args.map(aliases.native.function.index(i))),
 				Math.min(...args.map((a) => a.length)),
 				x
 			)
@@ -282,6 +291,7 @@ export const array = {
 		return newarr
 	},
 
+	// ! Later, (in v1.1, when working on 'statistics', pray relocate 'countAppearences' to there...);
 	countAppearences: TEMPLATE({
 		defaults: {
 			comparison: comparisons.refCompare,
@@ -294,26 +304,23 @@ export const array = {
 }
 
 // ! make heavy usage of 'strmethod' for this thing, pray...;
-export const string = {}
+export const string = {
+	strmethod: aliases.wrapper({
+		in: aliases.native.string.stoa,
+		out: aliases.native.string.atos
+	}).function
+}
+for (const x in array.replace) string[`s${x}`] = string.strmethod(array.replace[x])
 
-// todo: generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
-// ? Is one really happy with the way this is getting exported?
-// * Gorgeous. Just gorgeous...
-string.UTF16 = (p, l) =>
-	number.generate(0, l).map((x) => aliases.native.string.fcc(p + x))
-
-string.strmethod = aliases.wrapper({
-	in: string.stoa,
-	out: string.atos
-}).function
-
-// ? suggestion: add all the methods of 'array' to string via the 'strmethod'?
-string.sreplaceIndexes = string.strmethod(array.replaceIndexes)
-// * Replace the first occurence of a given value within a string...
+// * Replaces the first occurence of a given value within a string...
 string.sreplaceFirst = string.sreplaceIndexes
-string.sreplace = string.strmethod(array.replace)
 
-string.sreplaceIndex = string.strmethod(array.replaceIndex)
+// ? generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
+// * Gorgeous. Just gorgeous...
+string.UTF16 = (p, l = 0) =>
+	algorithms.integer
+		.generate(0, l, (-1) ** (l < 0))
+		.map((x) => aliases.native.string.fcc(p + x))
 
 // * 1.
 // * Replaces at 1 index;
@@ -328,24 +335,29 @@ string.sreplaceIndexesMult = string.strmethod(array.replaceIndexesMult)
 // * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
 array.replace.replaceMany = array.multArrsRepApp({
 	n: 2,
-	f: array.replace,
+	f: array.replace.replace,
 	default: []
 }).function
-string.sreplaceMany = string.strmethod(array.replaceMany)
+string.sreplaceMany = string.strmethod(array.replace.replaceMany)
 
 export const finite = TEMPLATE({
 	defaults: {
 		definseq: [false],
-		defout: false
+		defout: false,
+		integer: false
 	},
 	function: function (f, out = this.template.defout, inseq = this.template.definseq) {
+		const f = this.template.integer
+			? ID
+			: general.DEFAULT_TINTCLASS.static.fromCounter
 		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
-		const tin = (out) => (out ? native.number.fromNumber : types.arrays.CommonArray())
+		const tin = (out) =>
+			out ? f(native.number.fromNumber) : types.arrays.CommonArray()
 		const tout = (out) =>
 			out
 				? (x) => x.map(types.InfiniteCounter(counters.addnumber())).value
 				: (x) => x.copied("switchclass", [types.arrays.CommonArray()]).array
-		return native.function
+		return aliases.native.function
 			.wrapper({
 				out: tout(out),
 				in: inseq.map(tin),

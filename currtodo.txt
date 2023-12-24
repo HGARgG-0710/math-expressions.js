@@ -16,7 +16,13 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 	1.3. Code polishing: 
 		1.3.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
 			1.3.1.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
-		1.3.2. Complete ALL the TEMPLATEs' defaults and use the 'refactor.defaults' for storing the repeating defaults and referencing them...; 
+			1.3.1.2. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
+		1.3.2. Refactoring: 
+			1.3.2.1. 'refactor.defaults' - see if there are any further potential applications of it... 
+			1.3.2.2. various recurring function-expressions (create new aliases and use those instead...); 
+			1.3.2.3. all of aliases; 
+			1.3.2.4. aliases-simplification (use of aliases within the aliases, in such a way so as for the thing to be computable); 
+		1.3.3. Call the '.function...' on all the TEMPLATEs appropriately, unite the library's style on this particular issue...; 
 	
 2. Side: Testing; 
 	The library's approaching the v1.0 release; 

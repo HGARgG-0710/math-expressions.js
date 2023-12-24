@@ -127,7 +127,10 @@ export const classForm =
 export const garrayForm = classForm(types.GeneralArray)
 
 export const countrecursive = TEMPLATE({
-	defaults: {},
+	defaults: {
+		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
+		form: arrayForm
+	},
 	function: function (array = this.form.new()) {
 		return aliases.native.number
 			.fromNumber({ icclass: this.template.icclass })(
@@ -176,8 +179,11 @@ export const totalElems = function (template = {}) {
 }
 
 export const dim = TEMPLATE({
-	defaults: {},
-	function: function (recarr = this.template.genarrclass.static.empty()) {
+	defaults: {
+		icclass: general.DEFAULT_ICCLASS,
+		form: arrayForm
+	},
+	function: function (recarr = this.template.form.new()) {
 		if (this.template.form.is(recarr))
 			return this.template.icclass.static
 				.one()
