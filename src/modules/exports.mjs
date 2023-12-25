@@ -1,4 +1,4 @@
-// TODO: check for colliding exports, then either rename the stuff, or allow for 
+// TODO: check for colliding exports, then either rename the stuff, or create some alternative solution's implementation
 export * from "./exports/algorithms.mjs"
 export * from "./exports/aliases.mjs"
 export * from "./exports/comparisons.mjs"

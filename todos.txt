@@ -81,6 +81,28 @@ It gets changed actively.
 	11.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
 		Things that are elementary, give a way for their composition production; 
 		Then, allow for such infinite composition, and consequently - partial computation of them too...; 
+	11.8. Real - class of real numbers, based off rational functions over which nth digit is to be calculated; 
+		Recently, done some derivation (still checking for correctness), seem to have found a proof for the 
+		statement that there is a general algorithm using which any real number's arbitrary digit in any number base
+		can be calculated (+ definition for the thing in question). Originally was planned for the v1.0, but now letting it rest for slightly later; 
+			The problems with adding it to the v1.0 are: 
+
+				1. It's complex, and in that harshly contrasts with some of the library's current tools. 
+				2. [Reason for 1.] For it to become simple, one requires a proper and widely extensive API for working with abstract functions and expressions, conversion between them, and so on... 
+					It's currently lacking, would take much time to implement. 
+					This library's version has already been in development for over a year, so one decided to do this well later, and for now merely keep a reminder.
+				3. Not quite sure about the implementation details due to the lack of proper limitation on the number of steps for the algorithm's execution: 
+					Namely, the theorem guarantees that the amount of steps of the algorithm IS finite, but how large - not specified. 
+					Generally, it is impossible to do so, due to the fact that one CAN explicitly construct functions, for which the algorithm will run for arbitrarily long time. 
+					
+					So, one would either have to set a certain kind of conditional 'restriction' upon the implementation, or leave the matter of some small details 
+					to the user's discretion (namely, the user would have to personally verify how fast does the given rational function converge on average, and whether 
+					it is applicable); 
+				4. The derivation in question may contain mistakes (plus, at the time that this is being written, it's only at the sketch stage of readiness), 
+					and later simplified/studied further. 
+
+			Thus, a decision has been made to think about it further in the v1.1; 
+
 		
 		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 
 
@@ -89,3 +111,12 @@ It gets changed actively.
 	Most of them make use of the predefined defaults only, forcing the user to either rewrite the code manually for this trivial matter, 
 	or to use the default package code convention; Not good at all. 
 	(Note: one can do it using further 'templates'; Additionally, fix the default recurring template names like 'genarrclass', 'tintclass', 'icclass', 'comparison' and so on...);
+
+13. Dubious but interesting structural ideas that may have a return: 
+
+	13.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
+		Currently - no application + trashes the code for no apparent reason. 
+		If return, only after v1.1. and when working on generalization of things. 
+			Reconsider their deletion, plus (generally, the way that the templates work). 
+				For some methods (like 'GeneralArray.permutations' and 'GeneralArray.intersection'), they work quite well as 'template-substitutes', 
+				and so shall be kept (even in the v1.0); 

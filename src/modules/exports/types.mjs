@@ -14,9 +14,6 @@ import { StaticThisTransform } from "../refactor.mjs"
 
 // ^ IDEA: create a class 'Comparable', which would be set by means of the orders and (consequently), can be converted to 'InfiniteCounter'; This way, one would be able to create InfiniteCounters from '.compare' orders!
 export const InfiniteCounter = (() => {
-	// ? Get rid of the 'leftovers', just use the good old 'comparison' instead here?
-	const sh1 = (_this, leftovers) =>
-		ensureProperty(leftovers, "comparison", _this.this.class.template.comparison)
 	// * Note: a minor 'trick' about the entire thing is that the value that is assigned to 'template.unacceptable' is thrown out of the function's value scopes [because that is the value from which it starts to count]; However, there are several ways of going around it. One is also replacing the value for the 'template.initialcheck';
 	return CLASS({
 		defaults: {
@@ -86,43 +83,43 @@ export const InfiniteCounter = (() => {
 			direction() {
 				return this.this.this.this.class.static.direction(this)
 			},
-			compare(ic, leftovers = {}) {
-				sh1(this, leftovers)
+			compare(ic, comparison = this.this.this.this.class.template.comparison) {
 				ic = ic.map(this.this.this.this.class)
 
 				let pointerfor = ic
 				let pointerback = ic
 
 				while (
-					!leftovers.comparison(pointerfor, this.this.this) &&
-					!leftovers.comparison(pointerback, this.this.this)
+					!comparison(pointerfor, this.this.this) &&
+					!comparison(pointerback, this.this.this)
 				) {
 					pointerfor = pointerfor.next()
 					pointerback = pointerback.previous()
 				}
 
-				return leftovers.comparison(pointerfor, this.this.this)
+				return comparison(pointerfor, this.this.this)
 			},
-			difference(ic, leftovers = {}) {
-				sh1(this, leftovers)
+			difference(ic, comparison = this.this.this.this.class.template.comparison) {
 				const next = aliases.property(
-					ic.compare(this.this.this, leftovers) ? "previous" : "next"
+					ic.compare(this.this.this, comparison) ? "previous" : "next"
 				)
 				this.this.this.this.class.static.whileloop(
 					this.this.this.copy(),
 					(current) => next(current)(),
 					ic,
 					(x) => next(x)(),
-					leftovers.comparison,
+					comparison,
 					this.this.this.this.class.class()
 				)
 				return current
 			},
-			jumpDirection(ic, leftovers = {}) {
-				sh1(this, leftovers)
+			jumpDirection(
+				ic,
+				comparison = this.this.this.this.class.template.comparison
+			) {
 				return this.this.this.this.class.static.direction(ic)
-					? this.this.this.jumpForward(ic, leftovers)
-					: this.this.this.jumpBackward(ic, leftovers)
+					? this.this.this.jumpForward(ic, comparison)
+					: this.this.this.jumpBackward(ic)
 			},
 			jump(x, jumping = (k) => k.next(), counterclass = this.this.this.this.class) {
 				return this.this.this.this.class.static.whileloop(
@@ -144,19 +141,20 @@ export const InfiniteCounter = (() => {
 					undefined
 				)
 			},
-			jumpForward(x, leftovers = {}) {
-				sh1(this, leftovers)
-				return this.jump(x, (a) => a.next(), leftovers)
+			// ? Question: does one really want the 'comparison' to hang out like that?
+			jumpForward(x, comparison = this.this.this.this.class.template.comparison) {
+				return this.jump(x, (a) => a.next(), comparison)
 			},
-			jumpBackward(x, leftovers = {}) {
-				sh1(this, leftovers)
-				return this.jump(x, (k) => k.previous(), leftovers)
+			jumpBackward(x, comparison = this.this.this.this.class.template.comparison) {
+				return this.jump(x, (k) => k.previous(), comparison)
 			},
-			map(icClass = this.class, leftovers = {}) {
-				sh1(this, leftovers)
+			map(
+				icClass = this.class,
+				comparison = this.this.this.this.class.template.comparison
+			) {
 				let current = this.this.this.this.class.class()
 				let alterCurrent = icClass.class()
-				while (!leftovers.comparison(current, this.this.this))
+				while (!comparison(current, this.this.this))
 					alterCurrent = alterCurrent.next()
 				return alterCurrent
 			},
@@ -195,20 +193,12 @@ export const InfiniteCounter = (() => {
 })()
 
 export const GeneralArray = (() => {
-	// * Shortcuts [for refactoring...];
-	const sh1static = (_this, leftovers) =>
-		ensureProperties(leftovers, {
-			fast: false,
-			comparison: _this.this.template.icclass.template.comparison
-		})
-	const sh1 = (_this, leftovers) =>
-		sh1static(_this.this.this.this.class.static, leftovers)
-
 	return CLASS({
 		defaults: {
 			empty: [],
 			unfound: undefined,
 			treatfinite: false,
+			fast: false,
 			default: aliases._const(undefined),
 			icclass: general.DEFAULT_ICCLASS,
 			comparison: comparisons.refCompare
@@ -221,7 +211,6 @@ export const GeneralArray = (() => {
 				return startindex
 			}
 		},
-		// ? Should this also become a part of the new CLASS definition? [a default, for instance?]
 		transform: StaticThisTransform,
 		static: (() => {
 			const R = {
@@ -238,14 +227,12 @@ export const GeneralArray = (() => {
 					return this.this.class(template).class()
 				},
 				// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
-				fromArray(arr, leftovers = {}) {
-					sh1static(this, leftovers)
+				fromArray(arr) {
 					const generalized = this.empty()
-					for (const a of arr) generalized.pushback(a, leftovers)
+					for (const a of arr) generalized.pushback(a)
 					return generalized
 				},
-				fromCounter(counter, leftovers = {}) {
-					sh1static(this, leftovers)
+				fromCounter(counter) {
 					const narr = this.empty()
 					counter.loop(() => narr.pushback(this.this.class.template.default()))
 					return narr
@@ -411,91 +398,79 @@ export const GeneralArray = (() => {
 						each(this.this.this)
 					return this.this.this.currindex
 				},
-				moveforward(index, leftovers = {}) {
-					ensureProperties(leftovers, {
-						begin: false,
-						comparison:
-							this.this.this.this.class.template.icclass.template
-								.comparison,
-						stop: (x) =>
-							leftovers.comparison(x.length().get().next(), x.currindex)
-					})
+				moveforward(
+					index = this.init(),
+					begin = false,
+					// ! Fix the '.comparison' argument for this thing, pray...
+					comparison = this.this.this.this.class.template.icclass.template
+						.comparison,
+					stop = (x) => comparison(x.length().get().next(), x.currindex)
+				) {
 					return this.move(
 						index,
 						(args, x) => {
-							if (leftovers.begin) x.currindex = x.init()
+							if (begin) x.currindex = x.init()
 						},
-						leftovers.comparison,
+						comparison,
 						(x) => x.next(),
-						leftovers.stop
+						stop
 					)
 				},
-				movebackward(index, leftovers = {}) {
-					ensureProperties(leftovers, {
-						end: false,
-						comparison:
-							this.this.this.this.class.template.icclass.template
-								.comparison,
-						stop: (x) => leftovers.comparison(x.init(), x.currindex)
-					})
+				movebackward(
+					index = this.init(),
+					end = false,
+					comparison = this.this.this.this.class.template.icclass.template
+						.comparison,
+					stop = (x) => comparison(x.init(), x.currindex)
+				) {
 					return this.move(
 						index,
 						(args, x) => {
-							if (leftovers.end) x.currindex = x.length().get()
+							if (end) x.currindex = x.length().get()
 						},
-						leftovers.comparison,
+						comparison,
 						(x) => x.previous(),
-						leftovers.stop
+						stop
 					)
 				},
-				movedirection(index, leftovers = {}) {
-					ensureProperty(
-						leftovers,
-						"comparison",
-						this.this.this.this.class.template.icclass.template.comparison
-					)
+				movedirection(
+					index,
+					init = false,
+					comparison,
+					stop = (x) => comparison(x.init(), x.currindex)
+				) {
 					return this.this.this.currindex.compare(index)
-						? this.moveforward(index, {
-								begin: false,
-								comparison: leftovers.comparison,
-								stop: (leftovers.stop =
-									leftovers.stop ||
-									((x) =>
-										leftovers.comparison(
-											x.currindex,
-											x.length().get()
-										)))
-						  })
-						: this.movebackward(index, {
-								end: false,
-								comparison: leftovers.comparison,
-								stop: (leftovers.stop =
-									leftovers.stop ||
-									((x) => leftovers.comparison(x.currindex, x.init())))
-						  })
+						? this.moveforward(
+								index,
+								init,
+								comparison,
+								stop || ((x) => comparison(x.currindex, x.length().get()))
+						  )
+						: this.movebackward(
+								index,
+								init,
+								comparison,
+								stop || ((x) => comparison(x.currindex, x.init()))
+						  )
 				},
-				jump(index, leftovers = {}) {
-					sh1(this, leftovers)
+				jump(index, comparison) {
 					return (this.this.this.currindex =
-						this.this.this.currindex.jumpDirection(index, leftovers))
+						this.this.this.currindex.jumpDirection(index, comparison))
 				},
-				read(index = this.init(), leftovers = {}) {
-					sh1(this, leftovers)
+				read(
+					index = this.init(),
+					fast = this.this.this.this.class.template.fast
+				) {
 					return general.fix([this.this.this], ["currindex"], () => {
-						if (leftovers.fast) this.go(index)
-						else this.moveforward(index, true, leftovers)
+						if (fast) this.go(index)
+						else this.moveforward(index, true, fast)
 						return this.currelem().get()
 					})
 				},
-				write(index, value, leftovers = {}) {
-					sh1(this, leftovers)
+				write(index, value) {
 					return general.fix([this.this.this], ["currindex"], () => {
-						if (leftovers.fast) this.go(index)
-						else
-							this.moveforward(index, {
-								begin: true,
-								...leftovers
-							})
+						if (fast) this.go(index)
+						else this.moveforward(index, true)
 						return this.currelem().set(value)
 					})
 				},
@@ -515,8 +490,7 @@ export const GeneralArray = (() => {
 							this.currindex = index
 							return returned
 						},
-						set: (value, leftovers = {}) => {
-							sh1(this, leftovers)
+						set: (value) => {
 							if (this.object().length().get().equal(value)) return
 							return this.length().get().compare(value)
 								? this.deleteMult(
@@ -535,36 +509,20 @@ export const GeneralArray = (() => {
 						}
 					}
 				},
-				copied(
-					method,
-					_arguments = [],
-					f = id,
-					template = this.this.this.this.class.template,
-					isclass = false,
-					leftovers = {}
-				) {
-					sh1(this, leftovers)
-					const c = this.copy(f, template, isclass, leftovers)
-					if (c.hasOwnProperty(method) && typeof c[method] === "function")
-						c[method](..._arguments)
-					return c
+				copied: classes.copied,
+				pushback(value) {
+					return this.write(this.length().get(), value)
 				},
-				pushback(value, leftovers = {}) {
-					sh1(this, leftovers)
-					return this.write(this.length().get(), value, leftovers)
-				},
-				pushfront(x, leftovers = {}) {
-					sh1(this, leftovers)
+				pushfront(x) {
 					this.this.this = this.this.this.this.class.static
-						.fromArray([x], leftovers)
-						.concat(this, leftovers)
+						.fromArray([x])
+						.concat(this)
 					return this
 				},
-				concat(array = this.empty(), leftovers = {}) {
-					sh1(this, leftovers)
+				concat(array = this.empty()) {
 					return array.loop()._full(
 						this.pushbackLoop({
-							arguments: [leftovers]
+							arguments: []
 						}).function
 					)
 				},
@@ -577,10 +535,8 @@ export const GeneralArray = (() => {
 					isclass = false,
 					template = isclass
 						? this.this.this.this.class
-						: this.this.this.this.class.template,
-					leftovers = {}
+						: this.this.this.this.class.template
 				) {
-					sh1(this, leftovers)
 					const copied = this.empty()
 					copied.class = isclass
 						? template
@@ -588,25 +544,22 @@ export const GeneralArray = (() => {
 					this.loop()._full(
 						copied.pushbackLoop({
 							transform: f,
-							arguments: [leftovers]
+							arguments: []
 						}).function
 					)
 					return copied
 				},
-				delval(value, leftovers = {}) {
-					const x = this.this.this.firstIndex(value, leftovers)
-					if (!(x === this.this.this.template.unfound))
-						return this.delete(x, leftovers)
+				delval(value) {
+					const x = this.this.this.firstIndex(value)
+					if (!(x === this.this.this.template.unfound)) return this.delete(x)
 					return this
 				},
-				slice(begin = this.init(), end = this.finish(), leftovers = {}) {
-					sh1(this, leftovers)
-
+				slice(begin = this.init(), end = this.finish()) {
 					// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
 					const sliced = this.empty()
 					this.loop()._full(
 						sliced.pushbackLoop({
-							arguments: [leftovers]
+							arguments: []
 						}).function,
 						undefined,
 						_const((t) => end.compare(t.object().currindex)),
@@ -625,25 +578,21 @@ export const GeneralArray = (() => {
 					)
 						yield c
 				},
-				*[Symbol.iterator](leftovers = {}) {
-					sh1(this, leftovers)
+				*[Symbol.iterator]() {
 					for (
 						let c = this.init();
 						!c.compare(this.length().get());
 						c = c.next()
 					)
-						yield this.read(c, leftovers)
+						yield this.read(c)
 				},
 				// ? refactor using the other GeneralArray methods;
 				// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
 				// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
-				fillfrom(index, value, leftovers = {}) {
-					sh1(this, leftovers)
+				fillfrom(index, value) {
 					const indexsaved = this.this.this.currindex
 					this.go(index)
-					while (
-						!leftovers.comparison(this.this.this.currindex, this.finish())
-					) {
+					while (!comparison(this.this.this.currindex, this.finish())) {
 						this.currelem().set(value)
 						this.next()
 					}
@@ -651,12 +600,12 @@ export const GeneralArray = (() => {
 					// * It must always return 'this', not 'this.this.this';
 					return this
 				},
-				convert(template = this.this.this.this.class.template, leftovers = {}) {
-					return (this.this.this = this.copy(ID, false, template, leftovers))
+				convert(template = this.this.this.this.class.template) {
+					return (this.this.this = this.copy(ID, false, template))
 				},
 				// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
-				switchclass(arrclass = this.this.this.this.class, leftovers = {}) {
-					return (this.this.this = this.copy(ID, true, arrclass, leftovers))
+				switchclass(arrclass = this.this.this.this.class) {
+					return (this.this.this = this.copy(ID, true, arrclass))
 				},
 				swap(i, j) {
 					const ival = this.read(i)
@@ -664,34 +613,21 @@ export const GeneralArray = (() => {
 					this.write(j, ival)
 					return this
 				},
-				delete(index = this.finish(), leftovers = {}) {
-					sh1(this, leftovers)
-					return this.deleteMult(index, index, leftovers)
+				delete(index = this.finish()) {
+					return this.deleteMult(index, index)
 				},
-				deleteMult(startindex, endindex = startindex, leftovers = {}) {
-					sh1(this, leftovers)
-					const x = this.copied(
-						"slice",
-						[endindex.next()],
-						undefined,
-						leftovers
-					)
-					return this.slice(
-						this.init(),
-						startindex.previous(),
-						leftovers
-					).concat(x)
+				deleteMult(startindex, endindex = startindex) {
+					const x = this.copied("slice", [endindex.next()], undefined)
+					return this.slice(this.init(), startindex.previous()).concat(x)
 				},
-				projectComplete(array, index, leftovers = {}) {
-					sh1(this, leftovers)
+				projectComplete(array, index) {
 					const _index = this.this.this.currindex
 					array.loop()._full(
 						(t) => {
 							// TODO: refactor this as well - some '.currwriteLoop(value, fast, comparison)', or something...
 							this.write(
 								this.this.this.currindex,
-								t.object().currelem().get(),
-								leftovers
+								t.object().currelem().get()
 							)
 						},
 						_const((x) => {
@@ -711,15 +647,13 @@ export const GeneralArray = (() => {
 						}
 					)
 				},
-				projectFit(array, index, leftovers = {}) {
-					sh1(this, leftovers)
+				projectFit(array, index) {
 					general.fix([array], ["currindex"], () => {
 						this.loop()._full(
 							(t) => {
 								t.object().write(
 									t.object().currindex,
-									array.currelem().get(),
-									leftovers
+									array.currelem().get()
 								)
 								array.next()
 							},
@@ -732,63 +666,54 @@ export const GeneralArray = (() => {
 					})
 					return this
 				},
-				insert(index, value, leftovers = {}) {
-					sh1(this, leftovers)
+				insert(index, value) {
 					const x = this.copied(
 						"slice",
 						[undefined, index.previous()],
-						undefined,
-						leftovers
+						undefined
 					)
-					x.pushback(value, leftovers)
-					x.concat(this.copied("slice", [index], undefined, leftovers))
+					x.pushback(value)
+					x.concat(this.copied("slice", [index], undefined))
 					this.this.this = x
 					return this
 				},
-				index(i = this.init(), leftovers = {}) {
-					sh1(this, leftovers)
-					return this.read(i, leftovers)
+				index(i = this.init()) {
+					return this.read(i)
 				},
-				indexesOf(x, halt = false, haltAfter = Infinity, leftovers = {}) {
-					sh1(this, leftovers)
+				indexesOf(x, halt = false, haltAfter = Infinity) {
 					// ! ISSUE - with 'THIS'-passing: it must be passed via 'this.this', and also with 'A = {[classref]: {...}, this: {this: A, ...}}' more generally; This way, one won't have to worry about the contexting...;
 					return algorithms.array
-						.indexesOf({ leftovers, halt: halt, haltAfter: haltAfter })
+						.indexesOf({ halt: halt, haltAfter: haltAfter })
 						.function(this, x)
 				},
-				firstIndex(x, leftovers = {}) {
-					sh1(this, leftovers)
-					return algorithms.search.linear(leftovers).function(this, x)
+				firstIndex(x) {
+					return algorithms.search.linear().function(this, x)
 				},
-				shiftForward(times, leftovers = {}) {
-					sh1(this, leftovers)
+				shiftForward(times) {
 					const x = this.this.this.this.class.static.fromCounter(times)
-					this.this.this = x.concat(this.this.this, leftovers)
+					this.this.this = x.concat(this.this.this)
 					return this
 				},
-				shiftBackward(times = this.init(), leftovers = {}) {
-					sh1(this, leftovers)
-					return this.slice(times, undefined, leftovers)
+				shiftBackward(times = this.init()) {
+					return this.slice(times, undefined)
 				},
 				repeat(
 					times = this.init(),
-					icclass = this.this.this.this.class.template.icclass,
-					leftovers = {}
+					icclass = this.this.this.this.class.template.icclass
 				) {
 					// TODO: ration the usage of these throughout the code - namely, get rid of all the places that they aren't necessary...
-					sh1(this, leftovers)
 					const newarr = this.empty()
 					icclass.static.whileloop(icclass.class(), times, () =>
-						newarr.concat(this, leftovers)
+						newarr.concat(this)
 					)
 					this.this.this = newarr
 					return this
 				},
-				reverse(leftovers = {}) {
+				reverse() {
 					const reversedArr = this.empty()
 					this.loop()._full(
 						reversedArr.pushfrontLoop({
-							arguments: [leftovers]
+							arguments: []
 						}).function
 					)
 					this.this.this = reversedArr
@@ -797,11 +722,9 @@ export const GeneralArray = (() => {
 				map(
 					f = id,
 					template = this.this.this.this.class.template,
-					isclass = false,
-					leftovers = {}
+					isclass = false
 				) {
-					sh1(this, leftovers)
-					this.this.this = this.copy(f, template, isclass, leftovers)
+					this.this.this = this.copy(f, template, isclass)
 					return this
 				},
 				isEmpty(isend = this.this.this.this.class.template.isEnd) {
@@ -818,11 +741,10 @@ export const GeneralArray = (() => {
 						.function(this.this.this)
 					return this
 				},
-				isSorted(predicate, leftovers = {}) {
-					sh1(this, leftovers)
-					return leftovers.comparison(
+				isSorted(predicate) {
+					return comparison(
 						this.this.this,
-						this.copied("sort", [predicate], undefined, leftovers)
+						this.copied("sort", [predicate], undefined)
 					)
 				},
 				includes: classes.includes,
@@ -830,36 +752,32 @@ export const GeneralArray = (() => {
 				any: classes.any,
 				every: classes.every,
 				forEach: classes.forEach,
-				intersection: function (arr = this.empty(), leftovers = {}) {
-					this.this.this = algorithms.array
-						.intersection(leftovers)
-						.function(this, arr)
+				intersection: function (arr = this.empty()) {
+					this.this.this = algorithms.array.intersection().function(this, arr)
 					return this
 				},
-				permutations: function (leftovers = {}) {
+				permutations: function () {
 					return algorithms.array.permutations({
-						genarrclass: this.this.this.this.class,
-						...leftovers
+						genarrclass: this.this.this.this.class
 					})(this)
 				},
 				// For an array of arrays only;
-				join: function (leftovers = {}) {
-					this.this.this = algorithms.array.join(leftovers).function(this)
+				join: function () {
+					this.this.this = algorithms.array.join().function(this)
 					return this
 				},
-				strjoin: function (separator = "", leftovers = {}) {
+				strjoin: function (separator = "") {
 					return UnlimitedString(this.this.this.this.class)
 						.function()
-						.class(this.copy(aliases.str, undefined, undefined, leftovers))
+						.class(this.copy(aliases.str, undefined, undefined))
 						.join(separator)
 				},
 				// ? Generalie the '.split' functions? [Using a predicate and an 'algorithms.array' submodule algorithm may the haps?]
-				split: function (separator, leftovers = {}) {
-					sh1(this, leftovers)
+				split: function (separator) {
 					const farr = this.empty()
 					let prev = this.init()
 					for (const x of this.keys())
-						if (leftovers.comparison(separator, this.read(x))) {
+						if (comparison(separator, this.read(x))) {
 							farr.pushback(this.copied("slice", [prev, x]))
 							prev = x
 						}
@@ -1195,38 +1113,22 @@ export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 				isclass = false,
 				template = isclass
 					? this.this.this.this.class
-					: this.this.this.this.class.template,
-				leftovers = {}
+					: this.this.this.this.class.template
 			) {
 				return this.this.this.this.class.class(
-					this.this.this.keys.copy(f, isclass, template, leftovers),
-					this.this.this.values.copy(f, isclass, template, leftovers)
+					this.this.this.keys.copy(f, isclass, template),
+					this.this.this.values.copy(f, isclass, template)
 				)
 			},
-			// ! Problem discovered - the almost-exactly-the-same-but-not-quite kinds of methods methods of distinct classes have to be homogenized and quickly;
-			copied(
-				method,
-				_arguments = [],
-				f = id,
-				template = undefined,
-				isclass = false,
-				leftovers = {}
-			) {
-				const c = this.copy(f, template, isclass, leftovers)
-				if (c.hasOwnProperty(method) && typeof c[method] === "function")
-					c[method](..._arguments)
-				return c
-			},
+			copied: classes.copied,
 			map(
 				f = ID,
 				isclass = false,
 				template = isclass
 					? this.this.this.this.class
-					: this.this.this.this.class.template,
-
-				leftovers = {}
+					: this.this.this.this.class.template
 			) {
-				this.this.this = this.copy(f, isclass, template, leftovers)
+				this.this.this = this.copy(f, isclass, template)
 				return this
 			},
 			deleteKeys(keys) {
@@ -1484,16 +1386,14 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 							this.this.this.genarr.read(this.this.this.genarr.finish())
 						)
 					},
-					set: (newlen, leftovers = {}) => {
-						ensureProperty(
-							leftovers,
-							"basestr",
-							this.this.this.this.class.template.basestr[0]
-						)
+					set: (
+						newlen,
+						basestr = this.this.this.this.class.template.basestr[0]
+					) => {
 						if (newlen.compare(this.length().get())) {
 							newlen
 								.difference(this.length().get())
-								.loop(() => this.pushback(leftovers.basestr))
+								.loop(() => this.pushback(basestr))
 							return this
 						}
 
@@ -1501,22 +1401,7 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 					}
 				}
 			},
-			copied(
-				method,
-				_arguments = [],
-				f = id,
-				template = this.this.this.this.class.template.parentclass.template,
-				isclass = false,
-				leftovers = {}
-			) {
-				const acopy = this.copy(f, template, isclass, leftovers)
-				if (
-					acopy.this.hasOwnProperty(method) &&
-					typeof acopy[method] === "function"
-				)
-					acopy[method](..._arguments)
-				return acopy
-			},
+			copied: classes.copied,
 			insert(index, value) {
 				this.this.this = this.copied("slice", [this.init(), index.previous()])
 					.concat(value)
@@ -1579,8 +1464,8 @@ export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
 				for (const x of this.this.this.genarr) if (x !== "") return false
 				return true
 			},
-			sort(predicate, leftovers = {}) {
-				return this.split("").genarr.sort.merge(leftovers).function(predicate)
+			sort(predicate) {
+				return this.split("").genarr.sort.merge().function(predicate)
 			},
 			isSorted(predicate) {
 				return this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
@@ -1947,6 +1832,7 @@ export const InfiniteArray = CLASS({
 		read: function (i = this.class.template.icclass.class()) {
 			return this.f(i)
 		},
+		// ? Question: make 'index' separate from '.read' - get rid of the default values for it? [To allow for usage of 'undefined' in the counters used?];
 		index: function (i) {
 			return this.read(i)
 		},
@@ -1974,12 +1860,7 @@ export const InfiniteArray = CLASS({
 		copy() {
 			return this.class.class(this.f)
 		},
-		copied(method) {
-			const c = this.copy()
-			return c.hasOwnProperty(method) && typeof c[method] === "function"
-				? c[method]()
-				: c
-		},
+		copied: classes.copied,
 		map(g) {
 			const x = this.f
 			this.f = function (i) {
@@ -1996,24 +1877,48 @@ export const InfiniteArray = CLASS({
 		init() {
 			return this.class.template.genarrclass.init()
 		}
-		// ? Any more things to add?
 	},
 	recursive: false
 })
 // ? Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
 export function InfiniteString(parentclass = general.DEFAULT_INFARR) {
-	return EXTENSION({
-		defaults: {
-			parentclass: parentclass,
-			names: ["infarr"]
-		},
-		methods: {
-			// * Methods list:
-			// % 0. 'toextend: - same as InfiniteArray, BUT, with either a '.toString()[0]' or 'UnlimitedString' wrappers  for each and every element of 'f';'
-			// 		! Do work on the EXTENSION for that, pray... [to allow wrappers and more complex structures for inherited methods...];
-		},
-		recursive: false
-	})
+	// ! VERY GENERAL ISSUE [possibly for v1.1]: methods that behave equivalently structurally, but using alternative names/implementations for similar methods/terms/ideas. Create a mean for generalizing the method lists for them, perhaps, refactor such cases hardcorely.
+	return predicates.Ensurer(
+		EXTENSION({
+			defaults: {
+				parentclass: parentclass,
+				ustrclass: general.DEFAULT_USTRCLASS,
+				names: ["infarr"]
+			},
+			methods: {
+				copy() {
+					return this.this.this.this.class.class(this.this.this.infarr.f)
+				},
+				copied: classes.copied,
+				// ! if 2nd missing, let end be equal to 'beg';
+				slice(beg = this.init(), end) {
+					let c = beg
+					const r = this.this.this.this.class.template.ustrclass.class()
+					for (; predicates.lesser(c, end); c = predicates.next(c))
+						r.pushback(this.read(c))
+					return
+				}
+			},
+			recursive: false,
+			toextend: ["init", "subarr", "read", "index"]
+		}),
+		undefined,
+		{
+			// ! Not efficient - wastes a single '.write' call; (If just used the EXTENSION, this wouldn't happen...); But using EXTENSION means (largely), using exactly the same code;
+			// todo: work on EXTENSION to allow for compact wrappers for methods of derived class, like here;
+			write: function (_tr, thisarg, args) {
+				return thisarg.write(args[0], aliases.str(args[1]))
+			},
+			map: function (_tr, thisarg, _args) {
+				return thisarg.map(aliases.str)
+			}
+		}
+	)
 }
 // ! On this, base the Real - the unlimited-precision decimal; [Pray do some derivation work on the matter of infinite digit sums formulas - may come in handy later...];
 export function InfiniteNumber(parentclass = general.DEFAULT_INFARR) {
@@ -2097,9 +2002,9 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 			firstIndex(v) {
 				return this.indexesOf(v, true, this.init().next())
 			},
-			indexesOf(v, halt = false, haltAfter = Infinity, leftovers = {}) {
+			indexesOf(v, halt = false, haltAfter = Infinity) {
 				if (this.this.this.children.isEmpty())
-					return leftovers.comparison(this.this.this.node, v)
+					return comparison(this.this.this.node, v)
 						? this.this.this.children.empty()
 						: false
 				const indexes = this.this.this.children.empty()
@@ -2117,8 +2022,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 				isclass = false,
 				template = isclass
 					? this.this.this.this.class.template.parentclass
-					: this.this.this.this.class.template.parentclass.template,
-				leftovers = {}
+					: this.this.this.this.class.template.parentclass.template
 			) {
 				// ! Issue - should one copy the 'node' value as well? [One ought at least allow the option...];
 				return this.this.this.this.class.class(
@@ -2127,35 +2031,21 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 							return f(x.node, ...arguments)
 						},
 						isclass,
-						template,
-						leftovers
+						template
 					),
 					this.this.this.node,
 					this.this.this.root
 				)
 			},
-			copied(
-				method,
-				_arguments = [],
-				f = id,
-				template = this.this.this.this.class.template.parentclass.template,
-				isclass = false,
-				leftovers = {}
-			) {
-				const c = this.copy(f, template, isclass, leftovers)
-				if (c.hasOwnProperty(method) && typeof c[method] === "function")
-					c[method](..._arguments)
-				return c
-			},
+			copied: classes.copied,
 			map(
 				f = ID,
 				isclass = false,
 				template = isclass
 					? this.this.this.this.class.template.parentclass
-					: this.this.this.this.class.template.parentclass.template,
-				leftovers = {}
+					: this.this.this.this.class.template.parentclass.template
 			) {
-				this.this.this = this.copy(f, isclass, template, leftovers)
+				this.this.this = this.copy(f, isclass, template)
 				return this
 			},
 			insert(multindex, v) {
@@ -2173,9 +2063,9 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 					.insert(multindex.slice(multindex.init().next()), v)
 				return this
 			},
-			delval(v, leftovers = {}) {
+			delval(v) {
 				return this.this.this.children.delval(v, {
-					comparison: (x, y) => leftovers.comparison(x.node, y)
+					comparison: (x, y) => comparison(x.node, y)
 				})
 			},
 			prune(multindex) {
@@ -2210,8 +2100,8 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 					return r.read(index.slice(index.init().next()), multi, nodes, false)
 				return (nodes ? (x) => x.node : ID)(r)
 			},
-			findRoots(v, leftovers = {}) {
-				return this.indexesOf(v, leftovers).map((x) => this.read(x).root)
+			findRoots(v) {
+				return this.indexesOf(v).map((x) => this.read(x).root)
 			},
 			depth() {
 				// ! use this one with a somewhat greater frequency;
@@ -2247,18 +2137,18 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 					.write(mindex.slice(mindex.init().next()), value)
 			},
 			// ? Generalize?
-			findAncestors(x, leftovers = {}) {
+			findAncestors(x) {
 				const froots = this.this.this.children.empty()
-				let currroots = this.findRoots(x, leftovers)
+				let currroots = this.findRoots(x)
 				while (!currroots.every((x) => x === null)) {
-					currroots = currroots.copy((x) => this.findRoots(x, leftovers))
+					currroots = currroots.copy((x) => this.findRoots(x))
 					froots.concat(currroots)
 				}
 				return froots
 			},
-			commonAncestors(values, leftovers = {}) {
+			commonAncestors(values) {
 				return algorithms.array
-					.common({ f: (x) => this.findAncestors(x, leftovers), ...leftovers })
+					.common({ f: (x) => this.findAncestors(x) })
 					.function(values)
 			},
 			swap(ind1, ind2, multi = false) {
@@ -2302,28 +2192,13 @@ export function UnlimitedSet(parentclass = general.DEFAULT_GENARRCLASS) {
 				isclass = false,
 				template = isclass
 					? this.this.this.this.class
-					: this.this.this.this.class.template,
-				leftovers = {}
+					: this.this.this.this.class.template
 			) {
 				return this.this.this.this.class.class(
-					this.this.this.genarr.copy(f, isclass, template, leftovers)
+					this.this.this.genarr.copy(f, isclass, template)
 				)
 			},
-			copied(
-				method,
-				f = ID,
-				isclass = false,
-				template = isclass
-					? this.this.this.this.class
-					: this.this.this.this.class.template,
-				leftovers = {}
-			) {
-				const c = this.copy(f, isclass, template, leftovers)
-				return c.hasOwnProperty(method) && typeof c[method] === "function"
-					? c[method]()
-					: c
-			}
-			// ? Anything else?
+			copied: classes.copied
 		},
 		recursive: true,
 		// ? Consider whether this remains empty, or some things get to be added here after all...

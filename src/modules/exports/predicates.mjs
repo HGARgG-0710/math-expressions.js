@@ -14,17 +14,19 @@ export const next = (x) => x.next()
 
 export const allUnique = (el, _key, _arr, subset) => !subset.includes(el)
 
-export const Ensurer = (_class, predicate, responses = {}) => {
+export const Ensurer = (_class, predicate = T, responses = {}) => {
 	const X = {}
 	for (const m of _class.methods)
-		x[m] = function (...args) {
+		X[m] = function (...args) {
 			const tempr = _class.methods[m].bind(this)(...args)
-			if (predicate(tempr, this)) return responses.bind(this)(tempr, this, args)
+			if (predicate(tempr, this) && aliases.hasFunction(responses, m))
+				return responses[m].bind(this)(tempr, this, args)
 			return tempr
 		}
 	return { ..._class, methods: X }
 }
 
+// ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
 export const negate = wrapper({
 	out: aliases.n
 }).function

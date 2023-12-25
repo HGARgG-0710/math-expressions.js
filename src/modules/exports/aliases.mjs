@@ -227,3 +227,5 @@ export const is = {
 }
 
 export const cdieach = (x, i) => [x[i]]
+
+export const hasFunction = (x, m) => x.hasOwnProperty(m) && typeof x[m] === "function"

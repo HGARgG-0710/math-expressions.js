@@ -103,6 +103,17 @@ export const classes = {
 	},
 	twoadd: function () {
 		return this.one().add()
+	},
+	copied: function (
+		method,
+		_arguments = [],
+		f = id,
+		template = this.this.this.this.class.template,
+		isclass = false
+	) {
+		const c = this.copy(f, template, isclass)
+		if (aliases.hasFunction(c, method)) c[method](..._arguments)
+		return c
 	}
 }
 
