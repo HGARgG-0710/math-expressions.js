@@ -103,6 +103,14 @@ It gets changed actively.
 
 			Thus, a decision has been made to think about it further in the v1.1; 
 
+	11.9. RealEquality - a variable equality involving real numbers; 
+		Was originally a part of the package as a far simpler finite-decimal-rational-only version of 2 sides, but due to violent generalization, was remade into a purely
+			Real multi-sided equality implementation. Unfortunately, due to the 'Real' not being quite suitable for this particular release, it won't be possible to implement 
+				the thing in question within the v1.0 either. 
+		Later, add. Intended for analysis of approximation data for various function-equalities over reals; 
+		Supposed to boast a generalization for an arbitrary syntax (user-given parsing functions) + another one - for arbitrary sequences of objects in possession of 
+		properties same as Real (see if that's really necessary, or they're all isomorphic and, thus, representable via Real itself). 
+
 		
 		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 
 

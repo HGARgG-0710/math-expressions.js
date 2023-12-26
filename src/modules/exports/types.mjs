@@ -1796,29 +1796,6 @@ export const Pointer = TEMPLATE({
 	word: "class"
 })
 
-// Plan leftovers:
-// 		1. Using the 'uevaluate()', approximate the Expression's values (using the user-defined table of operators);
-// 	  * 2. Add methods for ANALYSIS of the result of 'approximation'
-export const NumericEquality = CLASS({
-	// ! Add a parsing default! [And a format for its result - that too is crucial for the implementation details...];
-	defaults: {
-		ustrclass: general.DEFAULT_USTRCLASS
-	},
-	properties: {
-		equality: function (ustring = this.template.ustrclass.class()) {
-			return this.template.parse(ustring)
-		}
-	},
-	methods: {
-		// * Methods:
-		// % 1. data(plugged - an UnlimitedMap of varname-varvalue, indexes - a GeneralArray of indexes of parts of the equation for which the computation of data is to be given, accuracy - an InfiniteCounter); Computes the values for the given arguments;
-		// 	! Note: this is the main method of the 'NumericEquality'; It works with the Real class objects;
-		// * First, finish that before continuing the work on the NumericEquality;
-	},
-	static: {},
-	recursive: true
-})
-
 export const InfiniteArray = CLASS({
 	defaults: {
 		index: ID
@@ -1881,60 +1858,102 @@ export const InfiniteArray = CLASS({
 	recursive: false
 })
 // ? Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
-export function InfiniteString(parentclass = general.DEFAULT_INFARR) {
-	// ! VERY GENERAL ISSUE [possibly for v1.1]: methods that behave equivalently structurally, but using alternative names/implementations for similar methods/terms/ideas. Create a mean for generalizing the method lists for them, perhaps, refactor such cases hardcorely.
-	return predicates.Ensurer(
-		EXTENSION({
-			defaults: {
-				parentclass: parentclass,
-				ustrclass: general.DEFAULT_USTRCLASS,
-				names: ["infarr"]
-			},
-			methods: {
-				copy() {
-					return this.this.this.this.class.class(this.this.this.infarr.f)
-				},
-				copied: classes.copied,
-				// ! if 2nd missing, let end be equal to 'beg';
-				slice(beg = this.init(), end) {
-					let c = beg
-					const r = this.this.this.this.class.template.ustrclass.class()
-					for (; predicates.lesser(c, end); c = predicates.next(c))
-						r.pushback(this.read(c))
-					return
-				}
-			},
-			recursive: false,
-			toextend: ["init", "subarr", "read", "index"]
-		}),
-		undefined,
-		{
-			// ! Not efficient - wastes a single '.write' call; (If just used the EXTENSION, this wouldn't happen...); But using EXTENSION means (largely), using exactly the same code;
-			// todo: work on EXTENSION to allow for compact wrappers for methods of derived class, like here;
-			write: function (_tr, thisarg, args) {
-				return thisarg.write(args[0], aliases.str(args[1]))
-			},
-			map: function (_tr, thisarg, _args) {
-				return thisarg.map(aliases.str)
-			}
-		}
-	)
-}
-// ! On this, base the Real - the unlimited-precision decimal; [Pray do some derivation work on the matter of infinite digit sums formulas - may come in handy later...];
-export function InfiniteNumber(parentclass = general.DEFAULT_INFARR) {
-	return EXTENSION({
+export function InfiniteString(parentclass = general.DEFAULT_INFARR, ensure = false) {
+	const _class = EXTENSION({
 		defaults: {
 			parentclass: parentclass,
-			names: ["infarr"]
+			ustrclass: general.DEFAULT_USTRCLASS,
+			names: ["infarr"],
+			deff: aliases._const(true),
+			defaults: {
+				inter: function (f = this.template.deff) {
+					return (i) => aliases.str(f(i))
+				}
+			}
 		},
 		methods: {
-			// * Methods list:
-			// % 1. add (in): changes the 'this.f' with '(x) => this.f(x).add(...)'
-			// 		! ... IS WHERE THE DERIVATION OF THE INFINITE-DECIMAL SUMS GO...!
-			// ! 2. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS...
-			// % 3. multiply(in): THINK ABOUT THIS ONE ESPECIALLY INTENTLY...
+			copy() {
+				return this.this.this.this.class.class(this.this.this.infarr.f)
+			},
+			copied: classes.copied,
+			// ! if 2nd missing, let end be equal to 'beg';
+			slice(beg = this.init(), end) {
+				let c = beg
+				const r = this.this.this.this.class.template.ustrclass.class()
+				for (; predicates.lesser(c, end); c = predicates.next(c))
+					r.pushback(this.read(c))
+				return
+			}
 		},
-		recursive: false
+		recursive: false,
+		toextend: ["init", "subarr", "read", "index"]
+	})
+	// ! VERY GENERAL ISSUE [possibly for v1.1]: methods that behave equivalently structurally, but using alternative names/implementations for similar methods/terms/ideas. Create a mean for generalizing the method lists for them, perhaps, refactor such cases hardcorely.
+	return (
+		ensure
+			? (x) =>
+					predicates.Ensurer(x, undefined, {
+						// ! Not efficient - wastes a single '.write' call; (If just used the EXTENSION, this wouldn't happen...); But using EXTENSION means (largely), using exactly the same code;
+						// ? work on EXTENSION to allow for compact wrappers for methods of derived class, like here;
+						write: function (_tr, thisarg, args) {
+							return thisarg.write(args[0], aliases.str(args[1]))
+						},
+						map: function (_tr, thisarg, _args) {
+							return thisarg.map(aliases.str)
+						}
+					})
+			: ID
+	)(_class)
+}
+// ? Dear, there's still lots of things to do. Take out of v1.0, again? 
+export function InfiniteNumber(parentclass = general.DEFAULT_INFARR) {
+	return EXTENSION({
+		defaults: [
+			function () {
+				return {
+					parentclass: parentclass,
+					names: ["infarr"],
+					icclass: general.DEFAULT_ICCLASS,
+					tintclass: general.DEFAULT_TINTCLASS
+				}
+			},
+			function () {
+				return {
+					base: this.template.icclass.static.two(),
+					wrapper: this.template.tintclass.class.fromCounter,
+					defaults: {
+						inter: function (f = ID) {
+							return (i) => this.template.wrapper(f(i))
+						}
+					}
+				}
+			}
+		],
+		methods: {
+			// ! Note: they must be in the same base! Create a function for changing the base of an InfiniteNumber;
+			add(inum = this.class.class()) {
+				const x = this.f
+				const y = inum.f
+				this.f = function (index = this.init()) {
+					const prev = index.equal(this.init())
+						? aliases.native.boolean.btic(
+								predicates.greater(
+									x(index.next()).add(y(index.next())),
+									this.template.base
+								),
+								this.class.template.icclass
+						  )
+						: this.template.tintclass.static.zero()
+					return x(index).add(y(index)).modulo(this.template.base).add(prev)
+				}
+				return this
+			}
+			// * Methods list:
+			// ! 1. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS...
+			// % 2. multiply(in): THINK ABOUT THIS ONE ESPECIALLY INTENTLY...
+		},
+		recursive: false,
+		isthis: true
 	})
 }
 

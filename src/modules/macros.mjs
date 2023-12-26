@@ -136,7 +136,7 @@ export const HIERARCHY = function (hierarr = []) {
 // ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
 // ! ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
 export const EXTENSION = (template = {}) => {
-	// TODO: refactor this piece of code, pray...
+	// ! refactor this repeating 'ensureProperties'; 
 	ensureProperties(template, {
 		word: "class",
 		recursive: false,
