@@ -1,7 +1,7 @@
 // * The 'orders' module [for working with GeneralArray-based linear and non-linear orders];
 // Currently, provides means of immidiate construction of orders based off GeneralArrays
 
-import * as aliases from "./aliases.mjs"
+import * as predicates from "./predicates.mjs"
 
 export const linear = TEMPLATE({
 	defaults: {
@@ -70,13 +70,13 @@ export const most = TEMPLATE({
 // * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
 export function min(template = {}) {
 	return most({
-		comparison: aliases.lesser,
+		comparison: predicates.lesser,
 		...template
 	})
 }
 export function max(template = {}) {
 	return most({
-		comparison: aliases.greater,
+		comparison: predicates.greater,
 		...template
 	})
 }

@@ -1,4 +1,4 @@
-// * The (presently) largest most essential part of the library - the types definitions;
+// * The (presently) largest and most essential part of the library - the types definitions;
 
 import * as aliases from "./aliases.mjs"
 import * as comparisons from "./comparisons.mjs"
@@ -934,7 +934,7 @@ export const arrays = {
 			},
 			class: GeneralArray({
 				empty: daform.new(),
-				// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...); 
+				// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
 				newvalue: function (array, value) {
 					let e = this.elem(array, true)
 					if (e[0] == undefined) {
@@ -1046,16 +1046,17 @@ export const arrays = {
 	})
 }
 
-export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
+export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	const sh1 = (key, _this, f, args = [], name = "keys") => {
 		const ind = _this.this.this[name].firstIndex(key)
 		if (ind === _this.this.this[name].class.template.unfound)
 			return _this.this.this.this.class.template.unfound
 		return f(ind, ...args)
 	}
+	const NAMESLIST = ["keys", "values"]
 	return EXTENSION({
 		defaults: {
-			names: ["keys", "values"],
+			names: NAMESLIST,
 			parentclass: parentclass,
 			defaults: {
 				constructor: number.native.generate(2).map(
@@ -1088,9 +1089,17 @@ export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 				}
 				return this
 			},
-			suchthat(predicates) {
-				this.this.this.keys.suchthat(predicates[0])
-				this.this.this.values.suchthat(predicates[1])
+			suchthat(predicates = algorithms.array.native.generate(2).map(predicates.T)) {
+				const oldkeys = this.this.this.keys.copy()
+				this.this.this.keys.suchthat(
+					(value, key) =>
+						predicates[0](value) &&
+						predicates[1](this.this.this.values.read(key))
+				)
+				this.this.this.values.suchthat(
+					(value, key) =>
+						predicates[1](value) && predicates[0](oldkeys.read(key))
+				)
 				return this
 			},
 			copy(
@@ -1116,7 +1125,9 @@ export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 				this.this.this = this.copy(f, isclass, template)
 				return this
 			},
-			deleteKeys(keys) {
+			deleteKeys(
+				keys = this.this.this.this.class.template.parentclass.static.empty()
+			) {
 				for (const k of keys) {
 					const inds = this.this.this.keys.indexesOf(k)
 					this.this.this.values.multcall("delete", inds)
@@ -1134,6 +1145,9 @@ export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 						finite ? this.this.template.parentclass.static.fromArray : ID
 					)
 				)
+			},
+			empty() {
+				return this.fromObject({}, true)
 			}
 		},
 		transform: StaticThisTransform,
@@ -1840,7 +1854,7 @@ export const InfiniteArray = CLASS({
 	},
 	recursive: false
 })
-// ! Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
+
 export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = false) => {
 	const _class = EXTENSION({
 		defaults: {
@@ -1861,7 +1875,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			copied: classes.copied,
 			slice(beg = this.init(), end) {
 				// ! generalize this;
-				if (args.length === 1) {
+				if (arguments.length === 1) {
 					end = beg
 					beg = this.init()
 				}
@@ -1894,6 +1908,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 }
 
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
+	let loctreeform = structure.treeForm(parentclass)
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2111,12 +2126,21 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				this.write(ind1, this.read(ind2, multi))
 				this.write(in2, n1val)
 				return this
+			},
+			order() {
+				return structure
+					.dim({ form: loctreeform })
+					.function(i)
 			}
 		},
 		static: {
-			// ? Suggestion [idea]: write a (static) 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes?
+			// ? Suggestion [idea]: write a (static) 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes? [note: would work only on a particular TreeNode given...];
 		},
-		recursive: true
+		recursive: true,
+		transform: (_class) => {
+			loctreeform = loctreeform(_class.template)
+			return _class
+		}
 	})
 }
 
@@ -2165,12 +2189,4 @@ export const InfiniteSet = (template = {}) => {
 	const x = InfiniteArray.function(template).class()
 	const y = x.copy()
 	return y.subarr((el, i) => !x.slice(x.init(), i.previous()).includes(el))
-}
-
-// * These are to allow work with 'Array'-based forms and unite them with GeneralArray-based ones (note: I know it's considered a horrible practice);
-Array.prototype.read = function (index) {
-	return this[index]
-}
-Array.prototype.copy = function (f = ID, thisarg = this) {
-	return a.map(f, thisarg)
 }

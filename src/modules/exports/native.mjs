@@ -14,8 +14,7 @@ export const copy = {
 		defaults: {
 			objdefmeth: ID,
 			arrdefmeth: ID,
-			// TODO: make an alias for this...
-			defcontext: () => ({})
+			defcontext: aliases.native.object.empty
 		},
 		function: function (
 			arrmeth = this.template.arrdefmeth,

@@ -8,9 +8,8 @@ import * as aliases from "./exports/aliases.mjs"
 // ? In particular - later create a General versions of macros (using unlimited types...);
 // ? In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
 
-// TODO [general; leave for the test-tune period]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
-// TODO [general; leave for tidying-up period]: pray walk through all of code and inspect the desireability of all the elements of the style (ranges from [kinds of functions used in places it does not, as such, matter] to [variable names and conventions used for them] to [whether to use one-time constants for the sake of memory-efficiency or not] to [chosen orders of properties/elements within objects/arrays])
-// TODO [general; leave until sometime later]: think further (and more deeply) on the matter of the publicity of the structure that is presented to the user by the results of the various macros;
+// TODO [general]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
+// TODO [general]: think further (and more deeply) on the matter of the publicity of the structure that is presented to the user by the results of the various macros;
 
 export const ID = (a) => a
 
@@ -85,7 +84,7 @@ export const TEMPLATE = function (template = {}) {
 					const k = K(this.template.defaults, x)
 					for (const y of k) _class[this.template.templateword][y] = k[y]
 					for (const y of template)
-						_class[this.template.tepmlateword][y] = template[y]
+						_class[this.template.templateword][y] = template[y]
 				}
 			_class[this.template.templateword] = {
 				...K(this.template.defaults),
@@ -313,7 +312,7 @@ export const CLASS = (ptemplate = {}) => {
 		p[p.isname] = function (x) {
 			return (
 				x.hasOwnProperty("class") &&
-				structure.structure().function(this).isisomorphic(x.class)
+				structure.structure().function(this).recisomorphic(x.class)
 			)
 		}.bind(p)
 		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';

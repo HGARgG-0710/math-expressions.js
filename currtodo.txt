@@ -1,12 +1,16 @@
 This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
 
 1. To Finish: 
-	1.1.1. BinomialHeap [priority N1]; 
+	1.1. predicates.ensureHeap; 
 
 2. Code polishing: 
 	1.3.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
-		1.3.1.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
-		1.3.1.2. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
+		1.3.1.0. On-top: 
+			1.3.1.0.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
+			1.3.1.0.2. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
+		1.3.1.1. Algorithm for efficient todo-finishing: 
+			Walk over all the '!' and 'todo', consider and fulfill each and every case transiently; 
+			
 	1.3.2. Refactoring: 
 		1.3.2.1. 'refactor.defaults' - see if there are any further potential applications of it... 
 		1.3.2.2. various recurring function-expressions (create new aliases and use those instead...); 

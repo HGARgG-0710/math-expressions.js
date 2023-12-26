@@ -113,9 +113,8 @@ export const native = {
 		multmap: function (a, fs) {
 			return a.map((el) => fs.map((f) => f(el)))
 		},
-		hasArrays: function (array = []) {
-			return array.any(aliases.is.arr)
-		}
+		// ! try hard to use arrow functions only for the aliases;
+		hasArrays: (array = []) => array.any(aliases.is.arr)
 	},
 
 	function: {
@@ -171,12 +170,13 @@ export const native = {
 		ensureProperties: function (object, defaultobj) {
 			for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
 		},
+		// ? should this be in the 'object' or in 'function'? 
 		property:
 			(p) =>
 			(x) =>
 			(...args) =>
 				x[p](...args),
-		prop: (p) => (x) => x[p]
+		empty: () => ({})
 	},
 
 	boolean: {

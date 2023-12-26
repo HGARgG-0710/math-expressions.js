@@ -8,55 +8,75 @@ import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as orders from "./orders.mjs"
+import * as native from "./native.mjs"
 
-// ? Add more methods to it? [IDEA: get rid of 'structure', embed its functionality inside the 'form'?]; 
-export const form = (_new, is, index, isomorphic) => {
+export const form = (
+	_new,
+	is,
+	index,
+	// ? What about this? Not really used by anything except for the 'constForm'...; Perhaps, decide means of individual extension of forms?
+	isomorphic = predicates.TRUTH,
+	copy = (x, f) => x.copy(f),
+	read = (x, i) => x.read(i),
+	write = (x, i, v) => x.write(i, v),
+	keys = (x) => x.keys()
+) => {
+	// ? Should one be using the 'arrow-functions' like that, or will 'form->this+function' be a more prefereable option?
 	const X = { new: _new, is, index, isomorphic }
-	X.flatmap = formFlatMap(X)
+	X.flatmap = (x, f) => X.new(copy(X.index(x), f))
+	X.read = (x, i) => read(X.index(x), i)
+	X.write = (x, i) => write(X.index(x), i, v)
+	X.keys = (x) => keys(X.index(x))
 	return X
 }
 
-export const formFlatMap = (form) => (x, f) => form.new(form.index(x).copy(f))
-
-// ! Use in the library for refactoring purposes;
 export const structure = TEMPLATE({
 	defaults: {
-		form: objectForm,
+		form: general.DEFAULT_FORM,
+		comparison: comparisons.valueCompare,
 		// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
 		compequiv: function (...args) {
 			if (args.length === 1) return args[1]
 			return true
 		}
 	},
-	function: function (obj = {}) {
-		// ! REWRITE; This is highly faulty, not general enough and object-oriented-only;
+	function: function (obj = this.template.form.new()) {
 		return {
 			template: {
 				template: this.template,
 				compequiv: this.template.compequiv,
+				comparison: this.template.comparison,
 				form: this.template.form,
 				object: obj
 			},
-			equivalent: function () {
-				const o = {}
-				for (const x in this.template.object)
-					o[x] = this.template.form.is(this.template.obj[x])
-						? this.function(this.template.obj[x]).equivalent()
-						: this.template.compequiv(obj[x])
+			equivalent: function (form = general.DEFAULT_FORM) {
+				const o = form.new()
+				for (const x of this.template.form.keys(this.template.object)) {
+					const rresult = this.template.form.read(this.template.object, x)
+					o.write(
+						x,
+						this.template.form.is(rresult)
+							? this.function(rresult).equivalent()
+							: this.template.compequiv(rresult)
+					)
+				}
 				return o
 			},
-			isisomorphic(object, current = this.template.object) {
-				if (!this.template.form(object)) {
+			recisomorphic(object = this.template.object, current = this.template.object) {
+				if (!this.template.form.is(object)) {
 					return (
-						!this.template.is(current) &&
+						!this.template.form.is(current) &&
 						this.template.compequiv(object, current)
 					)
 				}
-				const keys = Object.keys(object)
-				// ! Not sufficiently general - need ability to set arbitary comparisons (for instance, 'refCompare...', so that one could check for typeConst results... - INFINITE POTENTIAL FOR COMPARISON-CONSTANT CREATION...)
+				const keys = this.template.form.keys(object)
 				return (
-					valueCompare(keys, Object.keys(current)) &&
-					keys.every((k) => this.isisomorphic(object[k], current[k]))
+					this.template.comparison(keys, this.template.form.keys(current)) &&
+					keys.every((k) =>
+						this.recisomorphic(
+							...[object, current].map((x) => this.template.form.read(x, k))
+						)
+					)
 				)
 			}
 		}
@@ -64,8 +84,8 @@ export const structure = TEMPLATE({
 })
 
 // * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'comparisons.refCompare' and the out-of-scope object constant;
-export function typeConst(f, n = 1) {
-	const TCONST = {}
+export function typeConst(f = ID, n = 1) {
+	const TCONST = aliases.native.object.empty()
 	// ! make an alias for the function in the map;
 	const arr = [TCONST].append(
 		algorithms.array.native.generate(n - 1).map(() => ({ ...TCONST }))
@@ -86,35 +106,59 @@ export function constForm(
 		let is = (checked) =>
 			checked instanceof Object && checked.hasOwnProperty(contentsname)
 		const index = (x) => x[contentsname]
-		let isomorphic = aliases.TRUTH
+		let isomorphic = undefined
 		if (n) {
 			c = c[0]
 			_new = (x = defaultval) => ({ [fieldname]: c, [contentsname]: x })
 			is = (checked) =>
-				checked instanceof Object &&
+				aliases.is.obj(checked) &&
 				checked[fieldname] === c &&
 				checked.hasOwnProperty(contentsname)
 			isomorphic = (x, y) => x[fieldname] === y[fieldname]
-			return form(_new, is, index, isomorphic)
 		}
+		return form(_new, is, index, isomorphic)
 	}, n)
 }
 
-export const propertyForm = function (contentsname = "") {
-	return constForm("", contentsname, false)
+export const propertyForm = function (contentsname = "", defaultval = {}) {
+	return constForm("", contentsname, false, defaultval)
 }
 
-export const objectForm = form(aliases.obj, aliases.is.obj, Object.values, aliases.TRUTH)
-export const arrayForm = form(aliases.arr, aliases.is.arr, ID, aliases.TRUTH)
+export const objectForm = form(
+	aliases.obj,
+	aliases.is.obj,
+	aliases.obj.values,
+	aliases.TRUTH,
+	(x, f = ID) => {
+		let c = native.copy.flatCopy(x)
+		for (const y in x) c[y] = f(c[y])
+		return c
+	},
+	// ? aliases? [or, are they defined already?]
+	(x, i) => x[i],
+	(x, i, v) => (x[i] = v),
+	aliases.obj.keys
+)
+export const arrayForm = form(
+	aliases.arr,
+	aliases.is.arr,
+	ID,
+	aliases.TRUTH,
+	(x, f = ID) => x.map(f),
+	(x, i = 0) => x[i],
+	(x, i, v) => (x[i] = v)
+)
 
 export const classForm =
 	(_class) =>
-	(template = {}) => {
+	(template = {}, index = ID, additional = []) => {
 		const Class = _class(template)
-		return form(Class.class, Class.is, ID, aliases.TRUTH)
+		return form(Class.class, Class.is, index, aliases.TRUTH, ...additional)
 	}
 
 export const garrayForm = classForm(types.GeneralArray)
+export const treeForm = (parentclass = general.DEFAULT_GENARRCLASS) =>
+	classForm(types.TreeNode(parentclass), aliases.native.function.index("children"))
 
 export const countrecursive = TEMPLATE({
 	defaults: {
@@ -154,7 +198,7 @@ export const arrElems = function (template = {}) {
 
 // Counts all non-array elements within a multidimensional array passed... [recursively so]
 export const nonArrElems = function (template = {}) {
-	return native.countrecursive({
+	return countrecursive({
 		predicate: aliases.negate(aliases.is.arr),
 		...template
 	})
@@ -162,7 +206,7 @@ export const nonArrElems = function (template = {}) {
 
 // Counts all the elements within a multi-dimensional array (including the arrays themselves...)
 export const totalElems = function (template = {}) {
-	return native.countrecursive({
+	return countrecursive({
 		predicate: (x) => (aliases.is.arr(x) ? x.length : 0),
 		...template
 	})
@@ -171,16 +215,16 @@ export const totalElems = function (template = {}) {
 export const dim = TEMPLATE({
 	defaults: {
 		icclass: general.DEFAULT_ICCLASS,
-		form: arrayForm
+		form: general.DEFAULT_FORM
 	},
 	function: function (recarr = this.template.form.new()) {
 		if (this.template.form.is(recarr))
 			return this.template.icclass.static
 				.one()
-				.jumpDirection(
+				.jumpForward(
 					orders
 						.max(this.template)
-						.function(this.form.index(recarr).copy(this.function))
+						.function(this.form.copy(recarr, this.function))
 				)
 		return this.template.icclass.class()
 	}
@@ -221,7 +265,6 @@ export const generalSearch = TEMPLATE({
 				)
 			)
 				return i
-			// ! [like here] - fix the '[...]' array-like indexes, replace them with the '.read()';
 			if (
 				this.template.form.is(
 					this.template.form.index(arrec).read(i.currelem().get())
@@ -330,7 +373,7 @@ export const repeatedApplicationWhilst = TEMPLATE({
 	}
 })
 
-export const native = {
+export const Native = {
 	// ! make the infinite version...
 	recursiveSetting: function (object = {}, fields = [], value = null) {
 		return (recursiveIndexation(object, fields.slice(0, fields.length - 1))[

@@ -7,6 +7,7 @@ import * as native from "./native.mjs"
 import * as expressions from "./expressions.mjs"
 import * as numeric from "./numeric.mjs"
 import * as predicates from "./predicates.mjs"
+import * as structure from "./structure.mjs"
 
 import { classes, general, defaults } from "../refactor.mjs"
 import { Ensurer } from "./predicates.mjs"
@@ -300,34 +301,105 @@ export const heaps = {
 			recursive: true
 		})
 	},
-	// ! This thing doesn't possess a verification '.inter' that the trees passed are, INDEED, of possession of heap property...;
-	// ^ idea [for a solution]: let the validation procedure lie on the user; For that, add an implementation of 'ensureHeap' to predicates;
-	// ! problem: the inter-usage; It requires the attached property ensuring operation fulfillment as a part of the class in question;
-	// ! add the '.read'-'.write' operations to the implementation;
+	// ! After having finished the 'ensureHeap' predicate, add it here and the other heaps...
 	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
+		let bintreeform = structure.treeForm(parentclass)
 		return EXTENSION({
 			defaults: {
+				treenodeclass: general.DEFAULT_TREENODECLASS,
 				parentclass: parentclass,
 				names: ["trees"]
 			},
 			methods: {
 				add: classes.add,
+				ordersort: function () {
+					// ! later, check if this sorts it from smallest-to-largest, or the reverse...
+					this.sort((x, y) => predicates.greateroe(x.order(), y.order()))
+					return this
+				},
+				order: function (i) {
+					if (!arguments.length) {
+						const n = this.this.this.this.class(
+							this.this.this.this.class.template.parentclass.static.fromArray(
+								[this]
+							)
+						)
+						return n.order(n.init())
+					}
+					return this.this.this.trees.read(i).order()
+				},
 				merge(heaps = this.template.parentclass.static.empty()) {
 					if (heaps.length().get().equal(heaps.class.static.one())) {
-						function mergetree(tree) {
-							// ! PROBLEM: lack of implemented algorithm for finding the order of a binomial tree
-							// * The 'order' is defined recusively as '1 + max(order())'; CONCLUSION: 'order' is just 'dim';
-							// ^ conclusion: this requires generalizational work on the 'multidim' methods;
+						function treemerge(affected, a, b, checked = false) {
+							if (
+								checked ||
+								this.this.this.this.class.template.predicate(
+									a.node,
+									b.node
+								)
+							) {
+								affected.children.pushback(b)
+								return affected
+							}
+							return treemerge(affected, b, a, true)
 						}
-						for (const x of heaps.read()) mergetree(x)
+						const heap = heaps.read()
+						const hbmerged = heap.trees.copy(predicates.F)
+						const horders = heap.trees.copy((x) => x.order())
+						const torders = this.this.this.trees.copy((x) => x.orders())
+						for (const i of this.keys())
+							for (const j of heap.keys())
+								if (
+									!hbmerged.read(j) &&
+									horders.read(j).equal(torders.read(i))
+								) {
+									this.write(
+										i,
+										treemerge(
+											this.this.this.this.class.template.treenodeclass.class(),
+											this.read(i),
+											heap.read(j)
+										)
+									)
+									torders.write(i, torders.read(i).next())
+									hbmerged.write(j, true)
+								}
 						return this
 					}
 					for (const x of heaps)
 						this.merge(this.template.parentclass.static.fromArray([x]))
 					return this
-				}
+				},
+				copy(f = ID) {
+					return this.this.this.this.class.class(this.this.this.trees.copy(f))
+				},
+				copied: classes.copied,
+				top() {
+					return orders
+						.most({
+							predicate: this.this.this.this.class.template.predicate
+						})
+						.function(this.this.this.this.trees.copy((x) => x.node))
+				},
+				topless() {
+					const top = this.top()
+					const firsttop = this.suchthat((x) =>
+						this.this.this.this.class.template.parentclass.template.comparison(
+							x.node,
+							top
+						)
+					).read()
+					const ind = this.firstIndex(firsttop)
+					this.write(ind, this.this.this.this.class.class(firsttop.children))
+					return top
+				}, 
+				// ? 1. decrease; 
+				// ? 2. delete; 
 			},
-			recurisve: true
+			recurisve: true,
+			transform: function (_class) {
+				bintreeform = bintreeform(_class.template)
+			}
 		})
 	}
 }
@@ -574,7 +646,7 @@ export const sort = {
 		function: function (array = this.template.genarrclass.static.empty()) {
 			const CONSTOBJ = {}
 			function split(a) {
-				return a.copied("splitlen", [a.init().next()]).map((x) => [CONSTOBJ, x])
+				return a.copied("splitlen", [a.one()]).map((x) => [CONSTOBJ, x])
 			}
 			function merge(a) {
 				if (a.init().compare(a.length().get())) return a.read()[1]
@@ -1278,7 +1350,7 @@ export const array = {
 				(f) => (i) =>
 					f(i, end)
 			)(predicates[step.direction() ? "lesseroe" : "greateroe"])
-			const wrap = this.template.ic ? ID : aliases.native.object.prop("value")
+			const wrap = this.template.ic ? ID : aliases.native.function.index("value")
 			for (let i = start; proposition(i); i = i.jumpDirection(step))
 				generated.pushback(wrap(i))
 			return generated

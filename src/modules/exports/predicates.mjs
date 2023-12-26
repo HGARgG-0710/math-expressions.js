@@ -35,3 +35,8 @@ export const T = TRUTH
 export const FALLACY = native.function._const(false)
 export const F = FALLACY
 export const VOID = native.function.void
+
+// ! This is the predicate that, given a 'broken' heap, will return a new one, that is ordered accordingly...; [Use it generally wherever there are heaps...]; 
+export const ensureHeap = (heap) => {
+
+}
