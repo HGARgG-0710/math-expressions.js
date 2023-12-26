@@ -1,4 +1,4 @@
-One revisits this file to use it as a sort of todo-list...
+One revisits this file to use it as a sort of short todo-list...
 
 GeneralArray<> (array) {
 	copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
@@ -13,59 +13,14 @@ UnlimitedMap<
 	[Symbol.iterator]
 	>([keys, objects] or some: InfiniteMap or map: {})
 
-IDEA: for an ACTUALLY infinite string (not just 'programmatically unlimited', actually infinite!); 
-Only problem is -- the possible amount of it that can be read is STILL finite :D, but the string itself is infinite! 
-Idea is such -- have a set of functions-counter pairs ".fcps", of which one is taking any array equivalent of the form [(f1, c1), (f2, c2), ...]; 
-With 'counters' representing the one state to which the function in question have in fact gone to; 
-To read the string, functions are called consequently to return the current index (also InfiniteCounter) of the string in question; 
-if it is 'greater' than the one that is currently read, one skips the function in question, gets to the next one! 
-This way, one gets the string 'symbol-by-symbol', after having 'found' the current index, one sets the corresponding counter for the corresponding function and starts search from there! 
-After-Note [forgotten to document]: Each such a set is given to a certain symbol from the encoding chosen [or, if that was the originally intended way for it...] the COUNTERS represent the letters!; 
+About InfiniteArray function-replacement and stack-usage: 
 
-ALTERNATIVE IMPLEMENTATION [simpler, similar idea]: just map an index-function to each symbol of the charset, then add a way for the user to 'compare' the indexes in question, 
-then just 'seek' in the same fashion.  
-
-So long as the infinite string in question can be represented with the use of the elementary functions of the counter model in question, one can store it in a finite amount of memory! 
-Beautiful! [note also, that the InfiniteCounters in question must also be programmatically unlimited, so doing this stuff with finite integers won't really work; one only gets the usual string]; 
-
-The user could always change the Array's function, of course...
-but the library has no way of doing it the same way as the user -- that'd require [at least]
-parsing the function, then putting in the new AST at its beginning, 
-then 'compile' to a function back again and then replacing the result for the original function; 
-? Though, perhaps, one would do that [with the use of a different library of oneselves']???
-
-^ NOTE: the InfiniteString has the exact same difficulty -- unless either the user changes the functions themselves [which is direct user's interation...], 
-the library learns to parse functions of arbitrary finite length [perhaps with the use of a different library of oneself], 
-or one does everything in a continuation-passing style [+ corresponding structure for infinte stack implementation, which is a different part of the library...], 
-one has no way to allow infinite change of the infinite string/infinite array/infinite map 
-[which is 'sort of' different from a finite string [they don't change, JS just creates new ones]; and is completely different from ]; 
-
-
-NOTICED ANOTHER PROBLEM: the 'Infinite' types within the library, that are based on recursive array/object types depend on the size of the JS stack; 
-As it isn't [by default] infinite [one writes the implementation separately], they aren't REALLY unlimited 
-[or, more precisely, though the types themselves ARE unlimited, they can't be USED as types that are, in fact, unlimited]; 
-This means that one does [certainly] get to write the infinite stack implementation of that thing...
-Question: should the library then be 'united' with the other library of self's that does provide this functionality? 
-
-AGAIN, the question of library-management and 'how-to-import-best?';
-Pray think on it; 
-For continuation, follow 'privatenotes.txt' [continuation 1]
-
-
-BREAK 
-
-IDEA: the InfiniteNumber: as a math-expression.js-type generator-function defining an infinite sequence of objects with a defined order on them in terms of the index of the position, 
-wrapped into a templated object, which itself is a result of an InfiniteNumber() function call;  
-So, for instance, one would have something like: 
-
-0011235423624678679235956791... 
-10089704590434750296493034024059...
-
-The last one being greater. 
-One could add signs for this sort of stuff, as well as dot-positions [proper Real numbers implementation]; 
-The thing itself would be defined as an infinite (that being, unlimited) GeneralArray instance, with addition, multiplication, inverses [both additive and multiplicative] implemented on it; 
-Indexes used would [could, that being] also be unlimited; 
-
-// Note: the defined sequences always have the maximum being one defined by the function (i) => (n-1), where 'n' is the number of symbols used for the representation of the sequences...
-
-[for example, for decimal with symbols 0123456789, it'd be: 999999999999....]
+	The user could always change the Array's function, of course...
+	but the library has no way of doing it the same way as the user -- that'd require [at least]
+	parsing the function, then putting in the new AST at its beginning, 
+	then 'compile' to a function back again and then replacing the result for the original function; 
+	? Though, perhaps, one would do that [with the use of a different library of oneselves']???
+	
+	In the returnless version, this wouldn't be an issue due to a Stack unlimitation (so, if implement, then do it later...). 
+	
+Question: should the library then be 'united' with the other library of self's that does provide the functionality for the returnless stack? 

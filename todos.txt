@@ -55,10 +55,7 @@ It gets changed actively.
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
 	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
 
-8. TODO: project tree cleanup; 
-
-	1. delete the 'images.txt' [after having completed all inside it]
-	2. delete the local 'privatenotes.txt' [only after having completed them... Until then - let they stay '.gitignored'...]
+8. Complete the 'images.txt' [after having completed all inside it, or regarded as undesired]
 
 9. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
 
@@ -71,11 +68,11 @@ It gets changed actively.
 11. Things to add to the library [for the later versions]: 
 
 	11.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and skinny to be added. 
-		Even though that is (historically), is also the origin of the library, it must be first properly revised and (especially) finished - new methods, new things; 
+		Even though that is (historically), is also an origin of the library, it must be first properly revised and (especially) finished - new methods, abstractions - things;
 	11.2. Number sequences; 
 		Amongst them - fibonacci, Lucas numbers, primes, and so on...
 	11.3. Linear algebra; 
-	11.4. (Possibly, possibly not, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
+	11.4. (Possibly, possibly a separate project, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
 	11.5. (Possibly?) Combinatorics? 
 	11.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
 	11.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
@@ -110,6 +107,18 @@ It gets changed actively.
 		Later, add. Intended for analysis of approximation data for various function-equalities over reals; 
 		Supposed to boast a generalization for an arbitrary syntax (user-given parsing functions) + another one - for arbitrary sequences of objects in possession of 
 		properties same as Real (see if that's really necessary, or they're all isomorphic and, thus, representable via Real itself). 
+
+	11.10. InfiniteNumber - an InfiniteArray-based arbitrarily-based TrueInteger infinite sequence defined by the user's function (like InfiniteArray); 
+		Supposed to implement (minimum, later - add new beautiful creative ideas here): 
+			1. addition (infnum)
+			2. additive inverse ()
+			3. multiplication ()
+
+		Undone for several reasons: 
+
+			1. The methods 2. and 3. require more mathematical derivation (which will take time and which, at the moment of writing the thing in question, one does not yet possess); 
+			2. Too short methods list due to the previous difficulties with InfiniteSeries API, and abstract-Function-treatment in the library generally [which, again, will take time, and currently not having it]. 
+			3. 
 
 		
 		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 

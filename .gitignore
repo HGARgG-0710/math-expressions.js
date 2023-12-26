@@ -1,5 +1,0 @@
-.prettierrc
-node_modules
-# todo: resolve these as well... Then, delete...
-privatenotes.txt
-src/modules/exports/statistics.mjs

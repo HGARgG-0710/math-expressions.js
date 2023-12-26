@@ -136,7 +136,7 @@ export const HIERARCHY = function (hierarr = []) {
 // ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
 // ! ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
 export const EXTENSION = (template = {}) => {
-	// ! refactor this repeating 'ensureProperties'; 
+	// ! refactor this repeating 'ensureProperties';
 	ensureProperties(template, {
 		word: "class",
 		recursive: false,
@@ -359,6 +359,6 @@ export const NOMODULE = function (moduleobj) {
 
 // ! Use throughout...Maybe, pick a more plausible name...
 // * Stands for 'Obj-Func-Def-Key-List'
-export function OFDKL(obj, f, keylist = [], bind = false) {
+export const OFDKL = (obj, f, keylist = [], bind = false) => {
 	for (const x of keylist) obj[x] = (bind ? (x) => x.bind(obj) : ID)(f(x))
 }

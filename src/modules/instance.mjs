@@ -16,9 +16,9 @@ import * as structure from "./exports/structure.mjs"
 import * as types from "./exports/types.mjs"
 import * as variables from "./exports/variables.mjs"
 
-export function instance(transformation = ID) {
-	// * Module instance Export
-	return transformation({
+// * Module instance Export
+export const instance = (transformation = ID) =>
+	transformation({
 		algorithms: NOMODULE(algorithms),
 		aliases: NOMODULE(aliases),
 		comparisons: NOMODULE(comparisons),
@@ -27,10 +27,9 @@ export function instance(transformation = ID) {
 		native: NOMODULE(native),
 		numeric: NOMODULE(numeric),
 		orders: NOMODULE(orders),
-		predicates: NOMODULE(predicates), 
+		predicates: NOMODULE(predicates),
 		printing: NOMODULE(printing),
 		structure: NOMODULE(structure),
 		types: NOMODULE(types),
 		variables: NOMODULE(variables)
 	})
-}

@@ -1,9 +1,9 @@
 // ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
 // ? Later - try to redistribute all this somewhere accordingly?
 
+import { TEMPLATE } from "./macros.mjs"
 import * as aliases from "./exports/aliases.mjs"
 import * as comparisons from "./exports/comparisons.mjs"
-import { arrayCounter } from "./exports/counters.mjs"
 import * as native from "./exports/native.mjs"
 import {
 	numbers,
@@ -15,6 +15,7 @@ import {
 import { heaps } from "./exports/algorithms.mjs"
 import * as predicates from "./exports/predicates.mjs"
 import * as orders from "./exports/orders.mjs"
+import * as structure  from "./exports/structure.mjs"
 
 export const classes = {
 	finish: function () {
@@ -166,14 +167,14 @@ export const general = {
 				.function(target[names[x]], outtransform[x], insequences[x])
 		return newobj
 	},
-	counterFrom: function (_labels = [], wrapper = aliases.ID) {
+	counterFrom: function (_labels = [], wrapper = ID) {
 		return TEMPLATE({
 			defaults: [
-				aliases.function._const({ icclass: InfiniteCounter(arrayCounter) }),
+				aliases.function._const({ icclass: general.DEFAULT_ICCLASS, wrapper }),
 				function () {
 					return {
-						forth: wrapper(this.template.icclass.static.one()),
-						back: wrapper(this.template.icclass.static.none())
+						forth: this.template.wrapper(this.template.icclass.static.one()),
+						back: this.template.wrapper(this.template.icclass.static.none())
 					}
 				}
 			],
@@ -209,6 +210,7 @@ general.DEFAULT_INFARR = InfiniteArray()
 general.DEFAULT_TINTCLASS = numbers.TrueInteger()
 general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
 general.DEFAULT_TRATIOCLASS = numbers.TrueRatio()
+general.DEFAULT_FORM = structure.arrayForm
 
 // TODO: make the object of defaults that is to be used throughout the library...;
 export const defaults = {

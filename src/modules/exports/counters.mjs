@@ -15,11 +15,7 @@ export const number = GENERATOR({
 	},
 	range: negate(isNaN)
 })
-// ? QUESTION [1]: the degree to which some such thing may be extended, mayhaps? [Namely, ought one be able to extend the object passed down to the 'number' right there or not?]
-// ? QUESTION [2]: does one want to make a macro for this one, or categorize into one of the already existing ones [as a TEMPLATE, perhaps]? Pray consider...
-// * Current decision [temporary]: leave alone such cases for now, as are...
-// ! notice: should there generally not be a mean to extend BOTH the template's shape {the data} and the template's function {the transformation regulated by the data};
-export function addnumber(template = {}) {
+export function addnumber(template = {}, ntemplate = {}) {
 	return number({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
@@ -27,11 +23,11 @@ export function addnumber(template = {}) {
 		},
 		backward(x) {
 			return x + this.template.bdiff
-		}
+		},
+		...ntemplate
 	})
 }
-
-export function multnumber(template = {}) {
+export function multnumber(template = {}, ntemplate = {}) {
 	return number({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
@@ -39,7 +35,8 @@ export function multnumber(template = {}) {
 		},
 		backward(x) {
 			return x * this.template.bdiff
-		}
+		},
+		...ntemplate
 	})
 }
 // * Probably the "simplest" infinite counter one would have in JS is based off this generator;
@@ -99,11 +96,8 @@ export const recursiveCounter = function (template = {}) {
 			return (
 				aliases.is.arr(x) &&
 				!!x.length &&
-				!!min(
-					x.map(
-						(y) =>
-							this.template.type(y) || (aliases.is.arr(x) && this.range(y))
-					)
+				x.every(
+					(y) => this.template.type(y) || (aliases.is.arr(x) && this.range(y))
 				)
 			)
 		}
@@ -302,12 +296,12 @@ export function stringCounter(template = {}) {
 	})
 }
 
-// ! Get rid of the 'multitudes' - replace them with 'forms' from 'structure.mjs'; 
+// ! Get rid of the 'multitudes' - replace them with 'forms' from 'structure.mjs';
 export const circularCounter = (() => {
 	const final = {
 		defaults: {
 			values: [],
-			multitude: { new: null, is: null, map: null },
+			form: general.DEFAULT_FORM,
 			hop: 1
 		},
 		range(x) {
@@ -317,8 +311,7 @@ export const circularCounter = (() => {
 
 	const generalized = (name, sign) =>
 		function (x) {
-			if (this.template.multitude.is(x))
-				return this.template.multitude.map(x, (a) => this[name])
+			if (this.template.form.is(x)) return this.template.form.flatmap(x, this[name])
 			const vals = aliases.native.array
 				.indexesOf(this.template.values, x)
 				.map(
@@ -382,8 +375,23 @@ export const finiteCounter = (() => {
 export const fromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
 
 // * Constructs a counter from a TrueInteger class (additive);
-// ! Create more examples of 'tint'-based counters;
 export const tintAdditive = general.counterFrom(
 	["add", "difference"],
 	types.numbers.TrueInteger().static.fromCounter
 )
+
+// ? Add tint-based counters for other operations as well? [same goes for the native JS Number...];
+export const tintMultiplicative = (() => {
+	const X = general.counterFrom(
+		["multiply", "divide"],
+		types.numbers.TrueInteger().static.fromCounter
+	)
+	// * setting a different default for the 'forth' and 'back';
+	X.template.defaults[1] = function () {
+		return {
+			forth: this.template.wrapper(this.template.icclass.static.two()),
+			back: this.template.wrapper(this.template.icclass.static.two())
+		}
+	}
+	return X
+})()

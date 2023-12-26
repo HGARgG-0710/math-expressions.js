@@ -1,16 +1,22 @@
 // * This is the 'Structure API' part of the package - it contains means of working with arbitrary multilayered recursive forms, the shape of which is defined by the user;
 // % note: the module is, in many ways, central to the library from the dependency- and generality- standpoints of view, for its methods and definitions can be applied to nigh every part of the package that works with recursion and nested objects;
 
+import { general } from "./../refactor.mjs"
 import { TEMPLATE, ID } from "./../macros.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
-import * as counters from "./counters.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as orders from "./orders.mjs"
 
-// ^ OBSERVATIONS regarding the issues concerning the generalization of the 'multidim' methods to the 'structures' module API;
-// * 	1. The 'objStructure' is fairly incompatible with the 'form', namely: the names of the fields;
+// ? Add more methods to it? [IDEA: get rid of 'structure', embed its functionality inside the 'form'?]; 
+export const form = (_new, is, index, isomorphic) => {
+	const X = { new: _new, is, index, isomorphic }
+	X.flatmap = formFlatMap(X)
+	return X
+}
+
+export const formFlatMap = (form) => (x, f) => form.new(form.index(x).copy(f))
 
 // ! Use in the library for refactoring purposes;
 export const structure = TEMPLATE({
@@ -23,7 +29,7 @@ export const structure = TEMPLATE({
 		}
 	},
 	function: function (obj = {}) {
-		// ! REWRITE; This is highly faulty and object-oriented-only;
+		// ! REWRITE; This is highly faulty, not general enough and object-oriented-only;
 		return {
 			template: {
 				template: this.template,
@@ -50,7 +56,7 @@ export const structure = TEMPLATE({
 				// ! Not sufficiently general - need ability to set arbitary comparisons (for instance, 'refCompare...', so that one could check for typeConst results... - INFINITE POTENTIAL FOR COMPARISON-CONSTANT CREATION...)
 				return (
 					valueCompare(keys, Object.keys(current)) &&
-					!!min(keys.map((k) => this.isisomorphic(object[k], current[k])))
+					keys.every((k) => this.isisomorphic(object[k], current[k]))
 				)
 			}
 		}
@@ -89,8 +95,8 @@ export function constForm(
 				checked[fieldname] === c &&
 				checked.hasOwnProperty(contentsname)
 			isomorphic = (x, y) => x[fieldname] === y[fieldname]
+			return form(_new, is, index, isomorphic)
 		}
-		return { new: _new, is, index, isomorphic }
 	}, n)
 }
 
@@ -98,30 +104,14 @@ export const propertyForm = function (contentsname = "") {
 	return constForm("", contentsname, false)
 }
 
-export const objectForm = {
-	new: aliases.obj,
-	is: aliases.is.obj,
-	index: Object.values,
-	isomorphic: aliases.TRUTH
-}
-
-export const arrayForm = {
-	new: aliases.arr,
-	is: aliases.is.arr,
-	index: ID,
-	isomorphic: aliases.TRUTH
-}
+export const objectForm = form(aliases.obj, aliases.is.obj, Object.values, aliases.TRUTH)
+export const arrayForm = form(aliases.arr, aliases.is.arr, ID, aliases.TRUTH)
 
 export const classForm =
 	(_class) =>
 	(template = {}) => {
 		const Class = _class(template)
-		return {
-			new: Class.class,
-			is: Class.is,
-			index: ID,
-			isomorphic: aliases.TRUTH
-		}
+		return form(Class.class, Class.is, ID, aliases.TRUTH)
 	}
 
 export const garrayForm = classForm(types.GeneralArray)
@@ -129,7 +119,7 @@ export const garrayForm = classForm(types.GeneralArray)
 export const countrecursive = TEMPLATE({
 	defaults: {
 		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
-		form: arrayForm
+		form: general.DEFAULT_FORM
 	},
 	function: function (array = this.form.new()) {
 		return aliases.native.number
@@ -201,14 +191,12 @@ export const generalSearch = TEMPLATE({
 	defaults: {
 		self: false,
 		reversed: false,
-		// ? Give this thing an alias...;
-		genarrclass: types.arrays.LastIndexArray({
-			icclass: types.InfiniteCounter(counters.arrayCounter())
-		}),
-		soughtProp: aliases._const(true)
+		genarrclass: general.DEFAULT_GENARRCLASS,
+		soughtProp: aliases._const(true),
+		form: general.DEFAULT_FORM
 	},
 	function: function (
-		arrrec = this.form.new(),
+		arrrec = this.template.form.new(),
 		prevArr = this.template.genarrclass.static.empty(),
 		self = this.template.self,
 		reversed = this.template.reversed
@@ -229,15 +217,18 @@ export const generalSearch = TEMPLATE({
 		) {
 			if (
 				this.template.soughtProp(
-					this.template.form.index(arrrec)[i.currelem().get()]
+					this.template.form.index(arrrec).read(i.currelem().get())
 				)
 			)
 				return i
+			// ! [like here] - fix the '[...]' array-like indexes, replace them with the '.read()';
 			if (
-				this.template.form.is(this.template.form.index(arrec)[i.currelem().get()])
+				this.template.form.is(
+					this.template.form.index(arrec).read(i.currelem().get())
+				)
 			) {
 				const r = this.function(
-					this.template.form.index(arrrec)[i.currelem().get()],
+					this.template.form.index(arrrec).read(i.currelem().get()),
 					i,
 					false,
 					reversed
@@ -250,11 +241,19 @@ export const generalSearch = TEMPLATE({
 	}
 }).function
 
+// ? Consider this '.comparison' business (not quite sure one likes it, the '.compare' ensures that the thing works on all forms, this doesn't...)
 export const findDeepUnfilled = TEMPLATE({
-	defaults: {
-		soughtProp: aliases._const(true),
-		comparison: comparisons.valueCompare
-	},
+	defaults: [
+		function () {
+			return {
+				form: general.DEFAULT_FORM,
+				comparison: comparisons.valueCompare
+			}
+		},
+		function () {
+			return { soughtProp: this.template.form.is }
+		}
+	],
 	function: function (template = {}) {
 		return generalSearch({
 			soughtProp: (x) =>
@@ -263,7 +262,8 @@ export const findDeepUnfilled = TEMPLATE({
 			...this.template,
 			...template
 		}).function
-	}
+	},
+	isthis: true
 }).function()
 
 // * all of these things ought to have aliases...
@@ -330,16 +330,7 @@ export const repeatedApplicationWhilst = TEMPLATE({
 	}
 })
 
-// ? Q: Keep or not?
 export const native = {
-	// ! rewrite using the repeatedApplication...
-	// ? Delete? [already an infinite version present...]
-	recursiveIndexation: function (object = {}, fields = []) {
-		let res = object
-		for (const f of fields) res = res[f]
-		return res
-	},
-
 	// ! make the infinite version...
 	recursiveSetting: function (object = {}, fields = [], value = null) {
 		return (recursiveIndexation(object, fields.slice(0, fields.length - 1))[
@@ -348,6 +339,7 @@ export const native = {
 	},
 
 	// ? Considered for deletion;
+	// * That's only useful for finite methods refactoring; [Consider if there are any in the library, if not - think whether wish to keep...];
 	repeatedApplication(initial, times, f, offset = 0, iter = (x) => x + 1) {
 		let r = initial
 		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)

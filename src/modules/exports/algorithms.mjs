@@ -11,7 +11,7 @@ import * as predicates from "./predicates.mjs"
 import { classes, general, defaults } from "../refactor.mjs"
 import { Ensurer } from "./predicates.mjs"
 
-export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
+export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: defaults.basicgenarr(parentclass),
 		toextend: [],
@@ -27,7 +27,7 @@ export function Stack(parentclass = general.DEFAULT_GENARRCLASS) {
 		recursive: true
 	})
 }
-export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
+export const Queue = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: defaults.basicgenarr(parentclass),
 		toextend: [],
@@ -44,9 +44,6 @@ export function Queue(parentclass = general.DEFAULT_GENARRCLASS) {
 }
 
 // Extends 'TreeNode';
-// * Usage: NTree().treenode;
-// ^ CONCLUSION: in regard to the implementation - one needs an additional class for that;
-// ^ IDEA: Ensurer(class, predicate, responses) - each and every call of the class's methods listed in 'responses' will check for presence of the property 'predicate'; If !preciate, then it will execute the corresponding response upon the 'this'; Using this construction, one can chain (recursively) different methods and thus ensure properties on recursive objects;
 export const NTreeNode = TEMPLATE({
 	defaults: [
 		function () {
@@ -101,7 +98,7 @@ export const NTreeNode = TEMPLATE({
 
 // * NOTE: as the Graph allows for dynamically defined graphs (namely, the graphs with different values of 'edges', this doesn't necessarily always make sense);
 // ^ NOTE: this class also allows for finite computation of infinitely large graphs (namely, those that use the recursive objects);
-export function Graph(parentclass = general.DEFAULT_GENARRCLASS) {
+export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -335,7 +332,7 @@ export const heaps = {
 	}
 }
 
-export function PriorityQueue(heapclass = general.DEFAULT_HEAPCLASS) {
+export const PriorityQueue = (heapclass = general.DEFAULT_HEAPCLASS) => {
 	return EXTENSION({
 		defaults: defaults.basicheap(heapclass),
 		methods: {

@@ -1,22 +1,20 @@
 This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
 
-1. DIRECTIONS; 
-	1.1 Finish: 
-		1.1.1 InfiniteNumber [prioritee N1]
-		1.1.2. BinomialHeap [priority N2]; 
+1. To Finish: 
+	1.1.1. BinomialHeap [priority N1]; 
+
+2. Code polishing: 
+	1.3.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
+		1.3.1.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
+		1.3.1.2. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
+	1.3.2. Refactoring: 
+		1.3.2.1. 'refactor.defaults' - see if there are any further potential applications of it... 
+		1.3.2.2. various recurring function-expressions (create new aliases and use those instead...); 
+		1.3.2.3. all of aliases; 
+		1.3.2.4. aliases-simplification (use of aliases within the aliases, in such a way so as for the thing to be computable); 
+	1.3.3. Call the '.function...' on all the TEMPLATEs appropriately, unite the library's style on this particular issue...; 
 	
-	1.2. Code polishing: 
-		1.3.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
-			1.3.1.1. This includes new ideas for things to add to the library (for instance, the BinaryArray - for binary arithmetic...); 
-			1.3.1.2. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
-		1.3.2. Refactoring: 
-			1.3.2.1. 'refactor.defaults' - see if there are any further potential applications of it... 
-			1.3.2.2. various recurring function-expressions (create new aliases and use those instead...); 
-			1.3.2.3. all of aliases; 
-			1.3.2.4. aliases-simplification (use of aliases within the aliases, in such a way so as for the thing to be computable); 
-		1.3.3. Call the '.function...' on all the TEMPLATEs appropriately, unite the library's style on this particular issue...; 
-	
-2. Side: Testing; 
+3. Testing; 
 	The library's approaching the v1.0 release; 
 	Before it, one desires to first conduct proper (and not like the other times!) testing operations; 
 
@@ -26,7 +24,14 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		0. Before testing a particular method, pray first re-look through its code most carefully and think of the design decisions made in it (namely, whether one was satisfied with them insofar or not...); 
 		1. Write extensive tests for each and every single thing; 
 		2. Test; 
-		3. Upon failure, rewrite and return to 2.; 
+		3. Upon failure, seek out the bug, fix and then return to 2.; 
 		4. Upon success, go on to the next piece of code (next method); 
 
 	The entire process oughtn't take more than a few days of dedicated work...
+
+	Before doing the testing, plan - create a list for testing of things; 
+	Before that, still - count the definitions and see how much time will be needed for testing (approximately); 
+	Each and every one test must be broken down into a descriptive (in a sense that they verify the functionality fully) set of cases. 
+
+4. Documentation: 	
+	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 

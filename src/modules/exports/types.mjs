@@ -7,14 +7,16 @@ import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as native from "./native.mjs"
 import * as predicates from "./predicates.mjs"
+import * as structure from "./structure.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
-// ^ IDEA: create a class 'Comparable', which would be set by means of the orders and (consequently), can be converted to 'InfiniteCounter'; This way, one would be able to create InfiniteCounters from '.compare' orders!
+// ^ IDEA [for after v1.1.]: create a class 'Comparable', which would be set by means of the orders and (consequently), can be converted to 'InfiniteCounter'; This way, one would be able to create InfiniteCounters from '.compare' orders!
+// ! collect all the ideas related to the v1.1 and put them under one single 'todos.txt' entry;
 export const InfiniteCounter = (() => {
-	// * Note: a minor 'trick' about the entire thing is that the value that is assigned to 'template.unacceptable' is thrown out of the function's value scopes [because that is the value from which it starts to count]; However, there are several ways of going around it. One is also replacing the value for the 'template.initialcheck';
+	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'types.InfiniteCounter(...).class()' syntax for simplified zero-creation;
 	return CLASS({
 		defaults: {
 			comparison: comparisons.valueCompare,
@@ -921,11 +923,7 @@ export const arrays = {
 	},
 	// * Note: this one requires another GeneralArray class to be used;
 	DeepArray(template = {}, garrtemplate = {}) {
-		// ? Is this a form (like in 'structure.mjs')? If so, do generalize...
-		// ! Refactor this - add as a common expression for the 'structure.mjs' lib module...;
-		const IDENTIFIER = {}
-		const ARRFORM = (x = []) => ({ arr: x, TOKEN: IDENTIFIER })
-		const isArr = (arr) => arr.TOKEN === IDENTIFIER
+		const daform = structure.constForm("TOKEN", "arr", 1, [])
 		const X = {
 			template: {
 				icclass: InfiniteCounter(counters.numberCounter()),
@@ -935,12 +933,16 @@ export const arrays = {
 				...template
 			},
 			class: GeneralArray({
-				empty: ARRFORM(),
+				empty: daform.new(),
+				// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...); 
 				newvalue: function (array, value) {
 					let e = this.elem(array, true)
 					if (e[0] == undefined) {
 						if (e[0] === null) {
-							const flayer = firstUnfilledLayer(array.array)
+							// ! ensure the proper template here, pray...
+							const flayer = structure
+								.findDeepUnfilled({ form: daform })
+								.function(array.array)
 							if (flayer) {
 								let p = array.array
 								for (const x of flayer) p = p[x].arr
@@ -971,7 +973,7 @@ export const arrays = {
 						}
 						const isfibelow = fi < currarray.length
 						if (isfibelow) {
-							while (isArr(currarray.arr[fi])) {
+							while (daform.is(currarray.arr[fi])) {
 								prevarrs.pushback(currarray)
 								currarray = currarray.arr[fi]
 								continue
@@ -997,23 +999,6 @@ export const arrays = {
 				icclass: this.template.icclass,
 				...garrtemplate
 			})
-		}
-
-		// ! ISSUE [GENERAL]: generalize the multidim API to work with structures;
-		// ? Suggestion: generalize, then merge the newly made 'multidim' into 'structure'? (they'd go along excellently)
-		function firstUnfilledLayer(
-			arrform,
-			indexes = X.template.genarrclass.static.empty()
-		) {
-			for (const x in arrform.arr) {
-				if (arrform.arr[x].length < X.template.maxlen) return indexes
-				const rrec = firstUnfilledLayer(
-					arrform.arr[x],
-					indexes.copied("pushback", [x])
-				)
-				if (rrec) return rrec
-			}
-			return false
 		}
 
 		return X
@@ -1158,9 +1143,7 @@ export function UnlimitedMap(parentclass = general.DEFAULT_GENARRCLASS) {
 	})
 }
 
-export function UnlimitedString(parent = general.DEFAULT_GENARRCLASS) {
-	// TODO: refactor the cases like such - when there is EXACTLY the same function used in two or more places, but the difference is in the '.'-spaces;
-	// ! THIS IS BROKEN! Pray fix the thing so that it could work based of the passed 'icclass' and not instance of UnlimitedString;
+export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: {
 			parentclass: parent,
@@ -1857,8 +1840,8 @@ export const InfiniteArray = CLASS({
 	},
 	recursive: false
 })
-// ? Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
-export function InfiniteString(parentclass = general.DEFAULT_INFARR, ensure = false) {
+// ! Replace such 'parentclass'-function definitions with simple 'const X = (parentclass) => ...'?
+export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = false) => {
 	const _class = EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -1876,8 +1859,12 @@ export function InfiniteString(parentclass = general.DEFAULT_INFARR, ensure = fa
 				return this.this.this.this.class.class(this.this.this.infarr.f)
 			},
 			copied: classes.copied,
-			// ! if 2nd missing, let end be equal to 'beg';
 			slice(beg = this.init(), end) {
+				// ! generalize this;
+				if (args.length === 1) {
+					end = beg
+					beg = this.init()
+				}
 				let c = beg
 				const r = this.this.this.this.class.template.ustrclass.class()
 				for (; predicates.lesser(c, end); c = predicates.next(c))
@@ -1905,59 +1892,8 @@ export function InfiniteString(parentclass = general.DEFAULT_INFARR, ensure = fa
 			: ID
 	)(_class)
 }
-// ? Dear, there's still lots of things to do. Take out of v1.0, again? 
-export function InfiniteNumber(parentclass = general.DEFAULT_INFARR) {
-	return EXTENSION({
-		defaults: [
-			function () {
-				return {
-					parentclass: parentclass,
-					names: ["infarr"],
-					icclass: general.DEFAULT_ICCLASS,
-					tintclass: general.DEFAULT_TINTCLASS
-				}
-			},
-			function () {
-				return {
-					base: this.template.icclass.static.two(),
-					wrapper: this.template.tintclass.class.fromCounter,
-					defaults: {
-						inter: function (f = ID) {
-							return (i) => this.template.wrapper(f(i))
-						}
-					}
-				}
-			}
-		],
-		methods: {
-			// ! Note: they must be in the same base! Create a function for changing the base of an InfiniteNumber;
-			add(inum = this.class.class()) {
-				const x = this.f
-				const y = inum.f
-				this.f = function (index = this.init()) {
-					const prev = index.equal(this.init())
-						? aliases.native.boolean.btic(
-								predicates.greater(
-									x(index.next()).add(y(index.next())),
-									this.template.base
-								),
-								this.class.template.icclass
-						  )
-						: this.template.tintclass.static.zero()
-					return x(index).add(y(index)).modulo(this.template.base).add(prev)
-				}
-				return this
-			}
-			// * Methods list:
-			// ! 1. THINK ABOUT HOW TO GENERALLY TACKLE THE COMPUTATION OF ADDITIVE INVERSES OF SUCH THINGS...
-			// % 2. multiply(in): THINK ABOUT THIS ONE ESPECIALLY INTENTLY...
-		},
-		recursive: false,
-		isthis: true
-	})
-}
 
-export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
+export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -2184,7 +2120,7 @@ export function TreeNode(parentclass = general.DEFAULT_GENARRCLASS) {
 	})
 }
 
-export function UnlimitedSet(parentclass = general.DEFAULT_GENARRCLASS) {
+export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
