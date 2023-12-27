@@ -4,7 +4,6 @@
  */
 
 export * from "./modules/macros.mjs"
-export * from "./modules/instance.mjs"
 export * from "./modules/refactor.mjs"
 export * from "./modules/exports.mjs"
 

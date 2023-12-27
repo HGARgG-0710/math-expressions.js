@@ -48,7 +48,7 @@ export const valueCompare = TEMPLATE({
 				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
 		)
 	}
-}).function()
+}).function
 
 export const refCompare = (a, b) => a === b
 export const oldCompare = (a, b) => a == b

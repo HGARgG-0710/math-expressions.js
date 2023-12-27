@@ -1,5 +1,20 @@
+export * as algorithms from "./exports/algorithms.mjs" 
+export * as aliases from "./exports/aliases.mjs"
+export * as comparisons from "./exports/comparisons.mjs"
+export * as counters from "./exports/counters.mjs"
+export * as expressions from "./exports/expressions.mjs"
+export * as native from "./exports/native.mjs"
+export * as numeric from "./exports/numeric.mjs"
+export * as orders from "./exports/orders.mjs"
+export * as predicates from "./exports/predicates.mjs"
+export * as printing from "./exports/printing.mjs"
+export * as structure from "./exports/structure.mjs"
+export * as types from "./exports/types.mjs"
+export * as variables from "./exports/variables.mjs"
+
+// This allows to avoid nested imports...
 // TODO: check for colliding exports, then either rename the stuff, or create some alternative solution's implementation
-export * from "./exports/algorithms.mjs"
+export * from "./exports/algorithms.mjs" 
 export * from "./exports/aliases.mjs"
 export * from "./exports/comparisons.mjs"
 export * from "./exports/counters.mjs"

@@ -44,7 +44,6 @@ export const udeftable = RECURSIVE_VARIABLE({
 	"%": general.recursiveOperation("%", (a, b) => a.modulo(b))
 })
 
-export const libPrecision = VARIABLE(16)
 export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
 export const MAX_INT = VARIABLE(2 ** 53 - 1)
 

@@ -1,4 +1,4 @@
-// * This is the 'Structure API' part of the package - it contains means of working with arbitrary multilayered recursive forms, the shape of which is defined by the user;
+// * This is 	the 'Structure API' part of the package - it contains means of working with arbitrary multilayered recursive forms, the shape of which is defined by the user;
 // % note: the module is, in many ways, central to the library from the dependency- and generality- standpoints of view, for its methods and definitions can be applied to nigh every part of the package that works with recursion and nested objects;
 
 import { general } from "./../refactor.mjs"
@@ -82,7 +82,7 @@ export const structure = TEMPLATE({
 			}
 		}
 	}
-}).function()
+}).function
 
 // * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'comparisons.refCompare' and the out-of-scope object constant;
 export function typeConst(f = ID, n = 1) {
@@ -185,11 +185,11 @@ export const countrecursive = TEMPLATE({
 					: this.template.icclass.zero()
 			)
 	}
-}).function()
+}).function
 
 // Counts all the array-elements within a multi-dimensional array;
 export const arrElems = function (template = {}) {
-	// ! aliases... Let function-related aliases like this one be repositioned into the 'expressions.mjs' codefile;
+	// ? aliases... Let function-related aliases like this one be repositioned into the 'expressions.mjs' codefile;
 	return (x) =>
 		(
 			(a, b) => (y) =>
@@ -229,7 +229,7 @@ export const dim = TEMPLATE({
 				)
 		return this.template.icclass.class()
 	}
-}).function()
+}).function
 
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
 export const generalSearch = TEMPLATE({
@@ -283,7 +283,7 @@ export const generalSearch = TEMPLATE({
 		}
 		return false
 	}
-}).function()
+}).function
 
 // ? Consider this '.comparison' business (not quite sure one likes it, the '.compare' ensures that the thing works on all forms, this doesn't...)
 export const findDeepUnfilled = TEMPLATE({
@@ -308,7 +308,7 @@ export const findDeepUnfilled = TEMPLATE({
 		}).function
 	},
 	isthis: true
-}).function()
+}).function
 
 // * all of these things ought to have aliases...
 export const findDeepUnfilledArr = TEMPLATE({
@@ -319,7 +319,7 @@ export const findDeepUnfilledArr = TEMPLATE({
 			...template
 		})
 	}
-}).function()
+}).function
 
 export const findDeepLast = TEMPLATE({
 	defaults: {
@@ -331,7 +331,7 @@ export const findDeepLast = TEMPLATE({
 			...template
 		}).function
 	}
-}).function()
+}).function
 
 export const recursiveIndexation = TEMPLATE({
 	function: function (object, fields = this.template.genarrclass.static.empty()) {
@@ -346,7 +346,7 @@ export const recursiveIndexation = TEMPLATE({
 			object
 		)
 	}
-}).function()
+}).function
 
 export const recursiveSetting = TEMPLATE({
 	defaults: {
@@ -365,7 +365,7 @@ export const recursiveSetting = TEMPLATE({
 		}
 		return object
 	}
-}).function()
+}).function
 
 export const repeatedApplication = TEMPLATE({
 	defaults: { iter: (x) => x.next() },
@@ -381,7 +381,7 @@ export const repeatedApplication = TEMPLATE({
 			r = f(r, i.difference(offset))
 		return r
 	}
-}).function()
+}).function
 
 // * This can create infinite loops...
 export const repeatedApplicationWhilst = TEMPLATE({
@@ -391,7 +391,7 @@ export const repeatedApplicationWhilst = TEMPLATE({
 		while (this.template.property()) curr = f(curr)
 		return curr
 	}
-}).function()
+}).function
 
 // ? Does one really want a whole subobject just for this one method?
 const Native = {

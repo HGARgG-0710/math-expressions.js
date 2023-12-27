@@ -122,7 +122,7 @@ export const INHERIT = function (x, X) {
 	}
 }
 
-// ? Add the general version? [See if want to delete this one or not...]
+// ? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
 export const HIERARCHY = function (hierarr = []) {
 	return structure.native.repeatedApplication(
 		TEMPLATE(hierarr[hierarr.length - 1]),

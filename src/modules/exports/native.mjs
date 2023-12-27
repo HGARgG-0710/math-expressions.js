@@ -1,12 +1,16 @@
 // * Algorithms and definitions regarding the native (finite) JS types;
 // % note: largely reworked from the old library code...
 
-import { TEMPLATE } from "./../macros.mjs"
+// TODO [for the v1.1.]: using 'forms', generalize ALL the object- and array-algorithms that are generalizable using it.
+
+import { TEMPLATE, ID } from "./../macros.mjs"
 import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
 import * as variables from "./variables.mjs"
 import * as types from "./types.mjs"
 import * as comparisons from "./comparisons.mjs"
+import * as structure from "./structure.mjs"
+import * as algorithms from "./algorithms.mjs"
 import { general } from "./refactor.mjs"
 
 export const copy = {
@@ -25,12 +29,13 @@ export const copy = {
 				array: (a, method = arrmeth) => a.map(method),
 				object: (a, method = objmeth) => objFmap(a, method),
 				function: (a, context = dcontext()) => a.bind(context),
-				symbol: (a) => Symbol(aliases.trim(7)(aliases.str(a))),
+				symbol: (a) =>
+					Symbol(aliases.trimBeginning(7)(aliases.trimEnd(1)(aliases.str(a)))),
 				arrayFlat: (a) => [...a],
 				objectFlat: (a) => ({ ...a })
 			}
 		}
-	}).function(),
+	}).function,
 
 	// ? find the definition for the general _switch() from a different library of self's, place in this one, then use here...
 	copyFunction: (() => {
@@ -47,7 +52,7 @@ export const copy = {
 					if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
 				return a
 			}
-		}).function()
+		}).function
 	})()
 }
 
@@ -69,10 +74,6 @@ copy.flatCopy = copy.copyFunction({
 export const number = {
 	// ! Note: this thing, while originally intended for numbers representations, actually is better categorized as an element for the string formatting operations;
 	// TODO: later, make either such a package/npm-module, or add such a section to the library; Then, put this there...;
-	/**
-	 * Takes a number and returns a string, containing it's readable variant. (Like 12345 and 12 345)
-	 * @param {number} num A number, from which to make a better-looking version of it.
-	 */
 	readable: TEMPLATE({
 		defaults: {
 			mod: 3
@@ -86,29 +87,22 @@ export const number = {
 			})
 			return affecteds
 		}
-	}).function(),
+	}).function,
 
 	// TODO: generalize [put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
-	/**
-	 * Floors the given number to the needed level of precision.
-	 * @param {number} number Number to be floored.
-	 * @param {number} afterDot How many positions after dot should there be.
-	 * @returns {number}
-	 */
 	floor: TEMPLATE({
-		defaults: { defacc: variables.libPrecision.get },
+		defaults: { defacc: 16 },
 		function: function (number, afterDot = this.template.defacc) {
 			if (afterDot < 0) {
 				afterDot = -afterDot
-				const inted = String(this.function(number, 0)).reverse()
-				// ! use the 'insert' alias here...
-				inted = inted.slice(0, afterDot).concat(".", inted.slice(afterDot))
-				return Number(inted.reverse().split(".")[0])
+				const inted = aliases.str(this.function(number, 0)).reverse()
+				inted = aliases.native.array._insert(inted, afterDot, ".")
+				return aliases.num(inted.reverse().split(".")[0])
 			}
-			return Number(number.toFixed(afterDot))
+			return aliases.num(number.toFixed(afterDot))
 		}
-	}).function(),
+	}).function,
 	ceil(x = 1) {
 		return this.floor(x) + 1
 	},
@@ -120,9 +114,6 @@ export const number = {
 	}
 }
 
-// TODO: write the gutInnerObjs function - the object-version of the 'Array.flat()'-kind of method;
-// 		TODO: the same way, write objEncircle; there'd also be an argument for the key;
-// 		? the same way, write "encircle" and "flat" methods/algorihtm-implementations for the GeneralArray and InfiniteMaps?
 export const object = {
 	subobjects(object = {}, prev = []) {
 		let returned = []
@@ -160,7 +151,7 @@ export const object = {
 			const objorig = umclass(obj, treatUniversal)
 			return umclass(objorig.values, objorig.keys, false)
 		}
-	}).function(),
+	}).function,
 
 	obj: OBJECT,
 
@@ -208,6 +199,30 @@ export const object = {
 		// ? create an aliase for these sorts of things [length-array ensuring of certain same function's call?]; Similar (special case of) ensureProperty;
 		aliases.native.object.ensureProperties(args, [{}, {}])
 		return comparisons.valueCompare().function(...args.map(aliases.obj.keys))
+	},
+
+	gutInnerObjs(obj = {}) {
+		const gutted = {}
+		for (const y in obj) {
+			if (aliases.is.obj(obj[y])) {
+				gutted = { ...gutted, ...obj[y] }
+				continue
+			}
+			gutted[y] = obj[y]
+		}
+		return gutted
+	},
+
+	objEncircle(obj, newkey, keys = []) {
+		const encirled = { [newkey]: {} }
+		for (const y of aliases.obj.keys(obj)) {
+			if (keys.includes(y)) {
+				encirled[newkey] = obj[y]
+				continue
+			}
+			encircled[y] = obj[y]
+		}
+		return encircled
 	}
 }
 
@@ -217,7 +232,6 @@ export const array = {
 			return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 		},
 
-		// TODO: RELOOK THROUGH THESE ONES [the array methods for index-replacement procedures] especially carefully! There's probably a lot of repetition going on here...
 		replaceIndexes: function (arr, x, y, indexes = [0]) {
 			return algorithms.array.native
 				.split()
@@ -228,16 +242,11 @@ export const array = {
 
 		// * Replaces all occurences of 'x' with 'y';
 		replace: function (arr, x, y) {
-			return array.replaceIndexes(
-				arr,
-				x,
-				y,
-				algorithms.integer.generate(arr.length)
-			)
+			return array.replaceIndexes(arr, x, y, algorithms.array.generate(arr.length))
 		},
 
 		// * Replaces values within an array and returns the obtained copy...
-		replaceArr: function (array, x, y, transformation = (a) => a) {
+		replaceArr: function (array, x, y, transformation = ID) {
 			const resArray = [...array]
 			for (let i = 0; i < array.length; i++) {
 				const index = x.indexOf(array[i])
@@ -253,18 +262,20 @@ export const array = {
 		defaults: { n: 1, default: null },
 		function: function (x = this.template.default) {
 			const args = Array.from(arguments).slice(1, this.template.n + 1)
-			// ? generalize this construction somehow conviniently...
+
+			// ? generalize conviniently...
 			const defobj = {}
 			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
 			ensureProperties(args, defobj)
+
 			return repeatedApplication(
 				(v, i) =>
 					this.template.f(v, ...args.map(aliases.native.function.index(i))),
-				Math.min(...args.map((a) => a.length)),
+				number.min(args.map(aliases.native.function.index("length"))),
 				x
 			)
 		}
-	}).function(),
+	}).function,
 
 	// * "reverses" the "Array.flat()";
 	arrEncircle: function (a, from = 0, to = a.length) {
@@ -282,12 +293,11 @@ export const array = {
 		return copied
 	},
 
-	// ! rewrite as an alias for application of 'repeatedApplication' onto this thing...;
 	// ? Generalize such usages of 'repeatedApplication' with some special alias of 'multiple' (works exclusively with arrays, for example?);
 	arrEncircleMult(arr = [], coors = []) {
-		let newarr = [...arr]
-		for (const c of coors) newarr = this.arrEncircle(newarr, ...c)
-		return newarr
+		return structure.native.repeatedApplication([...arr], coors.length, (r, i) =>
+			this.arrEncircle(r, coors[i])
+		)
 	},
 
 	// ! Later, (in v1.1, when working on 'statistics', pray relocate 'countAppearences' to there...);
@@ -299,7 +309,7 @@ export const array = {
 		function: function (array = [], element = this.template.defelem) {
 			return array.filter((x) => this.template.comparison(x, element)).length
 		}
-	}).function()
+	}).function
 }
 
 // ! make heavy usage of 'strmethod' for this thing, pray...;
@@ -307,11 +317,11 @@ export const string = {
 	strmethod: aliases.wrapper({
 		in: aliases.native.string.stoa,
 		out: aliases.native.string.atos
-	}).function
+	}).function,
+	replace: {}
 }
-for (const x in array.replace) string[`s${x}`] = string.strmethod(array.replace[x])
-
-// * Replaces the first occurence of a given value within a string...
+for (const x in array.replace)
+	string.replace[`s${x}`] = string.strmethod(array.replace[x])
 string.sreplaceFirst = string.sreplaceIndexes
 
 // ? generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
@@ -321,23 +331,19 @@ string.UTF16 = (p, l = 0) =>
 		.generate(0, l, (-1) ** (l < 0))
 		.map((x) => aliases.native.string.fcc(p + x))
 
-// * 1.
-// * Replaces at 1 index;
 array.replace.replaceIndexesMult = array.multArrsRepApp({
 	n: 2,
-	f: array.replaceIndex,
+	f: array.replace.replaceIndex,
 	default: []
 }).function
-string.sreplaceIndexesMult = string.strmethod(array.replaceIndexesMult)
+string.replace.sreplaceIndexesMult = string.strmethod(array.replaceIndexesMult)
 
-// * 2.
-// * Replaces all occurences of all 'a: a in x' with 'y[x.indexOf(a)]' for each and every such 'a';
 array.replace.replaceMany = array.multArrsRepApp({
 	n: 2,
 	f: array.replace.replace,
 	default: []
 }).function
-string.sreplaceMany = string.strmethod(array.replace.replaceMany)
+string.replace.sreplaceMany = string.strmethod(array.replace.replaceMany)
 
 export const finite = TEMPLATE({
 	defaults: {
@@ -364,4 +370,4 @@ export const finite = TEMPLATE({
 			})
 			.function(f)
 	}
-}).function()
+}).function

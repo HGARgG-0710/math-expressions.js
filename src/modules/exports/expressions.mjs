@@ -17,7 +17,7 @@ export const evaluate = TEMPLATE({
 			)
 		return this.template.table[expression.operator](...expression.objects)
 	}
-}).function()
+}).function
 
 // ? Generalize within the library's context the n-objects of named properties?
 // ? Make into a template to allow for general-types defaults? [another minor general dilemma]
@@ -40,7 +40,7 @@ export const uevaluate = TEMPLATE({
 			)
 		return this.template.table.read(expression.operator)(expression.objects)
 	}
-}).function()
+}).function
 
 // * Generalization of the 'Expression':
 export const composition = function (fcall) {

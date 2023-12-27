@@ -155,7 +155,9 @@ export const general = {
 		names = [],
 		templates = [],
 		insequences = [],
-		outtransform = []
+		outtransform = [],
+		aretemplates = [],
+		ftemplates = []
 	) {
 		const newobj = {}
 		const xf = !(template instanceof Array)
@@ -164,7 +166,13 @@ export const general = {
 		for (const x in names)
 			newobj[names[x]] = native
 				.finite(xf(x))
-				.function(target[names[x]], outtransform[x], insequences[x])
+				.function(
+					(aretemplates[x] ? (f) => f.function(ftemplates[x]) : ID)(
+						target[names[x]]
+					),
+					outtransform[x],
+					insequences[x]
+				)
 		return newobj
 	},
 	counterFrom: function (_labels = [], wrapper = ID) {
@@ -191,7 +199,7 @@ export const general = {
 						icclass.class(x)[labels[x][0]](this.template[labels[x][1]])
 				return X
 			}
-		}).function()
+		}).function
 	},
 	maxkey(garr) {
 		return this.template.hasOwnProperty("maxkey")
@@ -219,18 +227,8 @@ export const defaults = {
 		parentclass: parentclass,
 		names: ["treenode"],
 		defaults: {
-			inter: function (args) {
-				aliases.native.object.ensureProperty(args, 2, this.template.check)
-				if (args[2]) {
-					const tempcopy = args[1].copied("concat", [args[0]])
-					const m = orders
-						.most({
-							comparison: this.template.predicate
-						})
-						.function(tempcopy)
-					return [m, tempcopy.delval(m)]
-				}
-				return [args[0], args[1]]
+			outer: function (trNode) {
+				return predicates.ensureHeap(trNode, this.template.predicate)
 			}
 		},
 		predicate: predicates.lesser

@@ -13,8 +13,6 @@ import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
 import { StaticThisTransform } from "../refactor.mjs"
 
-// ^ IDEA [for after v1.1.]: create a class 'Comparable', which would be set by means of the orders and (consequently), can be converted to 'InfiniteCounter'; This way, one would be able to create InfiniteCounters from '.compare' orders!
-// ! collect all the ideas related to the v1.1 and put them under one single 'todos.txt' entry;
 export const InfiniteCounter = (() => {
 	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'types.InfiniteCounter(...).class()' syntax for simplified zero-creation;
 	return CLASS({
@@ -260,7 +258,7 @@ export const GeneralArray = (() => {
 							...this.template.arguments
 						)
 					}
-				}).function()
+				}).function
 			}
 			return R
 		})(),
@@ -847,8 +845,7 @@ export const GeneralArray = (() => {
 	})
 })()
 
-// ! Refactor those heavily...; Also, consider the optimizations matter...
-// ? Question: does one want to allow the user to tweak the minimum implementation details for this one, pray?
+// ! Refactor; Consider the optimization...
 export const arrays = {
 	LastIndexArray(template = {}, garrtemplate = {}) {
 		const A = {
@@ -1799,7 +1796,7 @@ export const Pointer = TEMPLATE({
 		return { [this.template.label]: value }
 	},
 	word: "class"
-}).function()
+}).function
 
 export const InfiniteArray = CLASS({
 	defaults: {

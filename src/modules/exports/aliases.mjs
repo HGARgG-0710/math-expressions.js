@@ -5,6 +5,7 @@
 
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
+import * as predicates from "./predicates.mjs"
 import { ID } from "./../macros.mjs"
 
 export const native = {
@@ -21,7 +22,7 @@ export const native = {
 					.class(x)
 					.map(this.template.icclass)
 			}
-		}).function(),
+		}).function,
 
 		iterations: TEMPLATE({
 			defaults: { iterated: counters.arrayCounter(), defnum: 1 },
@@ -32,11 +33,10 @@ export const native = {
 					this.template.iterated[n > 0 ? "generator" : "inverse"]
 				)
 			}
-		}).function(),
+		}).function,
 
 		negind: (x, arr) => (x < 0 ? arr.length + x : x),
-		nneg: (x) => (x < 0 ? -x : x),
-		call: (x) => x()
+		nneg: (x) => (x < 0 ? -x : x)
 	},
 
 	string: {
@@ -47,7 +47,6 @@ export const native = {
 			return x.join("")
 		},
 		fcc: String.fromCharCode,
-
 		strMap: function (str, symb = ID, isStrOut = false) {
 			return (isStrOut ? (x) => x.join("") : id)(str.split("").map(symb))
 		}
@@ -100,7 +99,7 @@ export const native = {
 			return f(...arr)
 		},
 		noarrs(array = []) {
-			return array.filter(negate(aliases.is.arr))
+			return array.filter(predicates.negate(aliases.is.arr))
 		},
 		arrsonly(array = []) {
 			return array.filter(is.arr)
@@ -137,7 +136,7 @@ export const native = {
 					? (x) => this.template.out(f(...this.template.in(x)))
 					: (x) => this.template.out(f(this.template.in(x)))
 			}
-		}).function(),
+		}).function,
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
 
 		// ? Generalize this to a context (add 'this');
@@ -158,7 +157,11 @@ export const native = {
 		index: (i) => (x) => x[i],
 
 		exparr: (f) => (arr) => f(...arr),
-		rexparr: (arr) => (f) => f(...arr)
+		rexparr: (arr) => (f) => f(...arr),
+		call: (x) => x(),
+		argscall: function (...args) {
+			return this.rexparr(args)
+		}
 	},
 
 	object: {
@@ -220,7 +223,11 @@ export const bi = BigInt
 export const ustr = types.UnlimitedString
 export const genarr = types.GeneralArray
 
-export const trim =
+export const trimBeginning =
+	(n = 1) =>
+	(x) =>
+		x.slice(n)
+export const trimEnd =
 	(n = 1) =>
 	(x) =>
 		x.slice(0, x.length - n)

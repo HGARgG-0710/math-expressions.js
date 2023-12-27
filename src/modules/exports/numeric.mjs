@@ -38,7 +38,7 @@ export const polystring = TEMPLATE({
 
 		return representation
 	}
-}).function()
+}).function
 
 export const fromPolystring = TEMPLATE({
 	defaults: [
@@ -73,7 +73,7 @@ export const fromPolystring = TEMPLATE({
 		return r
 	},
 	isthis: true
-}).function()
+}).function
 
 export const sameLength = TEMPLATE({
 	defaults: [
@@ -98,7 +98,7 @@ export const sameLength = TEMPLATE({
 		return endsize
 	},
 	isthis: true
-}).function()
+}).function
 
 export const baseconvert = TEMPLATE({
 	defaults: function () {
@@ -127,7 +127,7 @@ export const baseconvert = TEMPLATE({
 			}).function(numstr)
 		)
 	}
-}).function()
+}).function
 
 export const native = {
 	// * Brings whatever is given within the given base to base 10;
@@ -148,7 +148,7 @@ export const native = {
 				)
 			)
 		}
-	}).function(),
+	}).function,
 
 	// * Brings whatever in base 10 to whatever in whatever base is given...
 	polystring: TEMPLATE({
@@ -167,7 +167,7 @@ export const native = {
 			}
 			return coefficients.map((i) => this.template.alphabet[i]).join("")
 		}
-	}).function(),
+	}).function,
 
 	// * Convert a numeric string in one base to a base string in another;
 	baseconvert: TEMPLATE({
@@ -187,5 +187,5 @@ export const native = {
 					baseto
 				)
 		}
-	}).function()
+	}).function
 }

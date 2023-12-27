@@ -92,7 +92,7 @@ export const NTreeNode = TEMPLATE({
 	},
 	word: "class",
 	isthis: true
-}).function()
+}).function
 
 // * NOTE: as the Graph allows for dynamically defined graphs (namely, the graphs with different values of 'edges', this doesn't necessarily always make sense);
 // ^ NOTE: this class also allows for finite computation of infinitely large graphs (namely, those that use the recursive objects);
@@ -298,14 +298,21 @@ export const heaps = {
 			recursive: true
 		})
 	},
-	// ! After having finished the 'ensureHeap' predicate, add it here and the other heaps...
 	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
 		let bintreeform = structure.treeForm(parentclass)
 		return EXTENSION({
 			defaults: {
 				treenodeclass: general.DEFAULT_TREENODECLASS,
 				parentclass: parentclass,
-				names: ["trees"]
+				names: ["trees"],
+				defaults: {
+					inter: function (args, _i) {
+						const heapensured = args[0].copy()
+						for (const tree of heapensured)
+							predicates.ensureHeap(tree, this.template.predicate)
+						return heapensured
+					}
+				}
 			},
 			methods: {
 				add: classes.add,
@@ -426,7 +433,7 @@ export const sort = {
 			for (const _x of pqueue) final.pushback(pqueue.pull())
 			return final
 		}
-	}).function(),
+	}).function,
 	radix: TEMPLATE({
 		defaults: [
 			function () {
@@ -455,7 +462,7 @@ export const sort = {
 			return ordered
 		},
 		isthis: true
-	}).function(),
+	}).function,
 	bucket: TEMPLATE({
 		defaults: [
 			function () {
@@ -493,7 +500,7 @@ export const sort = {
 			return array.concat(this.template).function(buckets)
 		},
 		isthis: true
-	}).function(),
+	}).function,
 	counting: TEMPLATE({
 		defaults: {
 			genarrclass: DEFAULT_GENARRCLASS
@@ -523,7 +530,7 @@ export const sort = {
 
 			return output
 		}
-	}).function(),
+	}).function,
 	quick: TEMPLATE({
 		defaults: {
 			genarrclass: DEFAULT_GENARRCLASS
@@ -579,7 +586,7 @@ export const sort = {
 					)
 				)
 		}
-	}).function(),
+	}).function,
 	insertion: TEMPLATE({
 		defaults: {
 			genarrclass: DEFAULT_GENARRCLASS
@@ -599,7 +606,7 @@ export const sort = {
 			}
 			return garr
 		}
-	}).function(),
+	}).function,
 	bubble: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -618,7 +625,7 @@ export const sort = {
 						garr.swap(i, j)
 			return garr
 		}
-	}).function(),
+	}).function,
 	selection: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -635,7 +642,7 @@ export const sort = {
 			}
 			return sorted
 		}
-	}).function(),
+	}).function,
 	merge: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -692,7 +699,7 @@ export const sort = {
 			}
 			return merge(split(array))
 		}
-	}).function()
+	}).function
 }
 
 // ? Add search algorithms: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...);
@@ -713,7 +720,7 @@ export const search = {
 				? this.template.unfound
 				: i
 		}
-	}).function(),
+	}).function,
 	exponential: TEMPLATE({
 		// ! set the 'defaults' to have the 'factor' as '.fromNumber(2)' by default;
 		defaults: {
@@ -735,7 +742,7 @@ export const search = {
 				.binary(this.template)
 				.function(sought, garr.copied("slice", [p.value, i.value]))
 		}
-	}).function(),
+	}).function,
 	interpolation: TEMPLATE({
 		defaults: {
 			defelem: undefined,
@@ -781,46 +788,45 @@ export const search = {
 				)
 			)
 		}
-	}).function(),
-	jump: structure
-		.typeConst((FORBIDDEN_) => {
-			const FORBIDDEN = FORBIDDEN_[0]
-			return TEMPLATE({
-				defaults: { defelem: undefined },
-				function: function (
-					sought = this.template.defelem,
-					garr = this.template.tenarrclass.static.empty()
+	}).function,
+	jump: structure.typeConst((FORBIDDEN_) => {
+		const FORBIDDEN = FORBIDDEN_[0]
+		return TEMPLATE({
+			defaults: { defelem: undefined },
+			function: function (
+				sought = this.template.defelem,
+				garr = this.template.tenarrclass.static.empty()
+			) {
+				const sqrtlen = this.template.tintclass.class(garr.length().get()).root()
+				let tempres = FORBIDDEN
+				for (
+					let i = this.tintclass.class();
+					!i.compare(garr.length().get());
+					i = i.add(sqrtlen)
 				) {
-					const sqrtlen = this.template.tintclass
-						.class(garr.length().get())
-						.root()
-					let tempres = FORBIDDEN
-					for (
-						let i = this.tintclass.class();
-						!i.compare(garr.length().get());
-						i = i.add(sqrtlen)
-					) {
-						const curr = garr.read(i)
-						// ! make an alias; (was requested already somewhere...);
-						if (
-							((x) =>
-								this.template.predicate(x) ||
-								this.template.comparison(x))(curr, sought)
-						) {
-							tempres = i
-							break
-						}
-					}
-					if (tempres === FORBIDDEN) return this.template.unfound
-					return search.linear(this.template)(
-						garr.copied(
-							"slice",
-							[i.difference(sqrtlen), i].map((x) => x.value)
+					const curr = garr.read(i)
+					// ! make an alias; (was requested already somewhere...);
+					if (
+						((x) =>
+							this.template.predicate(x) || this.template.comparison(x))(
+							curr,
+							sought
 						)
-					)
+					) {
+						tempres = i
+						break
+					}
 				}
-			}).function()
-		}, 1),
+				if (tempres === FORBIDDEN) return this.template.unfound
+				return search.linear(this.template)(
+					garr.copied(
+						"slice",
+						[i.difference(sqrtlen), i].map((x) => x.value)
+					)
+				)
+			}
+		}).function
+	}, 1),
 	linear: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
 		function: function (
@@ -831,7 +837,7 @@ export const search = {
 				if (this.template.comparison(garr.read(a), sought)) return a
 			return this.template.unfound
 		}
-	}).function(),
+	}).function,
 	// ? Generalize? (can be generalized to an 'n-ary' search); Consider...
 	binary: TEMPLATE({
 		defaults: {
@@ -873,7 +879,7 @@ export const search = {
 				)
 			)
 		}
-	}).function()
+	}).function
 }
 
 export const integer = {
@@ -940,7 +946,7 @@ export const integer = {
 			}
 			return factors
 		}
-	}).function(),
+	}).function,
 
 	isPrime: TEMPLATE({
 		defaults: {
@@ -951,14 +957,14 @@ export const integer = {
 				.two()
 				.compare(integer.factorOut(this.template)(x).length().get())
 		}
-	}).function(),
+	}).function,
 
 	primesBefore: TEMPLATE({
 		defaults: { icclass: general.DEFAULT_ICCLASS },
 		function: function (x = this.template.icclass.class()) {
 			return array.generate(this.template)(x).suchthat(integer.isPrime)
 		}
-	}).function(),
+	}).function,
 
 	multiples: TEMPLATE({
 		default: { includezero: false },
@@ -976,7 +982,7 @@ export const integer = {
 				)
 				.map((a) => this.template.tintclass(a.value).multiply(n))
 		}
-	}).function(),
+	}).function,
 
 	multiplesBefore: TEMPLATE({
 		defaults: {
@@ -988,7 +994,7 @@ export const integer = {
 		) {
 			return number.multiples(n, x.divide(n))
 		}
-	}).function(),
+	}).function,
 
 	commonDivisors: TEMPLATE({
 		defaults: {},
@@ -997,7 +1003,7 @@ export const integer = {
 				.common({ f: integer.factorOut, ...this.template })
 				.function(tints)
 		}
-	}).function(),
+	}).function,
 
 	commonMultiples: TEMPLATE({
 		defaults: {},
@@ -1006,14 +1012,14 @@ export const integer = {
 				.common({ f: (x) => integer.native.multiples(x, this.template.range) })
 				.function(nums)
 		}
-	}).function(),
+	}).function,
 
 	lcm: TEMPLATE({
 		defaults: {},
 		function: function (...nums) {
 			return orders.min(this.template).function(integer.commonMultiples(...nums))
 		}
-	}).function(),
+	}).function,
 
 	lcd: TEMPLATE({
 		defaults: {},
@@ -1022,7 +1028,7 @@ export const integer = {
 				.min(this.template)
 				.function(integer.commonDivisors(this.template)(...nums))
 		}
-	}).function(),
+	}).function,
 
 	areCoprime: TEMPLATE({
 		defaults: {},
@@ -1035,7 +1041,7 @@ export const integer = {
 					integer.commonDivisors(this.template).function(tints).length().get()
 				)
 		}
-	}).function(),
+	}).function,
 
 	allFactors: TEMPLATE({
 		defaults: {
@@ -1056,7 +1062,7 @@ export const integer = {
 				if (number.modulo(currFactor).equal(z)) factors.push(currFactor)
 			return factors
 		}
-	}).function(),
+	}).function,
 
 	isPerfect: TEMPLATE({
 		defaults: {
@@ -1074,7 +1080,7 @@ export const integer = {
 				)
 				.equal(number)
 		}
-	}).function(),
+	}).function,
 
 	factorial: TEMPLATE({
 		defaults: { tintclass: general.DEFAULT_TINTCLASS },
@@ -1099,7 +1105,7 @@ export const integer = {
 				.uevaluate()
 				.function(expressions.Expression("*", [], numbers))
 		}
-	}).function(),
+	}).function,
 
 	binomial: TEMPLATE({
 		defaults: {
@@ -1118,7 +1124,7 @@ export const integer = {
 				) / this.factorial(k)
 			)
 		}
-	}).function()
+	}).function
 }
 
 integer.native.commonDivisors = function (...nums) {
@@ -1132,7 +1138,7 @@ integer.native.commonMultiples = TEMPLATE({
 			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
 			.function(nums)
 	}
-}).function()
+}).function
 
 // ! fix the missing in- and out-'sequences' for the determination of the types conversion at the beginning and ending...;
 integer.native = {
@@ -1152,7 +1158,10 @@ integer.native = {
 			"factorial",
 			"binomial"
 		],
-		{ integer: true }
+		{ integer: true },
+		[],
+		[],
+		[array.native.generate(aliases.obj.keys(integer).length).map(predicates.TRUTH)]
 	)
 }
 integer.native.primesBefore = native.finite().function(integer.primesBefore)
@@ -1176,7 +1185,7 @@ export const array = {
 					}
 				return segments.map((seg) => arr.slice(...seg))
 			}
-		}).function(),
+		}).function,
 		generate: function (start, end, step = 1, precision = 1) {
 			// ! find more places for this operation's application (refactor to an alias, mayhaps?)
 			if (arguments.length === 1) {
@@ -1215,7 +1224,7 @@ export const array = {
 			}
 			return this.function(arrs[0], this.function(arrs.slice(1)))
 		}
-	}).function(),
+	}).function,
 	permutations: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -1237,7 +1246,7 @@ export const array = {
 
 			return pnext
 		}
-	}).function(),
+	}).function,
 	indexesOf: TEMPLATE({
 		defaults: [
 			function () {
@@ -1266,7 +1275,7 @@ export const array = {
 					? (inds) => inds.length().get().compare(haltAfter)
 					: aliases.TRUTH
 				let currind
-				while (currind !== leftovers.unfound && !cond(inds, this)) {
+				while (currind !== this.template.unfound && !cond(inds, this)) {
 					currind = search.linear(this.template).function(el, arr)
 					inds.pushback(currind)
 				}
@@ -1274,7 +1283,7 @@ export const array = {
 			})
 		},
 		isthis: true
-	}).function(),
+	}).function,
 	norepetitions: TEMPLATE({
 		defaults: [
 			function () {
@@ -1303,7 +1312,7 @@ export const array = {
 			)(arr)
 		},
 		isthis: true
-	}).function(),
+	}).function,
 	isSub: TEMPLATE({
 		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
 		defaults: {
@@ -1314,7 +1323,7 @@ export const array = {
 				if (!arr.any((y) => this.template.comparison(x, y))) return false
 			return true
 		}
-	}).function(),
+	}).function,
 	join: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -1329,7 +1338,7 @@ export const array = {
 				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
 			)
 		}
-	}).function(),
+	}).function,
 	generate: TEMPLATE({
 		defaults: {
 			icclass: general.DEFAULT_ICCLASS,
@@ -1351,7 +1360,7 @@ export const array = {
 				generated.pushback(wrap(i))
 			return generated
 		}
-	}).function(),
+	}).function,
 	common: TEMPLATE({
 		defaults: {
 			f: ID
@@ -1359,7 +1368,7 @@ export const array = {
 		function: function (...args) {
 			return array.intersection(this.template).function(args.map(this.template.f))
 		}
-	}).function(),
+	}).function,
 	concat: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS
@@ -1376,7 +1385,7 @@ export const array = {
 				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
 			return r
 		}
-	}).function()
+	}).function
 }
 
 array.native = {
@@ -1433,5 +1442,5 @@ export const number = {
 			}
 			return gotten
 		}
-	}).function()
+	}).function
 }

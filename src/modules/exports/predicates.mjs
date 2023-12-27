@@ -2,7 +2,7 @@
 
 import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
-import {general} from "../refactor.mjs"
+import { general } from "../refactor.mjs"
 
 // ! Extend this - refactor the library hardcorely in the sense of repeating expressions and distribute all the appropriate ones in here;
 
@@ -13,6 +13,14 @@ export const lesser = (a, b) => !greateroe(a, b)
 export const greater = (a, b) => lesser(b, a)
 
 export const next = (x) => x.next()
+export const inc =
+	(a = 1) =>
+	(x) =>
+		x + a
+export const dec =
+	(a = 1) =>
+	(x) =>
+		x - a
 
 export const allUnique = (el, _key, _arr, subset) => !subset.includes(el)
 
@@ -30,7 +38,7 @@ export const Ensurer = (_class, predicate = T, responses = {}) => {
 
 // ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
 export const negate = wrapper({
-	out: aliases.n
+	out: aliases.native.boolean.n
 }).function
 export const TRUTH = aliases.native.function.const(true)
 export const T = TRUTH

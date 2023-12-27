@@ -2,9 +2,7 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 1. Code polishing: 
 	1.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
-		1.1.0. On-top: 
-			1.1.0.1. The 'native.mjs' module (unfinished TODOs, new methods desired but yet unimplemented); 
-			1.1.0.2. The 'recursiveCounter' refactoring; 
+		1.0. Finish the 'algorithms.native.sumRepresentations'; 
 		1.1.1. Algorithm for efficient todo-finishing: 
 			Walk over all the '!', 'todo' and '?', consider and fulfill each and every case transiently; 			
 	1.2. Refactoring: 
@@ -12,10 +10,13 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		2.2.2. various recurring function-expressions (create new aliases and use those instead...); 
 		2.2.3. all of aliases; 
 		2.2.4. aliases-simplification (use of aliases within the aliases, in such a way so as for the thing to be computable); 	
-	1.3. Call the '.function...' on all the TEMPLATEs appropriately, unite the library's style on this particular issue...; 
-		1.3.1 use the '.function()' inside some (or all) of the present definitions, and keep the stuff more or less as-is, ensuring only one '.function'?
-			1.3.1.1. ISSUE: maybe, it should be only '.function', and not '.function()' after all? Because, this way, the user still has the comfortable function-notation access to the setting of the 'templates'? 
+	1.3. Call the '.function...' on all the CLASSes, EXTENSIONs and so on - all the macros that are, in essence, a wrapper of the TEMPLATE; 
 	1.4. Do all the '.this'-ing, when passing, referencing/dereferencing objects too... [consider this matter separately...]; 
+	1.5. STYLE: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
+	1.6. Create short-names, so as not to have that much of the '.'; 
+
+	NOTE: a point in time (on a task list) must be decided after the coming of which, one moves on to the testing. 
+		Decision (regarding the point of time in question) - after 1.3, 1.4 and most (if not all) of 1.1.1, 1.5 and 1.6 would get completed...
 	
 2. Testing; 
 	The library's approaching the v1.0 release; 

@@ -1,20 +1,21 @@
-import { GENERATOR, ID } from "./../macros.mjs"
+import { GENERATOR } from "./../macros.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
 import { general } from "../refactor.mjs"
 import * as predicates from "./predicates.mjs"
+import * as structure from "./structure.mjs"
 
 export const number = GENERATOR({
 	defaults: { start: 0 },
 	generator(x = this.template.start) {
-		return this.template.forward(Number(x))
+		return this.template.forward(aliases.num(x))
 	},
 	inverse(x = this.template.start) {
-		return this.template.backward(Number(x))
+		return this.template.backward(aliases.num(x))
 	},
-	range: negate(isNaN)
+	range: negate(aliases.is.nan)
 })
 export function addnumber(template = {}, ntemplate = {}) {
 	return number({
@@ -84,6 +85,7 @@ export const objCounter = GENERATOR({
 	}
 })
 
+// ? Generalize with the usage of 'forms'? [the present implementation uses the 'DEFAULT_FORM...'];
 // * A maximally efficient structurally counter based on array recursion and finite orders;
 export const recursiveCounter = function (template = {}) {
 	const returned = {
@@ -94,18 +96,27 @@ export const recursiveCounter = function (template = {}) {
 			...template
 		},
 		range(x) {
-			return (
-				aliases.is.arr(x) &&
-				!!x.length &&
-				x.every(
-					(y) => this.template.type(y) || (aliases.is.arr(x) && this.range(y))
+			return aliases.native.function.binary.dand(
+				aliases.is.arr(x),
+				!!x.length,
+				x.every((y) =>
+					aliases.native.binary.dor(
+						...[
+							this.template.type,
+							(y) =>
+								aliases.native.binary.dand(
+									aliases.is.arr(x),
+									this.range(y)
+								)
+						].map(aliases.native.function.argscall(y))
+					)
 				)
 			)
 		}
 	}
 
 	const findDeepUnfilled = (t = true) => {
-		return multidim.findDeepUnfilled({
+		return structure.findDeepUnfilled({
 			soughtProp: (x) =>
 				returned.template.type(x) &&
 				(t ? aliases.id : aliases.n)(returned.template.sign(x)),
@@ -113,10 +124,10 @@ export const recursiveCounter = function (template = {}) {
 			comparison: returned.template.comparison
 		}).function
 	}
-	const findDeepUnfilledArr = multidim.findDeepUnfilledArr({
+	const findDeepUnfilledArr = structure.findDeepUnfilledArr({
 		bound: returned.template.maxarrlen
 	})
-	const findDeepLast = multidim.findDeepLast({ soughtProp: returned.template.type })
+	const findDeepLast = structure.findDeepLast({ soughtProp: returned.template.type })
 
 	const keys = ["inverse", "generator"]
 	keys.map(
@@ -178,50 +189,52 @@ export const recursiveCounter = function (template = {}) {
 				)
 					return x[0]
 
-				// TODO [general]: use the 'recursiveSetting' where appropriate; Create an infinite version for it as well...
+				const rindexation = structure.recursiveIndexation().function
+
 				let lastIndexes = findDeepLast(a)
 				const finind = lastIndexes.final()
 				const ffinind = finind.previous()
-				// * Note: the one underneath here is an old note;
-				// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-				let ppointer = recursiveIndexation()(
+
+				// ! do the 'ppointer' stuff after having made sure that the 'lastIndexes.length().get().compare(lastNumIndexes.two())'
+				let ppointer = rindexation(
 					x,
 					lastIndexes.slice(undefined, ffinind.previous())
 				)
-				let pointer = recursiveIndexation()(
-					x,
-					lastIndexes.slice(undefined, ffinind)
-				)
-				const llindex = lastIndexes.read(ffinind)
-				const lindex = lastIndexes.read(finind)
+				let pointer = rindexation(x, lastIndexes.slice(undefined, ffinind))
 
+				const lindex = lastIndexes.read(finind)
 				if (thisobject.template.sign(pointer[lindex])) {
 					pointer[lindex] = thisobject.template[sign ? "forward" : "backward"](
 						pointer[lindex]
 					)
 					return x
 				}
+				const llindex = lastIndexes.read(ffinind)
 
-				ppointer[llindex] = aliases._remove(ppointer[llindex], lindex)
+				ppointer[llindex] = aliases.native.array._remove(
+					ppointer[llindex],
+					lindex
+				)
 				pointer = ppointer[llindex]
 
 				let index = lindex
 				let hlindex = llindex
 
-				// TODO [local refactoring]: the pre-while-loop piece of code is nigh exactly the same as that within the loop; Pray re-organize to make this stuff shorter and more concise... [for instance, separate declarations from definitions and on and on...]
 				while (!pointer.length) {
-					// TODO: now, this is a RECURSIVE step, so, for instance, one accomplishes this same one procedure not just for 'pointer', but for the 'ppointer' and all the other ones such as well...
-					// * Consider carefully how to do this precisely...
-					// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
-					index = index.previous()
-					ppointer = recursiveIndexation()(
+					ppointer = rindexation(
 						x,
-						lastIndexes.slice(undefined, (hlindex = hlindex.previous()))
+						lastIndexes.copied("slice", [
+							undefined,
+							(hlindex = hlindex.previous())
+						])
 					)
-					ppointer[hlindex] = aliases._remove(ppointer[hlindex], index)
-					pointer = recursiveIndexation()(
+					ppointer[hlindex] = aliases.native.array._remove(
+						ppointer[hlindex],
+						(index = index.previous())
+					)
+					pointer = rindexation(
 						x,
-						lastIndexes.slice(undefined, index)
+						lastIndexes.copied("slice", [undefined, index])
 					)
 				}
 
@@ -245,7 +258,7 @@ export const recursiveCounter = function (template = {}) {
 		return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(r)
 	}
 
-	return GENERATOR(returned)
+	return GENERATOR(returned).function
 }
 
 // * That's an example of an infinite counter;
@@ -258,15 +271,18 @@ export function numberCounter(template = {}) {
 		lower: 0,
 		rupper: -variables.MAX_INT.get,
 		sign: (x) => x > 0,
-		// TODO: generalize this to an 'alias';
 		globalsign: function (x) {
-			return !!methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
+			return x.any((a) =>
+				aliases.native.binary.dor(
+					...[this.sign, this.globalsign].map(
+						aliases.native.function.argscall(a)
+					)
+				)
+			)
 		},
-		// ? Should this not be replaced with !isNaN(x)? [this'd permit stuff like '[true]' to be recieved by the '.range()'; ]
-		// * Also, create an alias for that thing pray...
-		type: (x) => typeof x === "number" || x instanceof Number,
-		forward: (x) => x + 1,
-		backward: (x) => x - 1,
+		type: predicates.negate(aliases.is.nan),
+		forward: predicates.inc(),
+		backward: predicates.dec(),
 		...template
 	})
 }
@@ -278,10 +294,16 @@ export function orderCounter(template = {}) {
 		upper: template.order[template.strorder.length - 1],
 		lower: template.order[Math.floor(template.order.length / 2)],
 		rupper: template.order[0],
-		forward: (x) => template.order[template.order.indexOf(x) + 1],
-		backward: (x) => template.order[template.order.indexOf(x) - 1],
+		forward: (x) => template.order[predicates.inc(template.order.indexOf(x))],
+		backward: (x) => template.order[predicates.dec(template.order.indexOf(x))],
 		globalsign: function (x) {
-			return !!methods.max(x.map((a) => this.sign(a) || this.globalsign(a)))
+			return x.any((a) =>
+				aliases.native.binary.dor(
+					...[this.sign, this.globalsign].map(
+						aliases.native.function.argscall(a)
+					)
+				)
+			)
 		},
 		sign: (x) => strorder.indexOf(x) > Math.floor(template.order.length / 2),
 		...template
@@ -289,15 +311,13 @@ export function orderCounter(template = {}) {
 }
 
 export function stringCounter(template = {}) {
-	// ? Check if nodejs can work with this large a number for array-generation?
 	return orderCounter({
-		type: (x) => typeof x === "string" || x instanceof String,
-		order: number.native.generate(variables.MAX_INT).map((x) => nbasereverse(x)),
+		type: aliases.is.str,
+		order: native.string.UTF16(48, 127),
 		...template
 	})
 }
 
-// ! Get rid of the 'multitudes' - replace them with 'forms' from 'structure.mjs';
 export const circularCounter = (() => {
 	const final = {
 		defaults: {
@@ -322,7 +342,7 @@ export const circularCounter = (() => {
 						]
 				)
 			if (vals.length == 1) return vals[0]
-			return this.template.multitude.new(vals)
+			return this.template.form.new(vals)
 		}
 	const arr = ["generator", "range"]
 	for (const i of [0, 1]) final[arr[i]] = generalized(arr[i], (-1) ** i)
@@ -332,11 +352,7 @@ export const circularCounter = (() => {
 
 export function arrCircCounter(template = {}) {
 	return circularCounter.function({
-		multitude: {
-			new: ID,
-			is: (x) => x instanceof Array,
-			map: (x, f) => x.map(f)
-		},
+		form: general.DEFAULT_FORM,
 		...template
 	})
 }
@@ -373,7 +389,7 @@ export const finiteCounter = (() => {
 })()
 
 // * Constructs a counter from an InfiniteClass;
-export const fromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
+export const cfromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
 
 // * Constructs a counter from a TrueInteger class (additive);
 export const tintAdditive = general.counterFrom(

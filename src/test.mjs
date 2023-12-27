@@ -23,6 +23,6 @@ export const generalCall = TEMPLATE({
 		}
 		return r
 	}
-}).function()
+}).function
 
 generalCall.function("../test/")
