@@ -10,7 +10,7 @@ export const print = TEMPLATE({
 		return this.template.pfun(this.template.interpret(x))
 	},
 	defaults: { pfun: console.log, interpret: ID, defaultS: "" }
-})
+}).function()
 
 // todo: create some special cases for this stuff pray...
 

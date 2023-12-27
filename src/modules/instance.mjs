@@ -16,6 +16,9 @@ import * as structure from "./exports/structure.mjs"
 import * as types from "./exports/types.mjs"
 import * as variables from "./exports/variables.mjs"
 
+import * as macros from "./macros.mjs"
+import * as refactor from "./refactor.mjs"
+
 // * Module instance Export
 export const instance = (transformation = ID) =>
 	transformation({
@@ -31,5 +34,7 @@ export const instance = (transformation = ID) =>
 		printing: NOMODULE(printing),
 		structure: NOMODULE(structure),
 		types: NOMODULE(types),
-		variables: NOMODULE(variables)
+		variables: NOMODULE(variables),
+		macros: NOMODULE(macros),
+		refactor: NOMODULE(refactor)
 	})

@@ -201,7 +201,7 @@ export const GeneralArray = (() => {
 			unfound: undefined,
 			treatfinite: false,
 			fast: false,
-			default: aliases._const(undefined),
+			default: aliases.native.function.const(undefined),
 			icclass: general.DEFAULT_ICCLASS,
 			comparison: comparisons.refCompare
 		},
@@ -260,7 +260,7 @@ export const GeneralArray = (() => {
 							...this.template.arguments
 						)
 					}
-				})
+				}).function()
 			}
 			return R
 		})(),
@@ -289,7 +289,7 @@ export const GeneralArray = (() => {
 							after: ID,
 							...template
 						},
-						object: _const(this),
+						object: aliases.native.function.const(this),
 						restart: function () {
 							this.counter = this.template.icclass.class()
 						},
@@ -305,15 +305,19 @@ export const GeneralArray = (() => {
 						},
 						_full(
 							each,
-							iter = _const(this.template.indexiter),
-							end = _const(this.template.end),
+							iter = aliases.native.function.const(this.template.indexiter),
+							end = aliases.native.function.const(this.template.end),
 							begin = this.template.begin,
 							after = this.template.after
 						) {
 							const index = this.object().this.this.currindex
 							begin(this)
 							let r = undefined
-							let is = this.yield(_const(null), end(), false)
+							let is = this.yield(
+								aliases.native.function.const(null),
+								end(),
+								false
+							)
 							while (!is) {
 								r = each(this, r)
 								is = this.yield(iter(), end())
@@ -329,8 +333,8 @@ export const GeneralArray = (() => {
 						// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 						full(
 							each = this.template.each,
-							iter = _const(this.template.indexiter),
-							end = _const(this.template.end),
+							iter = aliases.native.function.const(this.template.indexiter),
+							end = aliases.native.function.const(this.template.end),
 							begin = this.template.begin,
 							after = this.template.after
 						) {
@@ -564,7 +568,9 @@ export const GeneralArray = (() => {
 							arguments: []
 						}).function,
 						undefined,
-						_const((t) => end.compare(t.object().currindex)),
+						aliases.native.function.const((t) =>
+							end.compare(t.object().currindex)
+						),
 						(t) => {
 							t.object().begin()
 							t.object().go(begin)
@@ -632,7 +638,7 @@ export const GeneralArray = (() => {
 								t.object().currelem().get()
 							)
 						},
-						_const((x) => {
+						aliases.native.functionconst((x) => {
 							x.object().next()
 							this.next()
 						}),
@@ -1031,7 +1037,7 @@ export const arrays = {
 	TypedArray: CLASS({
 		defaults: {
 			empty: [],
-			typefunction: aliases._const(true)
+			typefunction: aliases.native.function.const(true)
 		},
 		function: function (array = C.template.empty) {
 			const X = this
@@ -1060,7 +1066,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			parentclass: parentclass,
 			defaults: {
 				constructor: number.native.generate(2).map(
-					aliases._const(function () {
+					aliases.native.function.const(function () {
 						return this.template.empty
 					})
 				),
@@ -1167,7 +1173,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			basestr: " "
 		},
 		properties: {
-			currindex: aliases._const(0)
+			currindex: aliases.native.function.const(0)
 		},
 		methods: {
 			split(useparator = "") {
@@ -1318,7 +1324,9 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			write(index, value) {
 				general.fix(
 					[this.this.this.genarr, this.this.this],
-					algorithms.array.native.generate(2).map(aliases._const("currindex")),
+					algorithms.array.native
+						.generate(2)
+						.map(aliases.native.function.const("currindex")),
 					() => {
 						this.go(index)
 						this.currelem().set(value)
@@ -1410,7 +1418,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			},
 			join(
 				separator,
-				frequency = aliases._const(
+				frequency = aliases.native.function.const(
 					this.this.this.this.class.template.parentclass.template.icclass.next()
 				),
 				order = false
@@ -1791,7 +1799,7 @@ export const Pointer = TEMPLATE({
 		return { [this.template.label]: value }
 	},
 	word: "class"
-})
+}).function()
 
 export const InfiniteArray = CLASS({
 	defaults: {
@@ -1861,7 +1869,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			parentclass: parentclass,
 			ustrclass: general.DEFAULT_USTRCLASS,
 			names: ["infarr"],
-			deff: aliases._const(true),
+			deff: predicates.TRUTH,
 			defaults: {
 				inter: function (f = this.template.deff) {
 					return (i) => aliases.str(f(i))
@@ -2128,9 +2136,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			order() {
-				return structure
-					.dim({ form: loctreeform })
-					.function(i)
+				return structure.dim({ form: loctreeform }).function(i)
 			}
 		},
 		static: {
@@ -2151,7 +2157,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			names: ["genarr"],
 			defaults: {
 				inter: function (genarr = this.template.genarrclass.static.empty()) {
-					return [genarr.copied("suchthat", [predicates.allUnique])]
+					return [predicates.ensureSet(genarr)]
 				}
 			}
 		},
@@ -2163,7 +2169,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				if (!this.includes(el)) this.this.this.genarr.pushback(el)
 				return this
 			},
-			delete(el) {
+			delval(el) {
 				return this.this.this.genarr.delval(el)
 			},
 			copy(
@@ -2177,7 +2183,43 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.genarr.copy(f, isclass, template)
 				)
 			},
-			copied: classes.copied
+			copied: classes.copied,
+			// ! These two should be generalized and refactored...;
+			union(uset = this.this.this.this.class.static.empty()) {
+				return this.this.this.this.class.class(
+					this.this.this.genarr.copied("concat", [uset.genarr])
+				)
+			},
+			intersection(uset = this.this.this.this.class.static.empty()) {
+				return this.this.this.this.class.class(
+					this.this.this.genarr.copied("intersection", [uset.genarr])
+				)
+			},
+			complement(uset = this.this.this.this.class.static.empty()) {
+				return this.suchthat((x) => !uset.ni(x))
+			},
+			subsets(fix = false) {
+				if (fix) this.fix()
+				const subs = this.this.this.this.class.template.parentclass.static.empty()
+				for (const i of this.keys()) {
+					const c = this.copied("delete", [i])
+					subs.pushback(c)
+					subs.concat(c.subsets().genarr)
+				}
+				return this.this.this.this.class.class(subs)
+			},
+			// * manually 'fixes' a potentially 'broken' set - allows usage of sets as arrays in algorithms, then returning them to their desired state (and also - explicit manipulation of orders on sets);
+			fix() {
+				this.this.this.genarr = this.this.this.this.class.class(
+					this.this.this.genarr
+				)
+				return this
+			}
+		},
+		static: {
+			empty() {
+				return this.this.class()
+			}
 		},
 		recursive: true,
 		// ? Consider whether this remains empty, or some things get to be added here after all...

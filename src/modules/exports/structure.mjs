@@ -9,6 +9,7 @@ import * as types from "./types.mjs"
 import * as comparisons from "./comparisons.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
+import * as predicates from "./predicates.mjs"
 
 export const form = (
 	_new,
@@ -81,7 +82,7 @@ export const structure = TEMPLATE({
 			}
 		}
 	}
-})
+}).function()
 
 // * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'comparisons.refCompare' and the out-of-scope object constant;
 export function typeConst(f = ID, n = 1) {
@@ -184,7 +185,7 @@ export const countrecursive = TEMPLATE({
 					: this.template.icclass.zero()
 			)
 	}
-})
+}).function()
 
 // Counts all the array-elements within a multi-dimensional array;
 export const arrElems = function (template = {}) {
@@ -228,7 +229,7 @@ export const dim = TEMPLATE({
 				)
 		return this.template.icclass.class()
 	}
-})
+}).function()
 
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
 export const generalSearch = TEMPLATE({
@@ -236,7 +237,7 @@ export const generalSearch = TEMPLATE({
 		self: false,
 		reversed: false,
 		genarrclass: general.DEFAULT_GENARRCLASS,
-		soughtProp: aliases._const(true),
+		soughtProp: predicates.TRUTH,
 		form: general.DEFAULT_FORM
 	},
 	function: function (
@@ -282,7 +283,7 @@ export const generalSearch = TEMPLATE({
 		}
 		return false
 	}
-}).function
+}).function()
 
 // ? Consider this '.comparison' business (not quite sure one likes it, the '.compare' ensures that the thing works on all forms, this doesn't...)
 export const findDeepUnfilled = TEMPLATE({
@@ -332,20 +333,39 @@ export const findDeepLast = TEMPLATE({
 	}
 }).function()
 
-export const recursiveIndexationInfFields = TEMPLATE({
+export const recursiveIndexation = TEMPLATE({
 	function: function (object, fields = this.template.genarrclass.static.empty()) {
 		return repeatedApplication({
 			icclass: fields.this.class.template.icclass,
 			...this.template
 		})(
 			(x, i) => {
-				return this.form.index(x).read(fields.read(i))
+				return this.form.read(x, fields.read(i))
 			},
 			fields.length().get(),
 			object
 		)
 	}
-})
+}).function()
+
+export const recursiveSetting = TEMPLATE({
+	defaults: {
+		form: general.DEFAULT_FORM,
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: function (
+		object = this.tepmlate.form.new(),
+		fields = this.template.genarrclass.static.empty()
+	) {
+		if (!fields.isEmpty()) {
+			const indexed = recursiveIndexation(this.template).function(
+				fields.copied("slice", [fields.init(), fields.finish().previous()])
+			)
+			this.template.form.write(indexed, fields.read(fiends.finish()))
+		}
+		return object
+	}
+}).function()
 
 export const repeatedApplication = TEMPLATE({
 	defaults: { iter: (x) => x.next() },
@@ -361,7 +381,7 @@ export const repeatedApplication = TEMPLATE({
 			r = f(r, i.difference(offset))
 		return r
 	}
-})
+}).function()
 
 // * This can create infinite loops...
 export const repeatedApplicationWhilst = TEMPLATE({
@@ -371,21 +391,15 @@ export const repeatedApplicationWhilst = TEMPLATE({
 		while (this.template.property()) curr = f(curr)
 		return curr
 	}
-})
+}).function()
 
-export const Native = {
-	// ! make the infinite version...
-	recursiveSetting: function (object = {}, fields = [], value = null) {
-		return (recursiveIndexation(object, fields.slice(0, fields.length - 1))[
-			fields[fields.length - 1]
-		] = value)
-	},
-
-	// ? Considered for deletion;
-	// * That's only useful for finite methods refactoring; [Consider if there are any in the library, if not - think whether wish to keep...];
+// ? Does one really want a whole subobject just for this one method?
+const Native = {
 	repeatedApplication(initial, times, f, offset = 0, iter = (x) => x + 1) {
 		let r = initial
 		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
 		return r
 	}
 }
+
+export { Native as native }

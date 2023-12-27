@@ -4,10 +4,9 @@ import * as aliases from "./aliases.mjs"
 import * as native from "./native.mjs"
 import { general } from "./../refactor.mjs"
 
-// ? More methods?
-// ? Add aliases for those commonly used binary-operator functions?
+// ? More methods? [later, maybe...]
 export const deftable = RECURSIVE_VARIABLE({
-	"+": general.recursiveOperation("+", (a, b) => a + b),
+	"+": general.recursiveOperation("+", aliases.native.binary.add),
 	"-": function (...args) {
 		return this.get["+"](
 			...(args.length ? [args[0]].concat(args.slice(1).map((x) => -x)) : [])
@@ -16,18 +15,17 @@ export const deftable = RECURSIVE_VARIABLE({
 	"/": function (...args) {
 		return args.length >= 2 ? args[0] / this.get["*"](...args.slice(1)) : args[0]
 	},
-	"*": general.recursiveOperation("*", (a, b) => a * b),
-	"**": general.recursiveOperation("**", (a, b) => a ** b),
-	"^": general.recursiveOperation("^", (a, b) => a ^ b),
-	">>": general.recursiveOperation(">>", (a, b) => a >> b),
-	"<<": general.recursiveOperation("<<", (a, b) => a << b),
-	"&": general.recursiveOperation("&", (a, b) => a & b),
-	"|": general.recursiveOperation("|", (a, b) => a | b),
-	"%": general.recursiveOperation("%", (a, b) => a % b),
-	"&&": general.recursiveOperation("&&", (a, b) => a && b),
-	"||": general.recursiveOperation("||", (a, b) => a || b)
+	"*": general.recursiveOperation("*", aliases.native.binary.mult),
+	"**": general.recursiveOperation("**", aliases.native.binary.power),
+	"^": general.recursiveOperation("^", aliases.native.binary.xor),
+	">>": general.recursiveOperation(">>", aliases.native.binary.rshift),
+	"<<": general.recursiveOperation("<<", aliases.native.binary.lshift),
+	"&": general.recursiveOperation("&", aliases.native.binary.and),
+	"|": general.recursiveOperation("|", aliases.native.binary.or),
+	"%": general.recursiveOperation("%", aliases.native.binary.modulo),
+	"&&": general.recursiveOperation("&&", aliases.native.binary.dand),
+	"||": general.recursiveOperation("||", aliass.native.binary.dor)
 })
-// ? Bitwise operators? Consider those [for this - create a 'BinaryArray' class implementation (or its generalization - an NAryArray), and all the corresponding methods-algorithms implementations];
 export const udeftable = RECURSIVE_VARIABLE({
 	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
 	"-": function (...args) {

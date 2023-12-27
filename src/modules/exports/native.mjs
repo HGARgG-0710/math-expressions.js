@@ -30,7 +30,7 @@ export const copy = {
 				objectFlat: (a) => ({ ...a })
 			}
 		}
-	}),
+	}).function(),
 
 	// ? find the definition for the general _switch() from a different library of self's, place in this one, then use here...
 	copyFunction: (() => {
@@ -47,7 +47,7 @@ export const copy = {
 					if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
 				return a
 			}
-		})
+		}).function()
 	})()
 }
 
@@ -86,7 +86,7 @@ export const number = {
 			})
 			return affecteds
 		}
-	}),
+	}).function(),
 
 	// TODO: generalize [put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
@@ -108,7 +108,7 @@ export const number = {
 			}
 			return Number(number.toFixed(afterDot))
 		}
-	}),
+	}).function(),
 	ceil(x = 1) {
 		return this.floor(x) + 1
 	},
@@ -160,7 +160,7 @@ export const object = {
 			const objorig = umclass(obj, treatUniversal)
 			return umclass(objorig.values, objorig.keys, false)
 		}
-	}),
+	}).function(),
 
 	obj: OBJECT,
 
@@ -264,7 +264,7 @@ export const array = {
 				x
 			)
 		}
-	}),
+	}).function(),
 
 	// * "reverses" the "Array.flat()";
 	arrEncircle: function (a, from = 0, to = a.length) {
@@ -299,7 +299,7 @@ export const array = {
 		function: function (array = [], element = this.template.defelem) {
 			return array.filter((x) => this.template.comparison(x, element)).length
 		}
-	})
+	}).function()
 }
 
 // ! make heavy usage of 'strmethod' for this thing, pray...;
@@ -364,4 +364,4 @@ export const finite = TEMPLATE({
 			})
 			.function(f)
 	}
-})
+}).function()

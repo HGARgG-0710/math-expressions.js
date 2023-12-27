@@ -4,6 +4,7 @@ import * as variables from "./variables.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
 import { general } from "../refactor.mjs"
+import * as predicates from "./predicates.mjs"
 
 export const number = GENERATOR({
 	defaults: { start: 0 },
@@ -89,7 +90,7 @@ export const recursiveCounter = function (template = {}) {
 		defaults: {
 			comparison: comparisons.valueCompare,
 			maxarrlen: variables.MAX_ARRAY_LENGTH.get,
-			type: aliases._const(true),
+			type: predicates.TRUTH,
 			...template
 		},
 		range(x) {
@@ -135,7 +136,7 @@ export const recursiveCounter = function (template = {}) {
 					indexes = findDeepUnfilledArr(x)
 					if (!indexes) return [x]
 
-					result = recursiveIndexationInfFields()(result, indexes)
+					result = recursiveIndexation()(result, indexes)
 
 					// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
 					// * Including the infinite versions of them...
@@ -155,7 +156,7 @@ export const recursiveCounter = function (template = {}) {
 					return x
 				}
 
-				result = recursiveIndexationInfFields()(
+				result = recursiveIndexation()(
 					result,
 					indexes.slice(undefined, indexes.finish().previous())
 				)
@@ -183,11 +184,11 @@ export const recursiveCounter = function (template = {}) {
 				const ffinind = finind.previous()
 				// * Note: the one underneath here is an old note;
 				// ! do the 'ppointer' stuff after having made sure that the 'lastNumIndexes.length().compare(lastNumIndexes.init().next().next())'
-				let ppointer = recursiveIndexationInfFields()(
+				let ppointer = recursiveIndexation()(
 					x,
 					lastIndexes.slice(undefined, ffinind.previous())
 				)
-				let pointer = recursiveIndexationInfFields()(
+				let pointer = recursiveIndexation()(
 					x,
 					lastIndexes.slice(undefined, ffinind)
 				)
@@ -213,12 +214,12 @@ export const recursiveCounter = function (template = {}) {
 					// * Consider carefully how to do this precisely...
 					// ? Some of these things do tend to re-appear quite some number of times here... Generalize?
 					index = index.previous()
-					ppointer = recursiveIndexationInfFields()(
+					ppointer = recursiveIndexation()(
 						x,
 						lastIndexes.slice(undefined, (hlindex = hlindex.previous()))
 					)
 					ppointer[hlindex] = aliases._remove(ppointer[hlindex], index)
-					pointer = recursiveIndexationInfFields()(
+					pointer = recursiveIndexation()(
 						x,
 						lastIndexes.slice(undefined, index)
 					)

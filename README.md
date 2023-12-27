@@ -69,7 +69,6 @@ A brief repository organization guide:
         -   instance.mjs - module with the 'instance' function, providing means of convinient import/manipulation of the library
         -   macros.mjs - module which provides exported macros (and which are also extensively used by the rest of the package's code)
         -   refactor.mjs - module, which was originally made for refactoring purposes
-        -   transforms.mjs - module containing some transforms, that can be used with the 'instance' function's structure, so as to ease the user's experience in its structure manipulation
     -   test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
 -   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library, there is an individual test script (the examples.mjs)
 -   README.md - this file

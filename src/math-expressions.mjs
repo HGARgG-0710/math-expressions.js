@@ -6,7 +6,6 @@
 export * from "./modules/macros.mjs"
 export * from "./modules/instance.mjs"
 export * from "./modules/refactor.mjs"
-export * from "./modules/transforms.mjs"
 export * from "./modules/exports.mjs"
 
 // TODO [for versions >=1.1], pray create a 'returnless' (continuation-style-tailpipe-infinite-stack) version of the 'instance' function;

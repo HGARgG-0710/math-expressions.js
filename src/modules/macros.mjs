@@ -3,6 +3,7 @@
 import * as native from "./exports/native.mjs"
 import * as structure from "./exports/structure.mjs"
 import * as aliases from "./exports/aliases.mjs"
+import * as structure from "./exports/structure.mjs"
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
 // ? In particular - later create a General versions of macros (using unlimited types...);
@@ -51,8 +52,6 @@ export const READONLY = (x) =>
 	})
 
 // * Allows to define templated classes and functions more non-conventionally;
-// ! use actively across the entire library...
-// TODO: optimize the macros; [re-implement them more desireably...];
 export const TEMPLATE = function (template = {}) {
 	return {
 		template: {
@@ -90,8 +89,11 @@ export const TEMPLATE = function (template = {}) {
 				...K(this.template.defaults),
 				...template
 			}
+			// ! FIX THIS [the present 'isthis' function do __NOT__ adhere to this requirement of possessing a 'this'-wrapper...] - simply use the 'aliases.native.function.const' on it...;
 			_class[this.template.word] = (
-				this.template.isthis ? (x) => x(this.template.this) : ID
+				this.template.isthis
+					? (x) => x(this.template.this ? _class : this.template.this)
+					: ID
 			)(this.template.function).bind(_class)
 			for (const x in this.template.rest) _class[x] = { ...this.template.rest[x] }
 			return this.template.transform(_class, template)
@@ -120,22 +122,23 @@ export const INHERIT = function (x, X) {
 	}
 }
 
+// ? Add the general version? [See if want to delete this one or not...]
 export const HIERARCHY = function (hierarr = []) {
-	// ? rewrite using the repeatedApplication?
-	// * Add the infinite types version [as a macro - this'll do, for now...];
-	let final = TEMPLATE(hierarr[hierarr.length - i])
-	for (let i = 1; i <= hierarr.length; i++)
-		final = INHERIT(hierarr[hierarr.length - i], final)
-	return final
+	return structure.native.repeatedApplication(
+		TEMPLATE(hierarr[hierarr.length - 1]),
+		hierarr.length - 1,
+		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
+		-2
+	)
 }
 
-// ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the issue is somewhat different:
+// ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the dilemma is somewhat different:
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
 // 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
 // ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
-// ! ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
+// ? ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
 export const EXTENSION = (template = {}) => {
-	// ! refactor this repeating 'ensureProperties';
+	// ? refactor this repeating 'ensureProperties';
 	ensureProperties(template, {
 		word: "class",
 		recursive: false,
@@ -331,7 +334,7 @@ export const CLASS = (ptemplate = {}) => {
 export const NOREST = function (labels = [], btemplate = {}) {
 	return function (template = {}) {
 		const X = { ...btemplate }
-		// ! refactor!
+		// ! refactor! [make a method for array disjunction...];
 		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
 		X.rest = {}
 		// ! refactor!

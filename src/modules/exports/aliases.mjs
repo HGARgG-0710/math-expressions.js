@@ -5,7 +5,6 @@
 
 import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
-import * as Native from "./native.mjs"
 import { ID } from "./../macros.mjs"
 
 export const native = {
@@ -22,7 +21,7 @@ export const native = {
 					.class(x)
 					.map(this.template.icclass)
 			}
-		}),
+		}).function(),
 
 		iterations: TEMPLATE({
 			defaults: { iterated: counters.arrayCounter(), defnum: 1 },
@@ -33,7 +32,7 @@ export const native = {
 					this.template.iterated[n > 0 ? "generator" : "inverse"]
 				)
 			}
-		}),
+		}).function(),
 
 		negind: (x, arr) => (x < 0 ? arr.length + x : x),
 		nneg: (x) => (x < 0 ? -x : x),
@@ -118,7 +117,7 @@ export const native = {
 	},
 
 	function: {
-		_const: (c) => () => c,
+		const: (c) => () => c,
 		void: () => {},
 		bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
 		// TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
@@ -127,18 +126,18 @@ export const native = {
 		},
 		// ! Use this one extensively...
 		wrapper: TEMPLATE({
-			function: function (f = this.template.deff) {
-				return this.template.inarr
-					? (x) => this.template.out(f(...this.template.in(x)))
-					: (x) => this.template.out(f(this.template.in(x)))
-			},
 			defaults: {
 				inarr: false,
 				in: id,
 				out: id,
 				deff: id
+			},
+			function: function (f = this.template.deff) {
+				return this.template.inarr
+					? (x) => this.template.out(f(...this.template.in(x)))
+					: (x) => this.template.out(f(this.template.in(x)))
 			}
-		}),
+		}).function(),
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
 
 		// ? Generalize this to a context (add 'this');
@@ -170,7 +169,7 @@ export const native = {
 		ensureProperties: function (object, defaultobj) {
 			for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
 		},
-		// ? should this be in the 'object' or in 'function'? 
+		// ? should this be in the 'object' or in 'function'?
 		property:
 			(p) =>
 			(x) =>
@@ -184,6 +183,22 @@ export const native = {
 		t: true,
 		f: false,
 		btic: (x, _class) => _class.static[x ? "one" : "zero"]()
+	},
+
+	binary: {
+		add: (a, b) => a + b,
+		sub: (a, b) => a - b,
+		mult: (a, b) => a * b,
+		div: (a, b) => a / b,
+		power: (a, b) => a ** b,
+		xor: (a, b) => a ^ b,
+		rshift: (a, b) => a >> b,
+		lshift: (a, b) => a << b,
+		and: (a, b) => a & b,
+		or: (a, b) => a | b,
+		modulo: (a, b) => a % b,
+		dand: (a, b) => a && b,
+		dor: (a, b) => a || b
 	}
 }
 
@@ -226,6 +241,7 @@ export const is = {
 	class: (cl) => cl.is
 }
 
+// ! use the 'composition' and 'wrapper' especially much with the 'aliases' to obtain new ones...;
 export const cdieach = (x, i) => [x[i]]
-
 export const hasFunction = (x, m) => x.hasOwnProperty(m) && typeof x[m] === "function"
+export const inarr = (x) => [x]

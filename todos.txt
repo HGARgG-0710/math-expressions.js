@@ -67,13 +67,16 @@ It gets changed actively.
 
 11. Things to add to the library [for the later versions]: 
 
-	11.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and skinny to be added. 
+	11.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and "skinny" to be added. 
 		Even though that is (historically), is also an origin of the library, it must be first properly revised and (especially) finished - new methods, abstractions - things;
+		New things to add to it (besides the already present): 
+			1. regression analysis tools implementation; 
 	11.2. Number sequences; 
-		Amongst them - fibonacci, Lucas numbers, primes, and so on...
+		Amongst them - fibonacci, Lucas numbers, primes, perfect numbers, and so on...
+		[One general method to be implemented - InfiniteUntil(ic, f, predicate) - will get all the objects of 'f(i)' of possession of predicate 'predicate', can be implemented via InfiniteArray]; 
 	11.3. Linear algebra; 
 	11.4. (Possibly, possibly a separate project, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
-	11.5. (Possibly?) Combinatorics? 
+	11.5. (Possibly?) More combinatorics? 
 	11.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
 	11.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
 		Things that are elementary, give a way for their composition production; 
@@ -118,10 +121,23 @@ It gets changed actively.
 
 			1. The methods 2. and 3. require more mathematical derivation (which will take time and which, at the moment of writing the thing in question, one does not yet possess); 
 			2. Too short methods list due to the previous difficulties with InfiniteSeries API, and abstract-Function-treatment in the library generally [which, again, will take time, and currently not having it]. 
-			3. 
-
+		3. A dependant upon the exactly same derivation as the 'Real'. 
 		
 		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 
+
+	11.11. NAryArray, and their arithmetic: 
+		Add the bitwise operators to the 'variables.udefaultTable', based upon the special case of a new class NAryArray (based off an 'n' - InfiniteCounter), 
+			which is a GeneralArray-wrapper, filled with n-bits, that interact with one another by means of predefined operations 
+				(which themselves, are just a generalization of the binary bitwise-operators...); 
+			
+	11.12.? Integral/Differential Calculus (on real-valued functions): 
+		The issue with adding an implementation of this is that the library does not boast a general definition of a limit. 
+		The solution to the problem of defining the derviatives/antiderivatives in a desirable fashion would be: 
+
+			1. Creating 'approximation-up-to' functions based off a definition of a derivative/integral, namely, approximating the value of the derivative 'up to some point of proximity' (difficulty arises when finding consequent derivatives); 
+			2. Creating a set of 'rules' for elementary functions, by means of which they are integrated/differentiated (difficulty arises due to limitedness of approach); 
+		
+		The first one is currently preferred...
 
 12. MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
 
@@ -137,3 +153,19 @@ It gets changed actively.
 			Reconsider their deletion, plus (generally, the way that the templates work). 
 				For some methods (like 'GeneralArray.permutations' and 'GeneralArray.intersection'), they work quite well as 'template-substitutes', 
 				and so shall be kept (even in the v1.0); 
+	13.2. 'transforms.mjs' - a file with various transformations upon the library objects that may come in useful 
+		Originally boasted a 'noTemplates' method, that'd return the version of the 'instance()' call without the need to do '.function().function', 
+		Ended up being way too thin to be added to the package in a full capacity.
+
+14. General matters left until v1.1: 
+	14.1. TEMPLATEs state - whether '.function()' should be kept or left out of the user's scope; 
+		The question relates to the fact that, while the changes to the templates in question that the second-level '.template' field provides are either too general (read 'f'), or too brisk (read 'word'), 
+			they DO allow for vast library extension by means of function-wrappers and semantic-changing (and making the macro in question SUPERBLY useful for such things...); 
+		Due to the fact that this is not the originally intended purpose of the many of the package's code components, the '.function()'s were taken out, 
+			but this matter remained (for the most part) unanswered - SHOULD THEY REMAIN? 
+	14.2. Should 'math-expressions.js' split into several libraries? 
+		In particular, should 'macros' be made a separate npm package? While they do happen to have been meant for 'math-expressions.js', their usage is far-extending. 
+		More than that, they are also: 
+			
+			1. thematically independent (and thus, can be wanted by a user for completely different reasons from that of the 'math-expressions.js' rest of the contents); 
+			2. ~20 times slimmer than the rest of the library [and so, if the rest is unwanted, have to be used in this fashion...]; 

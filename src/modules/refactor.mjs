@@ -15,7 +15,7 @@ import {
 import { heaps } from "./exports/algorithms.mjs"
 import * as predicates from "./exports/predicates.mjs"
 import * as orders from "./exports/orders.mjs"
-import * as structure  from "./exports/structure.mjs"
+import * as structure from "./exports/structure.mjs"
 
 export const classes = {
 	finish: function () {
@@ -160,7 +160,7 @@ export const general = {
 		const newobj = {}
 		const xf = !(template instanceof Array)
 			? (x) => templates[x]
-			: aliases.native.function._const(template)
+			: aliases.native.function.const(template)
 		for (const x in names)
 			newobj[names[x]] = native
 				.finite(xf(x))
@@ -170,7 +170,7 @@ export const general = {
 	counterFrom: function (_labels = [], wrapper = ID) {
 		return TEMPLATE({
 			defaults: [
-				aliases.function._const({ icclass: general.DEFAULT_ICCLASS, wrapper }),
+				aliases.function.const({ icclass: general.DEFAULT_ICCLASS, wrapper }),
 				function () {
 					return {
 						forth: this.template.wrapper(this.template.icclass.static.one()),
@@ -191,7 +191,7 @@ export const general = {
 						icclass.class(x)[labels[x][0]](this.template[labels[x][1]])
 				return X
 			}
-		})
+		}).function()
 	},
 	maxkey(garr) {
 		return this.template.hasOwnProperty("maxkey")

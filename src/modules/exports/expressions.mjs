@@ -17,9 +17,9 @@ export const evaluate = TEMPLATE({
 			)
 		return this.template.table[expression.operator](...expression.objects)
 	}
-})
+}).function()
 
-// ? Generalize within the library's context the objects of n-properties?
+// ? Generalize within the library's context the n-objects of named properties?
 // ? Make into a template to allow for general-types defaults? [another minor general dilemma]
 export const Expression = function (operator = "", expressions = [], objects = []) {
 	return { operator, expressions, objects }
@@ -40,7 +40,7 @@ export const uevaluate = TEMPLATE({
 			)
 		return this.template.table.read(expression.operator)(expression.objects)
 	}
-})
+}).function()
 
 // * Generalization of the 'Expression':
 export const composition = function (fcall) {
@@ -59,7 +59,7 @@ export const composition = function (fcall) {
 }
 
 export const FunctionCall = function (f, functions = [], args = []) {
-return { f, functions, args }
+	return { f, functions, args }
 }
 
 // ? Create an alias here for the different kinds of 'repeatedApplication' of Expression upon itself? [so as to be able to build recursive Expressions from various user-given data quickly and not by-hand?]

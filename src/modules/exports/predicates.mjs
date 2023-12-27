@@ -1,6 +1,8 @@
 // * This sourcefile possesses aliases for the commonly used elementary predicates' generalizations (allow for greater simplification of the code);
 
 import * as aliases from "./aliases.mjs"
+import * as orders from "./orders.mjs"
+import {general} from "../refactor.mjs"
 
 // ! Extend this - refactor the library hardcorely in the sense of repeating expressions and distribute all the appropriate ones in here;
 
@@ -30,13 +32,31 @@ export const Ensurer = (_class, predicate = T, responses = {}) => {
 export const negate = wrapper({
 	out: aliases.n
 }).function
-export const TRUTH = native.function._const(true)
+export const TRUTH = aliases.native.function.const(true)
 export const T = TRUTH
-export const FALLACY = native.function._const(false)
+export const FALLACY = aliases.native.function.const(false)
 export const F = FALLACY
-export const VOID = native.function.void
+export const VOID = aliases.native.function.void
 
-// ! This is the predicate that, given a 'broken' heap, will return a new one, that is ordered accordingly...; [Use it generally wherever there are heaps...]; 
-export const ensureHeap = (heap) => {
+// * Ensures the 'heap' property upon a given tree;
+// TODO: rewrite the previous parts of the library in such a way so as to use this... [namely, algorithms.heaps]
+export const ensureHeap = (
+	tree,
+	predicate,
+	comparison = tree.class.template.parentclass.template.comparison
+) => {
+	const node = tree.node
+	const most = orders
+		.most({ predicate: predicate })
+		.function(tree.children.copied("pushfront", tree.node))
+	if (!comparison(node, most)) {
+		tree.node = most
+		tree.children.write(tree.children.firstIndex(most), node)
+	}
+	for (const c of tree.children) ensureHeap(c)
+	return tree
+}
 
+export const ensureSet = (genarr = general.DEFAULT_GENARRCLASS.static.empty()) => {
+	return genarr.copied("suchthat", [predicates.allUnique])
 }
