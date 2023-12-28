@@ -192,7 +192,6 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				for (const ind of todelinds) edges.delete(ind)
 				return this
 			}
-			// ? Add any more methods?
 		},
 		recursive: true
 	})
@@ -293,7 +292,6 @@ export const heaps = {
 					)
 					return top
 				}
-				// ? Anything else here?
 			},
 			recursive: true
 		})
@@ -633,7 +631,6 @@ export const sort = {
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			const listArr = garr.copy()
 			const sorted = garr.empty()
-			// ? alias this...
 			const f = orders.most({ comparison: this.template.predicate })
 			for (const _t of garr) {
 				const extreme = f(listArr)
@@ -795,7 +792,7 @@ export const search = {
 			defaults: { defelem: undefined },
 			function: function (
 				sought = this.template.defelem,
-				garr = this.template.tenarrclass.static.empty()
+				garr = this.template.genarrclass.static.empty()
 			) {
 				const sqrtlen = this.template.tintclass.class(garr.length().get()).root()
 				let tempres = FORBIDDEN
@@ -805,13 +802,13 @@ export const search = {
 					i = i.add(sqrtlen)
 				) {
 					const curr = garr.read(i)
-					// ! make an alias; (was requested already somewhere...);
 					if (
-						((x) =>
-							this.template.predicate(x) || this.template.comparison(x))(
-							curr,
-							sought
-						)
+						((...x) =>
+							aliases.native.function.dor(
+								[this.template.predicate, this.template.comparison].map(
+									aliases.native.function.rexparr(x)
+								)
+							))(curr, sought)
 					) {
 						tempres = i
 						break
@@ -888,33 +885,15 @@ export const integer = {
 			return array.generate(x).filter(this.isPrime)
 		},
 
-		// ! Generalize;
-		// * Re-look through this;
+		// ! Generalize...
 		// Finds for some 'k' an array of all representations 'a = [a1, ..., an]', such that: a1+...+an with given minimum value 'al>=minval', for all n>=l>=1; (without the 'minval', the set is infinite due to the fact that Z is an abelian group over +);
-		sumRepresentations: function (n, m, minval = 1) {
-			// ? generalize this as well... [either use this or do stuff related to the finite natural power-series arrays + ]
-			const itered = generate(minval, n).map((x) =>
-				generate(minval, m).map((v, i) => (i == 0 ? x : minval))
-			)
-
-			while (itered.length < n ** m)
-				for (let i = 0; i < itered.length; i++) {
-					const copied = native.copy.flatCopy(itered[i])
-					for (let j = 0; j < m; j++) {
-						copied[j]++
-						if (native.array.indexesOf().function(itered, copied).length) {
-							copied[j]--
-							continue
-						}
-						itered.push(copied)
-					}
-				}
-
-			return itered.filter(
-				(x) =>
-					expressions.evaluate().function(expressions.Expression("+", [], x)) ==
-					n
-			)
+		sumRepresentations: function (endval, terms, minval = 1) {
+			if (terms === 1) return [[endval]]
+			const res = []
+			for (let i = minval; i < endval - minval; i++)
+				for (const r of this.sumRepresentations(endval - i, terms - 1, minval))
+					res.push([i].concat(r))
+			return res
 		}
 	},
 
@@ -1089,11 +1068,6 @@ export const integer = {
 				this.template.tintclass.static.one()
 			])
 
-			if (!tint.compare(this.template.tintclass.static.zero()))
-				throw new RangeError(
-					"factorial() library function only accepts non-negative values"
-				)
-
 			for (
 				let i = this.template.tintclass.static.one();
 				tint.compare(i);
@@ -1205,7 +1179,7 @@ export const array = {
 	intersection: TEMPLATE({
 		defaults: {
 			comparison: comparisons.valueCompare,
-			preferred: (fel, sel, comp, farr, sarr) => fel,
+			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (...arrs) {
@@ -1213,13 +1187,23 @@ export const array = {
 			if (arrs.length == 1) return arrs[0]
 			if (arrs.length == 2) {
 				const inter = this.template.genarrclass.class()
-				// ? Q: Does one want to provide indexes at which the elements have been met as well?
-				for (const x of arrs[0])
-					for (const y of arrs[1])
+				for (
+					let i = this.template.icclass.class();
+					predicates.lesser(i, arrs[0]);
+					i = predicates.next(i)
+				)
+					for (
+						let j = this.template.icclass.class();
+						predicates.lesser(j, arrs[1]);
+						j = predicates.next(j)
+					) {
+						const x = arrs[0].read(i),
+							y = arrs[1].read(j)
 						if (this.template.comparison(x, y))
 							inter.pushback(
-								this.template.preferred(x, y, comparison, ...arrs)
+								this.template.preferred(x, y, comparison, ...arrs, i, j)
 							)
+					}
 				return inter
 			}
 			return this.function(arrs[0], this.function(arrs.slice(1)))

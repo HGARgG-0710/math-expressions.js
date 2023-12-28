@@ -115,6 +115,13 @@ export const classes = {
 		const c = this.copy(f, template, isclass)
 		if (aliases.hasFunction(c, method)) c[method](..._arguments)
 		return c
+	},
+	usetmeth: function (name) {
+		return function (uset = this.this.this.this.class.static.empty()) {
+			return this.this.this.this.class.class(
+				this.this.this.genarr.copied(name, [uset.genarr])
+			)
+		}
 	}
 }
 

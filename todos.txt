@@ -169,3 +169,5 @@ It gets changed actively.
 			
 			1. thematically independent (and thus, can be wanted by a user for completely different reasons from that of the 'math-expressions.js' rest of the contents); 
 			2. ~20 times slimmer than the rest of the library [and so, if the rest is unwanted, have to be used in this fashion...]; 
+	14.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
+		The 'v1.1.' is supposed to bring those back to consideration.

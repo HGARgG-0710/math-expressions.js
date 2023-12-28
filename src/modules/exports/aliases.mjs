@@ -222,6 +222,19 @@ export const bi = BigInt
 
 export const ustr = types.UnlimitedString
 export const genarr = types.GeneralArray
+export const umap = types.UnlimitedMap
+export const infarr = types.InfiniteArray
+export const infstr = types.InfiniteString
+export const infset = types.InfiniteSet
+export const ic = types.InfiniteCounter
+export const liarr = types.arrays.LastIndexArray
+export const darr = types.arrays.DeepArray
+export const carr = types.arrays.CommonArray
+export const tint = types.numbers.TrueInteger
+export const tratio = types.numbers.TrueRatio
+export const tn = types.TreeNode
+export const uset = types.UnlimitedSet
+export const p = types.Pointer
 
 export const trimBeginning =
 	(n = 1) =>

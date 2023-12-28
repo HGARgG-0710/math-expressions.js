@@ -97,7 +97,7 @@ This file is also used for documentation, and name-collision-related work...
 		6.5. min
 		6.6. max
 		6.7. ofromIcc	
-	7. structure.mjs
+	7. structure.mjs [break into multiple files]
 		7.1. form
 		7.2. structure
 		7.3. typeConst
@@ -121,18 +121,18 @@ This file is also used for documentation, and name-collision-related work...
 		7.21. recursiveSetting
 		7.22. repeatedApplication
 		7.23. repeatedApplicationWhilst
-		7.24. native
+		7.24. native:
 			7.24.1. repeatedApplication
-	8. types.mjs
+	8. types.mjs [for each - their own file]
 		8.1. InfiniteCounter
 		8.2. GeneralArray
-		8.3. arrays
+		8.3. arrays:
 			8.3.1. LastIndexArray
 			8.3.2. DeepArray
 			8.3.3. CommonArray
 		8.4. UnlimitedMap
 		8.5. UnlimitedString
-		8.6. numbers
+		8.6. numbers:
 			8.6.1. TrueInteger
 			8.6.2. TrueRatio
 		8.7. Pointer
@@ -141,18 +141,18 @@ This file is also used for documentation, and name-collision-related work...
 		8.10. TreeNode
 		8.11. UnlimitedSet
 		8.12. InfiniteSet
-	9. algorithms.mjs
+	9. algorithms.mjs [sorts have their own file, heaps too, serach algorithms and 'integer' - as well, all else - individual files]
 		9.1. Stack
 		9.2. Queue
 		9.3. NTreeNode
 		9.4. Graph
 		9.5. Vertex
-		9.6. heaps
+		9.6. heaps:
 			9.6.1. PairingHeap
 			9.6.2. NAryHeap
 			9.6.3. BinomialHeap
-		9.7. PrioriteeQueued
-		9.8. sort
+		9.7. PrioriteeQueue
+		9.8. sort:
 			9.8.1. heap
 			9.8.2. radix
 			9.8.3. bucket
@@ -162,14 +162,14 @@ This file is also used for documentation, and name-collision-related work...
 			9.8.7. bubble
 			9.8.8. selection
 			9.8.9. merge
-		9.9. search
+		9.9. search:
 			9.9.1. sentinel
 			9.9.2. exponential
 			9.9.3. interpolation
 			9.9.4. jump
 			9.9.5. linear
 			9.9.6. binary
-		9.10. integer
+		9.10. integer:
 			9.10.1. native
 				9.10.1.1. primesBefore
 				9.10.1.2. sumRepresentations
@@ -196,6 +196,29 @@ This file is also used for documentation, and name-collision-related work...
 			9.10.11. isPerfect
 			9.10.12. factorial
 			9.10.13. binomial
+		9.11. array:
+			9.11.1. native: 
+				9.11.1.1. split
+				9.11.1.2. generate	
+				9.11.1.3. intersection
+				9.11.1.4. permutations
+				9.11.1.5. indexesOf
+				9.11.1.6. norepetitions
+				9.11.1.7. isSub
+				9.11.1.8. join
+				9.11.1.9. common
+				9.11.1.10. concat
+			9.11.2. intersection
+			9.11.3. permutations
+			9.11.4. indexesOf
+			9.11.5. norepetitions
+			9.11.6. isSub
+			9.11.7. join
+			9.11.8. generate
+			9.11.9. common
+			9.11.10. concat
+		9.12. number: 
+			9.12.1. farey
 	10. printing
 		10.1. print
 		10.2. controlprint

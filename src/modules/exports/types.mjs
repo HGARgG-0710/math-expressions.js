@@ -141,7 +141,6 @@ export const InfiniteCounter = (() => {
 					undefined
 				)
 			},
-			// ? Question: does one really want the 'comparison' to hang out like that?
 			jumpForward(x, comparison = this.this.this.this.class.template.comparison) {
 				return this.jump(x, (a) => a.next(), comparison)
 			},
@@ -226,7 +225,6 @@ export const GeneralArray = (() => {
 				empty(template = this.this.template) {
 					return this.this.class(template).class()
 				},
-				// TODO: look through the GeneralArray code looking for places this thing might get used handily... (Just like in the '.appendfront()' case...);
 				fromArray(arr) {
 					const generalized = this.empty()
 					for (const a of arr) generalized.pushback(a)
@@ -245,9 +243,6 @@ export const GeneralArray = (() => {
 						transform: id
 					},
 					function: function (b) {
-						// ? Perhaps, provide just 'b' in its stead? Pray consider...
-						// * The advantages of this thing is that it allows for a far more beautiful, convinient and native-JS-compatible syntax along with shorter identity names...;
-						// * The advantages of the alternative approach is the total number of arguments and the greater structural elegance...;
 						return this.template.target[`push${x}Loop`](
 							this.template.transform(
 								b.object().currelem().get(),
@@ -328,7 +323,7 @@ export const GeneralArray = (() => {
 							return r
 						},
 						// * The difference between '.full()' and '._full()' is that the former is based on latter and allows for 'break' and 'continue'...
-						// TODO: generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
+						// ? [later?] generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 						full(
 							each = this.template.each,
 							iter = aliases.native.function.const(this.template.indexiter),
@@ -481,18 +476,16 @@ export const GeneralArray = (() => {
 				length() {
 					return {
 						get: () => {
-							// ? Could this [the 'length.get()' method] not be rewritten by the means of the '.loop()' method??? Pray consider...
-							// * Yes, indeed! Pray do...
-							// TODO: refactor...
-							const index = this.currindex
-							this.begin()
-							while (
-								!this.this.this.this.class.template.isEnd(this.object())
-							)
-								this.next()
-							const returned = this.currindex
-							this.currindex = index
-							return returned
+							return general.fix([this.this.this], ["currindex"], () => {
+								this.begin()
+								while (
+									!this.this.this.this.class.template.isEnd(
+										this.object()
+									)
+								)
+									this.next()
+								return this.this.this.currindex
+							})
 						},
 						set: (value) => {
 							if (this.object().length().get().equal(value)) return
@@ -559,7 +552,6 @@ export const GeneralArray = (() => {
 					return this
 				},
 				slice(begin = this.init(), end = this.finish()) {
-					// TODO: generalize [add the corresponding argument to the methods and employ it] the uses of the 'this.this.this.empty'... in accordance with the newly created implementation...
 					const sliced = this.empty()
 					this.loop()._full(
 						sliced.pushbackLoop({
@@ -587,7 +579,7 @@ export const GeneralArray = (() => {
 				*[Symbol.iterator]() {
 					for (
 						let c = this.init();
-						!c.compare(this.length().get());
+						predicates.lesser(c, this.length().get());
 						c = c.next()
 					)
 						yield this.read(c)
@@ -626,34 +618,30 @@ export const GeneralArray = (() => {
 					const x = this.copied("slice", [endindex.next()], undefined)
 					return this.slice(this.init(), startindex.previous()).concat(x)
 				},
-				projectComplete(array, index) {
-					const _index = this.this.this.currindex
-					array.loop()._full(
-						(t) => {
-							// TODO: refactor this as well - some '.currwriteLoop(value, fast, comparison)', or something...
-							this.write(
-								this.this.this.currindex,
-								t.object().currelem().get()
-							)
-						},
-						aliases.native.functionconst((x) => {
-							x.object().next()
-							this.next()
-						}),
-						undefined,
-						(x) => {
-							x.object().begin()
-							this.go(index)
-						},
-						(_x) => {
-							// ! Problem : generally , one might want to implement a sort of a multi-array loop function [so that the 'index' could be changed and then restored for multiple of them...]...
-							// * Problem with this is this '.loop' is attached to one array and one don't seem to want to generalize it much further than that...
-							// ? Where to stick it? Should it be a '.static'? Or ought one take it out of the GeneralArray completely???
-							this.this.this.currindex = _index
-						}
-					)
+				projectComplete(array, index = this.init()) {
+					general.fix([this.this.this], ["currindex"], () => {
+						array.loop()._full(
+							(t) => {
+								// ? refactor this as well - some '.currwriteLoop(value, fast, comparison)', or something...
+								this.write(
+									this.this.this.currindex,
+									t.object().currelem().get()
+								)
+							},
+							aliases.native.functionconst((x) => {
+								x.object().next()
+								this.next()
+							}),
+							undefined,
+							(x) => {
+								x.object().begin()
+								this.go(index)
+							}
+						)
+					})
+					return this
 				},
-				projectFit(array, index) {
+				projectFit(array, index = this.init()) {
 					general.fix([array], ["currindex"], () => {
 						this.loop()._full(
 							(t) => {
@@ -703,15 +691,9 @@ export const GeneralArray = (() => {
 				shiftBackward(times = this.init()) {
 					return this.slice(times, undefined)
 				},
-				repeat(
-					times = this.init(),
-					icclass = this.this.this.this.class.template.icclass
-				) {
-					// TODO: ration the usage of these throughout the code - namely, get rid of all the places that they aren't necessary...
+				repeat(times = this.init()) {
 					const newarr = this.empty()
-					icclass.static.whileloop(icclass.class(), times, () =>
-						newarr.concat(this)
-					)
+					times.loop(() => newarr.concat(this))
 					this.this.this = newarr
 					return this
 				},
@@ -1139,7 +1121,6 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			multcall: classes.multcall
-			// ? Adding any more?
 		},
 		static: {
 			fromObject(object = {}, finite = false) {
@@ -1305,8 +1286,6 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			},
 			begin: classes.begin,
 			end: classes.end,
-			// TODO: generally - perform all the required 'InfiniteCounter.map's! DO NOT ASSUME THAT THE THING PASSED IS THE INFINITECOUNTER OF THE CORRESPONDING CLASS, ONLY ASSUME IT IS ___A___ COUNTER...;
-			// * This'll make InfiniteCounters (generally) EXTREMELY useful; All the inner information will be 'semi-hidden' (unneccessary to operate the thing), yet accessible (and hence, alterable, hence flexible) to the user;
 			slice(beginning = this.init(), end = this.finish(), orderly = false) {
 				const newstr = this.this.this.this.class.class()
 				this.go(beginning)
@@ -1644,7 +1623,7 @@ export const numbers = {
 				difference(d = this.one()) {
 					return this.this.this.add(d.invadd())
 				},
-				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA!]
+				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA! Where to put the method?]
 				divide(d) {
 					let r = this.this.this.this.class.class()
 					let copy = this.copy()
@@ -1665,7 +1644,6 @@ export const numbers = {
 						x.value.compare(this.this.this.value)
 					)
 				},
-				// ? NOT AWFULLY EFFICIENT - find a more time and memory-efficient way of computing the (floor/ceil)(xroot(this));
 				root(x = this.two(), ceil = false) {
 					let r = this.this.this.this.class.class()
 					let temp
@@ -1900,7 +1878,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			? (x) =>
 					predicates.Ensurer(x, undefined, {
 						// ! Not efficient - wastes a single '.write' call; (If just used the EXTENSION, this wouldn't happen...); But using EXTENSION means (largely), using exactly the same code;
-						// ? work on EXTENSION to allow for compact wrappers for methods of derived class, like here;
+						// ? work on EXTENSION to allow for compact in- and out-wrappers for methods of derived class, like here;
 						write: function (_tr, thisarg, args) {
 							return thisarg.write(args[0], aliases.str(args[1]))
 						},
@@ -2116,7 +2094,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				const froots = this.this.this.children.empty()
 				let currroots = this.findRoots(x)
 				while (!currroots.every((x) => x === null)) {
-					currroots = currroots.copy((x) => this.findRoots(x))
+					currroots = currroots.copy(this.findRoots)
 					froots.concat(currroots)
 				}
 				return froots
@@ -2181,17 +2159,8 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				)
 			},
 			copied: classes.copied,
-			// ! These two should be generalized and refactored...;
-			union(uset = this.this.this.this.class.static.empty()) {
-				return this.this.this.this.class.class(
-					this.this.this.genarr.copied("concat", [uset.genarr])
-				)
-			},
-			intersection(uset = this.this.this.this.class.static.empty()) {
-				return this.this.this.this.class.class(
-					this.this.this.genarr.copied("intersection", [uset.genarr])
-				)
-			},
+			union: classes.usetmeth("concat"),
+			intersection: classes.usetmeth("intersection"),
 			complement(uset = this.this.this.this.class.static.empty()) {
 				return this.suchthat((x) => !uset.ni(x))
 			},
@@ -2219,7 +2188,6 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}
 		},
 		recursive: true,
-		// ? Consider whether this remains empty, or some things get to be added here after all...
 		toextend: ["includes"]
 	})
 }
