@@ -2,11 +2,12 @@
 // % note: the module is, in many ways, central to the library from the dependency- and generality- standpoints of view, for its methods and definitions can be applied to nigh every part of the package that works with recursion and nested objects;
 
 import { general } from "./../refactor.mjs"
+import { repeatedApplication as _repeatedApplication } from "../imported.mjs"
 import { TEMPLATE, ID } from "./../macros.mjs"
 import * as algorithms from "./algorithms.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
-import * as comparisons from "./comparisons.mjs"
+import { valueCompare } from "./comparisons.mjs"
 import * as orders from "./orders.mjs"
 import * as native from "./native.mjs"
 import * as predicates from "./predicates.mjs"
@@ -34,7 +35,7 @@ export const form = (
 export const structure = TEMPLATE({
 	defaults: {
 		form: general.DEFAULT_FORM,
-		comparison: comparisons.valueCompare,
+		comparison: valueCompare,
 		// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
 		compequiv: function (...args) {
 			if (args.length === 1) return args[1]
@@ -291,7 +292,7 @@ export const findDeepUnfilled = TEMPLATE({
 		function () {
 			return {
 				form: general.DEFAULT_FORM,
-				comparison: comparisons.valueCompare
+				comparison: valueCompare
 			}
 		},
 		function () {
@@ -393,13 +394,7 @@ export const repeatedApplicationWhilst = TEMPLATE({
 	}
 }).function
 
-// ? Does one really want a whole subobject just for this one method?
-const Native = {
-	repeatedApplication(initial, times, f, offset = 0, iter = (x) => x + 1) {
-		let r = initial
-		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
-		return r
-	}
-}
+const Native = {}
+Native.repeatedApplication = _repeatedApplication
 
 export { Native as native }

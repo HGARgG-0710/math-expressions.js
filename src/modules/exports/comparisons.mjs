@@ -1,5 +1,3 @@
-import { TEMPLATE } from "./../macros.mjs"
-
 // * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
 //
 // ! [2]: with the currently chosen solution for the handling of the function arguments;
@@ -7,10 +5,8 @@ import { TEMPLATE } from "./../macros.mjs"
 // TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray
 // TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
 
-// ? Seemingly fixing the problem regarding the infinitely recursive (self-referential) objects?
-// * [pray check for it additionally later...];
-export const valueCompare = TEMPLATE({
-	defaults: {
+export const valueCompare = {
+	template: {
 		oneway: false
 	},
 	function: function (...args) {
@@ -48,7 +44,7 @@ export const valueCompare = TEMPLATE({
 				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
 		)
 	}
-}).function
+}
 
 export const refCompare = (a, b) => a === b
 export const oldCompare = (a, b) => a == b

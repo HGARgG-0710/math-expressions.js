@@ -155,7 +155,7 @@ export const native = {
 		defaults: {
 			alphabet: variables.defaultAlphabet
 		},
-		function: function (n, base = this.template.base) {
+		function: function (n) {
 			const coefficients = []
 			const base = this.template.alphabet.length
 			let i = Math.floor(Math.log(n) / Math.log(base))

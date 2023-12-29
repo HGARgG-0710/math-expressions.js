@@ -1,8 +1,8 @@
 // * This sourcefile possesses aliases for the commonly used elementary predicates' generalizations (allow for greater simplification of the code);
 
-import * as aliases from "./aliases.mjs"
 import * as orders from "./orders.mjs"
 import { general } from "../refactor.mjs"
+import { _void, _const, negate as _negate, hasFunction } from "../imported.mjs"
 
 // ! Extend this - refactor the library hardcorely in the sense of repeating expressions and distribute all the appropriate ones in here;
 
@@ -29,7 +29,7 @@ export const Ensurer = (_class, predicate = T, responses = {}) => {
 	for (const m of _class.methods)
 		X[m] = function (...args) {
 			const tempr = _class.methods[m].bind(this)(...args)
-			if (predicate(tempr, this) && aliases.hasFunction(responses, m))
+			if (predicate(tempr, this) && hasFunction(responses, m))
 				return responses[m].bind(this)(tempr, this, args)
 			return tempr
 		}
@@ -37,14 +37,12 @@ export const Ensurer = (_class, predicate = T, responses = {}) => {
 }
 
 // ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
-export const negate = wrapper({
-	out: aliases.native.boolean.n
-}).function
-export const TRUTH = aliases.native.function.const(true)
+export const negate = _negate
+export const TRUTH = _const(true)
 export const T = TRUTH
-export const FALLACY = aliases.native.function.const(false)
+export const FALLACY = _const(false)
 export const F = FALLACY
-export const VOID = aliases.native.function.void
+export const VOID = _void
 
 // * Ensures the 'heap' property upon a given tree;
 // TODO: rewrite the previous parts of the library in such a way so as to use this... [namely, algorithms.heaps]

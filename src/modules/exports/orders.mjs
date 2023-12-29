@@ -2,6 +2,7 @@
 // Currently, provides means of immidiate construction of orders based off GeneralArrays
 
 import * as predicates from "./predicates.mjs"
+import { TEMPLATE } from "./../macros.mjs"
 import { general } from "./../refactor.mjs"
 
 export const linear = TEMPLATE({

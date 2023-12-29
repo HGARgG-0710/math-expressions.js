@@ -6,12 +6,11 @@
 import { TEMPLATE, ID } from "./../macros.mjs"
 import { OBJECT, DEOBJECT } from "../macros.mjs"
 import * as aliases from "./aliases.mjs"
-import * as variables from "./variables.mjs"
 import * as types from "./types.mjs"
-import * as comparisons from "./comparisons.mjs"
+import { valueCompare, refCompare } from "./comparisons.mjs"
 import * as structure from "./structure.mjs"
 import * as algorithms from "./algorithms.mjs"
-import { general } from "./refactor.mjs"
+import { general } from "../refactor.mjs"
 
 export const copy = {
 	copy: TEMPLATE({
@@ -198,7 +197,7 @@ export const object = {
 	ismapped: function (...args) {
 		// ? create an aliase for these sorts of things [length-array ensuring of certain same function's call?]; Similar (special case of) ensureProperty;
 		aliases.native.object.ensureProperties(args, [{}, {}])
-		return comparisons.valueCompare().function(...args.map(aliases.obj.keys))
+		return valueCompare().function(...args.map(aliases.obj.keys))
 	},
 
 	gutInnerObjs(obj = {}) {
@@ -303,7 +302,7 @@ export const array = {
 	// ! Later, (in v1.1, when working on 'statistics', pray relocate 'countAppearences' to there...);
 	countAppearences: TEMPLATE({
 		defaults: {
-			comparison: comparisons.refCompare,
+			comparison: refCompare,
 			defelem: undefined
 		},
 		function: function (array = [], element = this.template.defelem) {
@@ -352,12 +351,12 @@ export const finite = TEMPLATE({
 		integer: false
 	},
 	function: function (f, out = this.template.defout, inseq = this.template.definseq) {
-		const f = this.template.integer
+		const fu = this.template.integer
 			? ID
 			: general.DEFAULT_TINTCLASS.static.fromCounter
 		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
 		const tin = (out) =>
-			out ? f(native.number.fromNumber) : types.arrays.CommonArray()
+			out ? fu(native.number.fromNumber) : types.arrays.CommonArray()
 		const tout = (out) =>
 			out
 				? (x) => x.map(types.InfiniteCounter(counters.addnumber())).value

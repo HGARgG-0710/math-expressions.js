@@ -75,6 +75,7 @@ A brief repository organization guide:
             -   variables.mjs - various
         -   macros.mjs - module which provides exported macros (and which are also extensively used by the rest of the package's code)
         -   refactor.mjs - module, which was originally made for refactoring purposes
+		- 	imported.mjs - technical module for resolving ESM-caused importing issues
     -   test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
 -   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library, there is an individual test script (the examples.mjs)
 -   README.md - this file

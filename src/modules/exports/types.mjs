@@ -1,7 +1,7 @@
 // * The (presently) largest and most essential part of the library - the types definitions;
 
 import * as aliases from "./aliases.mjs"
-import * as comparisons from "./comparisons.mjs"
+import { valueCompare, refCompare } from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as counters from "./counters.mjs"
 import * as algorithms from "./algorithms.mjs"
@@ -11,15 +11,14 @@ import * as structure from "./structure.mjs"
 
 import { general, classes } from "../refactor.mjs"
 import { CLASS, TEMPLATE, EXTENSION, DEOBJECT, OFDKL } from "../macros.mjs"
-import { StaticThisTransform } from "../refactor.mjs"
 
 export const InfiniteCounter = (() => {
 	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'types.InfiniteCounter(...).class()' syntax for simplified zero-creation;
 	return CLASS({
 		defaults: {
-			comparison: comparisons.valueCompare,
+			comparison: valueCompare,
 			unacceptable: undefined,
-			initialcheck: comparisons.refCompare,
+			initialcheck: refCompare,
 			...counters.arrayCounter()
 		},
 		properties: {
@@ -29,7 +28,7 @@ export const InfiniteCounter = (() => {
 					: previous
 			}
 		},
-		transform: StaticThisTransform,
+		transform: general.StaticThisTransform,
 		static: {
 			direction(ic) {
 				return ic.compare(this.this.class())
@@ -200,7 +199,7 @@ export const GeneralArray = (() => {
 			fast: false,
 			default: aliases.native.function.const(undefined),
 			icclass: general.DEFAULT_ICCLASS,
-			comparison: comparisons.refCompare
+			comparison: refCompare
 		},
 		properties: {
 			array: function (array = this.template.empty) {
@@ -210,7 +209,7 @@ export const GeneralArray = (() => {
 				return startindex
 			}
 		},
-		transform: StaticThisTransform,
+		transform: general.StaticThisTransform,
 		static: (() => {
 			const R = {
 				zero() {
@@ -1134,7 +1133,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.fromObject({}, true)
 			}
 		},
-		transform: StaticThisTransform,
+		transform: general.StaticThisTransform,
 		recursive: true,
 		// ! Consider the precise list;
 		toextend: []
@@ -1558,7 +1557,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this.class(str)
 			}
 		},
-		transform: StaticThisTransform,
+		transform: general.StaticThisTransform,
 		recursive: true
 	})
 }
@@ -1674,7 +1673,7 @@ export const numbers = {
 				one: classes.oneadd,
 				two: classes.twoadd
 			},
-			transform: StaticThisTransform,
+			transform: general.StaticThisTransform,
 			recursive: true,
 			toextend: []
 		})
@@ -1759,7 +1758,7 @@ export const numbers = {
 					return ratio
 				}
 			},
-			transform: StaticThisTransform,
+			transform: general.StaticThisTransform,
 			recursive: true,
 			// ! work more on this list...Decide if it ought to remain empty for the time being...;
 			toextend: []

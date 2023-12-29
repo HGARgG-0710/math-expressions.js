@@ -1,9 +1,14 @@
 // * Space for macros and local constants... [used for semantics and simplification of development/code-reading];
 
-import * as native from "./exports/native.mjs"
-import * as structure from "./exports/structure.mjs"
-import * as aliases from "./exports/aliases.mjs"
-import * as structure from "./exports/structure.mjs"
+import { valueCompare } from "./exports/comparisons.mjs"
+import {
+	INTERSECTION,
+	isfn,
+	repeatedApplication,
+	cdieach,
+	empty,
+	id
+} from "./imported.mjs"
 
 // TODO: improve the macros (make them general as well...); Consider self-using the package...;
 // ? In particular - later create a General versions of macros (using unlimited types...);
@@ -12,7 +17,7 @@ import * as structure from "./exports/structure.mjs"
 // TODO [general]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
 // TODO [general]: think further (and more deeply) on the matter of the publicity of the structure that is presented to the user by the results of the various macros;
 
-export const ID = (a) => a
+export const ID = id
 
 // ? Make a template? [namely, allow the user to define the default type of the TYPED_VARIABLE?]
 export const TYPED_VARIABLE =
@@ -34,7 +39,7 @@ export const RECURSIVE_VARIABLE = (x) => {
 			set(f) {
 				this.get = { ...f }
 				for (const y in this.get)
-					if (aliases.is.fn(this.get[y])) this.get[y] = f[y].bind(this)
+					if (isfn(this.get[y])) this.get[y] = f[y].bind(this)
 			}
 		}
 		r.set(x)
@@ -124,7 +129,7 @@ export const INHERIT = function (x, X) {
 
 // ? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
 export const HIERARCHY = function (hierarr = []) {
-	return structure.native.repeatedApplication(
+	return repeatedApplication(
 		TEMPLATE(hierarr[hierarr.length - 1]),
 		hierarr.length - 1,
 		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
@@ -180,7 +185,7 @@ export const EXTENSION = (template = {}) => {
 			names: ["sub"],
 			defaults: {
 				constructor: [],
-				inter: aliases.cdieach,
+				inter: cdieach,
 				outer: ID,
 				...template.defaults.defaults
 			},
@@ -223,16 +228,29 @@ export const EXTENSION = (template = {}) => {
 				))(
 				template.toextend === true
 					? template.defaults.parentclass.methods
-					: native.array.arrIntersections([
+					: INTERSECTION(
 							Object.keys(template.defaults.parentclass.methods),
 							template.toextend
-					  ])
+					  )
 			)
 		}
 	}
 	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...];
 	delete ftemplate.toextend
 	return PRECLASS(ftemplate)
+}
+
+export const NOREST = function (labels = [], btemplate = {}) {
+	return function (template = {}) {
+		const X = { ...btemplate }
+		// ! refactor! [make a method for array disjunction...];
+		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
+		X.rest = {}
+		// ! refactor!
+		for (const l of labels) X.rest[l] = template[l]
+		X.rest = { ...X.rest, ...template.rest }
+		return TEMPLATE(X)
+	}
 }
 
 export const GENERATOR = NOREST(["inverse", "range"], { word: "generator" })
@@ -254,8 +272,7 @@ export const PRECLASS = NOREST([
 export const CLASS = (ptemplate = {}) => {
 	ensureProperties(ptemplate, {
 		word: "class",
-		// ! alias for that;
-		function: () => ({}),
+		function: empty,
 		methods: {},
 		static: {},
 		recursive: false,
@@ -312,11 +329,8 @@ export const CLASS = (ptemplate = {}) => {
 				O[p] = this.properties[pr].bind(this)(...args)
 			return V
 		}.bind(p)
-		p[p.isname] = function (x) {
-			return (
-				x.hasOwnProperty("class") &&
-				structure.structure().function(this).recisomorphic(x.class)
-			)
+		p[p.isname] = function (x, classword = ptemplate.classref) {
+			return x.hasOwnProperty(classword) && valueCompare(this, x[classword])
 		}.bind(p)
 		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
 		p[Symbol.hasInstance] = function (x) {
@@ -329,19 +343,6 @@ export const CLASS = (ptemplate = {}) => {
 		return p
 	}
 	return template
-}
-
-export const NOREST = function (labels = [], btemplate = {}) {
-	return function (template = {}) {
-		const X = { ...btemplate }
-		// ! refactor! [make a method for array disjunction...];
-		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
-		X.rest = {}
-		// ! refactor!
-		for (const l of labels) X.rest[l] = template[l]
-		X.rest = { ...X.rest, ...template.rest }
-		return TEMPLATE(X)
-	}
 }
 
 export const DEOBJECT = function (obj = {}) {

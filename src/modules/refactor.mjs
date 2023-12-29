@@ -3,7 +3,7 @@
 
 import { TEMPLATE } from "./macros.mjs"
 import * as aliases from "./exports/aliases.mjs"
-import * as comparisons from "./exports/comparisons.mjs"
+import { refCompare } from "./exports/comparisons.mjs"
 import * as native from "./exports/native.mjs"
 import {
 	numbers,
@@ -50,7 +50,7 @@ export const classes = {
 	includes: function (element, leftovers = {}) {
 		ensureProperties(leftovers, {
 			unfound: this.this.this.this.class.template.unfound,
-			comparison: comparisons.refCompare
+			comparison: refCompare
 		})
 		return !leftovers.comparison(
 			this.firstIndex(element),

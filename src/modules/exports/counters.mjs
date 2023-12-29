@@ -1,5 +1,5 @@
 import { GENERATOR } from "./../macros.mjs"
-import * as comparisons from "./comparisons.mjs"
+import { valueCompare } from "./comparisons.mjs"
 import * as variables from "./variables.mjs"
 import * as aliases from "./aliases.mjs"
 import * as types from "./types.mjs"
@@ -90,7 +90,7 @@ export const objCounter = GENERATOR({
 export const recursiveCounter = function (template = {}) {
 	const returned = {
 		defaults: {
-			comparison: comparisons.valueCompare,
+			comparison: valueCompare,
 			maxarrlen: variables.MAX_ARRAY_LENGTH.get,
 			type: predicates.TRUTH,
 			...template

@@ -7,6 +7,18 @@ import * as types from "./types.mjs"
 import * as counters from "./counters.mjs"
 import * as predicates from "./predicates.mjs"
 import { ID } from "./../macros.mjs"
+import {
+	isfn,
+	cdieach as _cdieach,
+	empty,
+	index,
+	isobj,
+	wrapper,
+	n,
+	_const,
+	_void, 
+	hasFunction as _hasFunction
+} from "../imported.mjs"
 
 export const native = {
 	number: {
@@ -99,7 +111,7 @@ export const native = {
 			return f(...arr)
 		},
 		noarrs(array = []) {
-			return array.filter(predicates.negate(aliases.is.arr))
+			return array.filter(predicates.negate(is.arr))
 		},
 		arrsonly(array = []) {
 			return array.filter(is.arr)
@@ -112,31 +124,19 @@ export const native = {
 			return a.map((el) => fs.map((f) => f(el)))
 		},
 		// ! try hard to use arrow functions only for the aliases;
-		hasArrays: (array = []) => array.any(aliases.is.arr)
+		hasArrays: (array = []) => array.any(is.arr)
 	},
 
 	function: {
-		const: (c) => () => c,
-		void: () => {},
+		const: _const,
+		void: _void,
 		bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
 		// TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
 		compose: (fc, args = []) => {
 			return this.composition(fc)(...args)
 		},
 		// ! Use this one extensively...
-		wrapper: TEMPLATE({
-			defaults: {
-				inarr: false,
-				in: id,
-				out: id,
-				deff: id
-			},
-			function: function (f = this.template.deff) {
-				return this.template.inarr
-					? (x) => this.template.out(f(...this.template.in(x)))
-					: (x) => this.template.out(f(this.template.in(x)))
-			}
-		}).function,
+		wrapper: wrapper,
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
 
 		// ? Generalize this to a context (add 'this');
@@ -154,7 +154,7 @@ export const native = {
 			(...args) =>
 				(cond() ? a : b)(...args),
 
-		index: (i) => (x) => x[i],
+		index: index,
 
 		exparr: (f) => (arr) => f(...arr),
 		rexparr: (arr) => (f) => f(...arr),
@@ -178,11 +178,11 @@ export const native = {
 			(x) =>
 			(...args) =>
 				x[p](...args),
-		empty: () => ({})
+		empty: empty
 	},
 
 	boolean: {
-		n: (x) => !x,
+		n: n,
 		t: true,
 		f: false,
 		btic: (x, _class) => _class.static[x ? "one" : "zero"]()
@@ -249,12 +249,12 @@ export const is = {
 	bool: (x) => x === true || x === false,
 	str: (x) => typeof x === "string" || x instanceof String,
 	num: (x) => typeof x === "number" || x instanceof Number,
-	obj: (x) => typeof x === "object" && x instanceof Object,
+	obj: isobj,
 	sym: (x) => typeof x === "symbol",
 	udef: (x) => x === undefined,
 	set: (x) => x instanceof Set,
 	arr: (x) => x instanceof Array,
-	fn: (x) => x instanceof Function,
+	fn: isfn,
 	fun: (x) => typeof x === "function",
 	bi: (x) => x instanceof BigInt,
 	nan: isNaN,
@@ -262,6 +262,6 @@ export const is = {
 }
 
 // ! use the 'composition' and 'wrapper' especially much with the 'aliases' to obtain new ones...;
-export const cdieach = (x, i) => [x[i]]
-export const hasFunction = (x, m) => x.hasOwnProperty(m) && typeof x[m] === "function"
+export const cdieach = _cdieach
+export const hasFunction = _hasFunction
 export const inarr = (x) => [x]
