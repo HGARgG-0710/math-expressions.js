@@ -269,7 +269,7 @@ const refactor = {
 							icclass.class(x)[labels[x][0]](this.template[labels[x][1]])
 					return X
 				}
-			}).function
+			})
 		},
 		maxkey(garr) {
 			return this.template.hasOwnProperty("maxkey")
@@ -316,11 +316,13 @@ export const general = {
 		templated.static.this = templated
 		return templated
 	},
-	recursiveOperation(opname, binaryver) {
+	recursiveOperation(opname, binaryver, nullval) {
 		return function (...args) {
 			return args.length >= 2
-				? binaryver(args[0], this.get[opname](args.slice(1)))
-				: args[0]
+				? binaryver(args[0], this.get[opname](...args.slice(1)))
+				: args.length
+				? args[0]
+				: nullval
 		}
 	},
 	finiteobj: function (
@@ -335,15 +337,14 @@ export const general = {
 		const newobj = {}
 		const xf = !(templates instanceof Array)
 			? (x) => templates[x]
-			: alinative.function.const(template)
+			: alinative.function.const(templates)
 		for (const x in names)
 			newobj[names[x]] = finite(xf(x)).function(
-				(aretemplates[x] ? (f) => f.function(ftemplates[x]) : ID)(
-					target[names[x]]
-				),
+				(aretemplates[x] ? (f) => f(ftemplates[x]) : ID)(target[names[x]]),
 				outtransform[x],
 				insequences[x]
 			)
+
 		return newobj
 	}
 }
@@ -375,10 +376,7 @@ export const alinative = {
 		atos(x = []) {
 			return x.join("")
 		},
-		fcc: String.fromCharCode,
-		strMap: function (str, symb = ID, isStrOut = false) {
-			return (isStrOut ? (x) => x.join("") : id)(str.split("").map(symb))
-		}
+		fcc: String.fromCharCode
 	},
 
 	array: {
@@ -404,7 +402,7 @@ export const alinative = {
 				.slice(0, index)
 				.concat(values)
 				.concat(arr.slice(replacing ? (x) => x + values.length : index)),
-		_insert: (arr, index, val) => insert(arr, index, [val]),
+		_insert: (arr, index, val) => alinative.array.insert(arr, index, [val]),
 		remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
 		_remove: (arr, index) => remove(arr, index, index),
 		minlen: (...arrs) => flen(min, ...arrs),
@@ -453,6 +451,7 @@ export const alinative = {
 			return this.composition(fc)(...args)
 		},
 		// ! Use this one extensively...
+		// ? Not general enough... Do the same thing as with the 'finite' - then, rewrite 'finite' using wrapper...;
 		wrapper: TEMPLATE({
 			defaults: {
 				inarr: false,
@@ -462,8 +461,9 @@ export const alinative = {
 			},
 			function: function (f = this.template.deff) {
 				return this.template.inarr
-					? (x) => this.template.out(f(...this.template.in(x)))
-					: (x) => this.template.out(f(this.template.in(x)))
+					? (x, ...rest) =>
+							this.template.out(f(...this.template.in(x), ...rest))
+					: (x, ...rest) => this.template.out(f(this.template.in(x), ...rest))
 			}
 		}).function,
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
@@ -506,6 +506,11 @@ export const alinative = {
 			(p) =>
 			(x) =>
 			(...args) =>
+				x[p](...args),
+		rproperty:
+			(p) =>
+			(...args) =>
+			(x) =>
 				x[p](...args),
 		empty: () => ({})
 	},
@@ -846,11 +851,8 @@ export const valueCompare = TEMPLATE({
 				switch (typeof a) {
 					case "object":
 						if (
-							!max(
-								objs.map(
-									// TODO: create a nice function-alias for 'f(...) && g(...)'; [so that it may be used with the other ones]
-									(x) => x[0].includes(a) && x[0].includes(b)
-								)
+							!objs.some((x) =>
+								alinative.binary.dand(...[a, b].map(x[0].includes))
 							)
 						) {
 							objs.push([a, b])
@@ -868,17 +870,15 @@ export const valueCompare = TEMPLATE({
 				}
 			}
 		}
-		return !!alinative.min(
-			args
-				.slice(0, args.length - 1)
-				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
-		)
+		return args
+			.slice(0, args.length - 1)
+			.every((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
 	}
 }).function
 
 export const alarray = {
 	native: {
-		// ! Generalize;
+		// ! Generalize [wasn't there already a 'GeneralArray.split' implementation for this?];
 		split: TEMPLATE({
 			defaults: {
 				comparison: refCompare
@@ -893,6 +893,7 @@ export const alarray = {
 						endInd = i
 						segments.push([begInd, endInd])
 					}
+				segments.push([endInd + 1, arr.length])
 				return segments.map((seg) => arr.slice(...seg))
 			}
 		}).function,
@@ -904,10 +905,11 @@ export const alarray = {
 			}
 			const generated = []
 			const upper =
-				end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
+				end +
+				num((-1) ** step < 0) * (Number.isInteger(step) ? 1 : 10 ** -precision)
 			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
 			for (let i = start; proposition(i); i += step)
-				generated.push(this.floor(i, precision))
+				generated.push(nanumber.floor().function(i, precision))
 			return generated
 		}
 	},
@@ -1339,7 +1341,7 @@ export const copy = {
 		) {
 			return {
 				array: (a, method = arrmeth) => a.map(method),
-				object: (a, method = objmeth) => objFmap(a, method),
+				object: (a, method = objmeth) => object.objFmap(a, method),
 				function: (a, context = dcontext()) => a.bind(context),
 				symbol: (a) => Symbol(trimBeginning(7)(trimEnd(1)(str(a)))),
 				arrayFlat: (a) => [...a],
@@ -1360,7 +1362,8 @@ export const copy = {
 			defaults: { list: [] },
 			function: function (a) {
 				for (const x of this.template.list)
-					if (typeTransform(x)(a)) return copy().function()[x](a, this.function)
+					if (typeTransform(x)(a))
+						return copy.copy().function()[x](a, this.function)
 				return a
 			}
 		}).function
@@ -1369,7 +1372,7 @@ export const copy = {
 
 export const nanumber = {
 	// ! Note: this thing, while originally intended for numbers representations, actually is better categorized as an element for the string formatting operations;
-	// TODO: later, make either such a package/npm-module, or add such a section to the library; Then, put this there...;
+	// TODO: later, make either such a package/npm-module, or add an according new section to the library; Then, relocate...;
 	readable: TEMPLATE({
 		defaults: {
 			mod: 3
@@ -1379,7 +1382,8 @@ export const nanumber = {
 			let affecteds = ""
 			while (arr.length % this.template.mod > 0) affecteds += arr.shift()
 			arr.forEach((number, index) => {
-				affecteds += (index % this.template.mod === 0 ? ` ` : ``) + number
+				affecteds +=
+					(index && index % this.template.mod === 0 ? ` ` : ``) + number
 			})
 			return affecteds
 		}
@@ -1392,15 +1396,21 @@ export const nanumber = {
 		function: function (number, afterDot = this.template.defacc) {
 			if (afterDot < 0) {
 				afterDot = -afterDot
-				const inted = str(this.function(number, 0)).reverse()
+				let inted = string.reverse(str(this.function(number, 0)))
 				inted = alinative.array._insert(inted, afterDot, ".")
-				return num(inted.reverse().split(".")[0])
+				const parts = string.reverse(inted).split(".")
+				return num(
+					parts[0].concat(string.map(parts[1], alinative.function.const("0")))
+				)
 			}
 			return num(number.toFixed(afterDot))
 		}
 	}).function,
 	ceil(x = 1) {
-		return this.floor(x) + 1
+		return this.floor().function(x, 0) + !this.isWhole(x)
+	},
+	isWhole(x) {
+		return num(str(x).split(".")[0]) === x
 	},
 	min(numarr = []) {
 		return Math.min(...numarr)
@@ -1411,14 +1421,15 @@ export const nanumber = {
 }
 
 export const object = {
-	subobjects(object = {}, prev = []) {
+	subobjects(object = {}, prev = [], first = true) {
 		let returned = []
-		if (object instanceof Object && !prev.includes(object)) {
-			prev.push(object)
+		if (!first && prev.includes(object)) return returned
+		if (is.obj(object)) {
+			if (!first) prev.push(object)
 			for (const a in object)
-				if (is.obj(object[a])) {
+				if (is.obj(object[a]) && !prev.includes(object[a])) {
 					returned.push(object[a])
-					returned = returned.concat(this.subobjects(object[a], prev))
+					returned = returned.concat(this.subobjects(object[a], prev, false))
 				}
 		}
 		return returned
@@ -1428,35 +1439,25 @@ export const object = {
 	},
 
 	// * Checks if a certain object contains a recursive reference;
-	isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
+	// ! Finite - don't work with arbitrarily deep objects... [write an infinite version - utilizes GeneralArrays, or (better still), forms?]
+	isRecursive(object = {}, prevobjsarrarrs = this.subobjects(object)) {
 		if (!is.obj(object)) return false
-		return number.max(
-			Object.values(object).map(
-				(x) => prevobjsarr.includes(x) || this.isRecursive(x, prevobjsarr)
-			)
+		const v = obj.values(object)
+		return (
+			v.includes(object) ||
+			prevobjsarrarrs.includes(object) ||
+			v.some((x) => this.isRecursive.bind(this)(x))
 		)
 	},
 
-	objInverse: TEMPLATE({
-		defaults: {
-			notfound: undefined,
-			treatUniversal: false
-		},
-		function: function (obj = {}, treatUniversal = this.template.treatUniversal) {
-			const umclass = UniversalMap(this.template)
-			const objorig = umclass(obj, treatUniversal)
-			return umclass(objorig.values, objorig.keys, false)
-		}
-	}).function,
-
 	obj: OBJECT,
 
-	objMap: function (obj, keys, id = true) {
+	objMap: function (obj_, keys = {}, id = true) {
 		const newobj = {}
-		for (const key in keys) newobj[keys[key]] = obj[key]
+		for (const key in keys) newobj[keys[key]] = obj_[key]
 		if (id) {
 			const newkeys = obj.values(keys)
-			for (const key in obj) if (!newkeys.includes(key)) newobj[key] = obj[key]
+			for (const key in obj_) if (!newkeys.includes(key)) newobj[key] = obj_[key]
 		}
 		return newobj
 	},
@@ -1470,15 +1471,15 @@ export const object = {
 	objArr: DEOBJECT,
 
 	objSwap: function (obj1 = {}, obj2 = {}) {
-		const [obj1Copy, obj2Copy] = Array.from(arguments).map(native.copy.flatCopy)
-		this.objClear(obj1, obj1Copy)
-		this.objClear(obj2, obj2Copy)
+		const [obj1Copy, obj2Copy] = Array.from(arguments).map(copy.flatCopy)
+		this.objClear(obj1, obj.keys(obj1Copy))
+		this.objClear(obj2, obj.keys(obj2Copy))
 		this.objInherit(obj1, obj2Copy)
 		this.objInherit(obj2, obj1Copy)
 	},
 
-	objClear: function (obj, objCopy = native.copy.flatCopy(obj)) {
-		for (const dp in objCopy) delete obj[dp]
+	objClear: function (obj_, delkeys = obj.keys(obj_)) {
+		for (const dp of delkeys) delete obj_[dp]
 	},
 
 	objInherit: function (obj, parObj = {}) {
@@ -1492,33 +1493,38 @@ export const object = {
 	},
 
 	ismapped: function (...args) {
-		// ? create an aliase for these sorts of things [length-array ensuring of certain same function's call?]; Similar (special case of) ensureProperty;
-		alinative.object.ensureProperties(args, [{}, {}])
 		return valueCompare().function(...args.map(obj.keys))
 	},
 
-	gutInnerObjs(obj = {}) {
-		const gutted = {}
-		for (const y in obj) {
-			if (is.obj(obj[y])) {
-				gutted = { ...gutted, ...obj[y] }
+	gutInnerObjs(obj_ = {}, keys = obj.keys(obj_)) {
+		let gutted = {}
+		const ok = obj.keys(obj_)
+		for (const y of ok) {
+			if (is.obj(obj_[y]) && keys.includes(y)) {
+				gutted = { ...gutted, ...obj_[y] }
 				continue
 			}
-			gutted[y] = obj[y]
+			gutted[y] = obj_[y]
 		}
 		return gutted
 	},
 
-	objEncircle(obj, newkey, keys = []) {
-		const encirled = { [newkey]: {} }
-		for (const y of obj.keys(obj)) {
+	objEncircle(obj_, newkey, keys = []) {
+		const encircled = { [newkey]: {} }
+		for (const y of obj.keys(obj_)) {
 			if (keys.includes(y)) {
-				encirled[newkey] = obj[y]
+				encircled[newkey][y] = obj_[y]
 				continue
 			}
-			encircled[y] = obj[y]
+			encircled[y] = obj_[y]
 		}
 		return encircled
+	},
+
+	boundObj(o, c = false) {
+		if (c) return this.boundObj(copy.deepCopy(o))
+		for (const x in o) if (is.fun(o[x])) o[x] = o[x].bind(o)
+		return o
 	}
 }
 
@@ -1528,34 +1534,45 @@ export const naarray = {
 			return [...arr.slice(0, index), value, ...arr.slice(index + 1)]
 		},
 
-		replaceIndexes: function (arr, x, y, indexes = [0]) {
+		replaceIndexes: function (_arr, x, y, indexes = naarray.keys(_arr)) {
 			return alarray.native
 				.split()
-				.function(arr, x)
-				.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
+				.function(_arr, x)
+				.map((seg, i, r) =>
+					(i === r.length - 1
+						? ID
+						: (t) => t.concat([indexes.includes(i) ? y : x]))(seg)
+				)
 				.flat()
 		},
 
 		// * Replaces all occurences of 'x' with 'y';
 		replace: function (arr, x, y) {
-			return array.replaceIndexes(arr, x, y, alarray.generate(arr.length))
+			return naarray.replace.replaceIndexes(arr, x, y)
 		},
 
+		// TODO [for the future] - develop (far more largely) the usage and immidiate construction of predicates (example [from which to make special cases]: (predicate) => (x) => (y) => predicate(x, y))
+		// ! In particular, add more generality to methods and base most the things (especially the searching operations and such) on the predicates instead of particular values/keys and so on...; Replace the '.comparisons' in this matter...;
 		// * Replaces values within an array and returns the obtained copy...
-		replaceArr: function (array, x, y, transformation = ID) {
-			const resArray = [...array]
-			for (let i = 0; i < array.length; i++) {
-				const index = x.indexOf(array[i])
-				if (index !== -1) resArray[i] = transformation(y[index])
-			}
+		replaceArr: function (array, p, transformation = ID) {
+			const resArray = copy.flatCopy(array)
+			for (let i = 0; i < array.length; i++)
+				if (p(array[i])) resArray[i] = transformation(array[i])
 			return resArray
 		}
+	},
+
+	keys(array = []) {
+		const keys = array.keys()
+		const fk = []
+		for (const k of keys) fk.push(k)
+		return fk
 	},
 
 	// ? What is this even? Fit only to be an alias...;
 	// ! decompose onto aliases, then consider what to do with it...
 	multArrsRepApp: TEMPLATE({
-		defaults: { n: 1, default: null },
+		defaults: { n: 1, default: null, f: ID },
 		function: function (x = this.template.default) {
 			const args = Array.from(arguments).slice(1, this.template.n + 1)
 
@@ -1564,18 +1581,18 @@ export const naarray = {
 			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
 			alinative.object.ensureProperties(args, defobj)
 
-			return repeatedApplication(
-				(v, i) => this.template.f(v, ...args.map(alinative.function.index(i))),
-				number.min(args.map(alinative.function.index("length"))),
-				x
+			return stnative.repeatedApplication(
+				x,
+				nanumber.min(args.map(alinative.function.index("length"))),
+				(v, i) => this.template.f(v, ...args.map(alinative.function.index(i)))
 			)
 		}
 	}).function,
 
 	// * "reverses" the "Array.flat()";
-	arrEncircle: function (a, from = 0, to = a.length) {
-		from = negind(from, a)
-		to = negind(to, a)
+	arrEncircle: function (a, from = 0, to = a.length - 1) {
+		from = alinative.number.negind(from, a)
+		to = alinative.number.negind(to, a)
 		const copied = []
 		for (let i = 0; i < a.length; i++) {
 			if (i >= from && i <= to) {
@@ -1589,13 +1606,31 @@ export const naarray = {
 	},
 
 	// ? Generalize such usages of 'repeatedApplication' with some special alias of 'multiple' (works exclusively with arrays, for example?);
+	// ! This can be optimized [repeated 'evaluate()'];
 	arrEncircleMult(arr = [], coors = []) {
-		return stnative.repeatedApplication([...arr], coors.length, (r, i) =>
-			this.arrEncircle(r, coors[i])
+		return stnative.repeatedApplication(copy.flatCopy(arr), coors.length, (r, i) =>
+			this.arrEncircle(
+				r,
+				...coors[i].map(
+					(x) =>
+						x +
+						i * num(i > 0) -
+						evaluate().function(
+							Expression(
+								"+",
+								[],
+								alarray.native
+									.generate(i)
+									.map((l) => ((x) => x[1] - x[0] + 1)(coors[l - 1]))
+							)
+						)
+				)
+			)
 		)
 	},
 
 	// ! Later, (in v1.1, when working on 'statistics', pray relocate 'countAppearences' to there...);
+	// ! Again, things like that are ALL to be generalized to the 'property'-style arguments (to allow for generality) + 'predicates' extended greatly to allow for working with both sub-divisions of structures and particular elements
 	countAppearences: TEMPLATE({
 		defaults: {
 			comparison: refCompare,
@@ -1618,21 +1653,25 @@ export const string = {
 // * Copies an object/array deeply...
 copy.deepCopy = copy.copyFunction({
 	list: ["array", "object", "function", "symbol"]
-})
+}).function
 
 // * Keeps the functions references intact whilst copying...
 copy.dataCopy = copy.copyFunction({
 	list: ["array", "object", "symbol"]
-})
+}).function
 
 // * Does a flat copy of something;
 copy.flatCopy = copy.copyFunction({
 	list: ["arrayFlat", "objectFlat", "function", "symbol"]
-})
+}).function
 
 for (const x in naarray.replace)
 	string.replace[`s${x}`] = string.strmethod(naarray.replace[x])
-string.sreplaceFirst = string.sreplaceIndexes
+string.replace.sreplaceFirst = (s, x, y) => string.replace.sreplaceIndexes(s, x, y, [0])
+string.reverse = string.strmethod(alinative.object.rproperty("reverse")())
+string.map = string.strmethod((x, ...args) =>
+	alinative.object.property("map")(x)(...args)
+)
 
 // ? generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
 // * Gorgeous. Just gorgeous...
@@ -1889,7 +1928,7 @@ export const RECURSIVE_VARIABLE = (x) => {
 
 // ? More methods? [later, maybe...]
 export const deftable = RECURSIVE_VARIABLE({
-	"+": general.recursiveOperation("+", alinative.binary.add),
+	"+": general.recursiveOperation("+", alinative.binary.add, 0),
 	"-": function (...args) {
 		return this.get["+"](
 			...(args.length ? [args[0]].concat(args.slice(1).map((x) => -x)) : [])
@@ -1898,16 +1937,16 @@ export const deftable = RECURSIVE_VARIABLE({
 	"/": function (...args) {
 		return args.length >= 2 ? args[0] / this.get["*"](...args.slice(1)) : args[0]
 	},
-	"*": general.recursiveOperation("*", alinative.binary.mult),
-	"**": general.recursiveOperation("**", alinative.binary.power),
-	"^": general.recursiveOperation("^", alinative.binary.xor),
-	">>": general.recursiveOperation(">>", alinative.binary.rshift),
-	"<<": general.recursiveOperation("<<", alinative.binary.lshift),
-	"&": general.recursiveOperation("&", alinative.binary.and),
-	"|": general.recursiveOperation("|", alinative.binary.or),
-	"%": general.recursiveOperation("%", alinative.binary.modulo),
-	"&&": general.recursiveOperation("&&", alinative.binary.dand),
-	"||": general.recursiveOperation("||", alinative.binary.dor)
+	"*": general.recursiveOperation("*", alinative.binary.mult, 1),
+	"**": general.recursiveOperation("**", alinative.binary.power, 1),
+	"^": general.recursiveOperation("^", alinative.binary.xor, 0),
+	">>": general.recursiveOperation(">>", alinative.binary.rshift, 0),
+	"<<": general.recursiveOperation("<<", alinative.binary.lshift, 0),
+	"&": general.recursiveOperation("&", alinative.binary.and, 0),
+	"|": general.recursiveOperation("|", alinative.binary.or, 0),
+	"%": general.recursiveOperation("%", alinative.binary.modulo, 1),
+	"&&": general.recursiveOperation("&&", alinative.binary.dand, false),
+	"||": general.recursiveOperation("||", alinative.binary.dor, false)
 })
 export const udeftable = RECURSIVE_VARIABLE({
 	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
@@ -1993,9 +2032,9 @@ export const numberc = GENERATOR({
 		return this.template.backward(num(x))
 	},
 	range: negate(is.nan)
-})
+}).function
 export function addnumber(template = {}, ntemplate = {}) {
-	return number({
+	return numberc({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
 			return x + this.template.fdiff
@@ -2007,7 +2046,7 @@ export function addnumber(template = {}, ntemplate = {}) {
 	})
 }
 export function multnumber(template = {}, ntemplate = {}) {
-	return number({
+	return numberc({
 		template: { fdiff: 1, bdiff: -1, ...template },
 		forward(x) {
 			return x * this.template.fdiff
@@ -2040,7 +2079,7 @@ export const objCounter = GENERATOR({
 			(typeof a === "object" && this.range(this.inverse(a)))
 		)
 	}
-})
+}).function
 
 // ? Generalize with the usage of 'forms'? [the present implementation uses the 'DEFAULT_FORM...'];
 // * A maximally efficient structurally counter based on array recursion and finite orders;
@@ -2655,7 +2694,7 @@ export const structure = TEMPLATE({
 export function typeConst(f = ID, n = 1) {
 	const TCONST = alinative.object.empty()
 	// ! make an alias for the function in the map;
-	const arr = [TCONST].append(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
+	const arr = [TCONST].concat(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
 	return f(Object.freeze(arr))
 }
 
@@ -3783,7 +3822,7 @@ export const garrays = {
 			},
 			icclass: InfiniteCounter(
 				addnumber({
-					start: this.this.template.offset
+					start: X.template.offset
 				})
 			),
 			...garrtemplate
@@ -4464,9 +4503,11 @@ export const tnumbers = {
 				names: nameslist,
 				inter: cdieach,
 				defaults: {
-					constructor: alarray.native.generate(2).map(function () {
-						return this.template.parentclass.static.one()
-					})
+					constructor: alarray.native.generate(2).map(
+						alinative.function.const(function () {
+							return this.template.parentclass.static.one()
+						})
+					)
 				}
 			},
 			methods: {
@@ -4672,7 +4713,6 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 }
 
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	let loctreeform = treeForm(parentclass)
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -4892,17 +4932,13 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			order() {
-				return dim({ form: loctreeform }).function(i)
+				return dim({ form: treeForm(this.this.this.this.class) }).function(i)
 			}
 		},
 		static: {
 			// ? Suggestion [idea]: write a (static) 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes? [note: would work only on a particular TreeNode given...];
 		},
-		recursive: true,
-		transform: (_class) => {
-			loctreeform = loctreeform(_class.template)
-			return _class
-		}
+		recursive: true
 	})
 }
 general.DEFAULT_TREENODECLASS = TreeNode()
@@ -5157,7 +5193,7 @@ export const Vertex = (value, edges) => ({ value, edges })
 export const heaps = {
 	PairingHeap(parentclass = general.DEFAULT_TREENODECLASS) {
 		return EXTENSION({
-			defaults: defaults.heap(parentclass),
+			defaults: refactor.defaults.heap(parentclass),
 			methods: {
 				merge(
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
@@ -5459,7 +5495,7 @@ export const sort = {
 	}).function,
 	counting: TEMPLATE({
 		defaults: {
-			genarrclass: DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS
 			// ! ISSUE: what about the default 'predicate'?
 			// ^ DECISION: perhaps, use one of the 'mjs' - namely, lesser/greater, those...
 		},
@@ -5489,7 +5525,7 @@ export const sort = {
 	}).function,
 	quick: TEMPLATE({
 		defaults: {
-			genarrclass: DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			if (
@@ -5545,7 +5581,7 @@ export const sort = {
 	}).function,
 	insertion: TEMPLATE({
 		defaults: {
-			genarrclass: DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
@@ -6169,7 +6205,9 @@ export function DEOBJECT(obj = {}) {
 }
 
 export function OBJECT(keys = [], values = []) {
-	let length = Math.min([keys.length, values.length])
+	const length = nanumber.min(
+		Array.from(arguments).map(alinative.function.index("length"))
+	)
 	const returned = {}
 	for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
 	return returned
@@ -6199,13 +6237,16 @@ alarray.native = {
 }
 
 // * Constructs a counter from an InfiniteClass;
-export const cfromIcc = refactor.general.counterFrom(["jumpForward", "jumpBackward"])
+export const cfromIcc = refactor.general.counterFrom([
+	"jumpForward",
+	"jumpBackward"
+]).function
 
 // * Constructs a counter from a TrueInteger class (additive);
 export const tintAdditive = refactor.general.counterFrom(
 	["add", "difference"],
 	tnumbers.TrueInteger().static.fromCounter
-)
+).function
 
 // ? Add tint-based counters for other operations as well? [same goes for the native JS Number...];
 export const tintMultiplicative = (() => {
@@ -6220,5 +6261,5 @@ export const tintMultiplicative = (() => {
 			back: this.template.wrapper(this.template.icclass.static.two())
 		}
 	}
-	return X
+	return X.function
 })()

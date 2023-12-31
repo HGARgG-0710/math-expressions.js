@@ -3,19 +3,20 @@ Order of testing [note: do NOT delete the items, mark instead, use later as a li
 This file is also used for documentation, and name-collision-related work...
 
 	1. native.mjs
-		1.1. copy: 
+		1.1. copy [check]: 
 			1.1.1. copy
 			1.1.2. copyFunction
 			1.1.3. deepCopy
 			1.1.4. dataCopy
 			1.1.5. flatCopy
-		1.2. number: 
+		1.2. number [check]: 
 			1.2.1. readable
 			1.2.2. floor
 			1.2.3. ceil
 			1.2.4. min
 			1.2.5. max
-		1.3. object: 
+			1.2.6. isWhole
+		1.3. object [check]: 
 			1.3.1. subobjects
 			1.3.2. subobjectsFlat
 			1.3.3. isRecursive
@@ -31,7 +32,7 @@ This file is also used for documentation, and name-collision-related work...
 			1.3.13. ismapped
 			1.3.14. gutInnerObjs
 			1.3.15. objEncircle
-		1.4. array:
+		1.4. array [check]:
 			1.4.1. replace: 
 				1.4.1.1. replaceIndex
 				1.4.1.2. replaceIndexes
@@ -53,8 +54,10 @@ This file is also used for documentation, and name-collision-related work...
 				1.5.1.5. sreplaceIndexesMult
 				1.5.1.6. sreplaceMany
 			1.5.3. UTF16
+			1.5.4. map
+			1.5.5. reverse
 		1.6. finite
-	2. comparisons.mjs
+	2. comparisons.mjs [check]
 		2.1. valueCompare
 		2.2. refCompare
 		2.3. oldCompare 

@@ -3,7 +3,7 @@
 // todo: work extensively on the precise list of aliases... Also, their names...
 // TODO [general] : perform hardcore alias-reusage ['alias-relinkage'] procedure, thus shortening and simplifying code using newly/previously introduced aliases...
 export {
-	alinative,
+	alinative as native,
 	id,
 	bool,
 	str,

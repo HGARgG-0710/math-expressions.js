@@ -172,3 +172,4 @@ It gets changed actively.
 	14.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
 		The 'v1.1.' is supposed to bring those back to consideration.
 	14.4. Related to the 'TEMPLATE.function' question - optional names. Allow for user-defined names for class instances [namely, the active usage of 'classref', 'isname' and so on... Currently, they are not used, just sort of 'hang' there...];
+	14.5. Edge cases handling - due to urgency, one don't have enough time to fix all the wanted issues regarding the edge cases, so (in the end) only the most essential pieces of the library have this issue dealt with...
