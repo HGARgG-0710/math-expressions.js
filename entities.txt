@@ -130,6 +130,7 @@ This file is also used for documentation, and name-collision-related work...
 			8.3.1. LastIndexArray
 			8.3.2. DeepArray
 			8.3.3. CommonArray
+			8.3.4. TypedArray
 		8.4. UnlimitedMap
 		8.5. UnlimitedString
 		8.6. numbers:

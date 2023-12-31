@@ -1,1 +1,40 @@
-export { aliases } from "../../lib.mjs"
+// * The file that covers various aliases of the library's entities;
+
+// todo: work extensively on the precise list of aliases... Also, their names...
+// TODO [general] : perform hardcore alias-reusage ['alias-relinkage'] procedure, thus shortening and simplifying code using newly/previously introduced aliases...
+export {
+	alinative,
+	id,
+	bool,
+	str,
+	num,
+	obj,
+	sym,
+	udef,
+	set,
+	arr,
+	fn,
+	fun,
+	bi,
+	ustr,
+	genarr,
+	umap,
+	infarr,
+	infstr,
+	infset,
+	ic,
+	liarr,
+	darr,
+	carr,
+	tint,
+	tratio,
+	tn,
+	uset,
+	p,
+	trimBeginning,
+	trimEnd,
+	is,
+	cdieach,
+	hasFunction,
+	inarr
+} from "../../lib.mjs"

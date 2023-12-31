@@ -8,65 +8,111 @@
 // 		* 1.4. general.recursiveOperation
 // 		! 1.5. general [all else] [not]
 // 2. Fix the definitions order, so as to avoid the 'const-deadzone-error' conflicts, along the way - fix the new names collisions found...;
-// 		* 2.1. List of modules left for 'unpacking':
-// 			1. macros
-// 			2. predicates
-// 			3. aliases
-//			4. general
-// 3. Return back the previous lists of expressions to their initial files, delete the temporary modules objects, GET RID OF THE REFERENCES AND FIX THE NAME-COLLISSION CONFLICTS!
+// 		* 2.1. List of modules left for 'unpacking' [fulfill some after...]:
+//			1. general
+// 3. FIX THE NAME-COLLISSION CONFLICTS!
+// ! ISSUE: with using the 'DEFAULT' variables? - [idea for a solution - use functions instead of those things?] (namely, put EVERYTHING in functions so as to allow for on-request processing of variables that is inherent to them?)
 
-// ! MAKE ORDER IN THIS FILE - MAKE DIFFERENT MODULES DISTINGUISHABLE SOMEHOW...
+// ! CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
+// ! FIX THE ERRORS RELATED TO MISSING PROPERTIES [examples: 'no defaults.parentclass for an EXTENSION']
 
-// ? Make a part of the 'MACROS?' [makes an awful lot of sense, especially considering just how ugly most of these functions' signatures are and that they mostly bear a purely service purpose...];
-export const general = {
-	fix: function (
-		objs = [],
-		keys = [],
-		operation = () => {},
-		readfunc = (o, k) => o[k],
-		setfunc = (o, k, v) => (o[k] = v)
-	) {
-		const remember = objs.map((obj, i) => readfunc(obj, keys[i]))
-		const returned = operation()
-		for (let i = 0; i < remember.length; i++) setfunc(objs[i], keys[i], remember[i])
-		return returned
-	},
+// ? Export or no? [if export, then make sure that this thing has a more 'sounding' name...]; Maybe, make a part of 'refactoring' instead? [serves little semantic purpose apart from the trivial one...];
+// * Stands for 'Obj-Func-Def-Key-List'
+const OFDKL = (obj, f, keylist = [], bind = false) => {
+	for (const x of keylist) obj[x] = (bind ? (x) => x.bind(obj) : ID)(f(x))
+}
 
-	StaticThisTransform: (templated) => {
-		templated.static.this = templated
-	},
-	recursiveOperation(opname, binaryver) {
-		return function (...args) {
-			return args.length >= 2
-				? binaryver(args[0], this.get[opname](args.slice(1)))
-				: args[0]
-		}
-	},
-	finiteobj: function (
-		target = {},
-		names = [],
-		templates = [],
-		insequences = [],
-		outtransform = [],
-		aretemplates = [],
-		ftemplates = []
-	) {
-		const newobj = {}
-		const xf = !(template instanceof Array)
-			? (x) => templates[x]
-			: aliases.native.function.const(template)
-		for (const x in names)
-			newobj[names[x]] = native
-				.finite(xf(x))
-				.function(
-					(aretemplates[x] ? (f) => f.function(ftemplates[x]) : ID)(
-						target[names[x]]
-					),
-					outtransform[x],
-					insequences[x]
-				)
-		return newobj
-	}
+const INTERSECTION = (a, b) => {
+	const f = []
+	for (const x of a) for (const y of b) if (x === y && !f.includes(x)) f.push(x)
+	return f
+}
+
+// ? Again - export or not?
+export const NAMED_TEMPLATE = (f, dname = undefined, dinstance = undefined, rest = {}) =>
+	TEMPLATE({
+		defaults: { name: dname, instance: dinstance },
+		function: f,
+		...rest
+	})
+
+export const refCompare = (a, b) => a === b
+export const ID = (a) => a
+// * Identity map (just a nice piece of notation, that's all);
+export const id = ID
+
+export const bool = Boolean
+export const str = String
+export const num = Number
+export const obj = Object
+export const sym = Symbol
+export const udef = undefined
+export const set = Set
+export const arr = Array
+export const fn = Function
+export const fun = Function
+export const bi = BigInt
+
+export const is = {
+	bool: (x) => x === true || x === false,
+	str: (x) => typeof x === "string" || x instanceof String,
+	num: (x) => typeof x === "number" || x instanceof Number,
+	obj: (x) => typeof x === "object" && x instanceof Object,
+	sym: (x) => typeof x === "symbol",
+	udef: (x) => x === undefined,
+	set: (x) => x instanceof Set,
+	arr: (x) => x instanceof Array,
+	fn: (x) => x instanceof Function,
+	fun: (x) => typeof x === "function",
+	bi: (x) => x instanceof BigInt,
+	nan: isNaN,
+	class: (cl) => cl.is
+}
+
+export const trimBeginning =
+	(n = 1) =>
+	(x) =>
+		x.slice(n)
+export const trimEnd =
+	(n = 1) =>
+	(x) =>
+		x.slice(0, x.length - n)
+
+// ! use the 'composition' and 'wrapper' especially much with the 'aliases' to obtain new ones...;
+export const cdieach = (x, i) => [x[i]]
+export const hasFunction = (x, m) => x.hasOwnProperty(m) && typeof x[m] === "function"
+export const inarr = (x) => [x]
+
+export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
+	return EXTENSION({
+		defaults: defaults.basicgenarr(parentclass),
+		toextend: [],
+		methods: {
+			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
+			push(element) {
+				return this.this.this.genarr.pushback(element)
+			},
+			pop: refactor.classes.pop,
+			peek: refactor.classes.peek,
+			copy: refactor.classes.copy
+		},
+		recursive: true
+	})
+}
+export const Queue = (parentclass = general.DEFAULT_GENARRCLASS) => {
+	return EXTENSION({
+		defaults: defaults.basicgenarr(parentclass),
+		toextend: [],
+		methods: {
+			enqueue(element) {
+				return this.this.this.genarr.pushfront(element)
+			},
+			dequeue: refactor.classes.pop,
+			front: refactor.classes.peek,
+			copy: refactor.classes.copy
+		},
+		recursive: true
+	})
 }
 
 // ! Use all over the place, DO NOT EXPORT
@@ -78,35 +124,35 @@ const refactor = {
 			return this.length().get().previous()
 		},
 		begin: function (go = true) {
-			return this[go ? "go" : "read"](this.init(), go ? aliases.TRUTH : undefined)
+			return this[go ? "go" : "read"](this.init(), go ? TRUTH : undefined)
 		},
 		end: function (go = true) {
-			return this[go ? "go" : "read"](this.finish(), go ? aliases.TRUTH : undefined)
+			return this[go ? "go" : "read"](this.finish(), go ? TRUTH : undefined)
 		},
-		suchthat: function (predicate = aliases.TRUTH) {
+		suchthat: function (predicate = TRUTH) {
 			const subset = this.this.this.this.class.class()
 			for (const key of this.keys())
 				if (predicate(this.read(key), key, this, subset)) subset.pushback(key)
 			this.this.this = subset
 			return this
 		},
-		any: function (predicate = aliases.TRUTH) {
+		any: function (predicate = TRUTH) {
 			return !this.init().compare(
 				this.copied("suchthat", [predicate]).length().get()
 			)
 		},
-		every: function (predicate = aliases.TRUTH) {
+		every: function (predicate = TRUTH) {
 			return this.this.this.class.template.icclass.template.comparison(
 				this.copied("suchthat", [predicate]).length().get(),
 				this.length().get()
 			)
 		},
-		forEach: function (method = aliases.VOID) {
+		forEach: function (method = VOID) {
 			for (const x of this.keys()) method(this.read(x), x, this)
 			return this
 		},
 		includes: function (element, leftovers = {}) {
-			ensureProperties(leftovers, {
+			alinative.object.ensureProperties(leftovers, {
 				unfound: this.this.this.this.class.template.unfound,
 				comparison: refCompare
 			})
@@ -171,7 +217,7 @@ const refactor = {
 			isclass = false
 		) {
 			const c = this.copy(f, template, isclass)
-			if (aliases.hasFunction(c, method)) c[method](..._arguments)
+			if (hasFunction(c, method)) c[method](..._arguments)
 			return c
 		},
 		usetmeth: function (name) {
@@ -185,17 +231,20 @@ const refactor = {
 
 	general: {
 		lengthSafeConcat: function (a, b) {
-			if (a.length >= variables.MAX_STRING_LENGTH.get - b.length)
+			if (a.length >= MAX_STRING_LENGTH.get - b.length)
 				return [
-					a.concat(b.slice(0, variables.MAX_STRING_LENGTH.get - a.length)),
-					b.slice(variables.MAX_STRING_LENGTH.get - a.length)
+					a.concat(b.slice(0, MAX_STRING_LENGTH.get - a.length)),
+					b.slice(MAX_STRING_LENGTH.get - a.length)
 				]
 			return [a.concat(b)]
 		},
 		counterFrom: function (_labels = [], wrapper = ID) {
 			return TEMPLATE({
 				defaults: [
-					aliases.function.const({ icclass: general.DEFAULT_ICCLASS, wrapper }),
+					alinative.function.const({
+						icclass: general.DEFAULT_ICCLASS,
+						wrapper
+					}),
 					function () {
 						return {
 							forth: this.template.wrapper(
@@ -228,9 +277,7 @@ const refactor = {
 				: orders.most({ comparison: this.template.predicate })(
 						garr.copy(this.template.predicate)
 				  )
-		},
-		DEFAULT_ICCLASS: InfiniteCounter(),
-		DEFAULT_GENARRCLASS: arrays.LastIndexArray()
+		}
 	},
 
 	// TODO: make the object of defaults that is to be used throughout the library...;
@@ -241,30 +288,1049 @@ const refactor = {
 			names: ["treenode"],
 			defaults: {
 				outer: function (trNode) {
-					return predicates.ensureHeap(trNode, this.template.predicate)
+					return ensureHeap(trNode, this.template.predicate)
 				}
 			},
-			predicate: predicates.lesser
+			predicate: lesser
 		}),
 		basicgenarr: (parentclass) => ({ parentclass: parentclass, names: ["genarr"] }),
 		basicheap: (heapclass) => ({ parentclass: heapclass, names: ["heap"] })
 	}
 }
 
-general.DEFAULT_USTRCLASS = UnlimitedString()
-general.DEFAULT_TREENODECLASS = TreeNode()
-general.DEFAULT_INFARR = InfiniteArray()
-general.DEFAULT_TINTCLASS = numbers.TrueInteger()
-general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
-general.DEFAULT_TRATIOCLASS = numbers.TrueRatio()
-general.DEFAULT_FORM = structure.arrayForm
+// ? Make a part of the 'MACROS?' [makes an awful lot of sense, especially considering just how ugly most of these functions' signatures are and that they mostly bear a purely service purpose...];
+export const general = {
+	fix: function (
+		objs = [],
+		keys = [],
+		operation = () => {},
+		readfunc = (o, k) => o[k],
+		setfunc = (o, k, v) => (o[k] = v)
+	) {
+		const remember = objs.map((obj, i) => readfunc(obj, keys[i]))
+		const returned = operation()
+		for (let i = 0; i < remember.length; i++) setfunc(objs[i], keys[i], remember[i])
+		return returned
+	},
+	StaticThisTransform: (templated) => {
+		templated.static.this = templated
+		return templated
+	},
+	recursiveOperation(opname, binaryver) {
+		return function (...args) {
+			return args.length >= 2
+				? binaryver(args[0], this.get[opname](args.slice(1)))
+				: args[0]
+		}
+	},
+	finiteobj: function (
+		target = {},
+		names = [],
+		templates = [],
+		insequences = [],
+		outtransform = [],
+		aretemplates = [],
+		ftemplates = []
+	) {
+		const newobj = {}
+		const xf = !(templates instanceof Array)
+			? (x) => templates[x]
+			: alinative.function.const(template)
+		for (const x in names)
+			newobj[names[x]] = finite(xf(x)).function(
+				(aretemplates[x] ? (f) => f.function(ftemplates[x]) : ID)(
+					target[names[x]]
+				),
+				outtransform[x],
+				insequences[x]
+			)
+		return newobj
+	}
+}
+
+export const alinative = {
+	number: {
+		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
+
+		fromNumber: TEMPLATE({
+			defaults: {
+				icclass: general.DEFAULT_ICCLASS
+			},
+			function(x = this.template.start) {
+				return types
+					.InfiniteCounter(addnumber(this.template))
+					.class(x)
+					.map(this.template.icclass)
+			}
+		}).function,
+
+		negind: (x, arr) => (x < 0 ? arr.length + x : x),
+		nneg: (x) => (x < 0 ? -x : x)
+	},
+
+	string: {
+		stoa(x = "") {
+			return x.split("")
+		},
+		atos(x = []) {
+			return x.join("")
+		},
+		fcc: String.fromCharCode,
+		strMap: function (str, symb = ID, isStrOut = false) {
+			return (isStrOut ? (x) => x.join("") : id)(str.split("").map(symb))
+		}
+	},
+
+	array: {
+		// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
+		last: (arr, obj, comparison = valueCompare) => {
+			return max(
+				alarray.native
+					.indexesOf({ comparison: comparison })
+					.function(arr, obj, comparison)
+			)
+		},
+		first: (arr, obj, comparison = valueCompare) => {
+			return min(
+				alarray.native
+					.indexesOf({ comparison: comparison })
+					.function(arr, obj, comparison)
+			)
+		},
+		_last: (arr) => arr[arr.length - 1],
+		_first: (arr) => arr[0],
+		insert: (arr, index, values, replacing = false) =>
+			arr
+				.slice(0, index)
+				.concat(values)
+				.concat(arr.slice(replacing ? (x) => x + values.length : index)),
+		_insert: (arr, index, val) => insert(arr, index, [val]),
+		remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
+		_remove: (arr, index) => remove(arr, index, index),
+		minlen: (...arrs) => flen(min, ...arrs),
+		maxlen: (...arrs) => flen(max, ...arrs),
+		flen: (f, ...arrs) => {
+			return f(arrs.map((a) => a.length))
+		},
+		flenarrs: (f, ...arrs) => {
+			const _f = f(...arrs)
+			return arrs.filter((a) => a.length === _f)
+		},
+		minlenarrs: (...arrs) => flenarrs(minlen, ...arrs),
+		maxlenarrs: (...arrs) => flenarrs(maxlen, ...arrs),
+		propertymap: (prop) => (objs) => objs.map((a) => a[prop]),
+
+		// ? does one want to rename these two?
+		arrThisApply: function (f, arr, thisArg = null) {
+			return f.apply(thisArg, arr)
+		},
+		arrApply: function (f, arr) {
+			return f(...arr)
+		},
+		noarrs(array = []) {
+			return array.filter(negate(is.arr))
+		},
+		arrsonly(array = []) {
+			return array.filter(is.arr)
+		},
+		// ? Does one want to keep those?
+		_multmap: function (a, fs) {
+			return multmap([a], fs)[0]
+		},
+		multmap: function (a, fs) {
+			return a.map((el) => fs.map((f) => f(el)))
+		},
+		// ! try hard to use arrow functions only for the aliases;
+		hasArrays: (array = []) => array.any(is.arr)
+	},
+
+	function: {
+		const: (c) => () => c,
+		void: () => {},
+		bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
+		// TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
+		compose: (fc, args = []) => {
+			return this.composition(fc)(...args)
+		},
+		// ! Use this one extensively...
+		wrapper: TEMPLATE({
+			defaults: {
+				inarr: false,
+				in: id,
+				out: id,
+				deff: id
+			},
+			function: function (f = this.template.deff) {
+				return this.template.inarr
+					? (x) => this.template.out(f(...this.template.in(x)))
+					: (x) => this.template.out(f(this.template.in(x)))
+			}
+		}).function,
+		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
+
+		// ? Generalize this to a context (add 'this');
+		adddefaults:
+			(f) =>
+			(defaults = []) => {
+				return (...args) => {
+					for (const x in defaults) if (!(x in args)) args[x] = defaults[x]
+					return f(...args)
+				}
+			},
+		paramDecide:
+			(cond) =>
+			(a = ID, b = ID) =>
+			(...args) =>
+				(cond() ? a : b)(...args),
+
+		index: (i) => (x) => x[i],
+
+		exparr: (f) => (arr) => f(...arr),
+		rexparr: (arr) => (f) => f(...arr),
+		call: (x) => x(),
+		argscall: function (...args) {
+			return this.rexparr(args)
+		}
+	},
+
+	object: {
+		ensureProperty: function (object, property, value = undefined) {
+			if (!object.hasOwnProperty(property)) object[property] = value
+		},
+		// * A convinient general-version...
+		ensureProperties: function (object, defaultobj) {
+			for (const x in defaultobj) this.ensureProperty(object, x, defaultobj[x])
+		},
+		// ? should this be in the 'object' or in 'function'?
+		property:
+			(p) =>
+			(x) =>
+			(...args) =>
+				x[p](...args),
+		empty: () => ({})
+	},
+
+	boolean: {
+		n: (x) => !x,
+		t: true,
+		f: false,
+		btic: (x, _class) => _class.static[x ? "one" : "zero"]()
+	},
+
+	binary: {
+		add: (a, b) => a + b,
+		sub: (a, b) => a - b,
+		mult: (a, b) => a * b,
+		div: (a, b) => a / b,
+		power: (a, b) => a ** b,
+		xor: (a, b) => a ^ b,
+		rshift: (a, b) => a >> b,
+		lshift: (a, b) => a << b,
+		and: (a, b) => a & b,
+		or: (a, b) => a | b,
+		modulo: (a, b) => a % b,
+		dand: (a, b) => a && b,
+		dor: (a, b) => a || b
+	}
+}
+
+// * Allows to define templated classes and functions more non-conventionally;
+export function TEMPLATE(template = {}) {
+	const F = function (template = this.template.deftemplate) {
+		let _class = {}
+		// ? Do something about this - don't just leave hanging...;
+		const K = (x, i = 0) => {
+			const isxarr = x instanceof Array
+			return i === -1
+				? isxarr
+					? {}
+					: x
+				: isxarr
+				? this.template.isthis
+					? x[i].bind(this.template.this)()
+					: x[i]
+				: this.template.isthis
+				? x.bind(this.template.this ? this.template.this : _class)()
+				: x
+		}
+		// ! refactor! [again, the native.object methods for immidiate object-property inheritance procedures accomplishment]
+		if (this.template.defaults instanceof Array)
+			for (const x in this.template.defaults) {
+				const k = K(this.template.defaults, x)
+				for (const y in k) _class[this.template.templateword][y] = k[y]
+				for (const y in template)
+					_class[this.template.templateword][y] = template[y]
+			}
+		_class[this.template.templateword] = {
+			...K(this.template.defaults, -1),
+			...template
+		}
+		// ! FIX THIS [the present 'isthis' function do __NOT__ adhere to this requirement of possessing a 'this'-wrapper...] - simply use the 'alinative.function.const' on it...;
+		_class[this.template.word] = (
+			this.template.isthis
+				? (x) => x(this.template.this ? _class : this.template.this)
+				: ID
+		)(this.template.function).bind(_class)
+		for (const x in this.template.rest)
+			_class[x] = is.obj(this.template.rest[x])
+				? { ...this.template.rest[x] }
+				: this.template.rest[x]
+		return this.template.transform(_class, template)
+	}
+	const X = {
+		template: {
+			deftemplate: {},
+			defaults: {},
+			word: "function",
+			function: ID,
+			isthis: false,
+			this: null,
+			rest: {},
+			transform: ID,
+			templateword: "template",
+			...template
+		}
+	}
+	X.function = F.bind(X)
+	return X
+}
+
+export const finite = TEMPLATE({
+	defaults: {
+		definseq: [false],
+		defout: false,
+		integer: false
+	},
+	function: function (f, out = this.template.defout, inseq = this.template.definseq) {
+		const fu = this.template.integer
+			? ID
+			: general.DEFAULT_TINTCLASS.static.fromCounter
+		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
+		const tin = (out) => (out ? fu(native.number.fromNumber) : garrays.CommonArray())
+		const tout = (out) =>
+			out
+				? (x) => x.map(InfiniteCounter(addnumber())).value
+				: (x) => x.copied("switchclass", [arrays.CommonArray()]).array
+		return alinative.function
+			.wrapper({
+				out: tout(out),
+				in: inseq.map(tin),
+				inarr: true
+			})
+			.function(f)
+	}
+}).function
+
+export function NOREST(labels = [], btemplate = {}) {
+	return function (template = {}) {
+		const X = { ...btemplate }
+		// ! refactor! [make a method for array disjunction...];
+		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
+		X.rest = {}
+		// ! refactor!
+		for (const l of labels) X.rest[l] = template[l]
+		X.rest = { ...X.rest, ...template.rest }
+		return TEMPLATE(X)
+	}
+}
+// ? Add the 'parentclass' and 'names' in there? Pray consider...;
+export const PRECLASS = NOREST([
+	"methods",
+	"static",
+	"recursive",
+	"classref",
+	"selfname",
+	"subselfname",
+	"isgeneral",
+	"properties",
+	"isname"
+])
+
+// ? generalize to another macro, maybe?
+// * Use all over the place...
+export const CLASS = (ptemplate = {}) => {
+	alinative.object.ensureProperties(ptemplate, {
+		word: "class",
+		function: (ptemplate.isthis ? alinative.function.const : ID)(
+			alinative.object.empty
+		),
+		methods: {},
+		static: {},
+		recursive: false,
+		classref: "class",
+		selfname: "this",
+		subselfname: "this",
+		isgeneral: {},
+		properties: {},
+		isname: "is"
+	})
+	const template = PRECLASS(ptemplate)
+	const POSTTF = template.function.bind(template)
+	template.function = function (vtemplate = template.template.deftemplate) {
+		const p = POSTTF(vtemplate)
+		const POSTF = p[template.template.word]
+		p[template.template.word] = function (...args) {
+			const V = POSTF(...args)
+
+			if (this.recursive) {
+				V = {
+					[this.classref]: this,
+					[this.selfname]: {
+						...V
+					}
+				}
+				V[this.selfname][this.subselfname] = V
+			}
+
+			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
+			for (const x in this.methods) {
+				const isarr = this.methods[x] instanceof Array
+				if (isarr || this.isgeneral.hasOwnProperty(x)) {
+					const B = isarr
+						? this.methods[x]
+						: [this.isgeneral[x], this.methods[x]]
+					const A = B[1]
+					A.template.instance = (this.recursive ? (x) => x[this.selfname] : ID)(
+						V
+					)
+					V[x] = B.methods[0] ? A.function.bind(A) : A.function()
+					continue
+				}
+				V[x] = this.methods[x].bind(
+					(this.recursive ? (x) => x[this.selfname] : ID)(V)
+				)
+			}
+
+			const O = this.recursive ? V[this.selfname][this.subselfname] : V
+			for (const pr in this.properties)
+				O[p] = this.properties[pr].bind(this)(...args)
+			return V
+		}.bind(p)
+		p[p.isname] = function (x, classword = ptemplate.classref) {
+			return x.hasOwnProperty(classword) && valueCompare(this, x[classword])
+		}.bind(p)
+		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
+		p[Symbol.hasInstance] = function (x) {
+			return (
+				this.is(x) ||
+				(x.class.template.names &&
+					x.class.template.names.any((n) => x[n] instanceof this))
+			)
+		}.bind(p)
+		return p
+	}
+	return template
+}
+
+// ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the dilemma is somewhat different:
+// * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
+// 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
+// ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
+// ? ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
+export const EXTENSION = (template = {}) => {
+	// ? refactor this repeating 'ensureProperties';
+	alinative.object.ensureProperties(template, {
+		word: "class",
+		recursive: false,
+		selfname: "this",
+		subselfname: "this",
+		classref: "class",
+		isname: "is",
+		methods: {},
+		properties: {},
+		static: {},
+		isgeneral: {},
+		toextend: true,
+		defaults: {},
+		index: {}
+	})
+	const ftemplate = {
+		function: function (template = {}) {
+			return CLASS({
+				...this,
+				function: function (...args) {
+					alinative.object.ensureProperties(
+						args,
+						this.template.defaults.constructor.map((x) => x.bind(this)())
+					)
+					const X = {}
+					let i = 0
+					for (const y of this.template.names)
+						X[y] = this.template.defauls.outer(
+							this.template.parentclass.class(
+								...this.template.defaults.inter.bind(this)(args, i, X)
+							),
+							i++
+						)
+					return X
+				},
+				...template
+			})
+		},
+		...template,
+		defaults: {
+			names: ["sub"],
+			defaults: {
+				constructor: [],
+				inter: cdieach,
+				outer: ID,
+				...template.defaults.defaults
+			},
+			...template.defaults
+		},
+		methods: {
+			...template.methods,
+			...((x) => {
+				return OBJECT(
+					x,
+					x.map((a) => [
+						template.isgeneral[x] || false,
+						NAMED_TEMPLATE(
+							function (
+								instance = this.template.instance,
+								name = this.template.name
+							) {
+								return function (...args) {
+									if (
+										this[
+											name.classref
+										].template.defaults.hasOwnProperty(a)
+									)
+										alinative.object.ensureProperties(
+											args,
+											this[name.classref].template.defaults[a]
+										)
+									// ! This is not general. Reconsider deeply. First - should be ability to return arbitrary 'this'-bound expression (including 'this' itself); Second - think of whether this does the job for recursive classes as well [test, in other words...]; Third - look through the code and consider some powerful generalization cases which would be desired by one's code...
+									return this[
+										this[name.classref].template.names[name.index]
+									][a](...args)
+								}.bind(instance)
+							},
+							{
+								classref: template.classref,
+								index: template.index[a] || 0
+							}
+						)
+					])
+				)
+			})(
+				template.toextend === true
+					? Object.keys(template.defaults.parentclass.methods)
+					: // ! was - alarray.native.intersection - FIX! [decide when to PROPERLY define them...];
+					  INTERSECTION(
+							Object.keys(template.defaults.parentclass.methods),
+							template.toextend
+					  )
+			)
+		}
+	}
+	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...];
+	delete ftemplate.toextend
+	return PRECLASS(ftemplate).function()
+}
+
+// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
+//
+// ! [2]: with the currently chosen solution for the handling of the function arguments;
+// * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
+// TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray
+// TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
+export const valueCompare = TEMPLATE({
+	defaults: {
+		oneway: false
+	},
+	function: function (...args) {
+		function TWOCASE(oneway = false, objs = []) {
+			return (a, b) => {
+				if (typeof a !== typeof b) return false
+				switch (typeof a) {
+					case "object":
+						if (
+							!max(
+								objs.map(
+									// TODO: create a nice function-alias for 'f(...) && g(...)'; [so that it may be used with the other ones]
+									(x) => x[0].includes(a) && x[0].includes(b)
+								)
+							)
+						) {
+							objs.push([a, b])
+							for (const a_ in a)
+								if (!TWOCASE(false, objs)(b[a_], a[a_])) return false
+							if (!oneway) return TWOCASE(true)(b, a)
+						}
+						return true
+					case "function":
+						return String(a) === String(b)
+					case "symbol":
+						return a.toString() === b.toString()
+					default:
+						return a === b
+				}
+			}
+		}
+		return !!alinative.min(
+			args
+				.slice(0, args.length - 1)
+				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
+		)
+	}
+}).function
+
+export const alarray = {
+	native: {
+		// ! Generalize;
+		split: TEMPLATE({
+			defaults: {
+				comparison: refCompare
+			},
+			function: function (arr, el) {
+				const segments = []
+				let begInd = 0
+				let endInd = 0
+				for (let i = 0; i < arr.length; i++)
+					if (this.template.comparison(el, arr[i])) {
+						begInd = endInd + (endInd > 0)
+						endInd = i
+						segments.push([begInd, endInd])
+					}
+				return segments.map((seg) => arr.slice(...seg))
+			}
+		}).function,
+		generate: function (start, end, step = 1, precision = 1) {
+			// ! find more places for this operation's application (refactor to an alias, mayhaps?)
+			if (arguments.length === 1) {
+				end = start
+				start = 1
+			}
+			const generated = []
+			const upper =
+				end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
+			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
+			for (let i = start; proposition(i); i += step)
+				generated.push(this.floor(i, precision))
+			return generated
+		}
+	},
+	// ? Question [general]: which one should the library prefer the 'GeneralArray'-based multiple arguments, or the spread syntax? (GeneralArray permits unlimited number of arguments for a function that uses it...);
+	intersection: TEMPLATE({
+		defaults: {
+			comparison: valueCompare,
+			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		function: function (...arrs) {
+			if (!arrs.length) return this.template.genarrclass.empty()
+			if (arrs.length == 1) return arrs[0]
+			if (arrs.length == 2) {
+				const inter = this.template.genarrclass.class()
+				for (
+					let i = this.template.icclass.class();
+					lesser(i, arrs[0]);
+					i = next(i)
+				)
+					for (
+						let j = this.template.icclass.class();
+						lesser(j, arrs[1]);
+						j = next(j)
+					) {
+						const x = arrs[0].read(i),
+							y = arrs[1].read(j)
+						if (this.template.comparison(x, y))
+							inter.pushback(
+								this.template.preferred(x, y, comparison, ...arrs, i, j)
+							)
+					}
+				return inter
+			}
+			return this.function(arrs[0], this.function(arrs.slice(1)))
+		}
+	}).function,
+	permutations: TEMPLATE({
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
+		function: function (array = this.template.genarrclass.static.empty()) {
+			if (array.init().next().compare(array.length().get()))
+				return this.template.genarrclass.fromArray([array.copy()])
+
+			const pprev = this.function(
+				array.copied("slice", array.init(), array.finish().previous())
+			)
+			const l = array.end(false)
+			const pnext = this.template.genarrclass.static.empty()
+
+			for (const i of array.keys())
+				for (const j of pprev.read(i).keys())
+					pnext.pushback(pprev.copied("insert", [j, l]))
+
+			return pnext
+		}
+	}).function,
+	indexesOf: TEMPLATE({
+		defaults: [
+			function () {
+				return {
+					unfound: undefined,
+					comparison: valueCompare,
+					halt: false,
+					icclass: general.DEFAULT_ICCLASS
+				}
+			},
+			function () {
+				return {
+					haltAfter: this.template.icclass.static.one()
+				}
+			}
+		],
+		function: alinative.function.const(function (
+			arr,
+			el,
+			halt = this.template.halt,
+			haltAfter = this.template.haltAfter
+		) {
+			return general.fix([arr.this.this], ["currindex"], () => {
+				const inds = this.empty()
+				const cond = halt
+					? (inds) => inds.length().get().compare(haltAfter)
+					: TRUTH
+				let currind
+				while (currind !== this.template.unfound && !cond(inds, this)) {
+					currind = search.linear(this.template).function(el, arr)
+					inds.pushback(currind)
+				}
+				return inds
+			})
+		}),
+		isthis: true
+	}).function,
+	norepetitions: TEMPLATE({
+		defaults: [
+			function () {
+				return {
+					comparison: valueCompare,
+					copy: false,
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					icclass: general.DEFAULT_ICCLASS
+				}
+			},
+			function () {
+				return {
+					tokeep: this.template.icclass.static.zero()
+				}
+			}
+		],
+		function: alinative.function.const(function (
+			arr,
+			el,
+			tokeep = this.template.tokeep
+		) {
+			const firstMet = array.indexesOf(this.template).function(arr, el)
+			const pred = (a, i) =>
+				!firstMet.firstIndex(i).map(tokeep.class).compare(tokeep) ||
+				!this.template.comparison(a, el)
+			return (
+				this.template.copy
+					? (x) => x.copied("suchthat", [pred])
+					: (x) => x.suchthat(pred)
+			)(arr)
+		}),
+		isthis: true
+	}).function,
+	isSub: TEMPLATE({
+		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
+		defaults: {
+			comparison: valueCompare
+		},
+		function: function (arrsub, arr = this.template.genarrclass.static.empty()) {
+			for (const x of arrsub)
+				if (!arr.any((y) => this.template.comparison(x, y))) return false
+			return true
+		}
+	}).function,
+	join: TEMPLATE({
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		function: function (
+			arrs = this.template.genarrclass.static.empty(),
+			separators = this.template.separators
+		) {
+			return repeatedApplication(
+				this.template.genarrclass.static.empty(),
+				arrs.length().get(),
+				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
+			)
+		}
+	}).function,
+	generate: TEMPLATE({
+		defaults: {
+			icclass: general.DEFAULT_ICCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			ic: false
+		},
+		function: function (start, end, step = this.template.icclass.class().next()) {
+			if (arguments.length === 1) {
+				end = start
+				start = this.template.icclass.class().next()
+			}
+			const generated = this.template.genarrclass.static.empty()
+			const proposition = (
+				(f) => (i) =>
+					f(i, end)
+			)(predicates[step.direction() ? "lesseroe" : "greateroe"])
+			const wrap = this.template.ic ? ID : alinative.function.index("value")
+			for (let i = start; proposition(i); i = i.jumpDirection(step))
+				generated.pushback(wrap(i))
+			return generated
+		}
+	}).function,
+	common: TEMPLATE({
+		defaults: {
+			f: ID
+		},
+		function: function (...args) {
+			return array.intersection(this.template).function(args.map(this.template.f))
+		}
+	}).function,
+	concat: TEMPLATE({
+		defaults: {
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		function: function (arrays = this.template.genarrclass.static.empty()) {
+			if (arrays.two().compare(arrays.length().get()))
+				return (arrays.one().equal(arrays.length().get()) ? (x) => x.read() : ID)(
+					arrays
+				)
+			if (arrays.length().get().equal(arrays.two()))
+				return arrays.read().concat(arrays.read(arrays.one()))
+			let r = arrays.read()
+			for (const x of arrays.slice(arrays.one()))
+				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
+			return r
+		}
+	}).function
+}
+
+export const GENERATOR = NOREST(["inverse", "range"], { word: "generator" })
+
+// * Probably the "simplest" infinite counter one would have in JS is based off this generator;
+export const arrayCounter = GENERATOR({
+	defaults: {
+		start: null
+	},
+	generator(a = this.template.start) {
+		if (!this.range(a)) this.template.start = a
+		return [a]
+	},
+	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
+	inverse: function (a) {
+		return a[0]
+	},
+	range: function (a) {
+		return (
+			a === this.template.start ||
+			(a instanceof Array && this.range(this.inverse(a)))
+		)
+	}
+}).function
+
+general.DEFUAULT_COUNTER = arrayCounter()
+alinative.number.iterations = TEMPLATE({
+	defaults: { iterated: general.DEFUAULT_COUNTER, defnum: 1 },
+	function(n = this.template.defnum) {
+		return repeatedApplication(
+			undefined,
+			nneg(n),
+			this.template.iterated[n > 0 ? "generator" : "inverse"]
+		)
+	}
+}).function
+
+export const InfiniteCounter = (() => {
+	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'InfiniteCounter(...).class()' syntax for simplified zero-creation;
+	return CLASS({
+		defaults: {
+			comparison: valueCompare,
+			unacceptable: undefined,
+			initialcheck: refCompare,
+			...general.DEFUAULT_COUNTER
+		},
+		properties: {
+			value: function (previous = this.template.unacceptable) {
+				return this.template.initialcheck(previous, this.template.unacceptable)
+					? this.template.generator()
+					: previous
+			}
+		},
+		transform: general.StaticThisTransform,
+		static: {
+			direction(ic) {
+				return ic.compare(this.this.class())
+			},
+			// ? do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
+			whileloop(
+				end,
+				each,
+				start = this.this.class(),
+				iter = (x) => x.next(),
+				comparison = (x, y) => x.compare(y),
+				init = undefined
+			) {
+				let curr = start.copy()
+				let r = init
+				while (comparison(curr, end)) {
+					r = each(curr, r)
+					curr = iter(curr)
+				}
+				return curr
+			},
+			reverse() {
+				const _this = this
+				return InfiniteCounter({
+					generator(x) {
+						if (x === undefined) return _this.this.template.generator()
+						return _this.this.template.inverse(x)
+					},
+					inverse: this.this.template.generator
+				})
+			},
+			zero: refactor.classes.zero,
+			one: refactor.classes.one,
+			two: refactor.classes.two,
+			none() {
+				return this.zero().previous()
+			}
+		},
+		methods: {
+			next: function () {
+				// * An observation: this is one of the ways to be able to reference a function from within itself...
+				return this.this.this.this.class.class(
+					this.this.this.this.class.template.generator(this.this.this.value)
+				)
+			},
+			previous: function () {
+				return this.this.this.this.class.class(
+					this.this.class.template.inverse(this.this.this.value)
+				)
+			},
+			direction() {
+				return this.this.this.this.class.static.direction(this)
+			},
+			compare(ic, comparison = this.this.this.this.class.template.comparison) {
+				ic = ic.map(this.this.this.this.class)
+
+				let pointerfor = ic
+				let pointerback = ic
+
+				while (
+					!comparison(pointerfor, this.this.this) &&
+					!comparison(pointerback, this.this.this)
+				) {
+					pointerfor = pointerfor.next()
+					pointerback = pointerback.previous()
+				}
+
+				return comparison(pointerfor, this.this.this)
+			},
+			difference(ic, comparison = this.this.this.this.class.template.comparison) {
+				const next = property(
+					ic.compare(this.this.this, comparison) ? "previous" : "next"
+				)
+				this.this.this.this.class.static.whileloop(
+					this.this.this.copy(),
+					(current) => next(current)(),
+					ic,
+					(x) => next(x)(),
+					comparison,
+					this.this.this.this.class.class()
+				)
+				return current
+			},
+			jumpDirection(
+				ic,
+				comparison = this.this.this.this.class.template.comparison
+			) {
+				return this.this.this.this.class.static.direction(ic)
+					? this.this.this.jumpForward(ic, comparison)
+					: this.this.this.jumpBackward(ic)
+			},
+			jump(x, jumping = (k) => k.next(), counterclass = this.this.this.this.class) {
+				return this.this.this.this.class.static.whileloop(
+					x,
+					jumping,
+					counterclass.class(),
+					jumping,
+					undefined,
+					deepCopy(this.this.this)
+				)
+			},
+			loop(body = () => {}, start = this.this.this.this.class.class()) {
+				return this.this.this.this.class.static.whileloop(
+					this.this.this,
+					body,
+					start,
+					undefined,
+					undefined,
+					undefined
+				)
+			},
+			jumpForward(x, comparison = this.this.this.this.class.template.comparison) {
+				return this.jump(x, (a) => a.next(), comparison)
+			},
+			jumpBackward(x, comparison = this.this.this.this.class.template.comparison) {
+				return this.jump(x, (k) => k.previous(), comparison)
+			},
+			map(
+				icClass = this.class,
+				comparison = this.this.this.this.class.template.comparison
+			) {
+				let current = this.this.this.this.class.class()
+				let alterCurrent = icClass.class()
+				while (!comparison(current, this.this.this))
+					alterCurrent = alterCurrent.next()
+				return alterCurrent
+			},
+			reverse() {
+				const REVERSED = this.this.this.this.class.static.reverse()
+				let revres = REVERSED.class()
+				this.loop(() => revres.next())
+				return revres
+			},
+			copy() {
+				return this.this.this.this.class.class(this.this.this.value)
+			},
+			equal(x) {
+				return this.compare(x) && x.compare(this)
+			},
+			*[Symbol.iterator]() {
+				const predicate = this.direction() ? lesser : greater
+				const change = this.direction() ? (x) => x.next() : (x) => x.previous()
+				for (
+					let i = this.this.this.this.class.class();
+					predicate(this);
+					i = change(i)
+				)
+					yield i
+			},
+			zero() {
+				return this.this.this.this.class.static.zero()
+			},
+			one: refactor.classes.one,
+			two: refactor.classes.two
+		},
+		recursive: true
+	})
+})().function
+
+general.DEFAULT_ICCLASS = InfiniteCounter()
 
 export const copy = {
 	copy: TEMPLATE({
 		defaults: {
 			objdefmeth: ID,
 			arrdefmeth: ID,
-			defcontext: aliases.native.object.empty
+			defcontext: alinative.object.empty
 		},
 		function: function (
 			arrmeth = this.template.arrdefmeth,
@@ -275,8 +1341,7 @@ export const copy = {
 				array: (a, method = arrmeth) => a.map(method),
 				object: (a, method = objmeth) => objFmap(a, method),
 				function: (a, context = dcontext()) => a.bind(context),
-				symbol: (a) =>
-					Symbol(aliases.trimBeginning(7)(aliases.trimEnd(1)(aliases.str(a)))),
+				symbol: (a) => Symbol(trimBeginning(7)(trimEnd(1)(str(a)))),
 				arrayFlat: (a) => [...a],
 				objectFlat: (a) => ({ ...a })
 			}
@@ -287,8 +1352,8 @@ export const copy = {
 	copyFunction: (() => {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
-			if (x === "array" || x === "arrayFlat") return aliases.is.arr
-			if (x === "objectFlat") return aliases.is.obj
+			if (x === "array" || x === "arrayFlat") return is.arr
+			if (x === "objectFlat") return is.obj
 			return (p) => typeof p === x
 		}
 		return TEMPLATE({
@@ -327,11 +1392,11 @@ export const nanumber = {
 		function: function (number, afterDot = this.template.defacc) {
 			if (afterDot < 0) {
 				afterDot = -afterDot
-				const inted = aliases.str(this.function(number, 0)).reverse()
-				inted = aliases.native.array._insert(inted, afterDot, ".")
-				return aliases.num(inted.reverse().split(".")[0])
+				const inted = str(this.function(number, 0)).reverse()
+				inted = alinative.array._insert(inted, afterDot, ".")
+				return num(inted.reverse().split(".")[0])
 			}
-			return aliases.num(number.toFixed(afterDot))
+			return num(number.toFixed(afterDot))
 		}
 	}).function,
 	ceil(x = 1) {
@@ -351,7 +1416,7 @@ export const object = {
 		if (object instanceof Object && !prev.includes(object)) {
 			prev.push(object)
 			for (const a in object)
-				if (aliases.is.obj(object[a])) {
+				if (is.obj(object[a])) {
 					returned.push(object[a])
 					returned = returned.concat(this.subobjects(object[a], prev))
 				}
@@ -359,12 +1424,12 @@ export const object = {
 		return returned
 	},
 	subobjectsFlat(object = {}) {
-		return aliases.obj.values(object).filter(aliases.is.obj)
+		return obj.values(object).filter(is.obj)
 	},
 
 	// * Checks if a certain object contains a recursive reference;
 	isRecursive(object = {}, prevobjsarr = this.subobjects(object)) {
-		if (!aliases.is.obj(object)) return false
+		if (!is.obj(object)) return false
 		return number.max(
 			Object.values(object).map(
 				(x) => prevobjsarr.includes(x) || this.isRecursive(x, prevobjsarr)
@@ -378,7 +1443,7 @@ export const object = {
 			treatUniversal: false
 		},
 		function: function (obj = {}, treatUniversal = this.template.treatUniversal) {
-			const umclass = types.UniversalMap(this.template)
+			const umclass = UniversalMap(this.template)
 			const objorig = umclass(obj, treatUniversal)
 			return umclass(objorig.values, objorig.keys, false)
 		}
@@ -390,7 +1455,7 @@ export const object = {
 		const newobj = {}
 		for (const key in keys) newobj[keys[key]] = obj[key]
 		if (id) {
-			const newkeys = aliases.obj.values(keys)
+			const newkeys = obj.values(keys)
 			for (const key in obj) if (!newkeys.includes(key)) newobj[key] = obj[key]
 		}
 		return newobj
@@ -428,14 +1493,14 @@ export const object = {
 
 	ismapped: function (...args) {
 		// ? create an aliase for these sorts of things [length-array ensuring of certain same function's call?]; Similar (special case of) ensureProperty;
-		aliases.native.object.ensureProperties(args, [{}, {}])
-		return valueCompare().function(...args.map(aliases.obj.keys))
+		alinative.object.ensureProperties(args, [{}, {}])
+		return valueCompare().function(...args.map(obj.keys))
 	},
 
 	gutInnerObjs(obj = {}) {
 		const gutted = {}
 		for (const y in obj) {
-			if (aliases.is.obj(obj[y])) {
+			if (is.obj(obj[y])) {
 				gutted = { ...gutted, ...obj[y] }
 				continue
 			}
@@ -446,7 +1511,7 @@ export const object = {
 
 	objEncircle(obj, newkey, keys = []) {
 		const encirled = { [newkey]: {} }
-		for (const y of aliases.obj.keys(obj)) {
+		for (const y of obj.keys(obj)) {
 			if (keys.includes(y)) {
 				encirled[newkey] = obj[y]
 				continue
@@ -464,7 +1529,7 @@ export const naarray = {
 		},
 
 		replaceIndexes: function (arr, x, y, indexes = [0]) {
-			return algorithms.array.native
+			return alarray.native
 				.split()
 				.function(arr, x)
 				.map((seg, i) => seg.concat(indexes.includes(i) ? y : x))
@@ -473,7 +1538,7 @@ export const naarray = {
 
 		// * Replaces all occurences of 'x' with 'y';
 		replace: function (arr, x, y) {
-			return array.replaceIndexes(arr, x, y, algorithms.array.generate(arr.length))
+			return array.replaceIndexes(arr, x, y, alarray.generate(arr.length))
 		},
 
 		// * Replaces values within an array and returns the obtained copy...
@@ -497,12 +1562,11 @@ export const naarray = {
 			// ? generalize conviniently...
 			const defobj = {}
 			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
-			ensureProperties(args, defobj)
+			alinative.object.ensureProperties(args, defobj)
 
 			return repeatedApplication(
-				(v, i) =>
-					this.template.f(v, ...args.map(aliases.native.function.index(i))),
-				number.min(args.map(aliases.native.function.index("length"))),
+				(v, i) => this.template.f(v, ...args.map(alinative.function.index(i))),
+				number.min(args.map(alinative.function.index("length"))),
 				x
 			)
 		}
@@ -510,8 +1574,8 @@ export const naarray = {
 
 	// * "reverses" the "Array.flat()";
 	arrEncircle: function (a, from = 0, to = a.length) {
-		from = aliases.negind(from, a)
-		to = aliases.negind(to, a)
+		from = negind(from, a)
+		to = negind(to, a)
 		const copied = []
 		for (let i = 0; i < a.length; i++) {
 			if (i >= from && i <= to) {
@@ -526,7 +1590,7 @@ export const naarray = {
 
 	// ? Generalize such usages of 'repeatedApplication' with some special alias of 'multiple' (works exclusively with arrays, for example?);
 	arrEncircleMult(arr = [], coors = []) {
-		return structure.native.repeatedApplication([...arr], coors.length, (r, i) =>
+		return stnative.repeatedApplication([...arr], coors.length, (r, i) =>
 			this.arrEncircle(r, coors[i])
 		)
 	},
@@ -544,39 +1608,12 @@ export const naarray = {
 }
 
 export const string = {
-	strmethod: aliases.wrapper({
-		in: aliases.native.string.stoa,
-		out: aliases.native.string.atos
+	strmethod: alinative.function.wrapper({
+		in: alinative.string.stoa,
+		out: alinative.string.atos
 	}).function,
 	replace: {}
 }
-
-export const finite = TEMPLATE({
-	defaults: {
-		definseq: [false],
-		defout: false,
-		integer: false
-	},
-	function: function (f, out = this.template.defout, inseq = this.template.definseq) {
-		const fu = this.template.integer
-			? ID
-			: general.DEFAULT_TINTCLASS.static.fromCounter
-		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
-		const tin = (out) =>
-			out ? fu(native.number.fromNumber) : types.arrays.CommonArray()
-		const tout = (out) =>
-			out
-				? (x) => x.map(types.InfiniteCounter(counters.addnumber())).value
-				: (x) => x.copied("switchclass", [types.arrays.CommonArray()]).array
-		return aliases.native.function
-			.wrapper({
-				out: tout(out),
-				in: inseq.map(tin),
-				inarr: true
-			})
-			.function(f)
-	}
-}).function
 
 // * Copies an object/array deeply...
 copy.deepCopy = copy.copyFunction({
@@ -600,27 +1637,53 @@ string.sreplaceFirst = string.sreplaceIndexes
 // ? generalize further with the stuff below - create a function for creating a new array from 'cuts coordinates' of another array;
 // * Gorgeous. Just gorgeous...
 string.UTF16 = (p, l = 0) =>
-	algorithms.integer
-		.generate(0, l, (-1) ** (l < 0))
-		.map((x) => aliases.native.string.fcc(p + x))
+	alarray.native.generate(0, l, (-1) ** (l < 0)).map((x) => alinative.string.fcc(p + x))
 
 naarray.replace.replaceIndexesMult = naarray.multArrsRepApp({
 	n: 2,
-	f: native.array.replace.replaceIndex,
+	f: naarray.replace.replaceIndex,
 	default: []
 }).function
-string.replace.sreplaceIndexesMult = string.strmethod(native.array.replaceIndexesMult)
+string.replace.sreplaceIndexesMult = string.strmethod(naarray.replaceIndexesMult)
 
 naarray.replace.replaceMany = naarray.multArrsRepApp({
 	n: 2,
-	f: native.array.replace.replace,
+	f: naarray.replace.replace,
 	default: []
 }).function
-string.replace.sreplaceMany = string.strmethod(native.array.replace.replaceMany)
+string.replace.sreplaceMany = string.strmethod(naarray.replace.replaceMany)
+
+// ? Make a template? [namely, allow the user to define the default type of the TYPED_VARIABLE?]
+export const TYPED_VARIABLE =
+	(type = ID) =>
+	(x) => {
+		return {
+			get: type(x),
+			set(t) {
+				return (this.get = type(t))
+			}
+		}
+	}
+
+export const VARIABLE = TYPED_VARIABLE()
+
+const ccf = alinative.object.property("concat")
+export const defaultAlphabet = VARIABLE(
+	ccf("")(
+		[
+			// 0-9
+			[48, 9],
+			// a-z
+			[97, 25],
+			// A-Z
+			[65, 25]
+		].map(alinative.function.exparr(string.UTF16))
+	)
+)
 
 export const polystring = TEMPLATE({
 	defaults: {
-		alphabet: variables.defaultAlphabet.get,
+		alphabet: defaultAlphabet.get,
 		ustrclass: general.DEFAULT_USTRCLASS,
 		tintclass: general.DEFAULT_TINTCLASS,
 		icclass: general.DEFAULT_ICCLASS
@@ -665,7 +1728,7 @@ export const fromPolystring = TEMPLATE({
 			return { alphabet: this.template.genarrclass.static.empty() }
 		}
 	],
-	function: function (ustr = this.template.ustrclass.class()) {
+	function: alinative.function.const(function (ustr = this.template.ustrclass.class()) {
 		const r = this.template.tintclass.class()
 		let i = ustr.init()
 		for (k of ustr.keys())
@@ -683,7 +1746,7 @@ export const fromPolystring = TEMPLATE({
 					)
 			)
 		return r
-	},
+	}),
 	isthis: true
 }).function
 
@@ -701,14 +1764,16 @@ export const sameLength = TEMPLATE({
 			return { alphabet: this.template.genarrclass.static.empty() }
 		}
 	],
-	function: function (strs = this.template.genarrclass.static.empty()) {
+	function: alinative.function.const(function (
+		strs = this.template.genarrclass.static.empty()
+	) {
 		const endsize = (this.template.shrink ? min : max)().function(
 			strs.copy((str) => str.length().get())
 		)
 		for (const str of strs)
 			str.length().set(endsize, { basestr: this.template.alphabet.read() })
 		return endsize
-	},
+	}),
 	isthis: true
 }).function
 
@@ -745,7 +1810,7 @@ export const ponative = {
 	// * Brings whatever is given within the given base to base 10;
 	fromPolystring: TEMPLATE({
 		defaults: {
-			alphabet: variables.defaultAlphabet.get,
+			alphabet: defaultAlphabet.get,
 			defstr: ""
 		},
 		function: function (nstr = this.template.defstr) {
@@ -765,7 +1830,7 @@ export const ponative = {
 	// * Brings whatever in base 10 to whatever in whatever base is given...
 	polystring: TEMPLATE({
 		defaults: {
-			alphabet: variables.defaultAlphabet
+			alphabet: defaultAlphabet
 		},
 		function: function (n) {
 			const coefficients = []
@@ -784,7 +1849,7 @@ export const ponative = {
 	// * Convert a numeric string in one base to a base string in another;
 	baseconvert: TEMPLATE({
 		defaults: {
-			alphabet: variables.defaultAlphabet,
+			alphabet: defaultAlphabet,
 			from: 2,
 			to: 16
 		},
@@ -802,10 +1867,70 @@ export const ponative = {
 	}).function
 }
 
+export const negate = alinative.function.wrapper({
+	out: alinative.boolean.n
+}).function
+
+export const RECURSIVE_VARIABLE = (x) => {
+	if (x instanceof Object) {
+		const r = {
+			get: {},
+			set(f) {
+				this.get = { ...f }
+				for (const y in this.get)
+					if (is.fn(this.get[y])) this.get[y] = f[y].bind(this)
+			}
+		}
+		r.set(x)
+		return r
+	}
+	return VARIABLE(x)
+}
+
+// ? More methods? [later, maybe...]
+export const deftable = RECURSIVE_VARIABLE({
+	"+": general.recursiveOperation("+", alinative.binary.add),
+	"-": function (...args) {
+		return this.get["+"](
+			...(args.length ? [args[0]].concat(args.slice(1).map((x) => -x)) : [])
+		)
+	},
+	"/": function (...args) {
+		return args.length >= 2 ? args[0] / this.get["*"](...args.slice(1)) : args[0]
+	},
+	"*": general.recursiveOperation("*", alinative.binary.mult),
+	"**": general.recursiveOperation("**", alinative.binary.power),
+	"^": general.recursiveOperation("^", alinative.binary.xor),
+	">>": general.recursiveOperation(">>", alinative.binary.rshift),
+	"<<": general.recursiveOperation("<<", alinative.binary.lshift),
+	"&": general.recursiveOperation("&", alinative.binary.and),
+	"|": general.recursiveOperation("|", alinative.binary.or),
+	"%": general.recursiveOperation("%", alinative.binary.modulo),
+	"&&": general.recursiveOperation("&&", alinative.binary.dand),
+	"||": general.recursiveOperation("||", alinative.binary.dor)
+})
+export const udeftable = RECURSIVE_VARIABLE({
+	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
+	"-": function (...args) {
+		return this.get["+"](
+			...(args.length ? [args[0]].concat(args.slice(1).map((x) => x.invadd())) : [])
+		)
+	},
+	// ! the '/' division must return a TrueRation-al value;
+	"#": function (...args) {
+		return (args.length >= 2 ? (x) => x.divide(this.get["*"](...args.slice(1))) : ID)(
+			args[0]
+		)
+	},
+	"*": general.recursiveOperation("*", (a, b) => a.multiply(b)),
+	"**": general.recursiveOperation("**", (a, b) => a.power(b)),
+	"%": general.recursiveOperation("%", (a, b) => a.modulo(b))
+})
+
 // % This is the 'expressions' main expression-evaluation function;
 export const evaluate = TEMPLATE({
 	defaults: {
-		table: variables.deftable.get
+		table: deftable.get
 	},
 	function: function (expression) {
 		if (expression.expressions.length)
@@ -824,7 +1949,7 @@ export function Expression(operator = "", expressions = [], objects = []) {
 
 export const uevaluate = TEMPLATE({
 	defaults: {
-		deftable: variables.udeftable
+		deftable: udeftable
 	},
 	function: function (expression) {
 		if (
@@ -843,7 +1968,7 @@ export const uevaluate = TEMPLATE({
 export function composition(fcall) {
 	return (...args) => {
 		return fcall.f(
-			...algorithms.integer.native
+			...integer.native
 				.generate(native.number.max([fcall.functions.length, fcall.args.length]))
 				.map((x) => {
 					// ! PROBLEM - does ___not__ currently allow for things like: (a,b,c) => d(a, e(b, f, g(c))); Fix that...
@@ -862,12 +1987,12 @@ export function FunctionCall(f, functions = [], args = []) {
 export const numberc = GENERATOR({
 	defaults: { start: 0 },
 	generator(x = this.template.start) {
-		return this.template.forward(aliases.num(x))
+		return this.template.forward(num(x))
 	},
 	inverse(x = this.template.start) {
-		return this.template.backward(aliases.num(x))
+		return this.template.backward(num(x))
 	},
-	range: negate(aliases.is.nan)
+	range: negate(is.nan)
 })
 export function addnumber(template = {}, ntemplate = {}) {
 	return number({
@@ -893,26 +2018,6 @@ export function multnumber(template = {}, ntemplate = {}) {
 		...ntemplate
 	})
 }
-// * Probably the "simplest" infinite counter one would have in JS is based off this generator;
-export const arrayCounter = GENERATOR({
-	defaults: {
-		start: null
-	},
-	generator(a = this.template.start) {
-		if (!this.range(a)) this.template.start = a
-		return [a]
-	},
-	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
-	inverse: function (a) {
-		return a[0]
-	},
-	range: function (a) {
-		return (
-			a === this.template.start ||
-			(a instanceof Array && this.range(this.inverse(a)))
-		)
-	}
-})
 
 // * Generalization of the thing above (arrayCounter)...
 export const objCounter = GENERATOR({
@@ -920,7 +2025,7 @@ export const objCounter = GENERATOR({
 		field: "",
 		start: null,
 		// ? Does one desire the refCompare? Or valueCompare to be the default?
-		comparison: aliases.refCompare
+		comparison: refCompare
 	},
 	generator: function (a = this.template.start) {
 		if (!this.range(a)) this.template.start = a
@@ -943,24 +2048,20 @@ export function recursiveCounter(template = {}) {
 	const returned = {
 		defaults: {
 			comparison: valueCompare,
-			maxarrlen: variables.MAX_ARRAY_LENGTH.get,
-			type: predicates.TRUTH,
+			maxarrlen: MAX_ARRAY_LENGTH.get,
+			type: TRUTH,
 			...template
 		},
 		range(x) {
-			return aliases.native.function.binary.dand(
-				aliases.is.arr(x),
+			return alinative.function.binary.dand(
+				is.arr(x),
 				!!x.length,
 				x.every((y) =>
-					aliases.native.binary.dor(
+					alinative.binary.dor(
 						...[
 							this.template.type,
-							(y) =>
-								aliases.native.binary.dand(
-									aliases.is.arr(x),
-									this.range(y)
-								)
-						].map(aliases.native.function.argscall(y))
+							(y) => alinative.binary.dand(is.arr(x), this.range(y))
+						].map(alinative.function.argscall(y))
 					)
 				)
 			)
@@ -968,18 +2069,17 @@ export function recursiveCounter(template = {}) {
 	}
 
 	const findDeepUnfilled = (t = true) => {
-		return structure.findDeepUnfilled({
+		return findDeepUnfilled({
 			soughtProp: (x) =>
-				returned.template.type(x) &&
-				(t ? aliases.id : aliases.n)(returned.template.sign(x)),
+				returned.template.type(x) && (t ? id : n)(returned.template.sign(x)),
 			bound: t ? returned.template.upper : returned.template.rupper,
 			comparison: returned.template.comparison
 		}).function
 	}
-	const findDeepUnfilledArr = structure.findDeepUnfilledArr({
+	const findDeepUnfilledArr = findDeepUnfilledArr({
 		bound: returned.template.maxarrlen
 	})
-	const findDeepLast = structure.findDeepLast({
+	const findDeepLast = findDeepLast({
 		soughtProp: returned.template.type
 	})
 
@@ -1043,7 +2143,7 @@ export function recursiveCounter(template = {}) {
 				)
 					return x[0]
 
-				const rindexation = structure.recursiveIndexation().function
+				const rindexation = recursiveIndexation().function
 
 				let lastIndexes = findDeepLast(a)
 				const finind = lastIndexes.final()
@@ -1065,10 +2165,7 @@ export function recursiveCounter(template = {}) {
 				}
 				const llindex = lastIndexes.read(ffinind)
 
-				ppointer[llindex] = aliases.native.array._remove(
-					ppointer[llindex],
-					lindex
-				)
+				ppointer[llindex] = alinative.array._remove(ppointer[llindex], lindex)
 				pointer = ppointer[llindex]
 
 				let index = lindex
@@ -1082,7 +2179,7 @@ export function recursiveCounter(template = {}) {
 							(hlindex = hlindex.previous())
 						])
 					)
-					ppointer[hlindex] = aliases.native.array._remove(
+					ppointer[hlindex] = alinative.array._remove(
 						ppointer[hlindex],
 						(index = index.previous())
 					)
@@ -1121,22 +2218,20 @@ export function recursiveCounter(template = {}) {
 // note: creates new objects after having been called;
 export function numberCounter(template = {}) {
 	return recursiveCounter({
-		upper: variables.MAX_INT.get,
+		upper: MAX_INT.get,
 		lower: 0,
-		rupper: -variables.MAX_INT.get,
+		rupper: -MAX_INT.get,
 		sign: (x) => x > 0,
 		globalsign: function (x) {
 			return x.any((a) =>
-				aliases.native.binary.dor(
-					...[this.sign, this.globalsign].map(
-						aliases.native.function.argscall(a)
-					)
+				alinative.binary.dor(
+					...[this.sign, this.globalsign].map(alinative.function.argscall(a))
 				)
 			)
 		},
-		type: predicates.negate(aliases.is.nan),
-		forward: predicates.inc(),
-		backward: predicates.dec(),
+		type: negate(is.nan),
+		forward: inc(),
+		backward: dec(),
 		...template
 	})
 }
@@ -1148,14 +2243,12 @@ export function orderCounter(template = {}) {
 		upper: template.order[template.strorder.length - 1],
 		lower: template.order[Math.floor(template.order.length / 2)],
 		rupper: template.order[0],
-		forward: (x) => template.order[predicates.inc(template.order.indexOf(x))],
-		backward: (x) => template.order[predicates.dec(template.order.indexOf(x))],
+		forward: (x) => template.order[inc(template.order.indexOf(x))],
+		backward: (x) => template.order[dec(template.order.indexOf(x))],
 		globalsign: function (x) {
 			return x.any((a) =>
-				aliases.native.binary.dor(
-					...[this.sign, this.globalsign].map(
-						aliases.native.function.argscall(a)
-					)
+				alinative.binary.dor(
+					...[this.sign, this.globalsign].map(alinative.function.argscall(a))
 				)
 			)
 		},
@@ -1166,7 +2259,7 @@ export function orderCounter(template = {}) {
 
 export function stringCounter(template = {}) {
 	return orderCounter({
-		type: aliases.is.str,
+		type: is.str,
 		order: native.string.UTF16(48, 127),
 		...template
 	})
@@ -1187,7 +2280,7 @@ export const circularCounter = (() => {
 	const generalized = (name, sign) =>
 		function (x) {
 			if (this.template.form.is(x)) return this.template.form.flatmap(x, this[name])
-			const vals = aliases.native.array
+			const vals = alinative.array
 				.indexesOf(this.template.values, x)
 				.map(
 					(i) =>
@@ -1216,11 +2309,11 @@ export const finiteCounter = (() => {
 	const keys = ["generator", "inverse"]
 	const labels = ["next", "previous"]
 	for (const x in keys)
-		F[keys[x]] = function (item) {
+		F[keys[x]] = alinative.function.const(function (item) {
 			return this.template.values.read(
 				this.template.values.firstIndex(item)[labels[x]]()
 			)
-		}
+		})
 	return GENERATOR({
 		defaults: [
 			function () {
@@ -1242,79 +2335,6 @@ export const finiteCounter = (() => {
 	})
 })()
 
-// * Constructs a counter from an InfiniteClass;
-export const cfromIcc = general.counterFrom(["jumpForward", "jumpBackward"])
-
-// * Constructs a counter from a TrueInteger class (additive);
-export const tintAdditive = general.counterFrom(
-	["add", "difference"],
-	types.numbers.TrueInteger().static.fromCounter
-)
-
-// ? Add tint-based counters for other operations as well? [same goes for the native JS Number...];
-export const tintMultiplicative = (() => {
-	const X = refactor.general.counterFrom(
-		["multiply", "divide"],
-		types.numbers.TrueInteger().static.fromCounter
-	)
-	// * setting a different default for the 'forth' and 'back';
-	X.template.defaults[1] = function () {
-		return {
-			forth: this.template.wrapper(this.template.icclass.static.two()),
-			back: this.template.wrapper(this.template.icclass.static.two())
-		}
-	}
-	return X
-})()
-
-// * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
-//
-// ! [2]: with the currently chosen solution for the handling of the function arguments;
-// * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
-// TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray
-// TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
-export const valueCompare = TEMPLATE({
-	defaults: {
-		oneway: false
-	},
-	function: function (...args) {
-		function TWOCASE(oneway = false, objs = []) {
-			return (a, b) => {
-				if (typeof a !== typeof b) return false
-				switch (typeof a) {
-					case "object":
-						if (
-							!max(
-								objs.map(
-									// TODO: create a nice function-alias for 'f(...) && g(...)'; [so that it may be used with the other ones]
-									(x) => x[0].includes(a) && x[0].includes(b)
-								)
-							)
-						) {
-							objs.push([a, b])
-							for (const a_ in a)
-								if (!TWOCASE(false, objs)(b[a_], a[a_])) return false
-							if (!oneway) return TWOCASE(true)(b, a)
-						}
-						return true
-					case "function":
-						return String(a) === String(b)
-					case "symbol":
-						return a.toString() === b.toString()
-					default:
-						return a === b
-				}
-			}
-		}
-		return !!aliases.native.min(
-			args
-				.slice(0, args.length - 1)
-				.map((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
-		)
-	}
-}).function
-
-export const refCompare = (a, b) => a === b
 export const oldCompare = (a, b) => a == b
 
 export const linear = TEMPLATE({
@@ -1384,13 +2404,13 @@ export const most = TEMPLATE({
 // * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
 export function min(template = {}) {
 	return most({
-		comparison: predicates.lesser,
+		comparison: lesser,
 		...template
 	})
 }
 export function max(template = {}) {
 	return most({
-		comparison: predicates.greater,
+		comparison: greater,
 		...template
 	})
 }
@@ -1400,73 +2420,64 @@ export function ofromIcc(icclass = general.DEFAULT_ICCLASS) {
 	return (x, y) => icclass.class(x).compare(icclass.class(y))
 }
 
-export const predicates = {
-	// * This sourcefile possesses aliases for the commonly used elementary predicates' generalizations (allow for greater simplification of the code);
+// ! use these four a lot...
+export const greateroe = (a, b) => a.compare(b)
+export const lesseroe = (a, b) => greateroe(b, a)
+export const lesser = (a, b) => !greateroe(a, b)
+export const greater = (a, b) => lesser(b, a)
 
-	// ! Extend this - refactor the library hardcorely in the sense of repeating expressions and distribute all the appropriate ones in here;
+export const next = (x) => x.next()
+export const inc =
+	(a = 1) =>
+	(x) =>
+		x + a
+export const dec =
+	(a = 1) =>
+	(x) =>
+		x - a
 
-	// ! use these four a lot...
-	greateroe: (a, b) => a.compare(b),
-	lesseroe: (a, b) => greateroe(b, a),
-	lesser: (a, b) => !greateroe(a, b),
-	greater: (a, b) => lesser(b, a),
+export const allUnique = (el, _key, _arr, subset) => !subset.includes(el)
 
-	next: (x) => x.next(),
-	inc:
-		(a = 1) =>
-		(x) =>
-			x + a,
-	dec:
-		(a = 1) =>
-		(x) =>
-			x - a,
-
-	allUnique: (el, _key, _arr, subset) => !subset.includes(el),
-
-	Ensurer: (_class, predicate = T, responses = {}) => {
-		const X = {}
-		for (const m of _class.methods)
-			X[m] = function (...args) {
-				const tempr = _class.methods[m].bind(this)(...args)
-				if (predicate(tempr, this) && hasFunction(responses, m))
-					return responses[m].bind(this)(tempr, this, args)
-				return tempr
-			}
-		return { ..._class, methods: X }
-	},
-
-	// ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
-	negate: aliases.native.function.wrapper.function({
-		out: aliases.native.boolean.n
-	}),
-	TRUTH: aliases.native.function.const(true),
-	T: TRUTH,
-	FALLACY: aliases.native.function.const(false),
-	F: FALLACY,
-	VOID: _void,
-
-	// * Ensures the 'heap' property upon a given tree;
-	// TODO: rewrite the previous parts of the library in such a way so as to use this... [namely, algorithms.heaps]
-	ensureHeap: (
-		tree,
-		predicate,
-		comparison = tree.class.template.parentclass.template.comparison
-	) => {
-		const node = tree.node
-		const most = orders
-			.most({ predicate: predicate })
-			.function(tree.children.copied("pushfront", tree.node))
-		if (!comparison(node, most)) {
-			tree.node = most
-			tree.children.write(tree.children.firstIndex(most), node)
+export const Ensurer = (_class, predicate = T, responses = {}) => {
+	const X = {}
+	for (const m of _class.methods)
+		X[m] = function (...args) {
+			const tempr = _class.methods[m].bind(this)(...args)
+			if (predicate(tempr, this) && hasFunction(responses, m))
+				return responses[m].bind(this)(tempr, this, args)
+			return tempr
 		}
-		for (const c of tree.children) ensureHeap(c)
-		return tree
-	},
+	return { ..._class, methods: X }
+}
 
-	ensureSet: (genarr = general.DEFAULT_GENARRCLASS.static.empty()) => {
-		return genarr.copied("suchthat", [predicates.allUnique])
+// ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
+export const TRUTH = alinative.function.const(true)
+export const T = TRUTH
+export const FALLACY = alinative.function.const(false)
+export const F = FALLACY
+export const VOID = alinative.function.void
+
+// * Ensures the 'heap' property upon a given tree;
+// TODO: rewrite the previous parts of the library in such a way so as to use this... [namely, algorithms.heaps]
+export const ensureHeap = (
+	tree,
+	predicate,
+	comparison = tree.class.template.parentclass.template.comparison
+) => {
+	const node = tree.node
+	const most = orders
+		.most({ predicate: predicate })
+		.function(tree.children.copied("pushfront", tree.node))
+	if (!comparison(node, most)) {
+		tree.node = most
+		tree.children.write(tree.children.firstIndex(most), node)
 	}
+	for (const c of tree.children) ensureHeap(c)
+	return tree
+}
+
+export const ensureSet = (genarr = general.DEFAULT_GENARRCLASS.static.empty()) => {
+	return genarr.copied("suchthat", [allUnique])
 }
 
 // ! implement the 'printi' for generalarrays and ic-s;
@@ -1478,8 +2489,25 @@ export const print = TEMPLATE({
 	defaults: { pfun: console.log, interpret: ID, defaultS: "" }
 }).function
 
-// todo: create some special cases for this stuff pray...
+export const stnative = {
+	repeatedApplication: function (initial, times, f, offset = 0, iter = (x) => x + 1) {
+		let r = initial
+		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
+		return r
+	}
+}
 
+// ? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
+export const HIERARCHY = function (hierarr = []) {
+	return stnative.repeatedApplication(
+		TEMPLATE(hierarr[hierarr.length - 1]),
+		hierarr.length - 1,
+		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
+		-2
+	)
+}
+
+// todo: create some special cases for this printing stuff pray...
 export const constrolprint = HIERARCHY([
 	{
 		defaults: {
@@ -1555,7 +2583,7 @@ export const form = (
 	is,
 	index,
 	// ? What about this? Not really used by anything except for the 'constForm'...; Perhaps, decide means of individual extension of forms?
-	isomorphic = predicates.TRUTH,
+	isomorphic = TRUTH,
 	copy = (x, f) => x.copy(f),
 	read = (x, i) => x.read(i),
 	write = (x, i, v) => x.write(i, v),
@@ -1623,13 +2651,11 @@ export const structure = TEMPLATE({
 	}
 }).function
 
-// * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'comparisons.refCompare' and the out-of-scope object constant;
+// * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'refCompare' and the out-of-scope object constant;
 export function typeConst(f = ID, n = 1) {
-	const TCONST = aliases.native.object.empty()
+	const TCONST = alinative.object.empty()
 	// ! make an alias for the function in the map;
-	const arr = [TCONST].append(
-		algorithms.array.native.generate(n - 1).map(() => ({ ...TCONST }))
-	)
+	const arr = [TCONST].append(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
 	return f(Object.freeze(arr))
 }
 
@@ -1651,7 +2677,7 @@ export function constForm(
 			c = c[0]
 			_new = (x = defaultval) => ({ [fieldname]: c, [contentsname]: x })
 			is = (checked) =>
-				aliases.is.obj(checked) &&
+				is.obj(checked) &&
 				checked[fieldname] === c &&
 				checked.hasOwnProperty(contentsname)
 			isomorphic = (x, y) => x[fieldname] === y[fieldname]
@@ -1665,10 +2691,10 @@ export function propertyForm(contentsname = "", defaultval = {}) {
 }
 
 export const objectForm = form(
-	aliases.obj,
-	aliases.is.obj,
-	aliases.obj.values,
-	aliases.TRUTH,
+	obj,
+	is.obj,
+	obj.values,
+	TRUTH,
 	(x, f = ID) => {
 		let c = native.copy.flatCopy(x)
 		for (const y in x) c[y] = f(c[y])
@@ -1677,450 +2703,26 @@ export const objectForm = form(
 	// ? aliases? [or, are they defined already?]
 	(x, i) => x[i],
 	(x, i, v) => (x[i] = v),
-	aliases.obj.keys
+	obj.keys
 )
 export const arrayForm = form(
-	aliases.arr,
-	aliases.is.arr,
+	arr,
+	is.arr,
 	ID,
-	aliases.TRUTH,
+	TRUTH,
 	(x, f = ID) => x.map(f),
 	(x, i = 0) => x[i],
 	(x, i, v) => (x[i] = v)
 )
 
+general.DEFAULT_FORM = arrayForm
+
 export const classForm =
 	(_class) =>
 	(template = {}, index = ID, additional = []) => {
 		const Class = _class(template)
-		return form(Class.class, Class.is, index, aliases.TRUTH, ...additional)
+		return form(Class.class, Class.is, index, TRUTH, ...additional)
 	}
-
-export const garrayForm = classForm(types.GeneralArray)
-export const treeForm = (parentclass = general.DEFAULT_GENARRCLASS) =>
-	classForm(types.TreeNode(parentclass), aliases.native.function.index("children"))
-
-export const countrecursive = TEMPLATE({
-	defaults: {
-		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
-		form: general.DEFAULT_FORM
-	},
-	function: function (array = this.form.new()) {
-		return aliases.native.number
-			.fromNumber({ icclass: this.template.icclass })(
-				this.template.predicate(array)
-			)
-			.jumpForward(
-				this.template.form.is(array)
-					? expressions
-							.uevaluate()
-							.function(
-								expressions.Expression(
-									"+",
-									[],
-									this.template.form.index(array).copy(this.function)
-								)
-							)
-					: this.template.icclass.zero()
-			)
-	}
-}).function
-
-// Counts all the array-elements within a multi-dimensional array;
-export function arrElems(template = {}) {
-	// ? aliases... Let function-related aliases like this one be repositioned into the 'expressions.mjs' codefile;
-	return (x) =>
-		(
-			(a, b) => (y) =>
-				a(y).difference(b(y))
-		)([totalElems, nonArrElems].map((t) => t(template)))(x)
-}
-
-// Counts all non-array elements within a multidimensional array passed... [recursively so]
-export function nonArrElems(template = {}) {
-	return countrecursive({
-		predicate: aliases.negate(aliases.is.arr),
-		...template
-	})
-}
-
-// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
-export function totalElems(template = {}) {
-	return countrecursive({
-		predicate: (x) => (aliases.is.arr(x) ? x.length : 0),
-		...template
-	})
-}
-
-export const dim = TEMPLATE({
-	defaults: {
-		icclass: general.DEFAULT_ICCLASS,
-		form: general.DEFAULT_FORM
-	},
-	function: function (recarr = this.template.form.new()) {
-		if (this.template.form.is(recarr))
-			return this.template.icclass.static
-				.one()
-				.jumpForward(
-					orders
-						.max(this.template)
-						.function(this.form.copy(recarr, this.function))
-				)
-		return this.template.icclass.class()
-	}
-}).function
-
-// * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
-export const generalSearch = TEMPLATE({
-	defaults: {
-		self: false,
-		reversed: false,
-		genarrclass: general.DEFAULT_GENARRCLASS,
-		soughtProp: predicates.TRUTH,
-		form: general.DEFAULT_FORM
-	},
-	function: function (
-		arrrec = this.template.form.new(),
-		prevArr = this.template.genarrclass.static.empty(),
-		self = this.template.self,
-		reversed = this.template.reversed
-	) {
-		const i = prevArr.copy()
-		if (self && this.template.soughtProp(this.template.form.index(arrrec))) return i
-
-		// ! Generalize this bounding function to allow arbitrary kinds of forms, pray...
-		const boundprop = reversed
-			? (x) => x >= 0
-			: (x) => x < this.template.form.index(arrrec).length
-		i.pushback(reversed ? this.template.form.index(arrrec).length - 1 : 0)
-		i.end()
-		for (
-			;
-			boundprop(i.currelem().get());
-			i.currelem().set(i.currelem().get() + (-1) ** reversed)
-		) {
-			if (
-				this.template.soughtProp(
-					this.template.form.index(arrrec).read(i.currelem().get())
-				)
-			)
-				return i
-			if (
-				this.template.form.is(
-					this.template.form.index(arrec).read(i.currelem().get())
-				)
-			) {
-				const r = this.function(
-					this.template.form.index(arrrec).read(i.currelem().get()),
-					i,
-					false,
-					reversed
-				)
-				if (!r) continue
-				return r
-			}
-		}
-		return false
-	}
-}).function
-
-// ? Consider this '.comparison' business (not quite sure one likes it, the '.compare' ensures that the thing works on all forms, this doesn't...)
-export const findDeepUnfilled = TEMPLATE({
-	defaults: [
-		function () {
-			return {
-				form: general.DEFAULT_FORM,
-				comparison: valueCompare
-			}
-		},
-		function () {
-			return { soughtProp: this.template.form.is }
-		}
-	],
-	function: function (template = {}) {
-		return generalSearch({
-			soughtProp: (x) =>
-				this.template.soughtProp(x) &&
-				!this.template.comparison(this.template.bound, x),
-			...this.template,
-			...template
-		}).function
-	},
-	isthis: true
-}).function
-
-// * all of these things ought to have aliases...
-export const findDeepUnfilledArr = TEMPLATE({
-	defaults: {
-		type: aliases.is.arr,
-		comparison: (a, b) => a <= b.length,
-		self: true
-	},
-	function: function (template = {}) {
-		return findDeepUnfilled.function({
-			...this.template,
-			...template
-		})
-	}
-}).function
-
-export const findDeepLast = TEMPLATE({
-	defaults: {
-		reversed: true
-	},
-	function: function (template = {}) {
-		return generalSearch({
-			...this.template,
-			...template
-		}).function
-	}
-}).function
-
-export const recursiveIndexation = TEMPLATE({
-	function: function (object, fields = this.template.genarrclass.static.empty()) {
-		return repeatedApplication({
-			icclass: fields.this.class.template.icclass,
-			...this.template
-		})(
-			(x, i) => {
-				return this.form.read(x, fields.read(i))
-			},
-			fields.length().get(),
-			object
-		)
-	}
-}).function
-
-export const recursiveSetting = TEMPLATE({
-	defaults: {
-		form: general.DEFAULT_FORM,
-		genarrclass: general.DEFAULT_GENARRCLASS
-	},
-	function: function (
-		object = this.tepmlate.form.new(),
-		fields = this.template.genarrclass.static.empty()
-	) {
-		if (!fields.isEmpty()) {
-			const indexed = recursiveIndexation(this.template).function(
-				fields.copied("slice", [fields.init(), fields.finish().previous()])
-			)
-			this.template.form.write(indexed, fields.read(fiends.finish()))
-		}
-		return object
-	}
-}).function
-
-export const repeatedApplication = TEMPLATE({
-	defaults: { iter: (x) => x.next() },
-	function: function (
-		initial = this.template.initial,
-		times = this.template.times,
-		f = this.template.f,
-		offset = this.template.icclass.class(),
-		iter = this.template.iter
-	) {
-		let r = initial
-		for (let i = this.template.icclass.class(); !i.compare(times); i = iter(i))
-			r = f(r, i.difference(offset))
-		return r
-	}
-}).function
-
-// * This can create infinite loops...
-export const repeatedApplicationWhilst = TEMPLATE({
-	defaults: { initial: undefined },
-	function: function (f = this.template.function) {
-		let curr = initial
-		while (this.template.property()) curr = f(curr)
-		return curr
-	}
-}).function
-
-export const stnative = {
-	repeatedApplication: function (initial, times, f, offset = 0, iter = (x) => x + 1) {
-		let r = initial
-		for (let i = 0; i < times; i = iter(i)) r = f(r, i - offset)
-		return r
-	}
-}
-
-export const InfiniteCounter = (() => {
-	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'types.InfiniteCounter(...).class()' syntax for simplified zero-creation;
-	return CLASS({
-		defaults: {
-			comparison: valueCompare,
-			unacceptable: undefined,
-			initialcheck: refCompare,
-			...counters.arrayCounter()
-		},
-		properties: {
-			value: function (previous = this.template.unacceptable) {
-				return this.template.initialcheck(previous, this.template.unacceptable)
-					? this.template.generator()
-					: previous
-			}
-		},
-		transform: general.StaticThisTransform,
-		static: {
-			direction(ic) {
-				return ic.compare(this.this.class())
-			},
-			// ? do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-			whileloop(
-				end,
-				each,
-				start = this.this.class(),
-				iter = (x) => x.next(),
-				comparison = (x, y) => x.compare(y),
-				init = undefined
-			) {
-				let curr = start.copy()
-				let r = init
-				while (comparison(curr, end)) {
-					r = each(curr, r)
-					curr = iter(curr)
-				}
-				return curr
-			},
-			reverse() {
-				const _this = this
-				return InfiniteCounter({
-					generator(x) {
-						if (x === undefined) return _this.this.template.generator()
-						return _this.this.template.inverse(x)
-					},
-					inverse: this.this.template.generator
-				})
-			},
-			zero: classes.zero,
-			one: classes.one,
-			two: classes.two,
-			none() {
-				return this.zero().previous()
-			}
-		},
-		methods: {
-			next: function () {
-				// * An observation: this is one of the ways to be able to reference a function from within itself...
-				return this.this.this.this.class.class(
-					this.this.this.this.class.template.generator(this.this.this.value)
-				)
-			},
-			previous: function () {
-				return this.this.this.this.class.class(
-					this.this.class.template.inverse(this.this.this.value)
-				)
-			},
-			direction() {
-				return this.this.this.this.class.static.direction(this)
-			},
-			compare(ic, comparison = this.this.this.this.class.template.comparison) {
-				ic = ic.map(this.this.this.this.class)
-
-				let pointerfor = ic
-				let pointerback = ic
-
-				while (
-					!comparison(pointerfor, this.this.this) &&
-					!comparison(pointerback, this.this.this)
-				) {
-					pointerfor = pointerfor.next()
-					pointerback = pointerback.previous()
-				}
-
-				return comparison(pointerfor, this.this.this)
-			},
-			difference(ic, comparison = this.this.this.this.class.template.comparison) {
-				const next = aliases.property(
-					ic.compare(this.this.this, comparison) ? "previous" : "next"
-				)
-				this.this.this.this.class.static.whileloop(
-					this.this.this.copy(),
-					(current) => next(current)(),
-					ic,
-					(x) => next(x)(),
-					comparison,
-					this.this.this.this.class.class()
-				)
-				return current
-			},
-			jumpDirection(
-				ic,
-				comparison = this.this.this.this.class.template.comparison
-			) {
-				return this.this.this.this.class.static.direction(ic)
-					? this.this.this.jumpForward(ic, comparison)
-					: this.this.this.jumpBackward(ic)
-			},
-			jump(x, jumping = (k) => k.next(), counterclass = this.this.this.this.class) {
-				return this.this.this.this.class.static.whileloop(
-					x,
-					jumping,
-					counterclass.class(),
-					jumping,
-					undefined,
-					deepCopy(this.this.this)
-				)
-			},
-			loop(body = () => {}, start = this.this.this.this.class.class()) {
-				return this.this.this.this.class.static.whileloop(
-					this.this.this,
-					body,
-					start,
-					undefined,
-					undefined,
-					undefined
-				)
-			},
-			jumpForward(x, comparison = this.this.this.this.class.template.comparison) {
-				return this.jump(x, (a) => a.next(), comparison)
-			},
-			jumpBackward(x, comparison = this.this.this.this.class.template.comparison) {
-				return this.jump(x, (k) => k.previous(), comparison)
-			},
-			map(
-				icClass = this.class,
-				comparison = this.this.this.this.class.template.comparison
-			) {
-				let current = this.this.this.this.class.class()
-				let alterCurrent = icClass.class()
-				while (!comparison(current, this.this.this))
-					alterCurrent = alterCurrent.next()
-				return alterCurrent
-			},
-			reverse() {
-				const REVERSED = this.this.this.this.class.static.reverse()
-				let revres = REVERSED.class()
-				this.loop(() => revres.next())
-				return revres
-			},
-			copy() {
-				return this.this.this.this.class.class(this.this.this.value)
-			},
-			equal(x) {
-				return this.compare(x) && x.compare(this)
-			},
-			*[Symbol.iterator]() {
-				const predicate = this.direction()
-					? predicates.lesser
-					: predicates.greater
-				const change = this.direction() ? (x) => x.next() : (x) => x.previous()
-				for (
-					let i = this.this.this.this.class.class();
-					predicate(this);
-					i = change(i)
-				)
-					yield i
-			},
-			zero() {
-				return this.this.this.this.class.static.zero()
-			},
-			one: classes.one,
-			two: classes.two
-		},
-		recursive: true
-	})
-})()
 
 export const GeneralArray = (() => {
 	return CLASS({
@@ -2129,7 +2731,7 @@ export const GeneralArray = (() => {
 			unfound: undefined,
 			treatfinite: false,
 			fast: false,
-			default: aliases.native.function.const(undefined),
+			default: alinative.function.const(undefined),
 			icclass: general.DEFAULT_ICCLASS,
 			comparison: refCompare
 		},
@@ -2213,7 +2815,7 @@ export const GeneralArray = (() => {
 							after: ID,
 							...template
 						},
-						object: aliases.native.function.const(this),
+						object: alinative.function.const(this),
 						restart: function () {
 							this.counter = this.template.icclass.class()
 						},
@@ -2229,8 +2831,8 @@ export const GeneralArray = (() => {
 						},
 						_full(
 							each,
-							iter = aliases.native.function.const(this.template.indexiter),
-							end = aliases.native.function.const(this.template.end),
+							iter = alinative.function.const(this.template.indexiter),
+							end = alinative.function.const(this.template.end),
 							begin = this.template.begin,
 							after = this.template.after
 						) {
@@ -2238,7 +2840,7 @@ export const GeneralArray = (() => {
 							begin(this)
 							let r = undefined
 							let is = this.yield(
-								aliases.native.function.const(null),
+								alinative.function.const(null),
 								end(),
 								false
 							)
@@ -2257,8 +2859,8 @@ export const GeneralArray = (() => {
 						// ? [later?] generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
 						full(
 							each = this.template.each,
-							iter = aliases.native.function.const(this.template.indexiter),
-							end = aliases.native.function.const(this.template.end),
+							iter = alinative.function.const(this.template.indexiter),
+							end = alinative.function.const(this.template.end),
 							begin = this.template.begin,
 							after = this.template.after
 						) {
@@ -2301,20 +2903,20 @@ export const GeneralArray = (() => {
 					a.restart()
 					return a
 				},
-				begin: classes.begin,
-				end: classes.end,
+				begin: refactor.classes.begin,
+				end: refactor.classes.end,
 				init() {
 					return this.this.this.this.class.template.icclass.class()
 				},
 				// * NOTE: the '.length()' is NOT the last '!isEnd'-kind-of index, but the one after it...
-				finish: classes.finish,
+				finish: refactor.classes.finish,
 				// * A far simpler (hence, less capable with performance of complex walking tasks), faster, direction independent alternative to '.move';
 				go(index = this.init()) {
 					return (this.this.this.currindex = index)
 				},
 				move(
 					index = this.init(),
-					preface = aliases.VOID,
+					preface = VOID,
 					comparison = this.this.this.this.class.template.icclass.template
 						.comparison,
 					each = (x) => x.next(),
@@ -2437,7 +3039,7 @@ export const GeneralArray = (() => {
 						}
 					}
 				},
-				copied: classes.copied,
+				copied: refactor.classes.copied,
 				pushback(value) {
 					return this.write(this.length().get(), value)
 				},
@@ -2454,7 +3056,7 @@ export const GeneralArray = (() => {
 						}).function
 					)
 				},
-				multcall: classes.multcall,
+				multcall: refactor.classes.multcall,
 				empty(template = this.this.this.this.class.template) {
 					return this.this.this.this.class.static.empty(template)
 				},
@@ -2489,7 +3091,7 @@ export const GeneralArray = (() => {
 							arguments: []
 						}).function,
 						undefined,
-						aliases.native.function.const((t) =>
+						alinative.function.const((t) =>
 							end.compare(t.object().currindex)
 						),
 						(t) => {
@@ -2510,7 +3112,7 @@ export const GeneralArray = (() => {
 				*[Symbol.iterator]() {
 					for (
 						let c = this.init();
-						predicates.lesser(c, this.length().get());
+						lesser(c, this.length().get());
 						c = c.next()
 					)
 						yield this.read(c)
@@ -2559,7 +3161,7 @@ export const GeneralArray = (() => {
 									t.object().currelem().get()
 								)
 							},
-							aliases.native.functionconst((x) => {
+							alinative.functionconst((x) => {
 								x.object().next()
 								this.next()
 							}),
@@ -2607,12 +3209,12 @@ export const GeneralArray = (() => {
 				},
 				indexesOf(x, halt = false, haltAfter = Infinity) {
 					// ! ISSUE - with 'THIS'-passing: it must be passed via 'this.this', and also with 'A = {[classref]: {...}, this: {this: A, ...}}' more generally; This way, one won't have to worry about the contexting...;
-					return algorithms.array
+					return alarray
 						.indexesOf({ halt: halt, haltAfter: haltAfter })
 						.function(this, x)
 				},
 				firstIndex(x) {
-					return algorithms.search.linear().function(this, x)
+					return search.linear().function(this, x)
 				},
 				shiftForward(times) {
 					const x = this.this.this.this.class.static.fromCounter(times)
@@ -2653,7 +3255,7 @@ export const GeneralArray = (() => {
 					})
 				},
 				sort(predicate) {
-					this.this.this = algorithms.sort
+					this.this.this = sort
 						.merge({
 							predicate
 						})
@@ -2666,29 +3268,29 @@ export const GeneralArray = (() => {
 						this.copied("sort", [predicate], undefined)
 					)
 				},
-				includes: classes.includes,
-				suchthat: classes.suchthat,
-				any: classes.any,
-				every: classes.every,
-				forEach: classes.forEach,
+				includes: refactor.classes.includes,
+				suchthat: refactor.classes.suchthat,
+				any: refactor.classes.any,
+				every: refactor.classes.every,
+				forEach: refactor.classes.forEach,
 				intersection: function (arr = this.empty()) {
-					this.this.this = algorithms.array.intersection().function(this, arr)
+					this.this.this = alarray.intersection().function(this, arr)
 					return this
 				},
 				permutations: function () {
-					return algorithms.array.permutations({
+					return alarray.permutations({
 						genarrclass: this.this.this.this.class
 					})(this)
 				},
 				// For an array of arrays only;
 				join: function () {
-					this.this.this = algorithms.array.join().function(this)
+					this.this.this = alarray.join().function(this)
 					return this
 				},
 				strjoin: function (separator = "") {
 					return UnlimitedString(this.this.this.this.class)
 						.function()
-						.class(this.copy(aliases.str, undefined, undefined))
+						.class(this.copy(str, undefined, undefined))
 						.join(separator)
 				},
 				// ? Generalie the '.split' functions? [Using a predicate and an 'algorithms.array' submodule algorithm may the haps?]
@@ -2722,7 +3324,7 @@ export const GeneralArray = (() => {
 				one() {
 					return this.init().next()
 				},
-				two: classes.two
+				two: refactor.classes.two
 			}
 			// ? Destructurize this further?
 			OFDKL(
@@ -2756,15 +3358,261 @@ export const GeneralArray = (() => {
 		recursive: true,
 		isthis: true
 	})
-})()
+})().function
+
+export const garrayForm = classForm(GeneralArray)
+export const treeForm = (parentclass = general.DEFAULT_GENARRCLASS) =>
+	classForm(TreeNode(parentclass), alinative.function.index("children"))
+
+export const countrecursive = TEMPLATE({
+	defaults: {
+		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
+		form: general.DEFAULT_FORM
+	},
+	function: function (array = this.form.new()) {
+		return alinative.number
+			.fromNumber({ icclass: this.template.icclass })(
+				this.template.predicate(array)
+			)
+			.jumpForward(
+				this.template.form.is(array)
+					? expressions
+							.uevaluate()
+							.function(
+								expressions.Expression(
+									"+",
+									[],
+									this.template.form.index(array).copy(this.function)
+								)
+							)
+					: this.template.icclass.zero()
+			)
+	}
+}).function
+
+// Counts all the array-elements within a multi-dimensional array;
+export function arrElems(template = {}) {
+	// ? .. Let function-related aliases like this one be repositioned into the 'expressions.mjs' codefile;
+	return (x) =>
+		(
+			(a, b) => (y) =>
+				a(y).difference(b(y))
+		)([totalElems, nonArrElems].map((t) => t(template)))(x)
+}
+
+// Counts all non-array elements within a multidimensional array passed... [recursively so]
+export function nonArrElems(template = {}) {
+	return countrecursive({
+		predicate: negate(is.arr),
+		...template
+	})
+}
+
+// Counts all the elements within a multi-dimensional array (including the arrays themselves...)
+export function totalElems(template = {}) {
+	return countrecursive({
+		predicate: (x) => (is.arr(x) ? x.length : 0),
+		...template
+	})
+}
+
+export const dim = TEMPLATE({
+	defaults: {
+		icclass: general.DEFAULT_ICCLASS,
+		form: general.DEFAULT_FORM
+	},
+	function: function (recarr = this.template.form.new()) {
+		if (this.template.form.is(recarr))
+			return this.template.icclass.static
+				.one()
+				.jumpForward(
+					orders
+						.max(this.template)
+						.function(this.form.copy(recarr, this.function))
+				)
+		return this.template.icclass.class()
+	}
+}).function
+
+// * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
+export const generalSearch = TEMPLATE({
+	defaults: {
+		self: false,
+		reversed: false,
+		genarrclass: general.DEFAULT_GENARRCLASS,
+		soughtProp: TRUTH,
+		form: general.DEFAULT_FORM
+	},
+	function: function (
+		arrrec = this.template.form.new(),
+		prevArr = this.template.genarrclass.static.empty(),
+		self = this.template.self,
+		reversed = this.template.reversed
+	) {
+		const i = prevArr.copy()
+		if (self && this.template.soughtProp(this.template.form.index(arrrec))) return i
+
+		// ! Generalize this bounding function to allow arbitrary kinds of forms, pray...
+		const boundprop = reversed
+			? (x) => x >= 0
+			: (x) => x < this.template.form.index(arrrec).length
+		i.pushback(reversed ? this.template.form.index(arrrec).length - 1 : 0)
+		i.end()
+		for (
+			;
+			boundprop(i.currelem().get());
+			i.currelem().set(i.currelem().get() + (-1) ** reversed)
+		) {
+			if (
+				this.template.soughtProp(
+					this.template.form.index(arrrec).read(i.currelem().get())
+				)
+			)
+				return i
+			if (
+				this.template.form.is(
+					this.template.form.index(arrec).read(i.currelem().get())
+				)
+			) {
+				const r = this.function(
+					this.template.form.index(arrrec).read(i.currelem().get()),
+					i,
+					false,
+					reversed
+				)
+				if (!r) continue
+				return r
+			}
+		}
+		return false
+	}
+}).function
+
+// ? Consider this '.comparison' business (not quite sure one likes it, the '.compare' ensures that the thing works on all forms, this doesn't...)
+export const findDeepUnfilled = TEMPLATE({
+	defaults: [
+		function () {
+			return {
+				form: general.DEFAULT_FORM,
+				comparison: valueCompare
+			}
+		},
+		function () {
+			return { soughtProp: this.template.form.is }
+		}
+	],
+	function: alinative.function.const(function (template = {}) {
+		return generalSearch({
+			soughtProp: (x) =>
+				this.template.soughtProp(x) &&
+				!this.template.comparison(this.template.bound, x),
+			...this.template,
+			...template
+		}).function
+	}),
+	isthis: true
+}).function
+
+// * all of these things ought to have ..
+export const findDeepUnfilledArr = TEMPLATE({
+	defaults: {
+		type: is.arr,
+		comparison: (a, b) => a <= b.length,
+		self: true
+	},
+	function: function (template = {}) {
+		return findDeepUnfilled.function({
+			...this.template,
+			...template
+		})
+	}
+}).function
+
+export const findDeepLast = TEMPLATE({
+	defaults: {
+		reversed: true
+	},
+	function: function (template = {}) {
+		return generalSearch({
+			...this.template,
+			...template
+		}).function
+	}
+}).function
+
+export const recursiveIndexation = TEMPLATE({
+	function: function (object, fields = this.template.genarrclass.static.empty()) {
+		return repeatedApplication({
+			icclass: fields.this.class.template.icclass,
+			...this.template
+		})(
+			(x, i) => {
+				return this.form.read(x, fields.read(i))
+			},
+			fields.length().get(),
+			object
+		)
+	}
+}).function
+
+export const recursiveSetting = TEMPLATE({
+	defaults: {
+		form: general.DEFAULT_FORM,
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: function (
+		object = this.tepmlate.form.new(),
+		fields = this.template.genarrclass.static.empty()
+	) {
+		if (!fields.isEmpty()) {
+			const indexed = recursiveIndexation(this.template).function(
+				fields.copied("slice", [fields.init(), fields.finish().previous()])
+			)
+			this.template.form.write(indexed, fields.read(fiends.finish()))
+		}
+		return object
+	}
+}).function
+
+export const repeatedApplication = TEMPLATE({
+	defaults: { iter: (x) => x.next() },
+	function: function (
+		initial = this.template.initial,
+		times = this.template.times,
+		f = this.template.f,
+		offset = this.template.icclass.class(),
+		iter = this.template.iter
+	) {
+		let r = initial
+		for (let i = this.template.icclass.class(); !i.compare(times); i = iter(i))
+			r = f(r, i.difference(offset))
+		return r
+	}
+}).function
+
+// * This can create infinite loops...
+export const repeatedApplicationWhilst = TEMPLATE({
+	defaults: { initial: undefined },
+	function: function (f = this.template.function) {
+		let curr = initial
+		while (this.template.property()) curr = f(curr)
+		return curr
+	}
+}).function
+
+export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
+export const MAX_INT = VARIABLE(2 ** 53 - 1)
+
+export const MAX_STRING_LENGTH = MAX_INT
 
 // ! Refactor; Consider the optimization...
+// ! This doesn't work as of present, reason - wrong form for the output objects ... [incompatible with the 'EXTENSION' and other such...];
 export const garrays = {
 	LastIndexArray(template = {}, garrtemplate = {}) {
 		const A = {
 			template: {
 				icclass: general.DEFAULT_ICCLASS,
-				maxarrlen: constants.MAX_ARRAY_LENGTH,
+				maxarrlen: MAX_ARRAY_LENGTH,
 				filling: null,
 				...template,
 				bound: function (i) {
@@ -2773,7 +3621,7 @@ export const garrays = {
 				...template
 			}
 		}
-		A.class = GeneralArray({
+		return GeneralArray({
 			this: A,
 			elem: function (
 				arrobj,
@@ -2822,9 +3670,9 @@ export const garrays = {
 			newvalue: function (array, value) {
 				let pointer = this.elem(array, undefined, true)
 				while (!pointer[0]) {
-					pointer[1][pointer[2]] = (
-						pointer[0] === undefined ? (x) => [x] : aliases.id
-					)(this.this.template.filling)
+					pointer[1][pointer[2]] = (pointer[0] === undefined ? (x) => [x] : id)(
+						this.this.template.filling
+					)
 					pointer = this.elem(array, pointer[1], true, pointer[3], pointer[2])
 				}
 				return (pointer[0][pointer[1]] = value)
@@ -2835,111 +3683,111 @@ export const garrays = {
 			icclass: A.template.icclass,
 			...garrtemplate
 		})
-		return A
 	},
 	// * Note: this one requires another GeneralArray class to be used;
 	DeepArray(template = {}, garrtemplate = {}) {
-		const daform = structure.constForm("TOKEN", "arr", 1, [])
+		const daform = constForm("TOKEN", "arr", 1, [])
 		const X = {
 			template: {
-				icclass: InfiniteCounter(counters.numberCounter()),
-				maxlen: variables.MAX_ARRAY_LENGTH.get,
+				icclass: InfiniteCounter(numberCounter()),
+				maxlen: MAX_ARRAY_LENGTH.get,
 				genarrclass: general.DEFAULT_GENARRCLASS,
 				filling: null,
 				...template
-			},
-			class: GeneralArray({
-				empty: daform.new(),
-				// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
-				newvalue: function (array, value) {
-					let e = this.elem(array, true)
-					if (e[0] == undefined) {
-						if (e[0] === null) {
-							// ! ensure the proper template here, pray...
-							const flayer = structure
-								.findDeepUnfilled({ form: daform })
-								.function(array.array)
-							if (flayer) {
-								let p = array.array
-								for (const x of flayer) p = p[x].arr
-								p.push(value)
-								return value
-							}
-						}
-
-						for (const y of e[1].previous())
-							general.fix([array], ["currindex"], () => {
-								array.currindex = array.currindex.jumpBackward(
-									e[1].previous().jumpBackWard(y)
-								)
-								this.newvalue(array, X.template.filling)
-							})
-					}
-					return (e[0][e[1]] = value)
-				},
-				elem(array, pointer = false) {
-					let i = array.init()
-					let fi = 0
-					let prevarrs = arrays.LastIndexArray().class()
-					let currarray = array.array
-					for (; !i.compare(array.currindex); fi++) {
-						if (currarray === array.array && fi === array.array.arr.length) {
-							const rx = array.currindex.difference(i)
-							return [rx.equal(array.init().next()) ? null : undefined, rx]
-						}
-						const isfibelow = fi < currarray.length
-						if (isfibelow) {
-							while (daform.is(currarray.arr[fi])) {
-								prevarrs.pushback(currarray)
-								currarray = currarray.arr[fi]
-								continue
-							}
-							i = i.jumpForward(
-								aliases.native.number.fromNumber(
-									native.number.min([
-										this.this.template.maxlen,
-										currarray.arr.length
-									])
-								)
-							)
-						}
-						fi = isfibelow ? fi : 0
-						currarray = prevarrs.read(prevarrs.finish())
-						prevarrs.delete()
-					}
-					return pointer ? [[currarray, fi]] : [[currarray[fi]]]
-				},
-				isEnd(array) {
-					return this.elem(array)[0] == undefined
-				},
-				icclass: this.template.icclass,
-				...garrtemplate
-			})
+			}
 		}
+		return GeneralArray({
+			this: X,
+			empty: daform.new(),
+			// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
+			newvalue: function (array, value) {
+				let e = this.elem(array, true)
+				if (e[0] == undefined) {
+					if (e[0] === null) {
+						// ! ensure the proper template here, pray...
+						const flayer = structure
+							.findDeepUnfilled({ form: daform })
+							.function(array.array)
+						if (flayer) {
+							let p = array.array
+							for (const x of flayer) p = p[x].arr
+							p.push(value)
+							return value
+						}
+					}
 
-		return X
+					for (const y of e[1].previous())
+						general.fix([array], ["currindex"], () => {
+							array.currindex = array.currindex.jumpBackward(
+								e[1].previous().jumpBackWard(y)
+							)
+							this.newvalue(array, this.this.template.filling)
+						})
+				}
+				return (e[0][e[1]] = value)
+			},
+			elem(array, pointer = false) {
+				let i = array.init()
+				let fi = 0
+				let prevarrs = arrays.LastIndexArray().class()
+				let currarray = array.array
+				for (; !i.compare(array.currindex); fi++) {
+					if (currarray === array.array && fi === array.array.arr.length) {
+						const rx = array.currindex.difference(i)
+						return [rx.equal(array.init().next()) ? null : undefined, rx]
+					}
+					const isfibelow = fi < currarray.length
+					if (isfibelow) {
+						while (daform.is(currarray.arr[fi])) {
+							prevarrs.pushback(currarray)
+							currarray = currarray.arr[fi]
+							continue
+						}
+						i = i.jumpForward(
+							alinative.number.fromNumber(
+								native.number.min([
+									this.this.template.maxlen,
+									currarray.arr.length
+								])
+							)
+						)
+					}
+					fi = isfibelow ? fi : 0
+					currarray = prevarrs.read(prevarrs.finish())
+					prevarrs.delete()
+				}
+				return pointer ? [[currarray, fi]] : [[currarray[fi]]]
+			},
+			isEnd(array) {
+				return this.elem(array)[0] == undefined
+			},
+			icclass: this.template.icclass,
+			...garrtemplate
+		})
 	},
 	CommonArray(template = {}, garrtemplate = {}) {
-		return {
-			template: { offset: -1, ...template },
-			class: GeneralArray({
-				newvalue: function (arr, value) {
-					return (arr.array[arr.currindex] = value)
-				},
-				elem: function (arr) {
-					return arr.array[arr.currindex]
-				},
-				isEnd: function (arr) {
-					return arr.array.length <= arr.currindex
-				},
-				icclass: InfiniteCounter(
-					addnumber({
-						start: this.template.offset
-					})
-				),
-				...garrtemplate
-			})
+		// ? Change the shape of this 'this.this' object?
+		const X = {
+			template: { offset: -1, ...template }
 		}
+		return GeneralArray({
+			this: X,
+			newvalue: function (arr, value) {
+				return (arr.array[arr.currindex] = value)
+			},
+			elem: function (arr) {
+				return arr.array[arr.currindex]
+			},
+			isEnd: function (arr) {
+				return arr.array.length <= arr.currindex
+			},
+			icclass: InfiniteCounter(
+				addnumber({
+					start: this.this.template.offset
+				})
+			),
+			...garrtemplate
+		})
 	},
 	// * This thing will allow to create function-based types on top of an Array;
 	// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
@@ -2947,7 +3795,7 @@ export const garrays = {
 	TypedArray: CLASS({
 		defaults: {
 			empty: [],
-			typefunction: aliases.native.function.const(true)
+			typefunction: TRUTH
 		},
 		function: function (array = C.template.empty) {
 			const X = this
@@ -2961,6 +3809,7 @@ export const garrays = {
 		}
 	})
 }
+general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
 
 export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	const sh1 = (key, _this, f, args = [], name = "keys") => {
@@ -2975,12 +3824,12 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			names: NAMESLIST,
 			parentclass: parentclass,
 			defaults: {
-				constructor: number.native.generate(2).map(
-					aliases.native.function.const(function () {
+				constructor: alarray.native.generate(2).map(
+					alinative.function.const(function () {
 						return this.template.empty
 					})
 				),
-				inter: aliases.cdieach
+				inter: cdieach
 			},
 			unfound: undefined
 		},
@@ -3005,7 +3854,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				return this
 			},
-			suchthat(predicates = algorithms.array.native.generate(2).map(predicates.T)) {
+			suchthat(predicates = alarray.native.generate(2).map(T)) {
 				const oldkeys = this.this.this.keys.copy()
 				this.this.this.keys.suchthat(
 					(value, key) =>
@@ -3030,7 +3879,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.values.copy(f, isclass, template)
 				)
 			},
-			copied: classes.copied,
+			copied: refactor.classes.copied,
 			map(
 				f = ID,
 				isclass = false,
@@ -3051,7 +3900,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				return this
 			},
-			multcall: classes.multcall
+			multcall: refactor.classes.multcall
 		},
 		static: {
 			fromObject(object = {}, finite = false) {
@@ -3082,12 +3931,12 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			basestr: " "
 		},
 		properties: {
-			currindex: aliases.native.function.const(0)
+			currindex: alinative.function.const(0)
 		},
 		methods: {
 			split(useparator = "") {
 				const strarr = this.this.this.this.class.template.parentclass.class()
-				if (aliases.is.str(useparator)) {
+				if (is.str(useparator)) {
 					let carryover = ""
 					for (const str of this.this.this.genarr) {
 						const postsplit = str.split(useparator)
@@ -3177,13 +4026,11 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					.copied("slice", [this.init(), ind.previous()])
 					.keys())
 					final = final.jumpForward(
-						aliases.native.number.fromNumber(genarr.read(x).length)
+						alinative.number.fromNumber(genarr.read(x).length)
 					)
-				return final.jumpForward(
-					aliases.native.number.fromNumber().function(subind)
-				)
+				return final.jumpForward(alinative.number.fromNumber().function(subind))
 			},
-			finish: classes.finish,
+			finish: refactor.classes.finish,
 			go(index) {
 				const nind = this.fromtotalindex(index)
 				this.this.this.genarr.currindex = nind[0]
@@ -3195,7 +4042,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				let inarrind = this.init()
 				let currstr = ""
 				for (const x of this.genarr.copy((str) =>
-					aliases.native.number.fromNumber(str.length)
+					alinative.number.fromNumber(str.length)
 				)) {
 					inarrind = inarrind.next()
 					currstr = x
@@ -3207,16 +4054,16 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					currstr.length -
 						present.difference(index).map(
 							// ! make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
-							types.InfiniteCounter(
-								counters.addnumber({
+							InfiniteCounter(
+								addnumber({
 									start: -1
 								})
 							)
 						).value
 				]
 			},
-			begin: classes.begin,
-			end: classes.end,
+			begin: refactor.classes.begin,
+			end: refactor.classes.end,
 			slice(beginning = this.init(), end = this.finish(), orderly = false) {
 				const newstr = this.this.this.this.class.class()
 				this.go(beginning)
@@ -3231,9 +4078,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			write(index, value) {
 				general.fix(
 					[this.this.this.genarr, this.this.this],
-					algorithms.array.native
-						.generate(2)
-						.map(aliases.native.function.const("currindex")),
+					alarray.native.generate(2).map(alinative.function.const("currindex")),
 					() => {
 						this.go(index)
 						this.currelem().set(value)
@@ -3242,7 +4087,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			concat(ustring) {
-				if (aliases.is.str(ustring)) return this.pushback(ustring)
+				if (is.str(ustring)) return this.pushback(ustring)
 				this.this.this.genarr.concat(ustring.genarr)
 				return this
 			},
@@ -3257,7 +4102,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						return this.this.this.genarr
 							.currelem()
 							.set(
-								aliases.native.string.sreplaceIndex(
+								alinative.string.sreplaceIndex(
 									this.this.this.genarr.currelem().get(),
 									this.this.this.currindex,
 									char
@@ -3313,7 +4158,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 			},
-			copied: classes.copied,
+			copied: refactor.classes.copied,
 			insert(index, value) {
 				this.this.this = this.copied("slice", [this.init(), index.previous()])
 					.concat(value)
@@ -3325,7 +4170,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			},
 			join(
 				separator,
-				frequency = aliases.native.function.const(
+				frequency = alinative.function.const(
 					this.this.this.this.class.template.parentclass.template.icclass.next()
 				),
 				order = false
@@ -3387,7 +4232,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			},
 			indexesOf(ustring, halt = false, haltAfter = Infinity) {
 				const indexes = this.this.this.this.class.template.parentclass.class()
-				if (aliases.is.str(ustring))
+				if (is.str(ustring))
 					return this.indexesOf(this.this.this.this.class.class(ustring))
 				if (this.this.this.this.class.is(ustring)) {
 					// ! NOTE: (partially) the same code as in the 'split'; Pray, after further work on it - refactor...
@@ -3435,7 +4280,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					return indexes.read(this.init())
 				return this.this.this.this.class.template.unfound
 			},
-			includes: classes.includes,
+			includes: refactor.classes.includes,
 			// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 			// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
 			order() {
@@ -3463,12 +4308,11 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			pushback(ustring) {
-				if (aliases.is.str(ustring))
-					return this.this.this.genarr.pushback(ustring)
+				if (is.str(ustring)) return this.this.this.genarr.pushback(ustring)
 				return this.concat(ustring)
 			},
 			pushfront(ustring) {
-				if (aliases.is.str(ustring)) {
+				if (is.str(ustring)) {
 					this.this.this.genarr.pushfront(ustring)
 					return this
 				}
@@ -3478,11 +4322,11 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			*[Symbol.iterator]() {
 				for (const str of this.this.this.genarr) for (const sym of str) yield sym
 			},
-			suchthat: classes.suchthat,
-			any: classes.any,
-			every: classes.every,
-			forEach: classes.forEach,
-			multcall: classes.multcall
+			suchthat: refactor.classes.suchthat,
+			any: refactor.classes.any,
+			every: refactor.classes.every,
+			forEach: refactor.classes.forEach,
+			multcall: refactor.classes.multcall
 		},
 		static: {
 			fromString(str = "") {
@@ -3494,11 +4338,13 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 	})
 }
 
+general.DEFAULT_USTRCLASS = UnlimitedString()
+
 export const tnumbers = {
-	TrueInteger: (function (parentclass = general.DEFAULT_ICCLASS) {
+	TrueInteger: function (parentclass = general.DEFAULT_ICCLASS) {
 		return EXTENSION({
 			defaults: {
-				parenclass: parentclass,
+				parentclass: parentclass,
 				names: ["value"]
 			},
 			methods: {
@@ -3585,15 +4431,15 @@ export const tnumbers = {
 				zero() {
 					return this.this.this.this.class.static.zero()
 				},
-				one: classes.oneadd,
-				two: classes.twoadd
+				one: refactor.classes.oneadd,
+				two: refactor.classes.twoadd
 			},
 			static: {
 				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
 				// ? Allow for '.static' extension?
 				fromNumber: function (num = 1) {
 					return this.this.class(
-						aliases.native.number.iterations({
+						alinative.number.iterations({
 							iterated: this.this.template.parentclass.template
 						})(num)
 					)
@@ -3601,24 +4447,24 @@ export const tnumbers = {
 				fromCounter: function (ic) {
 					return number.TrueInteger(ic.class)(ic.value)
 				},
-				zero: classes.zero,
-				one: classes.oneadd,
-				two: classes.twoadd
+				zero: refactor.classes.zero,
+				one: refactor.classes.oneadd,
+				two: refactor.classes.twoadd
 			},
 			transform: general.StaticThisTransform,
 			recursive: true,
 			toextend: []
 		})
-	})(),
+	},
 	TrueRatio: function (parentclass = general.DEFAULT_TINTCLASS) {
 		const nameslist = ["numerator", "denomenator"]
 		return EXTENSION({
 			defaults: {
 				parentclass: parentclass,
 				names: nameslist,
-				inter: aliases.cdieach,
+				inter: cdieach,
 				defaults: {
-					constructor: number.native.generate(2).map(function () {
+					constructor: alarray.native.generate(2).map(function () {
 						return this.template.parentclass.static.one()
 					})
 				}
@@ -3682,7 +4528,7 @@ export const tnumbers = {
 						? "numerator"
 						: "denomenator"
 					const l = m === ratio.numerator ? "denomenator" : "numerator"
-					for (const x of algorithms.integer.allFactors().function(m))
+					for (const x of integer.allFactors().function(m))
 						if (this.this.class().equal(ratio[l].modulo(x))) {
 							ratio[m] = ratio[m].divide(x)
 							ratio[l] = ratio[l].divide(x)
@@ -3697,6 +4543,9 @@ export const tnumbers = {
 		})
 	}
 }
+
+general.DEFAULT_TINTCLASS = tnumbers.TrueInteger()
+general.DEFAULT_TRATIOCLASS = tnumbers.TrueRatio()
 
 // Utilizes the fact that JS passes objects by reference;
 export const Pointer = TEMPLATE({
@@ -3732,7 +4581,7 @@ export const InfiniteArray = CLASS({
 			}
 			return this
 		},
-		subarr(predicate = aliases.TRUTH) {
+		subarr(predicate = TRUTH) {
 			x = this.f
 			this.f = function (i = this.class.template.icclass.class()) {
 				let subind = this.class.template.icclass.class()
@@ -3748,7 +4597,7 @@ export const InfiniteArray = CLASS({
 		copy() {
 			return this.class.class(this.f)
 		},
-		copied: classes.copied,
+		copied: refactor.classes.copied,
 		map(g) {
 			const x = this.f
 			this.f = function (i) {
@@ -3767,7 +4616,9 @@ export const InfiniteArray = CLASS({
 		}
 	},
 	recursive: false
-})
+}).function
+
+general.DEFAULT_INFARR = InfiniteArray()
 
 export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = false) => {
 	const _class = EXTENSION({
@@ -3775,10 +4626,10 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			parentclass: parentclass,
 			ustrclass: general.DEFAULT_USTRCLASS,
 			names: ["infarr"],
-			deff: predicates.TRUTH,
+			deff: TRUTH,
 			defaults: {
 				inter: function (f = this.template.deff) {
-					return (i) => aliases.str(f(i))
+					return (i) => str(f(i))
 				}
 			}
 		},
@@ -3786,7 +4637,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			copy() {
 				return this.this.this.this.class.class(this.this.this.infarr.f)
 			},
-			copied: classes.copied,
+			copied: refactor.classes.copied,
 			slice(beg = this.init(), end) {
 				// ! generalize this;
 				if (arguments.length === 1) {
@@ -3795,8 +4646,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 				}
 				let c = beg
 				const r = this.this.this.this.class.template.ustrclass.class()
-				for (; predicates.lesser(c, end); c = predicates.next(c))
-					r.pushback(this.read(c))
+				for (; lesser(c, end); c = next(c)) r.pushback(this.read(c))
 				return
 			}
 		},
@@ -3807,14 +4657,14 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 	return (
 		ensure
 			? (x) =>
-					predicates.Ensurer(x, undefined, {
+					Ensurer(x, undefined, {
 						// ! Not efficient - wastes a single '.write' call; (If just used the EXTENSION, this wouldn't happen...); But using EXTENSION means (largely), using exactly the same code;
 						// ? work on EXTENSION to allow for compact in- and out-wrappers for methods of derived class, like here;
 						write: function (_tr, thisarg, args) {
-							return thisarg.write(args[0], aliases.str(args[1]))
+							return thisarg.write(args[0], str(args[1]))
 						},
 						map: function (_tr, thisarg, _args) {
-							return thisarg.map(aliases.str)
+							return thisarg.map(str)
 						}
 					})
 			: ID
@@ -3822,7 +4672,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 }
 
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	let loctreeform = structure.treeForm(parentclass)
+	let loctreeform = treeForm(parentclass)
 	return EXTENSION({
 		defaults: {
 			parentclass: parentclass,
@@ -3921,7 +4771,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.root
 				)
 			},
-			copied: classes.copied,
+			copied: refactor.classes.copied,
 			map(
 				f = ID,
 				isclass = false,
@@ -4031,7 +4881,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return froots
 			},
 			commonAncestors(values) {
-				return algorithms.array
+				return alarray
 					.common({ f: (x) => this.findAncestors(x) })
 					.function(values)
 			},
@@ -4042,7 +4892,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			},
 			order() {
-				return structure.dim({ form: loctreeform }).function(i)
+				return dim({ form: loctreeform }).function(i)
 			}
 		},
 		static: {
@@ -4055,6 +4905,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		}
 	})
 }
+general.DEFAULT_TREENODECLASS = TreeNode()
 
 export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION({
@@ -4063,7 +4914,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			names: ["genarr"],
 			defaults: {
 				inter: function (genarr = this.template.genarrclass.static.empty()) {
-					return [predicates.ensureSet(genarr)]
+					return [ensureSet(genarr)]
 				}
 			}
 		},
@@ -4089,9 +4940,9 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.genarr.copy(f, isclass, template)
 				)
 			},
-			copied: classes.copied,
-			union: classes.usetmeth("concat"),
-			intersection: classes.usetmeth("intersection"),
+			copied: refactor.classes.copied,
+			union: refactor.classes.usetmeth("concat"),
+			intersection: refactor.classes.usetmeth("intersection"),
 			complement(uset = this.this.this.this.class.static.empty()) {
 				return this.suchthat((x) => !uset.ni(x))
 			},
@@ -4129,365 +4980,21 @@ export const InfiniteSet = (template = {}) => {
 	return y.subarr((el, i) => !x.slice(x.init(), i.previous()).includes(el))
 }
 
-// ? More methods? [later, maybe...]
-export const deftable = RECURSIVE_VARIABLE({
-	"+": general.recursiveOperation("+", aliases.native.binary.add),
-	"-": function (...args) {
-		return this.get["+"](
-			...(args.length ? [args[0]].concat(args.slice(1).map((x) => -x)) : [])
-		)
-	},
-	"/": function (...args) {
-		return args.length >= 2 ? args[0] / this.get["*"](...args.slice(1)) : args[0]
-	},
-	"*": general.recursiveOperation("*", aliases.native.binary.mult),
-	"**": general.recursiveOperation("**", aliases.native.binary.power),
-	"^": general.recursiveOperation("^", aliases.native.binary.xor),
-	">>": general.recursiveOperation(">>", aliases.native.binary.rshift),
-	"<<": general.recursiveOperation("<<", aliases.native.binary.lshift),
-	"&": general.recursiveOperation("&", aliases.native.binary.and),
-	"|": general.recursiveOperation("|", aliases.native.binary.or),
-	"%": general.recursiveOperation("%", aliases.native.binary.modulo),
-	"&&": general.recursiveOperation("&&", aliases.native.binary.dand),
-	"||": general.recursiveOperation("||", aliass.native.binary.dor)
-})
-export const udeftable = RECURSIVE_VARIABLE({
-	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
-	"-": function (...args) {
-		return this.get["+"](
-			...(args.length ? [args[0]].concat(args.slice(1).map((x) => x.invadd())) : [])
-		)
-	},
-	// ! the '/' division must return a TrueRation-al value;
-	"#": function (...args) {
-		return (args.length >= 2 ? (x) => x.divide(this.get["*"](...args.slice(1))) : ID)(
-			args[0]
-		)
-	},
-	"*": general.recursiveOperation("*", (a, b) => a.multiply(b)),
-	"**": general.recursiveOperation("**", (a, b) => a.power(b)),
-	"%": general.recursiveOperation("%", (a, b) => a.modulo(b))
-})
-
-export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
-export const MAX_INT = VARIABLE(2 ** 53 - 1)
-
-export const MAX_STRING_LENGTH = MAX_INT
-
-const ccf = property("concat")
-variables.defaultAlphabet = VARIABLE(
-	ccf("")(
-		[
-			// 0-9
-			[48, 9],
-			// a-z
-			[97, 25],
-			// A-Z
-			[65, 25]
-		].map(aliases.native.function.exparr(native.string.UTF16))
-	)
-)
-
-export const aliases = {
-	// * The file that covers various aliases of the library's entities;
-
-	// todo: work extensively on the precise list of aliases... Also, their names...
-	// TODO [general] : perform hardcore alias-reusage ['alias-relinkage'] procedure, thus shortening and simplifying code using newly/previously introduced aliases...
-
-	native: {
-		number: {
-			numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
-
-			fromNumber: TEMPLATE({
-				defaults: {
-					icclass: general.DEFAULT_ICCLASS
-				},
-				function(x = this.template.start) {
-					return types
-						.InfiniteCounter(counters.addnumber(this.template))
-						.class(x)
-						.map(this.template.icclass)
-				}
-			}).function,
-
-			iterations: TEMPLATE({
-				defaults: { iterated: counters.arrayCounter(), defnum: 1 },
-				function(n = this.template.defnum) {
-					return repeatedApplication(
-						undefined,
-						nneg(n),
-						this.template.iterated[n > 0 ? "generator" : "inverse"]
-					)
-				}
-			}).function,
-
-			negind: (x, arr) => (x < 0 ? arr.length + x : x),
-			nneg: (x) => (x < 0 ? -x : x)
-		},
-
-		string: {
-			stoa(x = "") {
-				return x.split("")
-			},
-			atos(x = []) {
-				return x.join("")
-			},
-			fcc: String.fromCharCode,
-			strMap: function (str, symb = ID, isStrOut = false) {
-				return (isStrOut ? (x) => x.join("") : id)(str.split("").map(symb))
-			}
-		},
-
-		array: {
-			// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
-			last: (arr, obj, comparison = valueCompare) => {
-				return max(
-					native.array
-						.indexesOf({ comparison: comparison })
-						.function(arr, obj, comparison)
-				)
-			},
-			first: (arr, obj, comparison = valueCompare) => {
-				return min(
-					native.array
-						.indexesOf({ comparison: comparison })
-						.function(arr, obj, comparison)
-				)
-			},
-			_last: (arr) => arr[arr.length - 1],
-			_first: (arr) => arr[0],
-			insert: (arr, index, values, replacing = false) =>
-				arr
-					.slice(0, index)
-					.concat(values)
-					.concat(arr.slice(replacing ? (x) => x + values.length : index)),
-			_insert: (arr, index, val) => insert(arr, index, [val]),
-			remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
-			_remove: (arr, index) => remove(arr, index, index),
-			minlen: (...arrs) => flen(min, ...arrs),
-			maxlen: (...arrs) => flen(max, ...arrs),
-			flen: (f, ...arrs) => {
-				return f(arrs.map((a) => a.length))
-			},
-			flenarrs: (f, ...arrs) => {
-				const _f = f(...arrs)
-				return arrs.filter((a) => a.length === _f)
-			},
-			minlenarrs: (...arrs) => flenarrs(minlen, ...arrs),
-			maxlenarrs: (...arrs) => flenarrs(maxlen, ...arrs),
-			propertymap: (prop) => (objs) => objs.map((a) => a[prop]),
-
-			// ? does one want to rename these two?
-			arrThisApply: function (f, arr, thisArg = null) {
-				return f.apply(thisArg, arr)
-			},
-			arrApply: function (f, arr) {
-				return f(...arr)
-			},
-			noarrs(array = []) {
-				return array.filter(predicates.negate(is.arr))
-			},
-			arrsonly(array = []) {
-				return array.filter(is.arr)
-			},
-			// ? Does one want to keep those?
-			_multmap: function (a, fs) {
-				return multmap([a], fs)[0]
-			},
-			multmap: function (a, fs) {
-				return a.map((el) => fs.map((f) => f(el)))
-			},
-			// ! try hard to use arrow functions only for the aliases;
-			hasArrays: (array = []) => array.any(is.arr)
-		},
-
-		function: {
-			const: (c) => () => c,
-			void: () => {},
-			bind: (a, f, fieldName) => (a[fieldName] = f.bind(a)),
-			// TODO: pray finish [generalize to an arbitrary position for each and every function + additional arguments' lists...]
-			compose: (fc, args = []) => {
-				return this.composition(fc)(...args)
-			},
-			// ! Use this one extensively...
-			wrapper: wrapper,
-			condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
-
-			// ? Generalize this to a context (add 'this');
-			adddefaults:
-				(f) =>
-				(defaults = []) => {
-					return (...args) => {
-						for (const x in defaults) if (!(x in args)) args[x] = defaults[x]
-						return f(...args)
-					}
-				},
-			paramDecide:
-				(cond) =>
-				(a = ID, b = ID) =>
-				(...args) =>
-					(cond() ? a : b)(...args),
-
-			wrapper: TEMPLATE({
-				defaults: {
-					inarr: false,
-					in: id,
-					out: id,
-					deff: id
-				},
-				function: function (f = this.template.deff) {
-					return this.template.inarr
-						? (x) => this.template.out(f(...this.template.in(x)))
-						: (x) => this.template.out(f(this.template.in(x)))
-				}
-			}),
-
-			index: (i) => (x) => x[i],
-
-			exparr: (f) => (arr) => f(...arr),
-			rexparr: (arr) => (f) => f(...arr),
-			call: (x) => x(),
-			argscall: function (...args) {
-				return this.rexparr(args)
-			}
-		},
-
-		object: {
-			ensureProperty: function (object, property, value = undefined) {
-				if (!object.hasOwnProperty(property)) object[property] = value
-			},
-			// * A convinient general-version...
-			ensureProperties: function (object, defaultobj) {
-				for (const x in defaultobj) ensureProperty(object, x, defaultobj[x])
-			},
-			// ? should this be in the 'object' or in 'function'?
-			property:
-				(p) =>
-				(x) =>
-				(...args) =>
-					x[p](...args),
-			empty: () => ({})
-		},
-
-		boolean: {
-			n: (x) => !x,
-			t: true,
-			f: false,
-			btic: (x, _class) => _class.static[x ? "one" : "zero"]()
-		},
-
-		binary: {
-			add: (a, b) => a + b,
-			sub: (a, b) => a - b,
-			mult: (a, b) => a * b,
-			div: (a, b) => a / b,
-			power: (a, b) => a ** b,
-			xor: (a, b) => a ^ b,
-			rshift: (a, b) => a >> b,
-			lshift: (a, b) => a << b,
-			and: (a, b) => a & b,
-			or: (a, b) => a | b,
-			modulo: (a, b) => a % b,
-			dand: (a, b) => a && b,
-			dor: (a, b) => a || b
-		}
-	},
-
-	// * Identity map (just a nice piece of notation, that's all);
-	id: ID,
-
-	bool: Boolean,
-	str: String,
-	num: Number,
-	obj: Object,
-	sym: Symbol,
-	udef: undefined,
-	set: Set,
-	arr: Array,
-	fn: Function,
-	fun: Function,
-	bi: BigInt,
-
-	ustr: types.UnlimitedString,
-	genarr: types.GeneralArray,
-	umap: types.UnlimitedMap,
-	infarr: types.InfiniteArray,
-	infstr: types.InfiniteString,
-	infset: types.InfiniteSet,
-	ic: types.InfiniteCounter,
-	liarr: types.arrays.LastIndexArray,
-	darr: types.arrays.DeepArray,
-	carr: types.arrays.CommonArray,
-	tint: types.numbers.TrueInteger,
-	tratio: types.numbers.TrueRatio,
-	tn: types.TreeNode,
-	uset: types.UnlimitedSet,
-	p: types.Pointer,
-
-	trimBeginning:
-		(n = 1) =>
-		(x) =>
-			x.slice(n),
-	trimEnd:
-		(n = 1) =>
-		(x) =>
-			x.slice(0, x.length - n),
-
-	is: {
-		bool: (x) => x === true || x === false,
-		str: (x) => typeof x === "string" || x instanceof String,
-		num: (x) => typeof x === "number" || x instanceof Number,
-		obj: typeof x === "object" && x instanceof Object,
-		sym: (x) => typeof x === "symbol",
-		udef: (x) => x === undefined,
-		set: (x) => x instanceof Set,
-		arr: (x) => x instanceof Array,
-		fn: (x) => x instanceof Function,
-		fun: (x) => typeof x === "function",
-		bi: (x) => x instanceof BigInt,
-		nan: isNaN,
-		class: (cl) => cl.is
-	},
-
-	// ! use the 'composition' and 'wrapper' especially much with the 'aliases' to obtain new ones...;
-	cdieach: (x, i) => [x[i]],
-	hasFunction: (x, m) => x.hasOwnProperty(m) && typeof x[m] === "function",
-	inarr: (x) => [x],
-
-	id: (a) => a
-}
-
-export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
-		defaults: defaults.basicgenarr(parentclass),
-		toextend: [],
-		methods: {
-			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
-			push(element) {
-				return this.this.this.genarr.pushback(element)
-			},
-			pop: classes.pop,
-			peek: classes.peek,
-			copy: classes.copy
-		},
-		recursive: true
-	})
-}
-export const Queue = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
-		defaults: defaults.basicgenarr(parentclass),
-		toextend: [],
-		methods: {
-			enqueue(element) {
-				return this.this.this.genarr.pushfront(element)
-			},
-			dequeue: classes.pop,
-			front: classes.peek,
-			copy: classes.copy
-		},
-		recursive: true
-	})
-}
+export const ustr = UnlimitedString
+export const genarr = GeneralArray
+export const umap = UnlimitedMap
+export const infarr = InfiniteArray
+export const infstr = InfiniteString
+export const infset = InfiniteSet
+export const ic = InfiniteCounter
+export const liarr = garrays.LastIndexArray
+export const darr = garrays.DeepArray
+export const carr = garrays.CommonArray
+export const tint = tnumbers.TrueInteger
+export const tratio = tnumbers.TrueRatio
+export const tn = TreeNode
+export const uset = UnlimitedSet
+export const p = Pointer
 
 // Extends 'TreeNode';
 export const NTreeNode = TEMPLATE({
@@ -4504,7 +5011,9 @@ export const NTreeNode = TEMPLATE({
 			}
 		}
 	],
-	function: function (parentclass = this.template.parentclass) {
+	function: alinative.function.const(function (
+		parentclass = this.template.parentclass
+	) {
 		return Ensurer(
 			parentclass,
 			(_r, _this) =>
@@ -4534,7 +5043,7 @@ export const NTreeNode = TEMPLATE({
 				}
 			}
 		)
-	},
+	}),
 	word: "class",
 	isthis: true
 }).function
@@ -4558,7 +5067,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		},
 		methods: {
 			getAdjacent(index) {
-				return this.this.this.verticies.read(index).edges.copy(aliases.call)
+				return this.this.this.verticies.read(index).edges.copy(call)
 			},
 			addvertex(
 				value,
@@ -4569,7 +5078,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			},
 			addedge(
 				index = this.init(),
-				edge = aliases.function.const(this.this.this.verticies.read(index))
+				edge = alinative.function.const(this.this.this.verticies.read(index))
 			) {
 				this.this.this.verticies.read(index).edges.pushback(edge)
 				return this
@@ -4616,7 +5125,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.verticies.copy(f, isclass, template, leftovers)
 				)
 			},
-			suchthat(predicate = aliases.TRUTH) {
+			suchthat(predicate = TRUTH) {
 				return this.this.this.this.class(
 					this.this.this.verticies.copied("suchthat", [
 						(x) =>
@@ -4682,7 +5191,7 @@ export const heaps = {
 				top() {
 					return this.this.this.treenode.value
 				},
-				add: classes.add,
+				add: refactor.classes.add,
 				topless() {
 					const topelem = this.top()
 					this.merge(this.this.this.treenode.children)
@@ -4742,7 +5251,7 @@ export const heaps = {
 		})
 	},
 	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
-		let bintreeform = structure.treeForm(parentclass)
+		let bintreeform = treeForm(parentclass)
 		return EXTENSION({
 			defaults: {
 				treenodeclass: general.DEFAULT_TREENODECLASS,
@@ -4752,16 +5261,16 @@ export const heaps = {
 					inter: function (args, _i) {
 						const heapensured = args[0].copy()
 						for (const tree of heapensured)
-							predicates.ensureHeap(tree, this.template.predicate)
+							ensureHeap(tree, this.template.predicate)
 						return heapensured
 					}
 				}
 			},
 			methods: {
-				add: classes.add,
+				add: refactor.classes.add,
 				ordersort: function () {
 					// ! later, check if this sorts it from smallest-to-largest, or the reverse...
-					this.sort((x, y) => predicates.greateroe(x.order(), y.order()))
+					this.sort((x, y) => greateroe(x.order(), y.order()))
 					return this
 				},
 				order: function (i) {
@@ -4791,7 +5300,7 @@ export const heaps = {
 							return treemerge(affected, b, a, true)
 						}
 						const heap = heaps.read()
-						const hbmerged = heap.trees.copy(predicates.F)
+						const hbmerged = heap.trees.copy(F)
 						const horders = heap.trees.copy((x) => x.order())
 						const torders = this.this.this.trees.copy((x) => x.orders())
 						for (const i of this.keys())
@@ -4820,7 +5329,7 @@ export const heaps = {
 				copy(f = ID) {
 					return this.this.this.this.class.class(this.this.this.trees.copy(f))
 				},
-				copied: classes.copied,
+				copied: refactor.classes.copied,
 				top() {
 					return orders
 						.most({
@@ -4850,6 +5359,8 @@ export const heaps = {
 		})
 	}
 }
+
+general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
 
 export const PriorityQueue = (heapclass = general.DEFAULT_HEAPCLASS) => {
 	return EXTENSION({
@@ -4890,7 +5401,9 @@ export const sort = {
 				return { alphabet: this.template.genarrclass.static.empty() }
 			}
 		],
-		function: function (garr = this.template.genarrclass.static.empty()) {
+		function: alinative.function.const(function (
+			garr = this.template.genarrclass.static.empty()
+		) {
 			const polyconverted = garr
 				.copy(this.template.tintclass.static.fromCounter)
 				.map(numeric.toPolystring(this.template).function)
@@ -4903,7 +5416,7 @@ export const sort = {
 			let ordered = polyconverted.copy()
 			for (const x of maxsize) ordered = toorder(ordered, x)
 			return ordered
-		},
+		}),
 		isthis: true
 	}).function,
 	bucket: TEMPLATE({
@@ -4921,7 +5434,7 @@ export const sort = {
 				}
 			}
 		],
-		function: function (
+		function: alinative.function.const(function (
 			garr = this.this.this.genarrclass.static.empty(),
 			bucketsnum = this.template.buckets
 		) {
@@ -4941,22 +5454,22 @@ export const sort = {
 				buckets.write(b, this.template.sortingf(buckets.read(b)))
 
 			return array.concat(this.template).function(buckets)
-		},
+		}),
 		isthis: true
 	}).function,
 	counting: TEMPLATE({
 		defaults: {
 			genarrclass: DEFAULT_GENARRCLASS
 			// ! ISSUE: what about the default 'predicate'?
-			// ^ DECISION: perhaps, use one of the 'predicates.mjs' - namely, lesser/greater, those...
+			// ^ DECISION: perhaps, use one of the 'mjs' - namely, lesser/greater, those...
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
 			const k = general.maxkey.bind(this)(garr)
 			const count = this.template.genarrclass.static
 				.fromCounter(k.next())
-				.map(aliases.native.function.const(k.class.init()))
-			const output = garr.copy(aliases.native.function.const(aliases.udef))
+				.map(alinative.function.const(k.class.init()))
+			const output = garr.copy(alinative.function.const(udef))
 
 			for (const x of garr) {
 				const j = this.template.predicate(x)
@@ -5135,7 +5648,7 @@ export const sort = {
 						}
 						b.pushback([CONSTOBJ, newarr])
 					},
-					aliases.native.function.const((x) => x.next().next())
+					alinative.function.const((x) => x.next().next())
 				)
 				return merge(b)
 			}
@@ -5188,7 +5701,7 @@ export const search = {
 	interpolation: TEMPLATE({
 		defaults: {
 			defelem: undefined,
-			comparison: comparisons.valueCompare,
+			comparison: valueCompare,
 			unfound: undefined
 		},
 		function: function (
@@ -5231,7 +5744,7 @@ export const search = {
 			)
 		}
 	}).function,
-	jump: structure.typeConst((FORBIDDEN_) => {
+	jump: typeConst((FORBIDDEN_) => {
 		const FORBIDDEN = FORBIDDEN_[0]
 		return TEMPLATE({
 			defaults: { defelem: undefined },
@@ -5249,9 +5762,9 @@ export const search = {
 					const curr = garr.read(i)
 					if (
 						((...x) =>
-							aliases.native.function.dor(
+							alinative.function.dor(
 								[this.template.predicate, this.template.comparison].map(
-									aliases.native.function.rexparr(x)
+									alinative.function.rexparr(x)
 								)
 							))(curr, sought)
 					) {
@@ -5284,7 +5797,7 @@ export const search = {
 	binary: TEMPLATE({
 		defaults: {
 			defelem: undefined,
-			comparison: comparisons.valueCompare,
+			comparison: valueCompare,
 			unfound: undefined
 		},
 		function: function (
@@ -5298,7 +5811,7 @@ export const search = {
 			const middleind = lenint
 				.divide(this.template.icclass.static.two())
 				.add(
-					aliases.btic(
+					btic(
 						lenint
 							.modulo(this.template.icclass.static.two())
 							.equal(this.template.icclass.static.one())
@@ -5399,8 +5912,7 @@ export const integer = {
 			return array
 				.generate()
 				.function(
-					(this.template.includezero ? ID : aliases.next)(n.class.class())
-						.value,
+					(this.template.includezero ? ID : next)(n.class.class()).value,
 					range.value,
 					this.template.step
 				)
@@ -5548,237 +6060,44 @@ export const integer = {
 	}).function
 }
 
-export const alarray = {
-	native: {
-		// ! Generalize;
-		split: TEMPLATE({
-			defaults: {
-				comparison: comparisons.refCompare
-			},
-			function: function (arr, el) {
-				const segments = []
-				let begInd = 0
-				let endInd = 0
-				for (let i = 0; i < arr.length; i++)
-					if (this.template.comparison(el, arr[i])) {
-						begInd = endInd + (endInd > 0)
-						endInd = i
-						segments.push([begInd, endInd])
-					}
-				return segments.map((seg) => arr.slice(...seg))
-			}
-		}).function,
-		generate: function (start, end, step = 1, precision = 1) {
-			// ! find more places for this operation's application (refactor to an alias, mayhaps?)
-			if (arguments.length === 1) {
-				end = start
-				start = 1
-			}
-			const generated = []
-			const upper =
-				end + (-1) ** step < 0 * (Number.isInteger(step) ? 1 : 10 ** -precision)
-			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
-			for (let i = start; proposition(i); i += step)
-				generated.push(this.floor(i, precision))
-			return generated
-		}
-	},
-	// ? Question [general]: which one should the library prefer the 'GeneralArray'-based multiple arguments, or the spread syntax? (GeneralArray permits unlimited number of arguments for a function that uses it...);
-	intersection: TEMPLATE({
-		defaults: {
-			comparison: comparisons.valueCompare,
-			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: function (...arrs) {
-			if (!arrs.length) return this.template.genarrclass.empty()
-			if (arrs.length == 1) return arrs[0]
-			if (arrs.length == 2) {
-				const inter = this.template.genarrclass.class()
-				for (
-					let i = this.template.icclass.class();
-					predicates.lesser(i, arrs[0]);
-					i = predicates.next(i)
-				)
-					for (
-						let j = this.template.icclass.class();
-						predicates.lesser(j, arrs[1]);
-						j = predicates.next(j)
-					) {
-						const x = arrs[0].read(i),
-							y = arrs[1].read(j)
-						if (this.template.comparison(x, y))
-							inter.pushback(
-								this.template.preferred(x, y, comparison, ...arrs, i, j)
-							)
-					}
-				return inter
-			}
-			return this.function(arrs[0], this.function(arrs.slice(1)))
-		}
-	}).function,
-	permutations: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
-		function: function (array = this.template.genarrclass.static.empty()) {
-			if (array.init().next().compare(array.length().get()))
-				return this.template.genarrclass.fromArray([array.copy()])
-
-			const pprev = this.function(
-				array.copied("slice", array.init(), array.finish().previous())
-			)
-			const l = array.end(false)
-			const pnext = this.template.genarrclass.static.empty()
-
-			for (const i of array.keys())
-				for (const j of pprev.read(i).keys())
-					pnext.pushback(pprev.copied("insert", [j, l]))
-
-			return pnext
-		}
-	}).function,
-	indexesOf: TEMPLATE({
-		defaults: [
-			function () {
-				return {
-					unfound: undefined,
-					comparison: comparisons.valueCompare,
-					halt: false,
-					icclass: general.DEFAULT_ICCLASS
-				}
-			},
-			function () {
-				return {
-					haltAfter: this.template.icclass.static.one()
-				}
-			}
-		],
-		function: function (
-			arr,
-			el,
-			halt = this.template.halt,
-			haltAfter = this.template.haltAfter
-		) {
-			return general.fix([arr.this.this], ["currindex"], () => {
-				const inds = this.empty()
-				const cond = halt
-					? (inds) => inds.length().get().compare(haltAfter)
-					: aliases.TRUTH
-				let currind
-				while (currind !== this.template.unfound && !cond(inds, this)) {
-					currind = search.linear(this.template).function(el, arr)
-					inds.pushback(currind)
-				}
-				return inds
-			})
-		},
-		isthis: true
-	}).function,
-	norepetitions: TEMPLATE({
-		defaults: [
-			function () {
-				return {
-					comparison: comparisons.valueCompare,
-					copy: false,
-					genarrclass: general.DEFAULT_GENARRCLASS,
-					icclass: general.DEFAULT_ICCLASS
-				}
-			},
-			function () {
-				return {
-					tokeep: this.template.icclass.static.zero()
-				}
-			}
-		],
-		function: function (arr, el, tokeep = this.template.tokeep) {
-			const firstMet = array.indexesOf(this.template).function(arr, el)
-			const pred = (a, i) =>
-				!firstMet.firstIndex(i).map(tokeep.class).compare(tokeep) ||
-				!this.template.comparison(a, el)
-			return (
-				this.template.copy
-					? (x) => x.copied("suchthat", [pred])
-					: (x) => x.suchthat(pred)
-			)(arr)
-		},
-		isthis: true
-	}).function,
-	isSub: TEMPLATE({
-		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
-		defaults: {
-			comparison: comparisons.valueCompare
-		},
-		function: function (arrsub, arr = this.template.genarrclass.static.empty()) {
-			for (const x of arrsub)
-				if (!arr.any((y) => this.template.comparison(x, y))) return false
-			return true
-		}
-	}).function,
-	join: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: function (
-			arrs = this.template.genarrclass.static.empty(),
-			separators = this.template.separators
-		) {
-			return repeatedApplication(
-				this.template.genarrclass.static.empty(),
-				arrs.length().get(),
-				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
-			)
-		}
-	}).function,
-	generate: TEMPLATE({
-		defaults: {
-			icclass: general.DEFAULT_ICCLASS,
-			genarrclass: general.DEFAULT_GENARRCLASS,
-			ic: false
-		},
-		function: function (start, end, step = this.template.icclass.class().next()) {
-			if (arguments.length === 1) {
-				end = start
-				start = this.template.icclass.class().next()
-			}
-			const generated = this.template.genarrclass.static.empty()
-			const proposition = (
-				(f) => (i) =>
-					f(i, end)
-			)(predicates[step.direction() ? "lesseroe" : "greateroe"])
-			const wrap = this.template.ic ? ID : aliases.native.function.index("value")
-			for (let i = start; proposition(i); i = i.jumpDirection(step))
-				generated.pushback(wrap(i))
-			return generated
-		}
-	}).function,
-	common: TEMPLATE({
-		defaults: {
-			f: ID
-		},
-		function: function (...args) {
-			return array.intersection(this.template).function(args.map(this.template.f))
-		}
-	}).function,
-	concat: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: function (arrays = this.template.genarrclass.static.empty()) {
-			if (arrays.two().compare(arrays.length().get()))
-				return (arrays.one().equal(arrays.length().get()) ? (x) => x.read() : ID)(
-					arrays
-				)
-			if (arrays.length().get().equal(arrays.two()))
-				return arrays.read().concat(arrays.read(arrays.one()))
-			let r = arrays.read()
-			for (const x of arrays.slice(arrays.one()))
-				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
-			return r
-		}
-	}).function
+integer.native.commonDivisors = function (...nums) {
+	return alarray.common({ f: integer.native.factorOut }).function(nums)
 }
+
+integer.native.commonMultiples = TEMPLATE({
+	defaults: { range: 100 },
+	function: function (...nums) {
+		return array
+			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
+			.function(nums)
+	}
+}).function
+
+// ! fix the missing in- and out-'sequences' for the determination of the types conversion at the beginning and ending...;
+integer.native = {
+	...integer.native,
+	...general.finiteobj(
+		integer,
+		[
+			"factorOut",
+			"isPrime",
+			"multiples",
+			"multiplesBefore",
+			"lcm",
+			"lcd",
+			"areCoprime",
+			"allFactors",
+			"isPerfect",
+			"factorial",
+			"binomial"
+		],
+		{ integer: true },
+		[],
+		[],
+		[alarray.native.generate(obj.keys(integer).length).map(TRUTH)]
+	)
+}
+integer.native.primesBefore = finite().function(integer.primesBefore)
 
 export const alnumber = {
 	farey: TEMPLATE({
@@ -5819,49 +6138,52 @@ export const alnumber = {
 	}).function
 }
 
-integer.native.commonDivisors = function (...nums) {
-	return alarray.common({ f: integer.native.factorOut }).function(nums)
-}
+export const READONLY = (x) =>
+	Object.freeze({
+		get: x
+	})
 
-integer.native.commonMultiples = TEMPLATE({
-	defaults: { range: 100 },
-	function: function (...nums) {
-		return array
-			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
-			.function(nums)
+export function INHERIT(x, X) {
+	return {
+		template: {
+			inherited: X,
+			defchild: x,
+			this: null
+		},
+		f: function (target = this.template.defchild) {
+			const _class = {
+				template: {
+					...target.defaults(this.template.this)
+				},
+				...target.rest
+			}
+			this.template.inherited.template.this = _class
+			_class[target.word] = this.template.inherited.f
+			return x.transform(_class)
+		}
 	}
-}).function
-
-// ! fix the missing in- and out-'sequences' for the determination of the types conversion at the beginning and ending...;
-integer.native = {
-	...integer.native,
-	...general.finiteobj(
-		integer,
-		[
-			"factorOut",
-			"isPrime",
-			"multiples",
-			"multiplesBefore",
-			"lcm",
-			"lcd",
-			"areCoprime",
-			"allFactors",
-			"isPerfect",
-			"factorial",
-			"binomial"
-		],
-		{ integer: true },
-		[],
-		[],
-		[alarray.native.generate(aliases.obj.keys(integer).length).map(predicates.TRUTH)]
-	)
 }
-integer.native.primesBefore = finite().function(integer.primesBefore)
 
+export function DEOBJECT(obj = {}) {
+	return [Object.keys, Object.values].map((x) => x(obj))
+}
+
+export function OBJECT(keys = [], values = []) {
+	let length = Math.min([keys.length, values.length])
+	const returned = {}
+	for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
+	return returned
+}
+
+export function NOMODULE(moduleobj) {
+	return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
+}
+
+// ! Note [on reassembling the code by pieces so as for it to work...]: Uses such as this must be moved to the end...
 alarray.native = {
 	...alarray.native,
 	...general.finiteobj(
-		array,
+		alarray,
 		[
 			"intersection",
 			"permutations",
@@ -5876,367 +6198,27 @@ alarray.native = {
 	)
 }
 
-export const macros = {
-	// * Space for macros and local constants... [used for semantics and simplification of development/code-reading];
+// * Constructs a counter from an InfiniteClass;
+export const cfromIcc = refactor.general.counterFrom(["jumpForward", "jumpBackward"])
 
-	// TODO: improve the macros (make them general as well...); Consider self-using the package...;
-	// ? In particular - later create a General versions of macros (using unlimited types...);
-	// ? In particular more - create later the 'returnless' versions [namely, the 'infinite stack' function];
+// * Constructs a counter from a TrueInteger class (additive);
+export const tintAdditive = refactor.general.counterFrom(
+	["add", "difference"],
+	tnumbers.TrueInteger().static.fromCounter
+)
 
-	// TODO [general]: make a total safe-check for ALL the methods/macros/functions/classes regarding anything concerning parameter values [default values, the transformations used, alternative values and the way that they behave collectively...];
-	// TODO [general]: think further (and more deeply) on the matter of the publicity of the structure that is presented to the user by the results of the various macros;
-
-	ID: aliases.id,
-
-	// ? Make a template? [namely, allow the user to define the default type of the TYPED_VARIABLE?]
-	TYPED_VARIABLE:
-		(type = ID) =>
-		(x) => {
-			return {
-				get: type(x),
-				set(t) {
-					return (this.get = type(t))
-				}
-			}
-		},
-
-	VARIABLE: TYPED_VARIABLE(),
-	RECURSIVE_VARIABLE: (x) => {
-		if (x instanceof Object) {
-			const r = {
-				get: {},
-				set(f) {
-					this.get = { ...f }
-					for (const y in this.get)
-						if (aliases.is.fn(this.get[y])) this.get[y] = f[y].bind(this)
-				}
-			}
-			r.set(x)
-			return r
-		}
-		return VARIABLE(x)
-	},
-
-	NAMED_TEMPLATE: (f, dname = undefined, dinstance = undefined, rest = {}) =>
-		TEMPLATE({
-			defaults: { name: dname, instance: dinstance },
-			function: f,
-			...rest
-		}),
-
-	READONLY: (x) =>
-		Object.freeze({
-			get: x
-		}),
-
-	// * Allows to define templated classes and functions more non-conventionally;
-	TEMPLATE: function (template = {}) {
+// ? Add tint-based counters for other operations as well? [same goes for the native JS Number...];
+export const tintMultiplicative = (() => {
+	const X = refactor.general.counterFrom(
+		["multiply", "divide"],
+		tnumbers.TrueInteger().static.fromCounter
+	)
+	// * setting a different default for the 'forth' and 'back';
+	X.template.defaults[1] = function () {
 		return {
-			template: {
-				deftemplate: {},
-				defaults: {},
-				word: "function",
-				function: ID,
-				isthis: false,
-				this: null,
-				rest: {},
-				transform: ID,
-				templateword: "template",
-				...template
-			},
-			function: function (template = this.template.deftemplate) {
-				let _class = {}
-				// ? Do something about this - don't just leave hanging...;
-				const K = (x, i = 0) =>
-					x instanceof Array
-						? this.template.isthis
-							? x[i].bind(this.template.this)()
-							: x[i]
-						: this.template.isthis
-						? x.bind(this.template.this ? this.template.this : _class)()
-						: x
-				// ! refactor! [again, the native.object methods for immidiate object-property inheritance procedures accomplishment]
-				if (this.template.defaults instanceof Array)
-					for (const x in this.template.defaults) {
-						const k = K(this.template.defaults, x)
-						for (const y of k) _class[this.template.templateword][y] = k[y]
-						for (const y of template)
-							_class[this.template.templateword][y] = template[y]
-					}
-				_class[this.template.templateword] = {
-					...K(this.template.defaults),
-					...template
-				}
-				// ! FIX THIS [the present 'isthis' function do __NOT__ adhere to this requirement of possessing a 'this'-wrapper...] - simply use the 'aliases.native.function.const' on it...;
-				_class[this.template.word] = (
-					this.template.isthis
-						? (x) => x(this.template.this ? _class : this.template.this)
-						: ID
-				)(this.template.function).bind(_class)
-				for (const x in this.template.rest)
-					_class[x] = { ...this.template.rest[x] }
-				return this.template.transform(_class, template)
-			}
+			forth: this.template.wrapper(this.template.icclass.static.two()),
+			back: this.template.wrapper(this.template.icclass.static.two())
 		}
-	},
-
-	INHERIT: function (x, X) {
-		return {
-			template: {
-				inherited: X,
-				defchild: x,
-				this: null
-			},
-			f: function (target = this.template.defchild) {
-				const _class = {
-					template: {
-						...target.defaults(this.template.this)
-					},
-					...target.rest
-				}
-				this.template.inherited.template.this = _class
-				_class[target.word] = this.template.inherited.f
-				return x.transform(_class)
-			}
-		}
-	},
-
-	// ? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
-	HIERARCHY: function (hierarr = []) {
-		return repeatedApplication(
-			TEMPLATE(hierarr[hierarr.length - 1]),
-			hierarr.length - 1,
-			(r, i) => INHERIT(hierarr[hierarr.length - i], r),
-			-2
-		)
-	},
-
-	// ! Partially solved the issue of non-copiability of the methods produced by the 'EXTENSION' macro using 'deepCopy' (or, generally, '.bind'), but now the dilemma is somewhat different:
-	// * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
-	// 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
-	// ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
-	// ? ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
-	EXTENSION: (template = {}) => {
-		// ? refactor this repeating 'ensureProperties';
-		ensureProperties(template, {
-			word: "class",
-			recursive: false,
-			selfname: "this",
-			subselfname: "this",
-			classref: "class",
-			methods: {},
-			static: {},
-			isgeneral: {},
-			toextend: true,
-			defaults: {},
-			index: {}
-		})
-		const ftemplate = {
-			function: function (template = {}) {
-				return CLASS({
-					...this,
-					function: function (...args) {
-						ensureProperties(
-							args,
-							this.template.defaults.constructor.map((x) => x.bind(this)())
-						)
-						const X = {}
-						let i = 0
-						for (const y of this.template.names)
-							X[y] = this.template.defauls.outer(
-								this.template.parentclass.class(
-									...this.template.defaults.inter.bind(this)(args, i, X)
-								),
-								i++
-							)
-						return X
-					},
-					...template
-				})
-			},
-			...template,
-			defaults: {
-				names: ["sub"],
-				defaults: {
-					constructor: [],
-					inter: cdieach,
-					outer: ID,
-					...template.defaults.defaults
-				},
-				...template.defaults
-			},
-			methods: {
-				...template.methods,
-				...((x) =>
-					OBJECT(
-						x,
-						x.map((a) => [
-							template.isgeneral[x] || false,
-							NAMED_TEMPLATE(
-								function (
-									instance = this.template.instance,
-									name = this.template.name
-								) {
-									return function (...args) {
-										if (
-											this[
-												name.classref
-											].template.defaults.hasOwnProperty(a)
-										)
-											ensureProperties(
-												args,
-												this[name.classref].template.defaults[a]
-											)
-										// ! This is not general. Reconsider deeply. First - should be ability to return arbitrary 'this'-bound expression (including 'this' itself); Second - think of whether this does the job for recursive classes as well [test, in other words...]; Third - look through the code and consider some powerful generalization cases which would be desired by one's code...
-										return this[
-											this[name.classref].template.names[name.index]
-										][a](...args)
-									}.bind(instance)
-								},
-								{
-									classref: template.classref,
-									index: template.index[a] || 0
-								}
-							)
-						])
-					))(
-					template.toextend === true
-						? template.defaults.parentclass.methods
-						: INTERSECTION(
-								Object.keys(template.defaults.parentclass.methods),
-								template.toextend
-						  )
-				)
-			}
-		}
-		// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...];
-		delete ftemplate.toextend
-		return PRECLASS(ftemplate)
-	},
-
-	NOREST: function (labels = [], btemplate = {}) {
-		return function (template = {}) {
-			const X = { ...btemplate }
-			// ! refactor! [make a method for array disjunction...];
-			for (const a in template) if (!labels.includes(a)) X[a] = template[a]
-			X.rest = {}
-			// ! refactor!
-			for (const l of labels) X.rest[l] = template[l]
-			X.rest = { ...X.rest, ...template.rest }
-			return TEMPLATE(X)
-		}
-	},
-
-	GENERATOR: NOREST(["inverse", "range"], { word: "generator" }),
-	// ? Add the 'parentclass' and 'names' in there? Pray consider...;
-	PRECLASS: NOREST([
-		"methods",
-		"static",
-		"recursive",
-		"classref",
-		"selfname",
-		"subselfname",
-		"isgeneral",
-		"properties",
-		"isname"
-	]),
-
-	// ? generalize to another macro, maybe?
-	// * Use all over the place...
-	CLASS: (ptemplate = {}) => {
-		ensureProperties(ptemplate, {
-			word: "class",
-			function: empty,
-			methods: {},
-			static: {},
-			recursive: false,
-			classref: "class",
-			selfname: "this",
-			subselfname: "this",
-			isgeneral: {},
-			properties: {},
-			isname: "is"
-		})
-		const template = PRECLASS(ptemplate)
-		// !!! NOOOOOTTTTEEE: one has recently found out how EXACTLY does NodeJS (and seemingly the ECMA standard altogether) treat the behaviour of the 'this' during the procedures of method-extraction via 'const x = {somemethod: function (...) {...}}; const f = x.somemethod';
-		// * Apparantly, during the assignment THE FINAL VALUE OF 'x' __DOES_NOT___ by default retain the 'this' context's value; So, hence, one ALWAYS has to assign it explicitly during such conversions;
-		// TODO: pray ensure that this is the thing done _throughout_the_code! TEST THE LIBRARY MOST VIGOROUSLY...
-		const POSTTF = template.function.bind(template)
-		template.function = function (vtemplate = template.template.deftemplate) {
-			const p = POSTTF(vtemplate)
-			const POSTF = p[template.template.word]
-			p[template.template.word] = function (...args) {
-				const V = POSTF(...args)
-
-				if (this.recursive) {
-					V = {
-						[this.classref]: this,
-						[this.selfname]: {
-							...V
-						}
-					}
-					V[this.selfname][this.subselfname] = V
-				}
-
-				// ! [GENERAL] CHECK FOR THE 'in/of' consistency within the 'for' loops; (I think one may have used 'of' where one ought to have written 'in' on more than one occasion...);
-				// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
-				for (const x in this.methods) {
-					const isarr = this.methods[x] instanceof Array
-					if (isarr || this.isgeneral.hasOwnProperty(x)) {
-						const B = isarr
-							? this.methods[x]
-							: [this.isgeneral[x], this.methods[x]]
-						const A = B[1]
-						A.template.instance = (
-							this.recursive ? (x) => x[this.selfname] : ID
-						)(V)
-						V[x] = B.methods[0] ? A.function.bind(A) : A.function()
-						continue
-					}
-					V[x] = this.methods[x].bind(
-						(this.recursive ? (x) => x[this.selfname] : ID)(V)
-					)
-				}
-
-				const O = this.recursive ? V[this.selfname][this.subselfname] : V
-				for (const pr in this.properties)
-					O[p] = this.properties[pr].bind(this)(...args)
-				return V
-			}.bind(p)
-			p[p.isname] = function (x, classword = ptemplate.classref) {
-				return x.hasOwnProperty(classword) && valueCompare(this, x[classword])
-			}.bind(p)
-			// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
-			p[Symbol.hasInstance] = function (x) {
-				return (
-					this.is(x) ||
-					(x.class.template.names &&
-						x.class.template.names.any((n) => x[n] instanceof this))
-				)
-			}.bind(p)
-			return p
-		}
-		return template
-	},
-
-	DEOBJECT: function (obj = {}) {
-		return [Object.keys, Object.values].map((x) => x(obj))
-	},
-
-	OBJECT: function (keys = [], values = []) {
-		let length = Math.min([keys.length, values.length])
-		const returned = {}
-		for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
-		return returned
-	},
-
-	NOMODULE: function (moduleobj) {
-		return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
-	},
-
-	// ! Use throughout...Maybe, pick a more plausible name...
-	// * Stands for 'Obj-Func-Def-Key-List'
-	OFDKL: (obj, f, keylist = [], bind = false) => {
-		for (const x of keylist) obj[x] = (bind ? (x) => x.bind(obj) : ID)(f(x))
 	}
-}
+	return X
+})()
