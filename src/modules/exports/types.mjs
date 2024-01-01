@@ -11,5 +11,6 @@ export {
 	InfiniteString,
 	TreeNode,
 	UnlimitedSet,
-	InfiniteSet
+	InfiniteSet,
+	BindableFunction
 } from "../../lib.mjs"

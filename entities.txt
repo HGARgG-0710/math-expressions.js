@@ -145,6 +145,7 @@ This file is also used for documentation, and name-collision-related work...
 		8.10. TreeNode
 		8.11. UnlimitedSet
 		8.12. InfiniteSet
+		8.13. BindableFunction
 	9. algorithms.mjs [sorts have their own file, heaps too, serach algorithms and 'integer' - as well, all else - individual files]
 		9.1. Stack
 		9.2. Queue
