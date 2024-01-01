@@ -53,7 +53,7 @@ const firstN = (n, c, counter) => {
 
 const nccounter = numberCounter()
 console.log(nccounter)
-const nctth = firstN(10000, nccounter.generator(), nccounter)
+const nctth = firstN(3, nccounter.generator() , nccounter)
 console.log(nctth)
 console.log()
 

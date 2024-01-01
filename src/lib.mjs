@@ -699,31 +699,52 @@ export const CLASS = (ptemplate = {}) => {
 				V[this.selfname][this.subselfname] = V
 			}
 
+			let K = this.recursive ? V[this.selfname] : V
+
 			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
 			for (const x in this.methods) {
+				// ! THIS IS A HACK [with this.methods[x] being an Array...]. FIX IT...
 				const isarr = this.methods[x] instanceof Array
 				if (isarr || this.isgeneral.hasOwnProperty(x)) {
 					const B = isarr
 						? this.methods[x]
 						: [this.isgeneral[x], this.methods[x]]
 					const A = B[1]
-					A.template.instance = (this.recursive ? (x) => x[this.selfname] : ID)(
-						V
-					)
-					V[x] = B.methods[0] ? A.function.bind(A) : A.function()
+					A.template.instance = K
+					K[x] = B.methods[0] ? A.function.bind(A) : A.function()
 					continue
 				}
-				V[x] = this.methods[x].bind(
-					(this.recursive ? (x) => x[this.selfname] : ID)(V)
-				)
+				K[x] = this.methods[x].bind(K)
 			}
 
+			// ! CREATE THE ABILITY TO DEFINE CONSTANTS!!! [using obj.defineProperty(..., ..., { writable: false, value: ... })]
 			const O = this.recursive ? V[this.selfname][this.subselfname] : V
 			for (const pr in this.properties)
-				O[p] = this.properties[pr].bind(this)(...args)
+				O[pr] = this.properties[pr].bind(this)(...args)
+
+			// ! refactor...
+			// ! ISSUE: about the properties - they are kept as-are in the object in question... Must work differently, namely, in such a fashion so:
+			// * 	1. For internal methods to be able to work with them as if were kept as-are...
+			// * 	2. For external changes to be possible via this;
+			// * 	3. For external reading to be possible...
+			if (this.recursive) {
+				for (const x in V[this.selfname])
+					if (!V.hasOwnProperty(x) && !(x in this.properties))
+						V[x] = K[x].bind(K[x])
+				for (const p in this.properties)
+					obj.defineProperty(V, p, {
+						get: function () {
+							return V[this.class.selfname][p]
+						},
+						set: function (v) {
+							return (V[this.class.selfname][p] = v)
+						}
+					})
+			}
+
 			return V
 		}.bind(p)
-		p[p.isname] = function (x, classword = ptemplate.classref) {
+		p[p.isname] = function (x, classword = this.classref) {
 			return x.hasOwnProperty(classword) && valueCompare(this, x[classword])
 		}.bind(p)
 		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
@@ -1137,7 +1158,7 @@ export const arrayCounter = GENERATOR({
 	}),
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
-		return a[0]
+		if (!a.hasOwnProperty(0)) return a[0]
 	},
 	range: function (a) {
 		return (
@@ -2136,7 +2157,7 @@ export function recursiveCounter(template = {}) {
 	const findDeepUnfilledArr_ = (returned) =>
 		findDeepUnfilledArr({
 			bound: returned.template.maxarrlen
-		}).function()
+		}).function
 	const findDeepLast_ = (returned) =>
 		findDeepLast({
 			soughtProp: returned.template.type
@@ -2152,6 +2173,8 @@ export function recursiveCounter(template = {}) {
 			}))
 	)
 
+	const rindexation = recursiveIndexation().function
+
 	function signedAdd(sign) {
 		return function (thisobject) {
 			return function (x) {
@@ -2162,7 +2185,7 @@ export function recursiveCounter(template = {}) {
 					indexes = findDeepUnfilledArr_(thisobject)(x)
 					if (!indexes) return [x]
 
-					result = recursiveIndexation()(result, indexes)
+					result = rindexation(result, indexes)
 
 					// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
 					// * Including the infinite versions of them...
@@ -2182,9 +2205,9 @@ export function recursiveCounter(template = {}) {
 					return x
 				}
 
-				result = recursiveIndexation()(
+				result = rindexation(
 					result,
-					indexes.slice(undefined, indexes.finish().previous())
+					indexes.copied("slice", [undefined, indexes.finish().previous()])
 				)
 				const endind = indexes.read(indexes.finish())
 				result[endind] = thisobject.template[sign ? "forward" : "backward"](
@@ -2204,10 +2227,7 @@ export function recursiveCounter(template = {}) {
 				)
 					return x[0]
 
-				const rindexation = recursiveIndexation().function
-
 				let lastIndexes = findDeepLast_(thisobject)(x)
-				console.log(lastIndexes)
 				const finind = lastIndexes.final()
 				const ffinind = finind.previous()
 
@@ -2283,7 +2303,8 @@ export function numberCounter(template = {}) {
 		upper: MAX_INT.get,
 		lower: 0,
 		rupper: -MAX_INT.get,
-		sign: (x) => x > 0,
+		// ? So... should the 'sign', then, involve '.lower', or not?
+		sign: (x) => x >= 0,
 		globalsign: function (x) {
 			return (
 				is.arr(x) &&
@@ -2843,7 +2864,7 @@ export const GeneralArray = (() => {
 						transform: id
 					},
 					function: function (b) {
-						return this.template.target[`push${x}Loop`](
+						return this.template.target[`push${x}`](
 							this.template.transform(
 								b.object().currelem().get(),
 								b.object().currindex,
@@ -3062,11 +3083,11 @@ export const GeneralArray = (() => {
 				) {
 					return general.fix([this.this.this], ["currindex"], () => {
 						if (fast) this.go(index)
-						else this.moveforward(index, true, fast)
+						else this.moveforward(index, true)
 						return this.currelem().get()
 					})
 				},
-				write(index, value) {
+				write(index, value, fast = true) {
 					return general.fix([this.this.this], ["currindex"], () => {
 						if (fast) this.go(index)
 						else this.moveforward(index, true)
@@ -3080,7 +3101,7 @@ export const GeneralArray = (() => {
 								this.begin()
 								while (
 									!this.this.this.this.class.template.isEnd(
-										this.object()
+										this.this.this
 									)
 								)
 									this.next()
@@ -3138,12 +3159,12 @@ export const GeneralArray = (() => {
 					copied.class = isclass
 						? template
 						: { ...copied.class, template: { ...template } }
-					this.loop()._full(
-						copied.pushbackLoop({
-							transform: f,
-							arguments: []
-						}).function
-					)
+					const t = copied.pushbackLoop({
+						transform: f,
+						arguments: []
+					})
+					console.log(t)
+					this.loop()._full(t.function)
 					return copied
 				},
 				delval(value) {
@@ -3407,18 +3428,19 @@ export const GeneralArray = (() => {
 				X,
 				(name) =>
 					function (template = {}) {
-						const origin =
-							this.this.this.this.class.static[`push${name}Loop`](template)
+						const origin = this.this.this.this.class.static[name](template)
 						const T = {
 							template: {
 								target: this,
 								...origin.template
 							}
 						}
+						// ! BIND ONLY WORKS ONCE!!!!
+						// TODO: do something about this - finally work on proper general function-binding procedures for the library...
 						T.function = origin.function.bind(T)
 						return T
 					},
-				["front", "back"]
+				["front", "back"].map((n) => `push${n}Loop`)
 			)
 			return X
 		})(),
@@ -3526,7 +3548,7 @@ export const garrays = {
 				arrobj,
 				array = arrobj.array,
 				pointer = false,
-				beginningobj = array.init(),
+				beginningobj = arrobj.init(),
 				beginningind = 0
 			) {
 				let currarr = array
@@ -3618,17 +3640,15 @@ export const generalSearch = TEMPLATE({
 		) {
 			if (
 				this.template.soughtProp(
-					this.template.form.index(arrrec).read(i.currelem().get())
+					this.template.form.read(arrrec, i.currelem().get())
 				)
 			)
 				return i
 			if (
-				this.template.form.is(
-					this.template.form.index(arrec).read(i.currelem().get())
-				)
+				this.template.form.is(this.template.form.read(arrrec, i.currelem().get()))
 			) {
 				const r = this.function(
-					this.template.form.index(arrrec).read(i.currelem().get()),
+					this.template.form.read(arrrec, i.currelem().get()),
 					i,
 					false,
 					reversed
@@ -3674,7 +3694,7 @@ export const findDeepUnfilledArr = TEMPLATE({
 		self: true
 	},
 	function: function (template = {}) {
-		return findDeepUnfilled.function({
+		return findDeepUnfilled({
 			...this.template,
 			...template
 		})
@@ -3698,7 +3718,7 @@ export const recursiveIndexation = TEMPLATE({
 		return repeatedApplication({
 			icclass: fields.this.class.template.icclass,
 			...this.template
-		})(
+		}).function(
 			(x, i) => {
 				return this.form.read(x, fields.read(i))
 			},
@@ -6294,3 +6314,19 @@ export const tintMultiplicative = (() => {
 	}
 	return X.function
 })()
+
+// ! USE THIS EVERYPLACE - FOR EACH AND EVERY FUNCTION(especially, WHERE THERE IS '.bind') in the project...;
+export const BindableFunction = function (f) {
+	const newfun = function (...args) {
+		return f(...args)
+	}
+	newfun.bind = function (x, ...args) {
+		const R = f.bind(x, ...args)
+		R.origin = f
+		R.bind = function (x) {
+			return this.origin.bind(x)
+		}
+		return r
+	}
+	return newfun
+}
