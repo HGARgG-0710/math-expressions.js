@@ -41,6 +41,8 @@ export const ID = (a) => a
 // * Identity map (just a nice piece of notation, that's all);
 export const id = ID
 
+export const abs = Math.abs
+
 export const bool = Boolean
 export const str = String
 export const num = Number
@@ -542,44 +544,45 @@ export const alinative = {
 // * Allows to define templated classes and functions more non-conventionally;
 export function TEMPLATE(template = {}) {
 	const F = function (template = this.template.deftemplate) {
-		let _class = {}
-		// ? Do something about this - don't just leave hanging...;
+		let _class = { [this.template.templateword]: {} }
+		const tobind = () => (this.template.this ? this.template.this : _class)
+		// ? Relocate, refactor?
 		const K = (x, i = 0) => {
-			const isxarr = x instanceof Array
+			const isxarr = is.arr(x)
 			return i === -1
 				? isxarr
 					? {}
 					: x
 				: isxarr
 				? this.template.isthis
-					? x[i].bind(this.template.this)()
+					? x[i].bind(this.template.this ? this.template.this : _class)()
 					: x[i]
 				: this.template.isthis
 				? x.bind(this.template.this ? this.template.this : _class)()
 				: x
 		}
-		// ! refactor! [again, the native.object methods for immidiate object-property inheritance procedures accomplishment]
-		if (this.template.defaults instanceof Array)
+		// ! refactor! [native.object methods]
+		if (is.arr(this.template.defaults)) {
 			for (const x in this.template.defaults) {
 				const k = K(this.template.defaults, x)
 				for (const y in k) _class[this.template.templateword][y] = k[y]
 				for (const y in template)
 					_class[this.template.templateword][y] = template[y]
 			}
+		}
 		_class[this.template.templateword] = {
 			...K(this.template.defaults, -1),
 			...template
 		}
-		// ! FIX THIS [the present 'isthis' function do __NOT__ adhere to this requirement of possessing a 'this'-wrapper...] - simply use the 'alinative.function.const' on it...;
-		_class[this.template.word] = (
-			this.template.isthis
-				? (x) => x(this.template.this ? _class : this.template.this)
-				: ID
-		)(this.template.function).bind(_class)
+		_class[this.template.word] = (this.template.isthis ? (x) => x() : ID)(
+			this.template.function
+		).bind(_class)
 		for (const x in this.template.rest)
 			_class[x] = is.obj(this.template.rest[x])
 				? { ...this.template.rest[x] }
-				: this.template.rest[x]
+				: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
+						this.template.rest[x]
+				  )
 		return this.template.transform(_class, template)
 	}
 	const X = {
@@ -593,6 +596,7 @@ export function TEMPLATE(template = {}) {
 			rest: {},
 			transform: ID,
 			templateword: "template",
+			tobind: [],
 			...template
 		}
 	}
@@ -638,6 +642,13 @@ export function NOREST(labels = [], btemplate = {}) {
 		return TEMPLATE(X)
 	}
 }
+
+export const GENERATOR = NOREST(["inverse", "range"], {
+	word: "generator",
+	isthis: true,
+	tobind: ["inverse", "range"]
+})
+
 // ? Add the 'parentclass' and 'names' in there? Pray consider...;
 export const PRECLASS = NOREST([
 	"methods",
@@ -652,6 +663,7 @@ export const PRECLASS = NOREST([
 ])
 
 // ? generalize to another macro, maybe?
+// ! CONCLUSION: using 'x.this' for every single object of a CLASS-class all over the place doesn't cut it. Create copies of methods [WITH NON-CONFLICTING NAMES...] for the classes in question...
 // * Use all over the place...
 export const CLASS = (ptemplate = {}) => {
 	alinative.object.ensureProperties(ptemplate, {
@@ -675,7 +687,7 @@ export const CLASS = (ptemplate = {}) => {
 		const p = POSTTF(vtemplate)
 		const POSTF = p[template.template.word]
 		p[template.template.word] = function (...args) {
-			const V = POSTF(...args)
+			let V = POSTF(...args)
 
 			if (this.recursive) {
 				V = {
@@ -1114,17 +1126,15 @@ export const alarray = {
 	}).function
 }
 
-export const GENERATOR = NOREST(["inverse", "range"], { word: "generator" })
-
 // * Probably the "simplest" infinite counter one would have in JS is based off this generator;
 export const arrayCounter = GENERATOR({
 	defaults: {
 		start: null
 	},
-	generator(a = this.template.start) {
+	function: alinative.function.const(function (a = this.template.start) {
 		if (!this.range(a)) this.template.start = a
 		return [a]
-	},
+	}),
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
 		return a[0]
@@ -2025,14 +2035,15 @@ export function FunctionCall(f, functions = [], args = []) {
 
 export const numberc = GENERATOR({
 	defaults: { start: 0 },
-	generator(x = this.template.start) {
+	function: alinative.function.const(function (x = this.template.start) {
 		return this.template.forward(num(x))
-	},
+	}),
 	inverse(x = this.template.start) {
 		return this.template.backward(num(x))
 	},
 	range: negate(is.nan)
 }).function
+
 export function addnumber(template = {}, ntemplate = {}) {
 	return numberc({
 		template: { fdiff: 1, bdiff: -1, ...template },
@@ -2047,18 +2058,21 @@ export function addnumber(template = {}, ntemplate = {}) {
 }
 export function multnumber(template = {}, ntemplate = {}) {
 	return numberc({
-		template: { fdiff: 1, bdiff: -1, ...template },
+		template: { fdiff: 2, bdiff: 2, ...template },
 		forward(x) {
 			return x * this.template.fdiff
 		},
 		backward(x) {
-			return x * this.template.bdiff
+			return x / this.template.bdiff
 		},
+		start: 1,
 		...ntemplate
 	})
 }
 
-// * Generalization of the thing above (arrayCounter)...
+// ! GENERALIZE THE OBJCOUNTER AND ARRAYCOUNTER TO A 'formCounter' (a counter, whose elements are forms...);
+// ? What about recursiveCounter?
+// * Generalization of arrayCounter...
 export const objCounter = GENERATOR({
 	defaults: {
 		field: "",
@@ -2066,10 +2080,10 @@ export const objCounter = GENERATOR({
 		// ? Does one desire the refCompare? Or valueCompare to be the default?
 		comparison: refCompare
 	},
-	generator: function (a = this.template.start) {
+	function: alinative.function.const(function (a = this.template.start) {
 		if (!this.range(a)) this.template.start = a
 		return { [this.template.field]: a }
-	},
+	}),
 	inverse: function (a) {
 		return a[this.template.field]
 	},
@@ -2092,52 +2106,60 @@ export function recursiveCounter(template = {}) {
 			...template
 		},
 		range(x) {
-			return alinative.function.binary.dand(
-				is.arr(x),
-				!!x.length,
-				x.every((y) =>
-					alinative.binary.dor(
-						...[
-							this.template.type,
-							(y) => alinative.binary.dand(is.arr(x), this.range(y))
-						].map(alinative.function.argscall(y))
+			// ! NOTE: places like these ARE NOT to be refactored using '.dand' or '.dor' - the functions do not provide the ability to avoid errors regarding pre-computation...
+			return (
+				is.arr(x) &&
+				alinative.binary.dand(
+					!!x.length,
+					x.every((y) =>
+						alinative.binary.dor(
+							...[
+								this.template.type,
+								(y) => alinative.binary.dand(is.arr(x), this.range(y))
+							].map(alinative.function.argscall(y))
+						)
 					)
 				)
 			)
 		}
 	}
 
-	const findDeepUnfilled = (t = true) => {
-		return findDeepUnfilled({
-			soughtProp: (x) =>
-				returned.template.type(x) && (t ? id : n)(returned.template.sign(x)),
-			bound: t ? returned.template.upper : returned.template.rupper,
-			comparison: returned.template.comparison
-		}).function
-	}
-	const findDeepUnfilledArr = findDeepUnfilledArr({
-		bound: returned.template.maxarrlen
-	})
-	const findDeepLast = findDeepLast({
-		soughtProp: returned.template.type
-	})
+	const findDeepUnfilled_ =
+		(returned) =>
+		(t = true) =>
+			findDeepUnfilled({
+				soughtProp: (x) =>
+					returned.template.type(x) && (t ? id : n)(returned.template.sign(x)),
+				bound: t ? returned.template.upper : returned.template.rupper,
+				comparison: returned.template.comparison
+			}).function()
+	const findDeepUnfilledArr_ = (returned) =>
+		findDeepUnfilledArr({
+			bound: returned.template.maxarrlen
+		}).function()
+	const findDeepLast_ = (returned) =>
+		findDeepLast({
+			soughtProp: returned.template.type
+		}).function()
 
-	const keys = ["inverse", "generator"]
+	const keys = ["inverse", "function"]
 	keys.map(
 		(x, i) =>
-			(returned[x] = function (t) {
+			(returned[x] = (x === "function" ? alinative.function.const : ID)(function (
+				t = [this.template.lower]
+			) {
 				return generalgenerator(t, !!i, this)
-			}.bind(returned))
+			}))
 	)
 
 	function signedAdd(sign) {
 		return function (thisobject) {
 			return function (x) {
-				let indexes = findDeepUnfilled(sign)(x)
+				let indexes = findDeepUnfilled_(thisobject)(sign)(x)
 				let result = x
 
 				if (!indexes) {
-					indexes = findDeepUnfilledArr(x)
+					indexes = findDeepUnfilledArr_(thisobject)(x)
 					if (!indexes) return [x]
 
 					result = recursiveIndexation()(result, indexes)
@@ -2176,15 +2198,16 @@ export function recursiveCounter(template = {}) {
 		return function (thisobject) {
 			return function (x) {
 				if (
-					!findDeepUnfilled(sign)(x) &&
-					findDeepUnfilledArr(x) &&
+					!findDeepUnfilled_(thisobject)(sign)(x) &&
+					findDeepUnfilledArr_(thisobject)(x) &&
 					x.length === 1
 				)
 					return x[0]
 
 				const rindexation = recursiveIndexation().function
 
-				let lastIndexes = findDeepLast(a)
+				let lastIndexes = findDeepLast_(thisobject)(x)
+				console.log(lastIndexes)
 				const finind = lastIndexes.final()
 				const ffinind = finind.previous()
 
@@ -2244,11 +2267,11 @@ export function recursiveCounter(template = {}) {
 
 	function generalgenerator(x, bool, thisobj) {
 		if (!thisobj.range(x)) return [thisobj.template.lower]
-		let r = deepCopy(x)
+		let r = copy.deepCopy(x)
 		return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(r)
 	}
 
-	return GENERATOR(returned).function
+	return GENERATOR(returned).function()
 }
 
 // * That's an example of an infinite counter;
@@ -2262,9 +2285,12 @@ export function numberCounter(template = {}) {
 		rupper: -MAX_INT.get,
 		sign: (x) => x > 0,
 		globalsign: function (x) {
-			return x.any((a) =>
-				alinative.binary.dor(
-					...[this.sign, this.globalsign].map(alinative.function.argscall(a))
+			return (
+				is.arr(x) &&
+				x.some(
+					(a) =>
+						alinative.function.argscall(a)(this.sign) ||
+						alinative.function.argscall(a)(this.globalsign)
 				)
 			)
 		},
@@ -2279,7 +2305,7 @@ export function numberCounter(template = {}) {
 // * Uses array-orders (by default);
 export function orderCounter(template = {}) {
 	return recursiveCounter({
-		upper: template.order[template.strorder.length - 1],
+		upper: template.order[template.order.length - 1],
 		lower: template.order[Math.floor(template.order.length / 2)],
 		rupper: template.order[0],
 		forward: (x) => template.order[inc(template.order.indexOf(x))],
@@ -2299,7 +2325,7 @@ export function orderCounter(template = {}) {
 export function stringCounter(template = {}) {
 	return orderCounter({
 		type: is.str,
-		order: native.string.UTF16(48, 127),
+		order: string.UTF16(48, 127),
 		...template
 	})
 }
@@ -2330,14 +2356,14 @@ export const circularCounter = (() => {
 			if (vals.length == 1) return vals[0]
 			return this.template.form.new(vals)
 		}
-	const arr = ["generator", "range"]
+	const arr = ["function", "inverse"]
 	for (const i of [0, 1]) final[arr[i]] = generalized(arr[i], (-1) ** i)
 
-	return GENERATOR(final)
+	return GENERATOR(final).function
 })()
 
 export function arrCircCounter(template = {}) {
-	return circularCounter.function({
+	return circularCounter({
 		form: general.DEFAULT_FORM,
 		...template
 	})
@@ -2345,10 +2371,12 @@ export function arrCircCounter(template = {}) {
 
 export const finiteCounter = (() => {
 	const F = {}
-	const keys = ["generator", "inverse"]
+	const keys = ["function", "inverse"]
 	const labels = ["next", "previous"]
 	for (const x in keys)
-		F[keys[x]] = alinative.function.const(function (item) {
+		F[keys[x]] = (keys[x] === "function" ? alinative.function.const : ID)(function (
+			item
+		) {
 			return this.template.values.read(
 				this.template.values.firstIndex(item)[labels[x]]()
 			)
@@ -2371,7 +2399,7 @@ export const finiteCounter = (() => {
 			return this.template.values.includes(x)
 		},
 		isthis: true
-	})
+	}).function
 })()
 
 export const oldCompare = (a, b) => a == b
@@ -2795,7 +2823,7 @@ export const GeneralArray = (() => {
 					return this.one().next()
 				},
 				empty(template = this.this.template) {
-					return this.this.class(template).class()
+					return GeneralArray(template).class()
 				},
 				fromArray(arr) {
 					const generalized = this.empty()
@@ -3473,6 +3501,92 @@ export const dim = TEMPLATE({
 	}
 }).function
 
+export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
+export const MAX_INT = VARIABLE(2 ** 53 - 1)
+
+export const MAX_STRING_LENGTH = MAX_INT
+
+export const garrays = {
+	LastIndexArray(template = {}, garrtemplate = {}) {
+		const A = {
+			template: {
+				icclass: general.DEFAULT_ICCLASS,
+				maxarrlen: MAX_ARRAY_LENGTH,
+				filling: null,
+				...template,
+				bound: function (i) {
+					return i < this.template.maxarrlen - 1
+				},
+				...template
+			}
+		}
+		return GeneralArray({
+			this: A,
+			elem: function (
+				arrobj,
+				array = arrobj.array,
+				pointer = false,
+				beginningobj = array.init(),
+				beginningind = 0
+			) {
+				let currarr = array
+				let ic = beginningobj
+				let isReturn = [false, undefined]
+				let index = beginningind
+				for (
+					;
+					!arrobj.this.class.template.icclass.template.comparison(
+						ic,
+						arrobj.currindex
+					);
+					ic = ic.next()
+				) {
+					const withinbounds = this.this.template.bound(index)
+
+					if (!(index in currarr)) {
+						isReturn[0] = true
+						if (withinbounds) isReturn[1] = null
+						break
+					}
+
+					if (withinbounds) {
+						index++
+						continue
+					}
+
+					currarr = currarr[index]
+					index = 0
+				}
+				const returned = arrobj.currindex
+				return isReturn[0]
+					? pointer
+						? [isReturn[1], currarr, index, returned]
+						: undefined
+					: !pointer
+					? currarr[index]
+					: [currarr, index]
+			},
+			newvalue: function (array, value) {
+				let pointer = this.elem(array, undefined, true)
+				while (!pointer[0]) {
+					pointer[1][pointer[2]] = (pointer[0] === undefined ? (x) => [x] : id)(
+						this.this.template.filling
+					)
+					pointer = this.elem(array, pointer[1], true, pointer[3], pointer[2])
+				}
+				return (pointer[0][pointer[1]] = value)
+			},
+			isEnd: function (array) {
+				return !!this.elem(array, undefined, true)[0]
+			},
+			icclass: A.template.icclass,
+			...garrtemplate
+		})
+	}
+}
+
+general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
+
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
 export const generalSearch = TEMPLATE({
 	defaults: {
@@ -3639,216 +3753,133 @@ export const repeatedApplicationWhilst = TEMPLATE({
 	}
 }).function
 
-export const MAX_ARRAY_LENGTH = VARIABLE(2 ** 32 - 1)
-export const MAX_INT = VARIABLE(2 ** 53 - 1)
-
-export const MAX_STRING_LENGTH = MAX_INT
-
 // ! Refactor; Consider the optimization...
-// ! This doesn't work as of present, reason - wrong form for the output objects ... [incompatible with the 'EXTENSION' and other such...];
-export const garrays = {
-	LastIndexArray(template = {}, garrtemplate = {}) {
-		const A = {
-			template: {
-				icclass: general.DEFAULT_ICCLASS,
-				maxarrlen: MAX_ARRAY_LENGTH,
-				filling: null,
-				...template,
-				bound: function (i) {
-					return i < this.template.maxarrlen - 1
-				},
-				...template
-			}
+// * Note: this one requires another GeneralArray class to be used;
+garrays.DeepArray = function (template = {}, garrtemplate = {}) {
+	const daform = constForm("TOKEN", "arr", 1, [])
+	const X = {
+		template: {
+			icclass: InfiniteCounter(numberCounter()),
+			maxlen: MAX_ARRAY_LENGTH.get,
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			filling: null,
+			...template
 		}
-		return GeneralArray({
-			this: A,
-			elem: function (
-				arrobj,
-				array = arrobj.array,
-				pointer = false,
-				beginningobj = array.init(),
-				beginningind = 0
-			) {
-				let currarr = array
-				let ic = beginningobj
-				let isReturn = [false, undefined]
-				let index = beginningind
-				for (
-					;
-					!arrobj.this.class.template.icclass.template.comparison(
-						ic,
-						arrobj.currindex
-					);
-					ic = ic.next()
-				) {
-					const withinbounds = this.this.template.bound(index)
-
-					if (!(index in currarr)) {
-						isReturn[0] = true
-						if (withinbounds) isReturn[1] = null
-						break
+	}
+	return GeneralArray({
+		this: X,
+		empty: daform.new(),
+		// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
+		newvalue: function (array, value) {
+			let e = this.elem(array, true)
+			if (e[0] == undefined) {
+				if (e[0] === null) {
+					// ! ensure the proper template here, pray...
+					const flayer = structure
+						.findDeepUnfilled({ form: daform })
+						.function(array.array)
+					if (flayer) {
+						let p = array.array
+						for (const x of flayer) p = p[x].arr
+						p.push(value)
+						return value
 					}
+				}
 
-					if (withinbounds) {
-						index++
+				for (const y of e[1].previous())
+					general.fix([array], ["currindex"], () => {
+						array.currindex = array.currindex.jumpBackward(
+							e[1].previous().jumpBackWard(y)
+						)
+						this.newvalue(array, this.this.template.filling)
+					})
+			}
+			return (e[0][e[1]] = value)
+		},
+		elem(array, pointer = false) {
+			let i = array.init()
+			let fi = 0
+			let prevarrs = arrays.LastIndexArray().class()
+			let currarray = array.array
+			for (; !i.compare(array.currindex); fi++) {
+				if (currarray === array.array && fi === array.array.arr.length) {
+					const rx = array.currindex.difference(i)
+					return [rx.equal(array.init().next()) ? null : undefined, rx]
+				}
+				const isfibelow = fi < currarray.length
+				if (isfibelow) {
+					while (daform.is(currarray.arr[fi])) {
+						prevarrs.pushback(currarray)
+						currarray = currarray.arr[fi]
 						continue
 					}
-
-					currarr = currarr[index]
-					index = 0
-				}
-				const returned = arrobj.currindex
-				return isReturn[0]
-					? pointer
-						? [isReturn[1], currarr, index, returned]
-						: undefined
-					: !pointer
-					? currarr[index]
-					: [currarr, index]
-			},
-			newvalue: function (array, value) {
-				let pointer = this.elem(array, undefined, true)
-				while (!pointer[0]) {
-					pointer[1][pointer[2]] = (pointer[0] === undefined ? (x) => [x] : id)(
-						this.this.template.filling
-					)
-					pointer = this.elem(array, pointer[1], true, pointer[3], pointer[2])
-				}
-				return (pointer[0][pointer[1]] = value)
-			},
-			isEnd: function (array) {
-				return !!this.elem(array, undefined, true)[0]
-			},
-			icclass: A.template.icclass,
-			...garrtemplate
-		})
-	},
-	// * Note: this one requires another GeneralArray class to be used;
-	DeepArray(template = {}, garrtemplate = {}) {
-		const daform = constForm("TOKEN", "arr", 1, [])
-		const X = {
-			template: {
-				icclass: InfiniteCounter(numberCounter()),
-				maxlen: MAX_ARRAY_LENGTH.get,
-				genarrclass: general.DEFAULT_GENARRCLASS,
-				filling: null,
-				...template
-			}
-		}
-		return GeneralArray({
-			this: X,
-			empty: daform.new(),
-			// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
-			newvalue: function (array, value) {
-				let e = this.elem(array, true)
-				if (e[0] == undefined) {
-					if (e[0] === null) {
-						// ! ensure the proper template here, pray...
-						const flayer = structure
-							.findDeepUnfilled({ form: daform })
-							.function(array.array)
-						if (flayer) {
-							let p = array.array
-							for (const x of flayer) p = p[x].arr
-							p.push(value)
-							return value
-						}
-					}
-
-					for (const y of e[1].previous())
-						general.fix([array], ["currindex"], () => {
-							array.currindex = array.currindex.jumpBackward(
-								e[1].previous().jumpBackWard(y)
-							)
-							this.newvalue(array, this.this.template.filling)
-						})
-				}
-				return (e[0][e[1]] = value)
-			},
-			elem(array, pointer = false) {
-				let i = array.init()
-				let fi = 0
-				let prevarrs = arrays.LastIndexArray().class()
-				let currarray = array.array
-				for (; !i.compare(array.currindex); fi++) {
-					if (currarray === array.array && fi === array.array.arr.length) {
-						const rx = array.currindex.difference(i)
-						return [rx.equal(array.init().next()) ? null : undefined, rx]
-					}
-					const isfibelow = fi < currarray.length
-					if (isfibelow) {
-						while (daform.is(currarray.arr[fi])) {
-							prevarrs.pushback(currarray)
-							currarray = currarray.arr[fi]
-							continue
-						}
-						i = i.jumpForward(
-							alinative.number.fromNumber(
-								native.number.min([
-									this.this.template.maxlen,
-									currarray.arr.length
-								])
-							)
+					i = i.jumpForward(
+						alinative.number.fromNumber(
+							native.number.min([
+								this.this.template.maxlen,
+								currarray.arr.length
+							])
 						)
-					}
-					fi = isfibelow ? fi : 0
-					currarray = prevarrs.read(prevarrs.finish())
-					prevarrs.delete()
+					)
 				}
-				return pointer ? [[currarray, fi]] : [[currarray[fi]]]
-			},
-			isEnd(array) {
-				return this.elem(array)[0] == undefined
-			},
-			icclass: this.template.icclass,
-			...garrtemplate
-		})
-	},
-	CommonArray(template = {}, garrtemplate = {}) {
-		// ? Change the shape of this 'this.this' object?
-		const X = {
-			template: { offset: -1, ...template }
-		}
-		return GeneralArray({
-			this: X,
-			newvalue: function (arr, value) {
-				return (arr.array[arr.currindex] = value)
-			},
-			elem: function (arr) {
-				return arr.array[arr.currindex]
-			},
-			isEnd: function (arr) {
-				return arr.array.length <= arr.currindex
-			},
-			icclass: InfiniteCounter(
-				addnumber({
-					start: X.template.offset
-				})
-			),
-			...garrtemplate
-		})
-	},
-	// * This thing will allow to create function-based types on top of an Array;
-	// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
-	// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
-	TypedArray: CLASS({
-		defaults: {
-			empty: [],
-			typefunction: TRUTH
+				fi = isfibelow ? fi : 0
+				currarray = prevarrs.read(prevarrs.finish())
+				prevarrs.delete()
+			}
+			return pointer ? [[currarray, fi]] : [[currarray[fi]]]
 		},
-		function: function (array = C.template.empty) {
-			const X = this
-			return GeneralArray({
-				...this.template,
-				newvalue: function (arr, val) {
-					if (X.template.typefunction(val)) return X.template.newval(arr, val)
-					return X.template.typefail(arr, val)
-				}
-			}).class(array)
-		}
+		isEnd(array) {
+			return this.elem(array)[0] == undefined
+		},
+		icclass: this.template.icclass,
+		...garrtemplate
 	})
 }
-general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
+
+garrays.CommonArray = function (template = {}, garrtemplate = {}) {
+	// ? Change the shape of this 'this.this' object?
+	const X = {
+		template: { offset: -1, ...template }
+	}
+	return GeneralArray({
+		this: X,
+		newvalue: function (arr, value) {
+			return (arr.array[arr.currindex] = value)
+		},
+		elem: function (arr) {
+			return arr.array[arr.currindex]
+		},
+		isEnd: function (arr) {
+			return arr.array.length <= arr.currindex
+		},
+		icclass: InfiniteCounter(
+			addnumber({
+				start: X.template.offset
+			})
+		),
+		...garrtemplate
+	})
+}
+
+// * This thing will allow to create function-based types on top of an Array;
+// Usage Example 1: use the 'typefunction' as a mean of identifying if the 'type' of the thing is right, with 'typefail' defined as a result of .newval(+typeconversion);
+// Usage Example 2: in 'typefail', throw an Exception, whilst in typefunction, do whatever it is one desires to do with the pre-checking of elements' properties;
+garrays.TypedArray = CLASS({
+	defaults: {
+		empty: [],
+		typefunction: TRUTH
+	},
+	function: function (array = C.template.empty) {
+		const X = this
+		return GeneralArray({
+			...this.template,
+			newvalue: function (arr, val) {
+				if (X.template.typefunction(val)) return X.template.newval(arr, val)
+				return X.template.typefail(arr, val)
+			}
+		}).class(array)
+	}
+})
 
 export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	const sh1 = (key, _this, f, args = [], name = "keys") => {

@@ -36,5 +36,6 @@ export {
 	is,
 	cdieach,
 	hasFunction,
-	inarr
+	inarr, 
+	abs
 } from "../../lib.mjs"

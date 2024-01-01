@@ -55,17 +55,15 @@ It gets changed actively.
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
 	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
 
-8. Complete the 'images.txt' [after having completed all inside it, or regarded as undesired]
-
-9. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
+8. [ACROSS-THE-JS-PROJECTS TODO...] : use the 'a in b' instead of 'b[a] !== undefined'; 
 
 	As one had suspected, the latter don't actually work in the cases when the 'undefined' is used as a value...
 
-10. Later - add better support for platform- and standard-dependent aspects of the library. 
+9. Later - add better support for platform- and standard-dependent aspects of the library. 
 	For instance, the native ecmascript String uses the UTF-16 standard. 
 	The JS has within the String class methods for more intimate working with it.
 
-11. Things to add to the library [for the later versions]: 
+10. Things to add to the library [for the later versions]: 
 
 	11.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and "skinny" to be added. 
 		Even though that is (historically), is also an origin of the library, it must be first properly revised and (especially) finished - new methods, abstractions - things;
@@ -139,13 +137,13 @@ It gets changed actively.
 		
 		The first one is currently preferred...
 
-12. MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
+11. MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
 
 	Most of them make use of the predefined defaults only, forcing the user to either rewrite the code manually for this trivial matter, 
 	or to use the default package code convention; Not good at all. 
 	(Note: one can do it using further 'templates'; Additionally, fix the default recurring template names like 'genarrclass', 'tintclass', 'icclass', 'comparison' and so on...);
 
-13. Dubious but interesting structural ideas that may have a return: 
+12. Dubious but interesting structural ideas that may have a return: 
 
 	13.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
 		Currently - no application + trashes the code for no apparent reason. 
@@ -157,19 +155,27 @@ It gets changed actively.
 		Originally boasted a 'noTemplates' method, that'd return the version of the 'instance()' call without the need to do '.function().function', 
 		Ended up being way too thin to be added to the package in a full capacity.
 
-14. General matters left until v1.1: 
-	14.1. TEMPLATEs state - whether '.function()' should be kept or left out of the user's scope; 
+13. General matters left until v1.1: 
+	13.1. TEMPLATEs state - whether '.function()' should be kept or left out of the user's scope; 
 		The question relates to the fact that, while the changes to the templates in question that the second-level '.template' field provides are either too general (read 'f'), or too brisk (read 'word'), 
 			they DO allow for vast library extension by means of function-wrappers and semantic-changing (and making the macro in question SUPERBLY useful for such things...); 
 		Due to the fact that this is not the originally intended purpose of the many of the package's code components, the '.function()'s were taken out, 
 			but this matter remained (for the most part) unanswered - SHOULD THEY REMAIN? 
-	14.2. Should 'math-expressions.js' split into several libraries? 
+	13.2. Should 'math-expressions.js' split into several libraries? 
 		In particular, should 'macros' be made a separate npm package? While they do happen to have been meant for 'math-expressions.js', their usage is far-extending. 
 		More than that, they are also: 
 			
 			1. thematically independent (and thus, can be wanted by a user for completely different reasons from that of the 'math-expressions.js' rest of the contents); 
 			2. ~20 times slimmer than the rest of the library [and so, if the rest is unwanted, have to be used in this fashion...]; 
-	14.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
+
+	13.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
 		The 'v1.1.' is supposed to bring those back to consideration.
-	14.4. Related to the 'TEMPLATE.function' question - optional names. Allow for user-defined names for class instances [namely, the active usage of 'classref', 'isname' and so on... Currently, they are not used, just sort of 'hang' there...];
-	14.5. Edge cases handling - due to urgency, one don't have enough time to fix all the wanted issues regarding the edge cases, so (in the end) only the most essential pieces of the library have this issue dealt with...
+	13.4. Related to the 'TEMPLATE.function' question - optional names. Allow for user-defined names for class instances [namely, the active usage of 'classref', 'isname' and so on... Currently, they are not used, just sort of 'hang' there...];
+	13.5. Edge cases handling - due to urgency, one don't have enough time to fix all the wanted issues regarding the edge cases, so (in the end) only the most essential pieces of the library have this issue dealt with...
+	13.6. Far more widespread usage of forms: 
+		They can be used to generalize vast swarthes of repeating algorithms for different recursive data structures. 
+	13.7. Fix the TEMPLATEs semantics: 
+		They're unnecesserily complex, exceedingly buggy, barely serve the purposes of the library in question and (worst of all) lack single form in handling of the same operations. 
+		Do hardcore refactorings + generalize where possible (then, in the uses, utilize the special case)...
+
+		Pay particular attention to the 'counters', and the usage of 'aliases.native.const' for 'this'-binding functions...
