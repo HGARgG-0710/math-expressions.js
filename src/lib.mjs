@@ -13,6 +13,7 @@
 //			1. general
 // 3. FIX THE NAME-COLLISSION CONFLICTS!
 // ! ISSUE: with using the 'DEFAULT' variables? - [idea for a solution - use functions instead of those things?] (namely, put EVERYTHING in functions so as to allow for on-request processing of variables that is inherent to them?)
+// ! Fix Each and every 'static: ' field and others such, where methods used do not get to be explicitly '.bound'...
 
 // ! CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
 // ! FIX THE ERRORS RELATED TO MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
@@ -287,9 +288,9 @@ export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		toextend: [],
 		methods: {
 			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
-			push(element) {
+			push: BindableFunction(function (element) {
 				return this.this.this.genarr.pushback(element)
-			},
+			}),
 			pop: refactor.classes.pop,
 			peek: refactor.classes.peek,
 			copy: refactor.classes.copy
@@ -302,9 +303,9 @@ export const Queue = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		defaults: defaults.basicgenarr(parentclass),
 		toextend: [],
 		methods: {
-			enqueue(element) {
+			enqueue: BindableFunction(function (element) {
 				return this.this.this.genarr.pushfront(element)
-			},
+			}),
 			dequeue: refactor.classes.pop,
 			front: refactor.classes.peek,
 			copy: refactor.classes.copy
@@ -456,7 +457,7 @@ const refactor = {
 								this.template.icclass.static.one()
 							),
 							back: this.template.wrapper(
-								this.template.icclass.static.none()
+								this.template.icclass.static.negone()
 							)
 						}
 					})
@@ -598,11 +599,12 @@ export function TEMPLATE(template = {}) {
 			this.template.function
 		).bind(_class)
 		for (const x in this.template.rest)
-			_class[x] = is.obj(this.template.rest[x])
-				? { ...this.template.rest[x] }
-				: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
-						this.template.rest[x]
-				  )
+			_class[x] =
+				is.obj(this.template.rest[x]) && !this.template.remain.includes(x)
+					? { ...this.template.rest[x] }
+					: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
+							this.template.rest[x]
+					  )
 		return this.template.transform(_class, template)
 	})
 	const X = {
@@ -617,6 +619,7 @@ export function TEMPLATE(template = {}) {
 			transform: ID,
 			templateword: "template",
 			tobind: [],
+			remain: [],
 			...template
 		}
 	}
@@ -674,17 +677,22 @@ export const GENERATOR = NOREST(["inverse", "range"], {
 })
 
 // ? Add the 'parentclass' and 'names' in there? Pray consider...;
-export const PRECLASS = NOREST([
-	"methods",
-	"static",
-	"recursive",
-	"classref",
-	"selfname",
-	"subselfname",
-	"isgeneral",
-	"properties",
-	"isname"
-])
+export const PRECLASS = NOREST(
+	[
+		"methods",
+		"static",
+		"recursive",
+		"classref",
+		"selfname",
+		"subselfname",
+		"isgeneral",
+		"properties",
+		"isname"
+	],
+	{
+		remain: ["static"]
+	}
+)
 
 // ? generalize to another macro, maybe?
 // ! CONCLUSION: using 'x.this' for every single object of a CLASS-class all over the place doesn't cut it. Create copies of methods [WITH NON-CONFLICTING NAMES...] for the classes in question...
@@ -850,11 +858,11 @@ export const EXTENSION = (template = {}) => {
 					x.map((a) => [
 						template.isgeneral[x] || false,
 						NAMED_TEMPLATE(
-							function (
+							BindableFunction(function (
 								instance = this.template.instance,
 								name = this.template.name
 							) {
-								return function (...args) {
+								return BindableFunction(function (...args) {
 									if (
 										this[
 											name.classref
@@ -868,8 +876,8 @@ export const EXTENSION = (template = {}) => {
 									return this[
 										this[name.classref].template.names[name.index]
 									][a](...args)
-								}.bind(instance)
-							},
+								}).bind(instance)
+							}),
 							{
 								classref: template.classref,
 								index: template.index[a] || 0
@@ -1234,12 +1242,19 @@ export const InfiniteCounter = (() => {
 			})
 		},
 		transform: general.StaticThisTransform,
-		static: {
-			direction(ic) {
+		static: (() => {
+			// ? Question: generalize this construction with objects and their consecurive BindableFunction(...).bind(RESULTOBJECT)?
+			const R = {
+				zero: refactor.classes.zero,
+				one: refactor.classes.one,
+				two: refactor.classes.two
+			}
+
+			R.direction = BindableFunction(function (ic) {
 				return ic.compare(this.this.class())
-			},
+			}).bind(R)
 			// ? do the thing with the first n 'conditional' arguments - that being, if length of passed args array is 'n<k', where 'k' is maximum length, then the first 'k-n' recieve prescribed default values
-			whileloop(
+			R.whileloop = BindableFunction(function (
 				end,
 				each,
 				start = this.this.class(),
@@ -1254,8 +1269,8 @@ export const InfiniteCounter = (() => {
 					curr = iter(curr)
 				}
 				return curr
-			},
-			reverse() {
+			}).bind(R)
+			R.reverse = BindableFunction(function () {
 				const _this = this
 				return InfiniteCounter({
 					generator(x) {
@@ -1264,14 +1279,12 @@ export const InfiniteCounter = (() => {
 					},
 					inverse: this.this.template.generator
 				})
-			},
-			zero: refactor.classes.zero,
-			one: refactor.classes.one,
-			two: refactor.classes.two,
-			none() {
+			}).bind(R)
+			R.negone = BindableFunction(function () {
 				return this.zero().previous()
-			}
-		},
+			}).bind(R)
+			return R
+		})(),
 		methods: {
 			next: BindableFunction(function () {
 				// * An observation: this is one of the ways to be able to reference a function from within itself...
@@ -2900,31 +2913,36 @@ export const GeneralArray = (() => {
 		},
 		transform: general.StaticThisTransform,
 		static: (() => {
-			const R = {
-				zero: BindableFunction(function () {
-					return this.this.template.icclass.static.zero()
-				}),
-				one: BindableFunction(function () {
-					return this.zero().next()
-				}),
-				two: BindableFunction(function () {
-					return this.one().next()
-				}),
-				// ! ISSUE - the 'BindableFunctions' don't get to be bound automatically to the object of desire. CONCLUSION - they must be ALL BOUND MANUALLY ... 
-				empty: BindableFunction(function (template = this.this.template) {
-					return GeneralArray(template).class()
-				}),
-				fromArray: BindableFunction(function (arr) {
-					const generalized = this.empty()
-					for (const a of arr) generalized.pushback(a)
-					return generalized
-				}),
-				fromCounter: BindableFunction(function (counter) {
-					const narr = this.empty()
-					counter.loop(() => narr.pushback(this.this.class.template.default()))
-					return narr
-				})
-			}
+			const R = {}
+
+			R.zero = BindableFunction(function () {
+				return this.this.template.icclass.static.zero()
+			}).bind(R)
+
+			R.one = BindableFunction(function () {
+				return this.zero().next()
+			}).bind(R)
+
+			R.two = BindableFunction(function () {
+				return this.one().next()
+			}).bind(R)
+			// ! ISSUE - the 'BindableFunctions' don't get to be bound automatically to the object of desire. CONCLUSION - they must be ALL BOUND MANUALLY ...
+			R.empty = BindableFunction(function (template = this.this.template) {
+				return GeneralArray(template).class()
+			}).bind(R)
+
+			R.fromArray = BindableFunction(function (arr) {
+				const generalized = this.empty()
+				for (const a of arr) generalized.pushback(a)
+				return generalized
+			}).bind(R)
+
+			R.fromCounter = BindableFunction(function (counter) {
+				const narr = this.empty()
+				counter.loop(() => narr.pushback(this.this.class.template.default()))
+				return narr
+			}).bind(R)
+
 			for (const x of ["back", "front"]) {
 				R[`push${x}Loop`] = TEMPLATE({
 					defaults: {
@@ -2972,90 +2990,86 @@ export const GeneralArray = (() => {
 							...template
 						},
 						object: alinative.function.const(this),
-						restart: BindableFunction(function () {
-							this.counter = this.template.icclass.class()
-						}),
-						yield: BindableFunction(function (
-							_indexiter = this.template.indexiter,
-							end = this.template.end,
-							iter = true
-						) {
-							if (iter) _indexiter(this)
-							const isend = end(this)
-							if (!isend && iter) this.counter = this.counter.next()
-							return isend
-						}),
-						_full: BindableFunction(function (
-							each,
-							iter = alinative.function.const(this.template.indexiter),
-							end = alinative.function.const(this.template.end),
-							begin = this.template.begin,
-							after = this.template.after
-						) {
-							const index = this.object().this.this.currindex
-							begin(this)
-							let r = undefined
-							let is = this.yield(
-								alinative.function.const(null),
-								end(),
-								false
-							)
-							while (!is) {
-								r = each(this, r)
-								is = this.yield(iter(), end())
-								if (this.broke) break
-							}
-							this.restart()
-							this.broke = false
-							this.object().currindex = index
-							after(this)
-							return r
-						}),
-						// * The difference between '.full()' and '._full()' is that the former is based on latter and allows for 'break' and 'continue'...
-						// ? [later?] generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
-						full: BindableFunction(function (
-							each = this.template.each,
-							iter = alinative.function.const(this.template.indexiter),
-							end = alinative.function.const(this.template.end),
-							begin = this.template.begin,
-							after = this.template.after
-						) {
-							const index = this.object().currindex
-							begin(this)
-							let r = undefined
-							let is = this.yield(null, end(), false)
-							while (!is) {
-								const x = each(this)
-								let goOn = true
-								r = x.loop()._full((t) => {
-									if (goOn) {
-										if (this.broke || this.continued) {
-											goOn = false
-											return
-										}
-										return t.object().currelem().get()(t)
-									}
-								})
-								is = this.yield(iter(), end())
-								if (this.broke) break
-								goOn = true
-								this.continued = false
-							}
-							this.restart()
-							this.broke = false
-							this.object().currindex = index
-							after(this)
-							return r
-						}),
-						break: BindableFunction(function () {
-							this.broke = true
-						}),
-						continue: BindableFunction(function () {
-							this.continued = true
-						}),
 						broke: false,
 						continued: false
 					}
+					a.restart = BindableFunction(function () {
+						this.counter = this.template.icclass.class()
+					}).bind(a)
+					a.yield = BindableFunction(function (
+						_indexiter = this.template.indexiter,
+						end = this.template.end,
+						iter = true
+					) {
+						if (iter) _indexiter(this)
+						const isend = end(this)
+						if (!isend && iter) this.counter = this.counter.next()
+						return isend
+					}).bind(a)
+					a._full = BindableFunction(function (
+						each,
+						iter = alinative.function.const(this.template.indexiter),
+						end = alinative.function.const(this.template.end),
+						begin = this.template.begin,
+						after = this.template.after
+					) {
+						const index = this.object().this.this.currindex
+						begin(this)
+						let r = undefined
+						let is = this.yield(alinative.function.const(null), end(), false)
+						while (!is) {
+							r = each(this, r)
+							is = this.yield(iter(), end())
+							if (this.broke) break
+						}
+						this.restart()
+						this.broke = false
+						this.object().currindex = index
+						after(this)
+						return r
+					}).bind(a)
+					// * The difference between '.full()' and '._full()' is that the former is based on latter and allows for 'break' and 'continue'...
+					// ? [later?] generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
+					a.full = BindableFunction(function (
+						each = this.template.each,
+						iter = alinative.function.const(this.template.indexiter),
+						end = alinative.function.const(this.template.end),
+						begin = this.template.begin,
+						after = this.template.after
+					) {
+						const index = this.object().currindex
+						begin(this)
+						let r = undefined
+						let is = this.yield(null, end(), false)
+						while (!is) {
+							const x = each(this)
+							let goOn = true
+							r = x.loop()._full((t) => {
+								if (goOn) {
+									if (this.broke || this.continued) {
+										goOn = false
+										return
+									}
+									return t.object().currelem().get()(t)
+								}
+							})
+							is = this.yield(iter(), end())
+							if (this.broke) break
+							goOn = true
+							this.continued = false
+						}
+						this.restart()
+						this.broke = false
+						this.object().currindex = index
+						after(this)
+						return r
+					}).bind(a)
+					a.break = BindableFunction(function () {
+						this.broke = true
+					}).bind(a)
+					a.continue = BindableFunction(function () {
+						this.continued = true
+					})
 					a.restart()
 					return a
 				}),
@@ -3221,10 +3235,13 @@ export const GeneralArray = (() => {
 				copy: BindableFunction(function (
 					f = ID,
 					isclass = false,
-					template = isclass
+					template /* = isclass
 						? this.this.this.this.class
-						: this.this.this.this.class.template
+						: this.this.this.this.class.template */
 				) {
+					// ! NEW ISSUE WITH THE BLEEDING FUNCTION SCOPES - ECMAScript, apparently, allows for functions to access themselves ONCE THEY'RE USED AS OBJECTS... (and hence, 'this' becomes the binded function's own context!). So, in conclusion, one has to add the property for the ACTUAL CONTEXT to the functions, and re-do each and every one of them...
+					console.log(this)
+					throw new Error("This didn't happen")
 					const copied = this.empty()
 					copied.class = isclass
 						? template
@@ -4081,18 +4098,23 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}),
 			multcall: refactor.classes.multcall
 		},
-		static: {
-			fromObject: BindableFunction(function (object = {}, finite = false) {
+		static: (() => {
+			const R = {}
+
+			R.fromObject = BindableFunction(function (object = {}, finite = false) {
 				return this.this.class(
 					...DEOBJECT(object).map(
 						finite ? this.this.template.parentclass.static.fromArray : ID
 					)
 				)
-			}),
-			empty: BindableFunction(function () {
+			}).bind(R)
+
+			R.empty = BindableFunction(function () {
 				return this.fromObject({}, true)
-			})
-		},
+			}).bind(R)
+
+			return R
+		})(),
 		transform: general.StaticThisTransform,
 		recursive: true,
 		// ! Consider the precise list;
@@ -4407,16 +4429,20 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				for (const x of this.this.this.genarr) if (x !== "") return false
 				return true
 			}),
-			sort: function (predicate) {
+			sort: BindableFunction(function (predicate) {
 				return this.split("").genarr.sort.merge().function(predicate)
-			},
-			isSorted(predicate) {
+			}),
+			isSorted: BindableFunction(function (predicate) {
 				return this.this.this.this.class.template.parentclass.template.icclass.template.comparison(
 					this.copied("sort", [predicate]),
 					this.this.this
 				)
-			},
-			indexesOf(ustring, halt = false, haltAfter = Infinity) {
+			}),
+			indexesOf: BindableFunction(function (
+				ustring,
+				halt = false,
+				haltAfter = Infinity
+			) {
 				const indexes = this.this.this.this.class.template.parentclass.class()
 				if (is.str(ustring))
 					return this.indexesOf(this.this.this.this.class.class(ustring))
@@ -4459,17 +4485,17 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 				return indexes
-			},
-			firstIndex(ustring) {
+			}),
+			firstIndex: BindableFunction(function (ustring) {
 				const indexes = this.indexesOf(ustring, true, this.init().next())
 				if (indexes.length().get().compare(this.init()))
 					return indexes.read(this.init())
 				return this.this.this.this.class.template.unfound
-			},
+			}),
 			includes: refactor.classes.includes,
 			// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 			// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
-			order() {
+			order: BindableFunction(function () {
 				const newstr = this.copy()
 				let bigind = this.init()
 				let smallind = 0
@@ -4484,28 +4510,28 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				}
 				this.this.this = newstr
 				return this
-			},
+			}),
 			// The precise opposite of 'order': minimizes the length of each and every string available within the underlying GeneralArray;
 			// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code;
-			symbolic() {
+			symbolic: BindableFunction(function () {
 				const symstr = this.this.this.this.class.class()
 				for (const sym of this) symstr.pushback(sym)
 				this.this.this = symstr
 				return this
-			},
-			pushback(ustring) {
+			}),
+			pushback: BindableFunction(function (ustring) {
 				if (is.str(ustring)) return this.this.this.genarr.pushback(ustring)
 				return this.concat(ustring)
-			},
-			pushfront(ustring) {
+			}),
+			pushfront: BindableFunction(function (ustring) {
 				if (is.str(ustring)) {
 					this.this.this.genarr.pushfront(ustring)
 					return this
 				}
 				this.this.this = ustring.copied("concat", [this.this.this])
 				return this
-			},
-			*[Symbol.iterator]() {
+			}),
+			[Symbol.iterator]: function* () {
 				for (const str of this.this.this.genarr) for (const sym of str) yield sym
 			},
 			suchthat: refactor.classes.suchthat,
@@ -4514,11 +4540,15 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			forEach: refactor.classes.forEach,
 			multcall: refactor.classes.multcall
 		},
-		static: {
-			fromString(str = "") {
+		static: (() => {
+			const R = {}
+
+			R.fromString = BindableFunction(function (str = "") {
 				return this.this.class(str)
-			}
-		},
+			}).bind(R)
+
+			return R
+		})(),
 		transform: general.StaticThisTransform,
 		recursive: true
 	})
@@ -4534,12 +4564,12 @@ export const tnumbers = {
 				names: ["value"]
 			},
 			methods: {
-				add(added = this.one()) {
+				add: BindableFunction(function (added = this.one()) {
 					return this.this.this.this.class.class(
 						this.this.this.value.jumpDirection(added.value)
 					)
-				},
-				multiply(multiplied = this.one()) {
+				}),
+				multiply: BindableFunction(function (multiplied = this.one()) {
 					return multiplied.value.class.static.whileloop(
 						multiplied.value,
 						(x) => x.add(this.this.this),
@@ -4548,9 +4578,9 @@ export const tnumbers = {
 						undefined,
 						this.this.this
 					)
-				},
+				}),
 				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
-				power(x = this.one()) {
+				power: BindableFunction(function (x = this.one()) {
 					if (!this.class.template.icclass.direction(x))
 						return TrueRatio(this.template.icclass).class([
 							this.class.template.icclass.class().next(),
@@ -4561,33 +4591,33 @@ export const tnumbers = {
 						x,
 						this.this.this
 					)
-				},
-				modulo(d = this.one()) {
+				}),
+				modulo: BindableFunction(function (d = this.one()) {
 					let curr = this.this.this.this.class.class()
 					while (!(curr = curr.add(d)).compare(this.this.this.value)) {}
 					return curr.difference(this.this.this)
-				},
+				}),
 				// * Returns the additive inverse
-				invadd() {
+				invadd: BindableFunction(function () {
 					return this.this.this.this.class(
 						this.value.map(this.class.template.icclass.static.reverse()).value
 					)
-				},
+				}),
 				// * Returns the multiplicative inverse (TrueRatio type);
-				invmult() {
+				invmult: BindableFunction(function () {
 					return TrueRatio(this.this.this.this.class)(
 						this.this.this.this.class.static.one(),
 						this.this.this
 					)
-				},
-				compare(compared = this.zero()) {
+				}),
+				compare: BindableFunction(function (compared = this.zero()) {
 					return this.this.this.value.compare(compared.value)
-				},
-				difference(d = this.one()) {
+				}),
+				difference: BindableFunction(function (d = this.one()) {
 					return this.this.this.add(d.invadd())
-				},
+				}),
 				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA! Where to put the method?]
-				divide(d) {
+				divide: BindableFunction(function (d) {
 					let r = this.this.this.this.class.class()
 					let copy = this.copy()
 					while (copy.compare(d)) {
@@ -4595,48 +4625,54 @@ export const tnumbers = {
 						r = r.add()
 					}
 					return r
-				},
-				copy() {
+				}),
+				copy: BindableFunction(function () {
 					return this.this.this.this.class.class(
 						native.copy.deepCopy(this.this.this.value.value)
 					)
-				},
-				equal(x = this.one()) {
+				}),
+				equal: BindableFunction(function (x = this.one()) {
 					return (
 						this.this.this.value.compare(x.value) &&
 						x.value.compare(this.this.this.value)
 					)
-				},
-				root(x = this.two(), ceil = false) {
+				}),
+				root: BindableFunction(function (x = this.two(), ceil = false) {
 					let r = this.this.this.this.class.class()
 					let temp
 					while (!(temp = r.power(x)).compare(this)) r = r.add()
 					if (temp.equal(this) || ceil) return r
 					return r.difference()
-				},
-				zero() {
+				}),
+				zero: BindableFunction(function () {
 					return this.this.this.this.class.static.zero()
-				},
+				}),
 				one: refactor.classes.oneadd,
 				two: refactor.classes.twoadd
 			},
-			static: {
+			static: (() => {
+				const R = {
+					zero: refactor.classes.zero,
+					one: refactor.classes.oneadd,
+					two: refactor.classes.twoadd
+				}
+
 				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
 				// ? Allow for '.static' extension?
-				fromNumber: BindableFunction(function (num = 1) {
+				R.fromNumber = BindableFunction(function (num = 1) {
 					return this.this.class(
 						alinative.number.iterations({
 							iterated: this.this.template.parentclass.template
 						})(num)
 					)
-				}),
-				fromCounter: BindableFunction(function (ic) {
+				}).bind(R)
+
+				R.fromCounter = BindableFunction(function (ic) {
 					return number.TrueInteger(ic.class)(ic.value)
-				}),
-				zero: refactor.classes.zero,
-				one: refactor.classes.oneadd,
-				two: refactor.classes.twoadd
-			},
+				}).bind(R)
+
+				return R
+			})(),
 			transform: general.StaticThisTransform,
 			recursive: true,
 			toextend: []
@@ -4660,7 +4696,9 @@ export const tnumbers = {
 				}
 			},
 			methods: {
-				add(addratio = this.this.this.this.class.static.one()) {
+				add: BindableFunction(function (
+					addratio = this.this.this.this.class.static.one()
+				) {
 					return this.this.this.this.class.static.simplified(
 						this.this.this.this.class.class(
 							this.this.this.numerator
@@ -4673,46 +4711,54 @@ export const tnumbers = {
 							this.this.this.denomenator.multiply(addratio.denomenator)
 						)
 					)
-				},
-				multiply(multratio = this.this.this.class.static.one()) {
+				}),
+				multiply: BindableFunction(function (
+					multratio = this.this.this.class.static.one()
+				) {
 					return this.this.this.this.class.class(
 						this.numerator.multiply(multratio.numenator),
 						this.denomenator.multiply(multratio.denomenator)
 					)
-				},
-				invadd() {
+				}),
+				invadd: BindableFunction(function () {
 					return this.this.this.this.class.class(
 						this.this.this.numerator.invadd(),
 						this.this.this.denomenator
 					)
-				},
-				invmult() {
+				}),
+				invmult: BindableFunction(function () {
 					return this.this.this.this.class.class(
 						...nameslist.map((x) => this.this.this[x]).reverse()
 					)
-				},
-				isWhole() {
+				}),
+				isWhole: BindableFunction(function () {
 					return this.this.this.denomenator.equal(
 						this.this.this.this.class.template.parentclass.static.one()
 					)
-				},
-				copy() {
+				}),
+				copy: BindableFunction(function () {
 					return this.this.this.this.class.class(
 						...nameslist.map((x) => this.this.this[x])
 					)
-				},
-				naivesum(ratio = this.this.this.this.class.class()) {
+				}),
+				naivesum: BindableFunction(function (
+					ratio = this.this.this.this.class.class()
+				) {
 					return this.this.this.this.class.class(
 						...nameslist.map((x) => this.this.this[x].add(ratio[x]))
 					)
-				},
+				}),
 				// ? Wonder - how about allowing for extended-methods of this general form [using the parent class variable instances list];
-				equal(ratio = this.this.this.this.class.class()) {
+				equal: BindableFunction(function (
+					ratio = this.this.this.this.class.class()
+				) {
 					return nameslist.every((x) => this.this.this[x].equal(ratio[x]))
-				}
+				})
 			},
-			static: {
-				simplified(ratio) {
+			static: (() => {
+				const R = {}
+
+				R.simplified = BindableFunction(function (ratio) {
 					ratio = ratio.copy()
 					const m = ratio.numerator.compare(ratio.denomenator)
 						? "numerator"
@@ -4724,8 +4770,10 @@ export const tnumbers = {
 							ratio[l] = ratio[l].divide(x)
 						}
 					return ratio
-				}
-			},
+				}).bind(R)
+
+				return R
+			})(),
 			transform: general.StaticThisTransform,
 			recursive: true,
 			// ! work more on this list...Decide if it ought to remain empty for the time being...;
@@ -4784,26 +4832,26 @@ export const InfiniteArray = CLASS({
 			})
 			return this
 		}),
-		copy() {
+		copy: BindableFunction(function () {
 			return this.class.class(this.f)
-		},
+		}),
 		copied: refactor.classes.copied,
-		map(g) {
+		map: BindableFunction(function (g) {
 			const x = this.f
 			this.f = BindableFunction(function (i) {
 				return g(x(i))
 			})
 			return this
-		},
-		slice(inind, enind) {
+		}),
+		slice: BindableFunction(function (inind, enind) {
 			const genarr = this.class.template.genarrclass.static.empty()
 			for (let i = inind; !i.compare(enind); i = i.next())
 				genarr.pushback(this.f(i))
 			return genarr
-		},
-		init() {
+		}),
+		init: BindableFunction(function () {
 			return this.class.template.genarrclass.init()
-		}
+		})
 	},
 	recursive: false
 }).function
@@ -5153,11 +5201,13 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			})
 		},
-		static: {
-			empty: BindableFunction(function () {
+		static: (() => {
+			const R = {}
+			R.empty = BindableFunction(function () {
 				return this.this.class()
-			})
-		},
+			}).bind(R)
+			return R
+		})(),
 		recursive: true,
 		toextend: ["includes"]
 	})
@@ -5255,39 +5305,39 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}
 		},
 		methods: {
-			getAdjacent(index) {
+			getAdjacent: BindableFunction(function (index = this.init()) {
 				return this.this.this.verticies.read(index).edges.copy(call)
-			},
-			addvertex(
+			}),
+			addvertex: BindableFunction(function (
 				value,
 				edges = this.this.this.this.class.template.parentclass.static.empty()
 			) {
 				this.pushback(Vertex(value, edges))
 				return this
-			},
-			addedge(
+			}),
+			addedge: BindableFunction(function (
 				index = this.init(),
 				edge = alinative.function.const(this.this.this.verticies.read(index))
 			) {
 				this.this.this.verticies.read(index).edges.pushback(edge)
 				return this
-			},
-			computevertex(indexv, indexe) {
+			}),
+			computevertex: BindableFunction(function (indexv, indexe) {
 				return this.pushback(
 					this.this.this.verticies.read(indexv).edges.read(indexe)
 				)
-			},
-			write(index, value) {
+			}),
+			write: BindableFunction(function (index, value) {
 				this.this.this.verticies.read(index).value = value
 				return this
-			},
-			read(index = this.init()) {
+			}),
+			read: BindableFunction(function (index = this.init()) {
 				return this.this.this.verticies.read(index).value()
-			},
-			deledge(indv, inde) {
+			}),
+			deledge: BindableFunction(function (indv, inde) {
 				return this.this.this.verticies.read(indv).edges.delete(inde)
-			},
-			delete(index, leftovers = {}) {
+			}),
+			delete: BindableFunction(function (index, leftovers = {}) {
 				const deleted = this.this.this.verticies.read(index)
 				this.this.this.verticies.delete(index)
 				const todelete =
@@ -5301,8 +5351,8 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				for (const td of todelete)
 					this.this.this.verticies.read(td[0]).edges.delete(td[1])
 				return this
-			},
-			copy(
+			}),
+			copy: BindableFunction(function (
 				f = ID,
 				isclass = false,
 				template = isclass
@@ -5313,8 +5363,8 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this.this.this.class.class(
 					this.this.this.verticies.copy(f, isclass, template, leftovers)
 				)
-			},
-			suchthat(predicate = TRUTH) {
+			}),
+			suchthat: BindableFunction(function (predicate = TRUTH) {
 				return this.this.this.this.class(
 					this.this.this.verticies.copied("suchthat", [
 						(x) =>
@@ -5322,11 +5372,11 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 							x.edges().every((y) => predicate(y().value()))
 					])
 				)
-			},
-			*[Symbol.iterator]() {
+			}),
+			[Symbol.iterator]: function* () {
 				for (const x of this.keys()) yield this.read(x)
 			},
-			deledgeval(index, value, leftovers = {}) {
+			deledgeval: BindableFunction(function (index, value, leftovers = {}) {
 				const todelinds =
 					this.this.this.this.class.template.parentclass.static.empty()
 				const edges = this.this.this.verticies.read(index).edges()
@@ -5334,7 +5384,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					if (leftovers.comparison(x().value(), value)) todelinds.pushback(x)
 				for (const ind of todelinds) edges.delete(ind)
 				return this
-			}
+			})
 		},
 		recursive: true
 	})
@@ -5348,7 +5398,7 @@ export const heaps = {
 		return EXTENSION({
 			defaults: refactor.defaults.heap(parentclass),
 			methods: {
-				merge(
+				merge: BindableFunction(function (
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
 				) {
 					if (heaps.length().get().compare(heaps.one())) {
@@ -5376,16 +5426,16 @@ export const heaps = {
 						return X(this, this.this.this, heaps[0])
 					}
 					return this
-				},
-				top() {
+				}),
+				top: BindableFunction(function () {
 					return this.this.this.treenode.value
-				},
+				}),
 				add: refactor.classes.add,
-				topless() {
+				topless: BindableFunction(function () {
 					const topelem = this.top()
 					this.merge(this.this.this.treenode.children)
 					return topelem
-				}
+				})
 			},
 			recursive: true
 		})
@@ -5394,10 +5444,10 @@ export const heaps = {
 		return EXTENSION({
 			defaults: defaults.heap(parentclass),
 			methods: {
-				top() {
+				top: BindableFunction(function () {
 					return this.this.this.treenode.value
-				},
-				add(elem) {
+				}),
+				add: BindableFunction(function (elem) {
 					// ! Generalize this, pray... [the 'index'-repetition... + the 'heap-property' restoration];
 					// * note: this ought to be fixed on the level of the constructor (implemented in such a way so as to be compatible with the methods in-usage)
 					let ind =
@@ -5426,15 +5476,15 @@ export const heaps = {
 					}
 
 					return this
-				},
-				topless() {
+				}),
+				topless: BindableFunction(function () {
 					const top = this.top()
 					this.this.this = this.this.this.this.class(
 						this.read(this.init()),
 						this.this.this.treenode.children.slice(this.one())
 					)
 					return top
-				}
+				})
 			},
 			recursive: true
 		})
@@ -5457,12 +5507,12 @@ export const heaps = {
 			},
 			methods: {
 				add: refactor.classes.add,
-				ordersort: function () {
+				ordersort: BindableFunction(function () {
 					// ! later, check if this sorts it from smallest-to-largest, or the reverse...
 					this.sort((x, y) => greateroe(x.order(), y.order()))
 					return this
-				},
-				order: function (i) {
+				}),
+				order: BindableFunction(function (i) {
 					if (!arguments.length) {
 						const n = this.this.this.this.class(
 							this.this.this.this.class.template.parentclass.static.fromArray(
@@ -5472,8 +5522,10 @@ export const heaps = {
 						return n.order(n.init())
 					}
 					return this.this.this.trees.read(i).order()
-				},
-				merge(heaps = this.template.parentclass.static.empty()) {
+				}),
+				merge: BindableFunction(function (
+					heaps = this.template.parentclass.static.empty()
+				) {
 					if (heaps.length().get().equal(heaps.class.static.one())) {
 						function treemerge(affected, a, b, checked = false) {
 							if (
@@ -5514,19 +5566,19 @@ export const heaps = {
 					for (const x of heaps)
 						this.merge(this.template.parentclass.static.fromArray([x]))
 					return this
-				},
-				copy(f = ID) {
+				}),
+				copy: BindableFunction(function (f = ID) {
 					return this.this.this.this.class.class(this.this.this.trees.copy(f))
-				},
+				}),
 				copied: refactor.classes.copied,
-				top() {
+				top: BindableFunction(function () {
 					return orders
 						.most({
 							predicate: this.this.this.this.class.template.predicate
 						})
 						.function(this.this.this.this.trees.copy((x) => x.node))
-				},
-				topless() {
+				}),
+				topless: BindableFunction(function () {
 					const top = this.top()
 					const firsttop = this.suchthat((x) =>
 						this.this.this.this.class.template.parentclass.template.comparison(
@@ -5537,7 +5589,7 @@ export const heaps = {
 					const ind = this.firstIndex(firsttop)
 					this.write(ind, this.this.this.this.class.class(firsttop.children))
 					return top
-				}
+				})
 				// ? 1. decrease;
 				// ? 2. delete;
 			},
@@ -5555,10 +5607,10 @@ export const PriorityQueue = (heapclass = general.DEFAULT_HEAPCLASS) => {
 	return EXTENSION({
 		defaults: defaults.basicheap(heapclass),
 		methods: {
-			// ! Create a shorter EXTENSION-based expression for the self-referencing method-aliases;
-			pull() {
+			// ? Create a shorter EXTENSION-based expression for the self-referencing method-aliases;
+			pull: BindableFunction(function () {
 				return this.this.this.heap.topless()
-			}
+			})
 		},
 		recursive: true
 	})
