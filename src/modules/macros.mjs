@@ -23,5 +23,6 @@ export {
 	CLASS,
 	DEOBJECT,
 	OBJECT,
-	NOMODULE
+	NOMODULE, 
+	FUNCTION
 } from "../lib.mjs"

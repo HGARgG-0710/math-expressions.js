@@ -181,3 +181,24 @@ It gets changed actively.
 		Pay particular attention to the 'counters', and the usage of 'aliases.native.const' for 'this'-binding functions...
 		Also - the classes, and the way that the 'edge cases' are handled - unacceptably dirty and particular (need generality, like with the rest of the project). 
 	13.8. Add more means for working with strings... - in particular the strings functions, their formatting (examples are throughout the library - for instance, the 'readable'...); 
+	13.9. IDEA: Interfaces! 
+		The issues connected with arbitriety of names could be a result of mixing the functionality of templates 
+			[function self-referenece + convinient-recursion-semantics + connection of data] with purely conventional issues like those of names. 
+		For their handling, INTERFACES can be created - they are nothing more than (conceptually, the structural complexity of the actual implementation/first-sketch may increase...): 
+
+
+			// ? Add error handling for 'n'? (Then, it will also have a 'restricting' quality + make it optional then...)
+			// ? Add the additional template layer (or turn this into an 'isthis: true'-kind of template?) for 'names' [Allows to change the stuff on the go...]?
+			export const Interface = TEMPLATE({ defaults: { n: 1 }, function: function (names = alinative.generate(this.template.n)) { return function (...args) { const R = {}; for (const x of this.template.names) { R[x] = args[i] }; return R } } })
+		
+		It generalizes many of the library's concepts, in particular, allowing for a convinient mean of handling varying property names (by means of saving 'n' and 'names', one can obtain precisely the shape of the object of desire - the only essential issue is keeping it all somewhere); 
+		Its' expansion also gives way to refactoring of many other, more complex name-involving cases (such as classes methods, for instance?); 
+			Particularly interesting cases would be those that'd allow for Interfaces that return a TEMPLATE instead of a function for simple object-construction based off given property lists. 
+				(Regular 'template-function'-named TEMPLATE itself would then be just a special case of Interface, with the corresponding names given...); 
+
+		Using HIERARCHY+"isthis: true" can give one a truly great degree of freedom in changing the names of the same structures (and, effectively, allowing for re-usage of theirs...); 
+
+		The only real difficulty afterwards become the already allocated objects from the previous versions of the Interface in question (namely, their reliance upon names that had been given before and their ultimate uselessness); 
+		One could make a '.map' method for creating a new Interface that would have different names (or, again, 'switching' classes...); 
+
+		The library would, then, utilize the Interfaces on LITERALLY EVERY step, thus achieving the name-independence...

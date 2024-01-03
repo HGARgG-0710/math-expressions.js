@@ -1,7 +1,10 @@
 // * Tests of 'BindableFunction' export
-import { BindableFunction } from "../src/modules/exports/types.mjs"
+// ! EXTEND THESE [to allow for newly added methods...];
+// ! do it separately...
+// import { BindableFunction } from "../src/modules/exports/types.mjs"
+import { FUNCTION } from "./../src/modules/macros.mjs"
 
-const f = BindableFunction(function () {
+const f = FUNCTION.function(function () {
 	return this
 })
 

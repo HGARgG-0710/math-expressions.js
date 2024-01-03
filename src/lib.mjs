@@ -13,29 +13,119 @@
 //			1. general
 // 3. FIX THE NAME-COLLISSION CONFLICTS!
 // ! ISSUE: with using the 'DEFAULT' variables? - [idea for a solution - use functions instead of those things?] (namely, put EVERYTHING in functions so as to allow for on-request processing of variables that is inherent to them?)
-// ! Fix Each and every 'static: ' field and others such, where methods used do not get to be explicitly '.bound'...
 
 // ! CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
-// ! FIX THE ERRORS RELATED TO MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
+// ! FIX THE ERRORS RELATED TO SOME MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
 
-// ! USE THIS EVERYPLACE - FOR EACH AND EVERY FUNCTION(especially, WHERE THERE IS '.bind') in the project...;
-// ! TEMPLATE IT [so as to allow for fluidity - arbitrary change in 'f'];
-// ^ IDEA [note]: THIS ALLOWS FOR CLASS-INSTANCE-INHERITANCE! IMPLEMENT IT... ('toClass' method for turning a class instance into a class + 'sameClass' method for creating an instance of the same class as that of the passed one..);
-export const BindableFunction = function (f) {
-	const newfun = function (...args) {
-		return f(...args)
-	}
-	newfun.origin = f
-	newfun.bind = function (x, ...args) {
-		const R = f.bind(x, ...args)
-		R.origin = f
-		R.bind = function (x) {
-			return BindableFunction(this.origin).bind(x)
-		}
-		return R
-	}
-	return newfun
+export const refCompare = (a, b) => a === b
+export const ID = (a) => a
+// * Identity map (just a nice piece of notation, that's all);
+export const id = ID
+
+export const abs = Math.abs
+
+export const bool = Boolean
+export const str = String
+export const num = Number
+export const obj = Object
+export const sym = Symbol
+export const udef = undefined
+export const set = Set
+export const arr = Array
+export const fn = Function
+export const fun = Function
+export const bi = BigInt
+export const nil = null
+
+export const is = {
+	bool: (x) => x === true || x === false,
+	str: (x) => typeof x === "string" || x instanceof String,
+	num: (x) => typeof x === "number" || x instanceof Number,
+	obj: (x) => typeof x === "object" && x instanceof Object,
+	sym: (x) => typeof x === "symbol",
+	udef: (x) => x === undefined,
+	set: (x) => x instanceof Set,
+	arr: (x) => x instanceof Array,
+	fn: (x) => x instanceof Function,
+	fun: (x) => typeof x === "function",
+	bi: (x) => x instanceof BigInt,
+	nan: isNaN,
+	class: (cl) => cl.is
 }
+
+// ! NOTE: a limitation - the function passed MUST NOT BE ALREADY BOUND!!! [see if there's a desireable way to check besides '.hasOwnProperty("prototype")'...];
+// ^ IDEA [note]: THIS ALLOWS FOR CLASS-INSTANCE-INHERITANCE! IMPLEMENT IT... ('toClass' method for turning a class instance into a class + 'sameClass' method for creating an instance of the same class as that of the passed one..);
+export const BindableFunction = TEMPLATE({
+	// ? Decide for a better placeholder function?
+	defaults: { origin: ID, defaultThis: null },
+	function: function (f = null, thisObj = this.template.defaultThis, ...defargs) {
+		const ownerobj = {}
+		// ! ISSUE: with the purely template-based approach for functions - it doesn't work, functions (generally) don't have means of accessing themselves...;
+		const newfun = function (...args) {
+			return (
+				is.fun(ownerobj.f.origin) ? ownerobj.f.origin : ownerobj.f.class.origin
+			).call(ownerobj.f.this, ...defargs, ...args)
+		}
+
+		// * note: private variable 'ownerobj' is needed because without it, the function has no means of accessing its own data from within its own calls...
+		ownerobj.f = newfun
+
+		// * this is so as to allow for 'single-separation' from a class...
+		newfun.class = this
+		// ^ IDEA [for general reimplementation of the default-defaults- system throughout the library]: instead of just linking the passed args to 'this.this...(.class, or whatever).template.varname', one checks for whether it is non-null EVERYWHERE WHERE IT'S USED (namely, dynamic replacement instead of static);
+		// % That kind of generalization would allow to EXPLICITLY create classes-based variables and AS EXPLICITLY, to separate them...
+		// ? But does one want that behaviour everywhere?
+		// * Answer: no, probably not. Hence, CONCLUSION - add this behaviour everywhere, where desired to the library, but in other places - keep things as they are (namely, separate the semantics of terms 'defaults-defaults' and 'templates').
+		newfun.origin = f
+		newfun.this = thisObj
+
+		newfun.bindArr = function (x, args = []) {
+			return this.bind(x, ...args)
+		}
+
+		newfun.bind = function (x, ...args) {
+			const R = this.class.function(
+				is.fn(this.origin) ? this.origin : this.class.template.origin,
+				...args
+			)
+			R.this = x
+			return R
+		}
+
+		newfun.apply = function (thisObj = this.this, args = []) {
+			return this.call(thisObj, ...args)
+		}
+
+		newfun.call = function (thisObj = this.this, ...args) {
+			return (is.fn(this.origin) ? this.origin : this.class.template.origin).call(
+				thisObj,
+				...args
+			)
+		}
+
+		newfun.switchclass = function (template = {}) {
+			return BindableFunction(template).function(
+				is.fun(this.origin) ? this.origin : this.class.template.origin
+			)
+		}
+
+		newfun.toString = function () {
+			// ! refactor that - (is.fun(...) ? ... : this.class.... )...
+			return (
+				is.fun(this.origin) ? this.origin : this.class.template.origin
+			).toString()
+		}
+
+		return newfun
+	}
+}).function
+
+export const FUNCTION = BindableFunction()
+// ! Now, the goals are the following:
+// * 1. improve the tests of 'BindableFunction';
+// ! ISSUE [with further testing of the 'BindableFunction' and 'FUNCTION' - THEY CANNOT BE TESTED BEFORE REPLACING ALL THE 'BindableFunction's...]
+// * 2. [AFTER HAVING TESTED ONLY!!!] REPLACE ALL THE APPEARENCES OF 'BindableFunction' with this...;
+const _FUNCTION = FUNCTION.function
 
 // ? Export or no? [if export, then make sure that this thing has a more 'sounding' name...]; Maybe, make a part of 'refactoring' instead? [serves little semantic purpose apart from the trivial one...];
 // * Stands for 'Obj-Func-Def-Key-List'
@@ -57,40 +147,6 @@ export const NAMED_TEMPLATE = (f, dname = undefined, dinstance = undefined, rest
 		...rest
 	})
 
-export const refCompare = (a, b) => a === b
-export const ID = (a) => a
-// * Identity map (just a nice piece of notation, that's all);
-export const id = ID
-
-export const abs = Math.abs
-
-export const bool = Boolean
-export const str = String
-export const num = Number
-export const obj = Object
-export const sym = Symbol
-export const udef = undefined
-export const set = Set
-export const arr = Array
-export const fn = Function
-export const fun = Function
-export const bi = BigInt
-
-export const is = {
-	bool: (x) => x === true || x === false,
-	str: (x) => typeof x === "string" || x instanceof String,
-	num: (x) => typeof x === "number" || x instanceof Number,
-	obj: (x) => typeof x === "object" && x instanceof Object,
-	sym: (x) => typeof x === "symbol",
-	udef: (x) => x === undefined,
-	set: (x) => x instanceof Set,
-	arr: (x) => x instanceof Array,
-	fn: (x) => x instanceof Function,
-	fun: (x) => typeof x === "function",
-	bi: (x) => x instanceof BigInt,
-	nan: isNaN,
-	class: (cl) => cl.is
-}
 export const alinative = {
 	number: {
 		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
@@ -564,7 +620,7 @@ export const general = {
 
 // * Allows to define templated classes and functions more non-conventionally;
 export function TEMPLATE(template = {}) {
-	const F = BindableFunction(function (template = this.template.deftemplate) {
+	const F = function (template = this.template.deftemplate) {
 		let _class = { [this.template.templateword]: {} }
 		const tobind = () => (this.template.this ? this.template.this : _class)
 		// ? Relocate, refactor?
@@ -606,7 +662,7 @@ export function TEMPLATE(template = {}) {
 							this.template.rest[x]
 					  )
 		return this.template.transform(_class, template)
-	})
+	}
 	const X = {
 		template: {
 			deftemplate: {},
