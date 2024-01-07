@@ -53,8 +53,10 @@ const firstN = (n, c, counter) => {
 
 const nccounter = numberCounter()
 console.log(nccounter)
-const nctth = firstN(3,  nccounter.generator(), nccounter)
-console.log(nctth)
+// const nctth1 = firstN(1000,  nccounter.generator(), nccounter)
+// console.log(nctth1)
+const nctth2 = firstN(10,  [2 ** 53 - 1], nccounter)
+console.log(nctth2)
 console.log()
 
 // const scounter = stringCounter()

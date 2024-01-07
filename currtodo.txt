@@ -4,27 +4,20 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 	1.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
 		1.1.1. Algorithm for efficient todo-finishing: 
 			Walk over all the '!', 'todo', '?' and '*', consider and fulfill each and every case transiently; 			
-	1.2. Do all the '.this'-ing, when passing, referencing/dereferencing objects too... [consider this matter separately...]; 
-	1.3. STYLE [maybe, leave for the project's future?]: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
+	1.2. STYLE [maybe, leave for the project's future?]: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
 	
 2. Testing; 
-	The library's approaching the v1.0 release; 
-	Before it, one desires to first conduct proper (and not like the other times!) testing operations; 
+	CONCLUSION: original plan for the testing procedure organization did not work out. 
+	NEW PLAN [repeat for each and every test]: 
 
-	For this: 
+		0. For each test file: 
+			1. Break down the test file into elementary tests, then for each of them: 
+				2. write the test's sketch (its description); 
+				3. write the implementation based off the sketch; 
+		4. For each test file: 
+			1. Run the tests
 
-		-1. Do the testing in small pieces of code, rapidly; 
-		0. Before testing a particular method, pray first re-look through its code most carefully and think of the design decisions made in it (namely, whether one was satisfied with them insofar or not...); 
-		1. Write extensive tests for each and every single thing; 
-		2. Test; 
-		3. Upon failure, seek out the bug, fix and then return to 2.; 
-		4. Upon success, go on to the next piece of code (next method); 
-
-	The entire process oughtn't take more than a few days of dedicated work...
-
-	Before doing the testing, plan - create a list for testing of things; 
-	Before that, still - count the definitions and see how much time will be needed for testing (approximately); 
-	Each and every one test must be broken down into a descriptive (in a sense that they verify the functionality fully) set of cases. 
+	Due to the intertwined nature of the library, testing's going to be far quicker with this scheme (as then, one needs not spend additional time on writing the tests themselves, only needing to do the testing itself after they've been written + writing tests takes less time than checking them...); 
 
 3. Documentation: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 
@@ -33,18 +26,30 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 	Add the CommonJS modules, work the 'todos.txt' file, final bits of work. 
 	After that is done, 'npm publish'!
+	
+	But first (minor things, simple to do...): 
+		1. Proper Deno and TypeScript support (perhaps, add it, perhaps not); 
+
+			For it to be possible without user having to do anything, one must provide the according type declarations under node16 (deno).
+			ALSO (important) - check correctness of references (import path-strings), apparently, due to 'tsconfig.json', TypeScript and JS Node may look at them slightly differently...
+
+			For this, the only truly needed thing are the proper 'JSDoc's. 
+			NOTE: only use the 'object', 'any' (and, only occasionally, 'number', 'boolean', 'string' - in special cases, like defaultTable), all else is unneeded...; 
+
+			
+		IDEA: add various types to the package? (For TypeScript programs...)
+			DIFFICULTY - these types don't align AT ALL with the results of the code (meaning, they're useless...);  
+
 
 5. Possible Methods for Addition: 
 
-	GeneralArray<> (array) {
+	GeneralArray:
 		copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
 		reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
 		entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
-	}
 	
-	UnlimitedMap<
+	UnlimitedMap:
 		entries<generator>() // like Object.entries()
-		map((value, key, obj) => [newvalue, newkey]) // Maps a map to a map. 
 		every((value, key) => boolean) // same as Array.
 		[Symbol.iterator]
-		>([keys, objects] or some: InfiniteMap or map: {})
+		

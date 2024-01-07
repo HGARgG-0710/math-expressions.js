@@ -39,7 +39,7 @@ Correspondently, some of the fundamental macro-API of it is not (as of yet) quit
 
 ## Installation
 
-Math-expressions.js can be installed using npm.
+Math-expressions.js can be installed with npm.
 Install math-expressions.js using npm:
 
     npm install math-expressions.js@[version]
@@ -50,7 +50,7 @@ Install math-expressions.js using npm:
 
 [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki)
 
-The library also supports basic in-editor JSDoc documentation.
+The library also supports basic in-editor JSDoc documentation (as of present - yet undone).
 
 ## Source
 
