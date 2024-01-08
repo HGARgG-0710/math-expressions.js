@@ -23,5 +23,5 @@ export {
 	recursiveSetting,
 	repeatedApplication,
 	repeatedApplicationWhilst,
-	stnative
+	stnative as native
 } from "../../lib.mjs"

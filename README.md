@@ -35,7 +35,9 @@ computational power is still (sadly) limited (so, the library's first two of the
 There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
 in one of the nearest future versions.
 
-Correspondently, some of the fundamental macro-API of it is not (as of yet) quite well-determeined, so may have a noticeable degree of 'edginess' and 'sketchiness' (which the future versions also aim to remedy). 
+Correspondently, some of the fundamental macro-API of it is not (as of yet) quite well-determeined, so may have a noticeable degree of 'edginess' and 'sketchiness' (which the future versions also aim to remedy). Although finally some aspects of its progress direction are already decided, the library still has a long way to develop.
+
+Note: the v1.0 version is the very-very first major release. While employing the library anywhere in practice, it's important to understand that, despite far more extensive testing efforts than before (as well as better understanding of its purpose and goals), it still may have bugs, incompletenesses, some few doubtful early-stage design decisions and other such qualities which may prevent one to be able to use it with full usage of all its potential benefits. Between v1.0 and v1.1., intermediate releases related to fixing such small design difficulties or minor issues may be anticipated.  
 
 ## Installation
 
@@ -71,13 +73,12 @@ A brief repository organization guide:
             -   numeric.mjs - short list of simple functions and utilities for working with different numeric writing systems and number-strings
             -   orders.mjs - set of methods for rapid and effective creation and property manipulation of order predicates and array-orders based off user arguments
             -   predicates.mjs - module of predicates, frequently used throughout the library's code and in various applications of its contents (made largely for refactoring and repetitious code simplification/refactoring purposes);
-            -   printing.mjs - general printing utilities for unlimited types
             -   structure.mjs - module for 'structures', recursive object-based user-defined structures useful for checking for different kinds of object-isomorphicity and immediate object-construction
             -   types.mjs - the main library module, contains types definitions
             -   variables.mjs - various
         -   macros.mjs - module which provides exported macros (and which are also extensively used by the rest of the package's code)
     -   test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
--   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library, there is an individual test script (the examples.mjs)
+-   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library has a test (thematically ordered, some are identical to the source files' names); If you find documentation absent/confusing, this may be the place to check out for further explanation.
 -   README.md - this file
 -   LICENSE - the MIT license
 - 	todos.txt - text file with unfinished 'TODO's of more general nature

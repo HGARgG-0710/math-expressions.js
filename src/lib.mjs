@@ -1,20 +1,8 @@
 // * The library's source code file (due to ESM's almost total ineffectiveness in handling anyhow complex recursive imports, the library's inner representation format was changed)
 
-// % Plan [for final v1.0 lib reorganization]:
-// 1. Decide which parts of the 'refactor' object are to be expotred:
-// 		! FIX THE 'general' module! Must export all one-by-one...;
-// 		* 1.1. general.DEFAULT_... [check!]
-// 		* 1.2. general.StaticThisTransform [rename, otherwise - check!]
-// 		* 1.3. general.fix [maybe rename to fixVariables or something such, otherwise - check!]
-// 		* 1.4. general.recursiveOperation
-// 		! 1.5. general [all else] [not]
-// 2. Fix the definitions order, so as to avoid the 'const-deadzone-error' conflicts, along the way - fix the new names collisions found...;
-// 		* 2.1. List of modules left for 'unpacking' [fulfill some after...]:
-//			1. general
-// 3. FIX THE NAME-COLLISSION CONFLICTS!
-// ! ISSUE: with using the 'DEFAULT' variables? - [idea for a solution - use functions instead of those things?] (namely, put EVERYTHING in functions so as to allow for on-request processing of variables that is inherent to them?)
+// ! FIX THE 'general' module! Must export all one-by-one...;
 
-// ! CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
+// ?[for v1.1?] CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
 // ! FIX THE ERRORS RELATED TO SOME MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
 
 export const refCompare = (a, b) => a === b
@@ -121,7 +109,6 @@ export const BindableFunction = TEMPLATE({
 }).function
 
 export const FUNCTION = BindableFunction()
-// ! NEW ISSUE - replaced it somewhere essential, now the bleeding thing don't work properly - for whatever reason, THE CLASS OBJECTS ARE NOW, TOO, _FUNCTION instances... (How the fuck??? Relook through it... YET AGAIN...)
 const _FUNCTION = FUNCTION.function
 
 // ? Export or no? [if export, then make sure that this thing has a more 'sounding' name...]; Maybe, make a part of 'refactoring' instead? [serves little semantic purpose apart from the trivial one...];
@@ -367,7 +354,6 @@ export const Queue = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	})
 }
 
-// ! Use all over the place, DO NOT EXPORT
 const refactor = {
 	// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
 	// ? Later - try to redistribute all this somewhere accordingly?
@@ -543,7 +529,7 @@ const refactor = {
 					return ensureHeap(trNode, this.template.predicate)
 				})
 			},
-			predicate: lesser
+			predicate: general.DEFAULT_PREDICATE
 		}),
 		basicgenarr: (parentclass) => ({ parentclass: parentclass, names: ["genarr"] }),
 		basicheap: (heapclass) => ({ parentclass: heapclass, names: ["heap"] }),
@@ -782,7 +768,7 @@ export const CLASS = (ptemplate = {}) => {
 
 			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
 			for (const x in this.methods) {
-				// ! THIS IS A HACK [with this.methods[x] being an Array...]. FIX IT...
+				// ! THIS IS A HACK [with this.methods[x] being an Array...]. ACCEPTABLE ONLY TEMPORARILY! FIX IT...
 				const isarr = this.methods[x] instanceof Array
 				if (isarr || this.isgeneral.hasOwnProperty(x)) {
 					const B = isarr
@@ -801,7 +787,7 @@ export const CLASS = (ptemplate = {}) => {
 			for (const pr in this.properties)
 				O[pr] = this.properties[pr].bind(this)(...args)
 
-			// ! refactor...
+			// ? refactor...
 			if (this.recursive) {
 				for (const x in V[this.selfname])
 					if (!V.hasOwnProperty(x) && !(x in this.properties))
@@ -1061,7 +1047,7 @@ export const alarray = {
 		},
 		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
 		function: _FUNCTION(function (array = this.template.genarrclass.static.empty()) {
-			if (array.init().next().compare(array.length().get()))
+			if (array.one().compare(array.length().get()))
 				return this.template.genarrclass.fromArray([array.copy()])
 
 			const pprev = this.function(
@@ -1335,7 +1321,7 @@ export const InfiniteCounter = (() => {
 			direction: _FUNCTION(function () {
 				return this.this.this.this.class.static.direction(this)
 			}),
-			// ^ Consider creating an alternative definition for InfiniteCounter or just a different part of the library - 
+			// ^ Consider creating an alternative definition for InfiniteCounter or just a different part of the library -
 			compare: _FUNCTION(function (
 				ic,
 				comparison = this.this.this.this.class.template.comparison
@@ -1630,6 +1616,7 @@ export const object = {
 		for (const dp of delkeys) delete obj_[dp]
 	},
 
+	// ? Isn't it just builtin 'Object.assign'? [Re-define as another alias, maybe then?];
 	objInherit: function (obj, parObj = {}) {
 		for (const ap in parObj) obj[ap] = parObj[ap]
 	},
@@ -1831,7 +1818,7 @@ naarray.replace.replaceIndexesMult = naarray.multArrsRepApp({
 	f: naarray.replace.replaceIndex,
 	default: []
 }).function
-string.replace.sreplaceIndexesMult = string.strmethod(naarray.replaceIndexesMult)
+string.replace.sreplaceIndexesMult = string.strmethod(naarray.replace.replaceIndexesMult)
 
 naarray.replace.replaceMany = naarray.multArrsRepApp({
 	n: 2,
@@ -2629,6 +2616,8 @@ export const lesseroe = (a, b) => greateroe(b, a)
 export const lesser = (a, b) => !greateroe(a, b)
 export const greater = (a, b) => lesser(b, a)
 
+general.DEFAULT_PREDICATE = lesser
+
 export const next = (x) => x.next()
 export const inc =
 	(a = 1) =>
@@ -2683,15 +2672,6 @@ export const ensureSet = (genarr = general.DEFAULT_GENARRCLASS.static.empty()) =
 	return genarr.copied("suchthat", [allUnique])
 }
 
-// ! implement the 'printi' for generalarrays and ic-s;
-// TODO: create a version of this (printic) with a default 'this.interpret' for the InfiniteCounters to be distinguishable... [and other corresponding templates]
-export const print = TEMPLATE({
-	function: _FUNCTION(function (x = this.template.defaultS) {
-		return this.template.pfun(this.template.interpret(x))
-	}),
-	defaults: { pfun: console.log, interpret: ID, defaultS: "" }
-}).function
-
 export const stnative = {
 	repeatedApplication: function (initial, times, f, offset = 0, iter = (x) => x + 1) {
 		let r = initial
@@ -2700,86 +2680,17 @@ export const stnative = {
 	}
 }
 
-// ? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
-export const HIERARCHY = function (hierarr = []) {
+// _? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
+// ? The 'print' is gone... Does oneself still want to keep it here?
+// ! commented out for now (not present in the v1.0 release, decide what to do with it later...);
+/* export const HIERARCHY = function (hierarr = []) {
 	return stnative.repeatedApplication(
 		TEMPLATE(hierarr[hierarr.length - 1]),
 		hierarr.length - 1,
 		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
 		-2
 	)
-}
-
-// todo: create some special cases for this printing stuff pray...
-export const constrolprint = HIERARCHY([
-	{
-		defaults: {
-			pfun: console.log,
-			// TODO: make an alias for that thing...
-			limit: (x, appended) => x.length >= MAX_STRING_LENGTH - appended.length,
-			// * By default, will finish the printing of the thing using the function chosen [REGARDLESS OF SIZE!];
-			control: _FUNCTION(function (current, loophandle) {
-				this.pfun(current)
-				return this.this.function({ ishandle: true }).function(loophandle)
-			})
-		},
-		transform: (templated, template) => {
-			templated.template.this = templated
-			templated.template.defstr = templated.template.ustrclass("")
-			templated.template = { ...templated, ...template }
-			return templated
-		}
-	},
-	{
-		function: _FUNCTION(function (toprint = this.template.function.defstr) {
-			if (!this.template.ishandle) {
-				let final = ""
-				let broken = false
-				let handle = null
-				toprint.loop().full((x) => {
-					return types
-						.CommonArray()
-						.class({ treatfinite: true })
-						.class([
-							(k) => {
-								if (
-									this.template.function.limit(
-										final,
-										x.object().current
-									)
-								) {
-									k.break()
-									broken = true
-									// * Without copying, the 'full()' erases data regarding the current index from the handle in question;
-									handle = deepCopy(k)
-								}
-							},
-							(t) => (final += t.object().current)
-						]).this
-				})
-				if (broken) return this.template.function.control(final, handle)
-				return this.template.function.pfun(final)
-			}
-			return general.fix([this.template], ["ishandle"], () => {
-				this.template.ishandle = false
-				return this.template.this.function(
-					toprint.object().slice(toprint.counter.next())
-				)
-			})
-		}),
-		defaults: _FUNCTION(function () {
-			return {
-				ishandle: false,
-				function: this
-			}
-		}),
-		// TODO: make an alias for that one (it's used quite frequently...);
-		transform: (templated) => {
-			templated.template.this = templated
-		},
-		isthis: true
-	}
-])
+} */
 
 export const form = (
 	_new,
@@ -3552,7 +3463,7 @@ export const GeneralArray = (() => {
 					}
 					return arrs.pushback(currarr)
 				}),
-				splice: _FUNCTION(function (index, times = this.init().next()) {
+				splice: _FUNCTION(function (index, times = this.one()) {
 					const c = this.copy()
 					this.this.this = c
 						.slice(c.init(), index.previous())
@@ -3952,7 +3863,7 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 				for (const y of e[1].previous())
 					general.fix([array], ["currindex"], () => {
 						array.currindex = array.currindex.jumpBackward(
-							e[1].previous().jumpBackWard(y)
+							e[1].previous().jumpBackward(y)
 						)
 						this.newvalue(array, this.this.template.filling)
 					})
@@ -3967,7 +3878,7 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 			for (; !i.compare(array.currindex); fi++) {
 				if (currarray === array.array && fi === array.array.arr.length) {
 					const rx = array.currindex.difference(i)
-					return [rx.equal(array.init().next()) ? null : undefined, rx]
+					return [rx.equal(array.one()) ? null : undefined, rx]
 				}
 				const isfibelow = fi < currarray.length
 				if (isfibelow) {
@@ -4070,14 +3981,14 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			unfound: undefined
 		},
 		methods: {
-			read: _FUNCTION(function (key) {
+			read: _FUNCTION(function (key = this.this.this.keys.read()) {
 				return sh1(key, this, this.this.this.values.read)
 			}),
 			write: _FUNCTION(function (key, value) {
 				sh1(key, this, this.this.this.values.write, [value])
 				return this
 			}),
-			deleteKey: _FUNCTION(function (key) {
+			deleteKey: _FUNCTION(function (key = this.this.this.keys.read()) {
 				sh1(key, this, this.this.this.values.delete)
 				sh1(key, this, this.this.this.keys.delete)
 				return this
@@ -4138,7 +4049,10 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				return this
 			}),
-			multcall: refactor.classes.multcall
+			multcall: refactor.classes.multcall,
+			[Symbol.iterator]: function* () {
+				for (const x of this.this.this.values) yield x
+			}
 		},
 		static: (() => {
 			const R = {}
@@ -4174,6 +4088,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 		properties: {
 			currindex: alinative.function.const(0)
 		},
+		// ? Refactor the 'methods' with 'OBJECT(...(methods' names), ...(methods' list).map(_FUNCTION))'?
 		methods: {
 			split: _FUNCTION(function (useparator = "") {
 				const strarr = this.this.this.this.class.template.parentclass.class()
@@ -4519,7 +4434,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return indexes
 			}),
 			firstIndex: _FUNCTION(function (ustring) {
-				const indexes = this.indexesOf(ustring, true, this.init().next())
+				const indexes = this.indexesOf(ustring, true, this.one())
 				if (indexes.length().get().compare(this.init()))
 					return indexes.read(this.init())
 				return this.this.this.this.class.template.unfound
@@ -4978,7 +4893,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		},
 		methods: {
 			getall: _FUNCTION(function (nodes = true) {
-				const transform = nodes ? (x) => x.node : ID
+				const transform = nodes ? alinative.function.index("node") : ID
 				const f = this.this.this.this.class.template.parentclass.static.fromArray(
 					[transform(this.this.this)]
 				)
@@ -4988,11 +4903,12 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				return f
 			}),
-			getpart: _FUNCTION(function (beg, end) {
+			getpart: _FUNCTION(function (beg, end, nodes = true) {
+				// note: the .slice(.one()) is to get rid of the 'undefined' in the leading node...;
 				return this.this.this.this
 					.class(this.this.this.children.copied("slice", [beg, end]), undefined)
-					.getall()
-					.slice([this.this.this.children.init().next()])
+					.getall(nodes)
+					.slice(this.this.this.children.one())
 			}),
 			// ! Generalize these (see, '.pushfront' and '.pushback') kinds of methods [both for the 'TreeNode' and the CLASSes in 'macros.mjs'];
 			pushback: _FUNCTION(function (v) {
@@ -5008,7 +4924,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			}),
 			firstIndex: _FUNCTION(function (v) {
-				return this.indexesOf(v, true, this.init().next())
+				return this.indexesOf(v, true, this.one())
 			}),
 			indexesOf: _FUNCTION(function (v, halt = false, haltAfter = Infinity) {
 				if (this.this.this.children.isEmpty())
@@ -5018,7 +4934,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				const indexes = this.this.this.children.empty()
 				for (x of this.this.this.children) {
 					const ci = indexes.read()
-					const r = x.indexesOf(ci.copied("slice", [this.init().next()]))
+					const r = x.indexesOf(ci.copied("slice", [this.one()]))
 					if (r) indexes.concat(r.pushfront(ci))
 				}
 				return (
@@ -5057,9 +4973,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this
 			}),
 			insert: _FUNCTION(function (multindex, v) {
-				if (
-					multindex.length().get().equal(this.this.this.children.init().next())
-				) {
+				if (multindex.length().get().equal(this.this.this.children.one())) {
 					this.this.this.children.insert(
 						multindex.read(),
 						this.this.this.this.class.class(undefined, v, this)
@@ -5068,7 +4982,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				this.this.this.children
 					.read(multindex.read())
-					.insert(multindex.slice(multindex.init().next()), v)
+					.insert(multindex.slice(multindex.one()), v)
 				return this
 			}),
 			delval: _FUNCTION(function (v) {
@@ -5077,15 +4991,13 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				})
 			}),
 			prune: _FUNCTION(function (multindex) {
-				if (
-					multindex.length().get().equal(this.this.this.children.init().next())
-				) {
+				if (multindex.length().get().equal(this.this.this.children.one())) {
 					this.this.this.children.delete(multindex.read())
 					return this
 				}
 				this.this.this.children
 					.read(multindex.read())
-					.prune(multindex.slice(multindex.init().next()), v)
+					.prune(multindex.slice(multindex.one()), v)
 				return this
 			}),
 			*[Symbol.iterator]() {
@@ -5094,7 +5006,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			*keys() {
 				for (const x of this.getall().keys()) yield x
 			},
-			// This one's especially useful for things like NTreeNode (due to 'multi' and known indicies distribution...);
+			// This one can be especially useful for things like NTreeNode (due to 'multi' and known indicies distribution...);
 			read: _FUNCTION(function (
 				index = this.this.this.children.init(),
 				multi = false,
@@ -5104,34 +5016,31 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				if (first) index = index.copy()
 				if (!multi) return this.getall(nodes).read(index)
 				const r = this.this.this.children.read(index.read())
-				if (index.length().get().compare(index.init().next().next()))
-					return r.read(index.slice(index.init().next()), multi, nodes, false)
-				return (nodes ? (x) => x.node : ID)(r)
+				if (index.length().get().compare(index.two()))
+					return r.read(index.slice(index.one()), multi, nodes, false)
+				return (nodes ? alinative.function.index("node") : ID)(r)
 			}),
 			findRoots: _FUNCTION(function (v) {
 				return this.indexesOf(v).map((x) => this.read(x).root)
 			}),
 			depth: _FUNCTION(function () {
-				// ! use this one with a somewhat greater frequency;
+				// ! use 'isEmpty()' more oftenly (generally - see which methods there are, whether they can be applied somewhere, refactor-elementarize...);
 				if (this.this.this.children.isEmpty())
 					return this.this.this.children.init()
 				// ! problem here is the default 'uevaluate' table, which doesn't currently have any predefined operations on the infinite Counters (add them, pray...);
-				return this.this.this.children
-					.init()
-					.next()
-					.jumpForward(
-						expressions.uevaluate(
-							expressions.Expression(
-								"jumpForward",
-								this.this.this.this.class.parentclass.static.empty(),
-								this.this.this.children.copy((x) => x.depth())
-							)
+				return this.this.this.children.one().jumpForward(
+					uevaluate().function(
+						Expression(
+							"jumpForward",
+							this.this.this.this.class.parentclass.static.empty(),
+							this.this.this.children.copy((x) => x.depth())
 						)
 					)
+				)
 			}),
 			// ! Allow for non-multiindex arguments here as well!
 			write: _FUNCTION(function (mindex, value) {
-				if (mindex.length().get().equal(mindex.init().next()))
+				if (mindex.length().get().equal(mindex.one()))
 					return this.this.this.children.write(
 						mindex.read(),
 						this.this.this.this.class.class(
@@ -5142,9 +5051,9 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					)
 				return this.this.this.children
 					.read(mindex.read())
-					.write(mindex.slice(mindex.init().next()), value)
+					.write(mindex.slice(mindex.one()), value)
 			}),
-			// ? Generalize?
+			// ? Generalize/refactor? [possibly, repeatedApplication]
 			findAncestors: _FUNCTION(function (x) {
 				const froots = this.this.this.children.empty()
 				let currroots = this.findRoots(x)
@@ -5154,23 +5063,67 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				return froots
 			}),
-			commonAncestors: _FUNCTION(function (values) {
+			commonAncestors: _FUNCTION(function (
+				values = this.this.this.this.class.template.parentclass.static.empty()
+			) {
 				return alarray
 					.common({ f: (x) => this.findAncestors(x) })
 					.function(values)
 			}),
-			swap: _FUNCTION(function (ind1, ind2, multi = false) {
+			swap: _FUNCTION(function (ind1, ind2 = this.init(), multi = false) {
 				const n1val = this.read(ind1, multi)
 				this.write(ind1, this.read(ind2, multi))
 				this.write(in2, n1val)
 				return this
 			}),
 			order: _FUNCTION(function () {
-				return dim({ form: treeForm(this.this.this.this.class) }).function(i)
+				return dim({ form: treeForm(this.this.this.this.class) }).function(this)
+			}),
+			multitoflat: _FUNCTION(function (
+				multi = this.this.this.this.class.template.parentclass.static.empty(),
+				first = true
+			) {
+				if (first) multi = multi.copy()
+				let res = this.this.this.this.class.template.icclass.static.one()
+				if (
+					multi
+						.length()
+						.get()
+						.compare(
+							this.this.this.this.class.template.parentclass.static.one()
+						)
+				)
+					res = multi
+						.read()
+						.jumpForward(
+							this.this.this.children
+								.read(multi.read())
+								.multitoflat(multi.slice(multi.one())),
+							false
+						)
+				return res
+			}),
+			flattomulti: _FUNCTION(function (index = this.init(), first = true) {
+				let currindex = (copy ? (x) => x.copy() : ID)(index)
+				const multi =
+					this.this.this.this.class.template.parentclass.static.empty()
+				for (const x of this.this.this.children.keys()) {
+					if (
+						!currindex.compare(this.this.this.children.read(x).length().get())
+					) {
+						if (!first) break
+						multi.pushback(x)
+						continue
+					}
+					currindex = currindex.jumpBackward(
+						this.this.this.children.read(x).length().get()
+					)
+					currindex = this.this.this.children
+						.read(x)
+						.flattomulti(currindex, false)
+				}
+				return first ? multi : currindex
 			})
-		},
-		static: {
-			// ? Suggestion [idea]: write a (static) 'multitoflat' method implementation for conversion of GeneralArray multiindexes to flat InfiniteCounter indexes? [note: would work only on a particular TreeNode given...];
 		},
 		recursive: true
 	})
@@ -5232,21 +5185,33 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}),
 			// * manually 'fixes' a potentially 'broken' set - allows usage of sets as arrays in algorithms, then returning them to their desired state (and also - explicit manipulation of orders on sets);
 			fix: _FUNCTION(function () {
+				// ? Dilemma - use 'ensureSet' directly, or keep as this? [that way, reference is 'linked', whereas otherwise it is 'parallel']
 				this.this.this.genarr = this.this.this.this.class.class(
 					this.this.this.genarr
-				)
+				).genarr
+				return this
+			}),
+			map: _FUNCTION(function (
+				f = ID,
+				isclass = false,
+				template = isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template
+			) {
+				this.this.this = this.copy(f, isclass, template).this
+				this.fix()
 				return this
 			})
 		},
 		static: (() => {
 			const R = {}
+			// ! REFACTOR THE '_FUNCTION's! (due to infinite Bindability, this can be done easily...);
 			R.empty = _FUNCTION(function () {
 				return this.this.class()
 			}).bind(R)
 			return R
 		})(),
-		recursive: true,
-		toextend: ["includes"]
+		recursive: true
 	})
 }
 
@@ -5764,9 +5729,8 @@ export const sort = {
 	}).function,
 	counting: TEMPLATE({
 		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-			// ! ISSUE: what about the default 'predicate'?
-			// ^ DECISION: perhaps, use one of the 'mjs' - namely, lesser/greater, those...
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			predicate: lesser
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
@@ -5854,11 +5818,7 @@ export const sort = {
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
-			for (
-				let i = garr.init().next();
-				!i.compare(garr.length().get());
-				i = i.next()
-			) {
+			for (let i = garr.one(); !i.compare(garr.length().get()); i = i.next()) {
 				for (let j = garr.init(); !j.compare(i); j = j.next()) {
 					if (this.template.predicate(garr.read(i), garr.read(j))) continue
 					garr.insert(j, garr.read(i))
@@ -6470,7 +6430,9 @@ export const READONLY = (x) =>
 		get: x
 	})
 
-export function INHERIT(x, X) {
+// ? Has no in-library use. Still keep?
+// ! Commented out for now. Decide later...
+/* export function INHERIT(x, X) {
 	return {
 		template: {
 			inherited: X,
@@ -6489,7 +6451,7 @@ export function INHERIT(x, X) {
 			return x.transform(_class)
 		}
 	}
-}
+} */
 
 export function DEOBJECT(obj = {}) {
 	return [Object.keys, Object.values].map((x) => x(obj))

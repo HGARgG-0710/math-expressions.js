@@ -193,6 +193,7 @@ It gets changed actively.
 		One could make a '.map' method for creating a new Interface that would have different names (or, again, 'switching' classes...); 
 
 		The library would, then, utilize the Interfaces on LITERALLY EVERY step, thus achieving the name-independence... 
+		(AND completely generalizing all the structures present within it, allowing for a far barer and more abstract expression of the ideas desired...)
 
 	12.10. Leaks! 
 		Check the library for possible memory leaks (in particular, everything related to 'this.this.this' and recursive classes); 
@@ -290,3 +291,68 @@ It gets changed actively.
 
 		During testing and consequent code-review, various (A LOT OF) new refactoring possibilities revealed themselves. 
 		Due to scheduilng matters, however, one does not feel it desired to include them into v1.0, but instead leave for v1.1.	
+	
+	12.16. UnlimitedString.print(); 
+
+		Previously, the library had included an attempt for a simple printing function for UnlimitedStrings. 
+		However, though well-intended, it was poorly implemented from the organization- and domains- points of view...
+		Ideas for re-introduction in v1.1: 
+
+			1. Add as a method of UnlimitedString (and not have it appear anywhere else); 
+			2. Make environment-independent, allowing for arbitrary printing functions (meaning - this is a either a separate in-class template, or a method relying upon class's template...); 
+			3. Possible generalization? (look further...)
+		
+	12.17. Output-Readable Structure-Representation: 
+
+		Generalization of the 12.16. issue (UnlimitedString.print()) - adding interfaces that would allow to output arbitrarily large 
+			structures in a readable (with 'readable' being here a term-variable) format, namely, general replacement for things like: 
+
+				const genarr = GeneralArray(...).static.empty()
+				console.log(genarr.array)
+
+		For, due to the specifics of the '...' template, the formats for arrays would differ violently, while 
+			the essential nature (the Interface) of theirs still remains the same. The output ought to be completely representative
+				of this, despite the size-unlimitedness requirement. 
+
+	12.18. OPTIMIZATION: 
+
+		By far, one of the weakest points of the library is the optimization matters - namely, the following: 
+
+			a(c.f())
+			return b(c.f())
+		
+		Where, c.f() can be saved into a variable. 
+		Issue is, due to the generality of the interfaces implemented, the user may often find want and need to create 'nonstandard', exotic, dynamic and changing 
+			instances of classes considered, and, thus, cause the simplification of using a variable (for reducing performance time) 
+				to cause the code in question to become effectively invalid. 
+
+		Consider optional allowing to use 'static' memorization of certain things throughout, 
+			which (by default) will be off. 
+		
+	12.19. Idea of atRequest (possibly, add to v1.1...): 
+
+		In a sense, a (generalization-of)/(similarly-structured-as) the Promises - an implementation of the 'at-request' computation: 
+
+			// ! Object is supposed to be an Interface...
+			export const atRequest = (f) => {
+				let r = f
+				let isComputed = false
+				let computed
+				return {
+					get get() {
+						if (isComputed)
+							return computed	
+						isComputed = true
+						return (computed = r())
+					}
+					set get(f) {
+						r = f
+						isComputed = false
+					}
+				}
+			}
+
+		Gets used as 'const a = atRequest(x); a.get // somewhere else...'
+
+		Allows to save time and resources for execution of a thing until when it is truly needed; 
+		Additionally (far more beautiful), allows to make code with undefined (undeclared) variables work after they had been declared;

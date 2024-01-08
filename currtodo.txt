@@ -11,16 +11,16 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 	NEW PLAN [repeat for each and every test]: 
 
 		0. For each test file: 
-			1. Break down the test file into elementary tests, then for each of them: 
-				2. write the test's sketch (its description); 
-				3. write the implementation based off the sketch; 
-		4. For each test file: 
+			1. write the implementation based off the sketch; 
+		1. For each test file: 
 			1. Run the tests
 
 	Due to the intertwined nature of the library, testing's going to be far quicker with this scheme (as then, one needs not spend additional time on writing the tests themselves, only needing to do the testing itself after they've been written + writing tests takes less time than checking them...); 
 
 3. Documentation: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 
+
+	NOTE: base the GitHub documentation on the tests that are present + actively employ the 'entities.txt' list; 
 
 4. Extension of domains: 
 
@@ -41,7 +41,7 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 			DIFFICULTY - these types don't align AT ALL with the results of the code (meaning, they're useless...);  
 
 
-5. Possible Methods for Addition: 
+5. Possible Methods for future addition: 
 
 	GeneralArray:
 		copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 

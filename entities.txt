@@ -224,13 +224,9 @@ This file is also used for documentation, and name-collision-related work...
 			9.11.10. concat
 		9.12. number: 
 			9.12.1. farey
-	10. printing
-		10.1. print
-		10.2. controlprint
-	! Do those slightly later, when working on documentation...
-	11. predicates
-	12. variables
-	13. aliases
+	10. predicates
+	11. variables
+	12. aliases
 
 
 ? Question: does self want to add 'macros' or 'refactor' to the list in question [not entirely certain as to how they ought to be tested...]? 
