@@ -373,7 +373,7 @@ const refactor = {
 			for (const key of this.keys())
 				if (predicate(this.read(key), key, this, subset)) subset.pushback(key)
 			this.this.this = subset.this
-			return this
+			return this.this
 		}),
 		any: _FUNCTION(function (predicate = TRUTH) {
 			return !this.init().compare(
@@ -388,7 +388,7 @@ const refactor = {
 		}),
 		forEach: _FUNCTION(function (method = VOID) {
 			for (const x of this.keys()) method(this.read(x), x, this)
-			return this
+			return this.this
 		}),
 		includes: _FUNCTION(function (
 			element,
@@ -421,7 +421,7 @@ const refactor = {
 				if (!arrs) x = [x]
 				this.this.this[method](...x, leftovers)
 			}
-			return this
+			return this.this
 		}),
 		add: _FUNCTION(function (elem) {
 			return this.merge(
@@ -972,25 +972,6 @@ export const valueCompare = TEMPLATE({
 
 export const alarray = {
 	native: {
-		// ! Generalize [wasn't there already a 'GeneralArray.split' implementation for this?];
-		split: TEMPLATE({
-			defaults: {
-				comparison: refCompare
-			},
-			function: _FUNCTION(function (arr, el) {
-				const segments = []
-				let begInd = 0
-				let endInd = 0
-				for (let i = 0; i < arr.length; i++)
-					if (this.template.comparison(el, arr[i])) {
-						begInd = endInd + (endInd > 0)
-						endInd = i
-						segments.push([begInd, endInd])
-					}
-				segments.push([endInd + 1, arr.length])
-				return segments.map((seg) => arr.slice(...seg))
-			})
-		}).function,
 		generate: function (start, end, step = 1, precision = 1) {
 			// ! find more places for this operation's application (refactor to an alias, mayhaps?)
 			if (arguments.length === 1) {
@@ -1008,25 +989,28 @@ export const alarray = {
 		}
 	},
 	// ? Question [general]: which one should the library prefer the 'GeneralArray'-based multiple arguments, or the spread syntax? (GeneralArray permits unlimited number of arguments for a function that uses it...);
+	// ! THE 'finite' is not currently suited to transform methods such as this... PRAY FIX IT... [allow for arguments-arrays transformations..., such as here...];
 	intersection: TEMPLATE({
 		defaults: {
+			// ! ISSUE [about the 'finite' again] - what to do with cases such as this - when the default 'genarrclass' is given, whereas it must be finite (CommonArray?);
+			// ^ 'finite' does permit the usage of arbitrary templates... Could just create a 'general.[something...]' property for storing the Defualt 'Finitization' template, which can then be used where needed via spread {...general.[whatever], ...{(rest of the good things)}};
 			comparison: valueCompare,
 			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: _FUNCTION(function (...arrs) {
 			if (!arrs.length) return this.template.genarrclass.empty()
-			if (arrs.length == 1) return arrs[0]
+			if (arrs.length == 1) return arrs[0].copy()
 			if (arrs.length == 2) {
 				const inter = this.template.genarrclass.class()
 				for (
 					let i = this.template.icclass.class();
-					lesser(i, arrs[0]);
+					lesser(i, arrs[0].length().get());
 					i = next(i)
 				)
 					for (
 						let j = this.template.icclass.class();
-						lesser(j, arrs[1]);
+						lesser(j, arrs[1].length().get());
 						j = next(j)
 					) {
 						const x = arrs[0].read(i),
@@ -1209,6 +1193,26 @@ export const alarray = {
 			for (const x of arrays.slice(arrays.one()))
 				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
 			return r
+		})
+	}).function,
+	split: TEMPLATE({
+		defaults: {
+			// ! DEFINE!
+			comparison: general.DEFAULT_COMPARISON,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
+		function: _FUNCTION(function (
+			array = this.template.genarrclass.static.empty(),
+			separator = this.template.separator
+		) {
+			const farr = array.empty()
+			let prev = array.init()
+			for (const x of array.keys().copied("slice", [array.one()]))
+				if (this.template.comparison(separator, array.read(x))) {
+					farr.pushback(array.copied("slice", [prev, x]))
+					prev = x
+				}
+			return farr
 		})
 	}).function
 }
@@ -1660,6 +1664,15 @@ export const object = {
 		if (c) return this.boundObj(copy.deepCopy(o))
 		for (const x in o) if (is.fun(o[x])) o[x] = o[x].bind(o)
 		return o
+	},
+
+	// method for converting objects into a JSON-like String format
+	toString(object, separator = ", ", padding = " ") {
+		const k = obj.keys(object)
+		const p = k.length ? padding : ""
+		return `{${p}${k
+			.map((x) => `"${x.toString()}": ${object[x].toString()}`)
+			.join(separator)}${p}}`
 	}
 }
 
@@ -2140,6 +2153,8 @@ export function composition(fcall) {
 				.generate(native.number.max([fcall.functions.length, fcall.args.length]))
 				.map((x) => {
 					// ! PROBLEM - does ___not__ currently allow for things like: (a,b,c) => d(a, e(b, f, g(c))); Fix that...
+					// ^ IDEA [for a solution]: create a special Interface/signature for this with an array of GeneralArrays for setting (recursively) indexes to a given value from 'typeConst', other arguments get replaced with user's values (Pre-Calling); Then, one repeats the procedure of replacement, this time with the user's final arguments (the Final-Calling);
+					// ^ Idea: generalize the 2-calling(Pre- and Final-Calling-s) process to the n-calling (like with (a1, ..., an) => composition(f1, ..., fn)(a1, ..., an) -> (a1) => (a2) => ... (an) => composition(f1, ..., fn)(a1, ..., an));
 					if (x in fcall.functions) return this.composition(x)()
 					if (!fcall.args) return args[x]
 					return fcall.args[x]
@@ -2576,7 +2591,7 @@ export const nonlinear = TEMPLATE({
 	})
 }).function
 
-// ! ISSUEEEEEE: this doesn't work with native JS arrays yet it is called with them. WHAT-TO-DO? WHAT-USAGE-WAS-EVEN-INTENDED? [idea 1 for resolution: use the 'CommonArray()' as the target form for the present special case of the recursiveCounter..., instead...];
+// ! ISSUEEEEEE: this doesn't work with native JS arrays yet it is called with them. WHAT-TO-DO? WHAT-USAGE-WAS-EVEN-INTENDED? [idea 1 for resolution: use the 'CommonArray()' as the target form for the present special case of the recursiveCounter... instead...];
 export const most = TEMPLATE({
 	defaults: {
 		genarrclass: general.DEFAULT_GENARRCLASS
@@ -3182,7 +3197,7 @@ export const GeneralArray = (() => {
 					this.this.this = this.this.this.this.class.static
 						.fromArray([x])
 						.concat(this).this
-					return this
+					return this.this
 				}),
 				concat: _FUNCTION(function (array = this.empty()) {
 					return array.loop()._full(
@@ -3223,7 +3238,7 @@ export const GeneralArray = (() => {
 				) {
 					const x = this.this.this.firstIndex(value, comparison)
 					if (!(x === this.this.this.template.unfound)) return this.delete(x)
-					return this
+					return this.this
 				}),
 				slice: _FUNCTION(function (begin = this.init(), end = this.finish()) {
 					const sliced = this.empty()
@@ -3270,7 +3285,7 @@ export const GeneralArray = (() => {
 					}
 					this.this.this.currindex = indexsaved
 					// * It must always return 'this', not 'this.this.this';
-					return this
+					return this.this
 				}),
 				convert: _FUNCTION(function (
 					template = this.this.this.this.class.template
@@ -3285,7 +3300,7 @@ export const GeneralArray = (() => {
 					const ival = this.read(i)
 					this.write(i, this.read(j))
 					this.write(j, ival)
-					return this
+					return this.this
 				}),
 				delete: _FUNCTION(function (index = this.finish()) {
 					return this.deleteMult(index, index)
@@ -3315,7 +3330,7 @@ export const GeneralArray = (() => {
 							}
 						)
 					})
-					return this
+					return this.this
 				}),
 				projectFit: _FUNCTION(function (array, index = this.init()) {
 					general.fix([array], ["currindex"], () => {
@@ -3334,7 +3349,7 @@ export const GeneralArray = (() => {
 							(t) => t.object().go(index)
 						)
 					})
-					return this
+					return this.this
 				}),
 				insert: _FUNCTION(function (index, value) {
 					const x = this.copied(
@@ -3345,7 +3360,7 @@ export const GeneralArray = (() => {
 					x.pushback(value)
 					x.concat(this.copied("slice", [index], undefined))
 					this.this.this = x.this
-					return this
+					return this.this
 				}),
 				index: _FUNCTION(function (i = this.init()) {
 					return this.read(i)
@@ -3364,7 +3379,7 @@ export const GeneralArray = (() => {
 				shiftForward: _FUNCTION(function (times) {
 					const x = this.this.this.this.class.static.fromCounter(times)
 					this.this.this = x.concat(this.this.this).this
-					return this
+					return this.this
 				}),
 				shiftBackward: _FUNCTION(function (times = this.init()) {
 					return this.slice(times, undefined)
@@ -3373,7 +3388,7 @@ export const GeneralArray = (() => {
 					const newarr = this.empty()
 					times.loop(() => newarr.concat(this))
 					this.this.this = newarr.this
-					return this
+					return this.this
 				}),
 				reverse: _FUNCTION(function () {
 					const reversedArr = this.empty()
@@ -3383,7 +3398,7 @@ export const GeneralArray = (() => {
 						}).function
 					)
 					this.this.this = reversedArr.this
-					return this
+					return this.this
 				}),
 				map: _FUNCTION(function (
 					f = id,
@@ -3393,7 +3408,7 @@ export const GeneralArray = (() => {
 						: this.this.this.this.class.template
 				) {
 					this.this.this = this.copy(f, isclass, template).this
-					return this
+					return this.this
 				}),
 				isEmpty: _FUNCTION(function (
 					isend = this.this.this.this.class.template.isEnd
@@ -3409,7 +3424,7 @@ export const GeneralArray = (() => {
 							predicate
 						})
 						.function(this.this.this).this
-					return this
+					return this.this
 				}),
 				isSorted: _FUNCTION(function (predicate, comparison) {
 					return comparison(
@@ -3423,8 +3438,8 @@ export const GeneralArray = (() => {
 				every: refactor.classes.every,
 				forEach: refactor.classes.forEach,
 				intersection: _FUNCTION(function (arr = this.empty()) {
-					this.this.this = alarray.intersection().function(this, arr).this
-					return this
+					this.this.this = alarray.intersection().function(this.this, arr).this
+					return this.this
 				}),
 				permutations: _FUNCTION(function () {
 					return alarray.permutations({
@@ -3433,8 +3448,8 @@ export const GeneralArray = (() => {
 				}),
 				// For an array of arrays only;
 				join: _FUNCTION(function () {
-					this.this.this = alarray.join().function(this).this
-					return this
+					this.this.this = alarray.join().function(this.this).this
+					return this.this
 				}),
 				strjoin: _FUNCTION(function (separator = "") {
 					return UnlimitedString(this.this.this.this.class)
@@ -3442,17 +3457,13 @@ export const GeneralArray = (() => {
 						.class(this.copy(str, undefined, undefined))
 						.join(separator)
 				}),
-				// ? Generalie the '.split' functions? [Using a predicate and an 'algorithms.array' submodule algorithm may the haps?]
-				split: _FUNCTION(function (separator) {
-					const farr = this.empty()
-					let prev = this.init()
-					for (const x of this.keys())
-						if (comparison(separator, this.read(x))) {
-							farr.pushback(this.copied("slice", [prev, x]))
-							prev = x
-						}
-					this.this.this = farr.this
-					return this
+				split: _FUNCTION(function (
+					comparison = this.this.this.this.class.template.comparison
+				) {
+					this.this.this = alarray
+						.split({ comparison })
+						.function(this.this).this
+					return this.this
 				}),
 				splitlen: _FUNCTION(function (length = this.length().get()) {
 					let arrs = this.empty()
@@ -3468,7 +3479,7 @@ export const GeneralArray = (() => {
 					this.this.this = c
 						.slice(c.init(), index.previous())
 						.concat(this.slice(index.jumpDirection(times))).this
-					return this
+					return this.this
 				}),
 				one: _FUNCTION(function () {
 					return this.init().next()
@@ -3986,12 +3997,12 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}),
 			write: _FUNCTION(function (key, value) {
 				sh1(key, this, this.this.this.values.write, [value])
-				return this
+				return this.this
 			}),
 			deleteKey: _FUNCTION(function (key = this.this.this.keys.read()) {
 				sh1(key, this, this.this.this.values.delete)
 				sh1(key, this, this.this.this.keys.delete)
-				return this
+				return this.this
 			}),
 			deleteValues: _FUNCTION(function (values) {
 				for (const v of values) {
@@ -3999,7 +4010,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.keys.multcall("delete", inds)
 					this.this.this.keys.multcall("delete", inds)
 				}
-				return this
+				return this.this
 			}),
 			suchthat: _FUNCTION(function (
 				predicates = alarray.native.generate(2).map(T)
@@ -4014,7 +4025,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					(value, key) =>
 						predicates[1](value) && predicates[0](oldkeys.read(key))
 				)
-				return this
+				return this.this
 			}),
 			copy: _FUNCTION(function (
 				f = alarray.native.generate(2).map(alinative.function.const(ID)),
@@ -4037,7 +4048,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					: this.this.this.this.class.template
 			) {
 				this.this.this = this.copy(f, isclass, template).this
-				return this
+				return this.this
 			}),
 			deleteKeys: _FUNCTION(function (
 				keys = this.this.this.this.class.template.parentclass.static.empty()
@@ -4047,7 +4058,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.values.multcall("delete", inds)
 					this.this.this.keys.multcall("delete", inds)
 				}
-				return this
+				return this.this
 			}),
 			multcall: refactor.classes.multcall,
 			[Symbol.iterator]: function* () {
@@ -4191,7 +4202,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				const nind = this.fromtotalindex(index)
 				this.this.this.genarr.currindex = nind[0]
 				this.this.this.currindex = nind[1]
-				return this
+				return this.this
 			}),
 			fromtotalindex: _FUNCTION(function (index) {
 				let present = this.init()
@@ -4230,7 +4241,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				for (; !this.tototalindex().compare(end); this.next())
 					newstr.pushback(this.currelem().get())
 				this.this.this = (orderly ? (x) => x.order() : ID)(newstr).this
-				return this
+				return this.this
 			}),
 			read: _FUNCTION(function (index = this.init()) {
 				return this.copied("symbolic", []).genarr.read(index)
@@ -4244,12 +4255,12 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						this.currelem().set(value)
 					}
 				)
-				return this
+				return this.this
 			}),
 			concat: _FUNCTION(function (ustring) {
 				if (is.str(ustring)) return this.pushback(ustring)
 				this.this.this.genarr.concat(ustring.genarr)
-				return this
+				return this.this
 			}),
 			currelem: _FUNCTION(function () {
 				return {
@@ -4310,7 +4321,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							newlen
 								.difference(this.length().get())
 								.loop(() => this.pushback(basestr))
-							return this
+							return this.this
 						}
 
 						return this.slice(this.init(), newlen.previous())
@@ -4322,7 +4333,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				this.this.this = this.copied("slice", [this.init(), index.previous()])
 					.concat(value)
 					.concat(this.copied("slice", [index])).this
-				return this
+				return this.this
 			}),
 			remove: _FUNCTION(function (index) {
 				return this.slice(index, index)
@@ -4353,17 +4364,17 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 				this.this.this = (order ? (x) => x.order() : ID)(r).this
-				return this
+				return this.this
 			}),
 			reverse: _FUNCTION(function () {
 				this.this.this.genarr.reverse()
 				for (x in this.this.this.genarr)
 					this.write(x, x.split("").reverse().join(""))
-				return this
+				return this.this
 			}),
 			map: _FUNCTION(function (f = ID) {
 				this.this.this = this.copy(f).this
-				return this
+				return this.this
 			}),
 			copy: _FUNCTION(function (f = ID) {
 				const emptystr = this.this.this.this.class.class()
@@ -4456,7 +4467,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					smallind++
 				}
 				this.this.this = newstr.this
-				return this
+				return this.this
 			}),
 			// The precise opposite of 'order': minimizes the length of each and every string available within the underlying GeneralArray;
 			// * Makes loops and [generally] execution of any manner of loops longer, because native API is not used anymore, less memory efficient option, but allows for a slightly more intuitive underlying 'GeneralArray' [best for representation/reading the unlimited string]; Also - produces more manageable code;
@@ -4464,7 +4475,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				const symstr = this.this.this.this.class.class()
 				for (const sym of this) symstr.pushback(sym)
 				this.this.this = symstr.this
-				return this
+				return this.this
 			}),
 			pushback: _FUNCTION(function (ustring) {
 				if (is.str(ustring)) return this.this.this.genarr.pushback(ustring)
@@ -4473,10 +4484,10 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			pushfront: _FUNCTION(function (ustring) {
 				if (is.str(ustring)) {
 					this.this.this.genarr.pushfront(ustring)
-					return this
+					return this.this
 				}
 				this.this.this = ustring.copied("concat", [this.this]).this
-				return this
+				return this.this
 			}),
 			[Symbol.iterator]: function* () {
 				for (const str of this.this.this.genarr) for (const sym of str) yield sym
@@ -4915,13 +4926,13 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				this.this.this.children.pushback(
 					this.this.this.this.class.class(undefined, v, this)
 				)
-				return this
+				return this.this
 			}),
 			pushfront: _FUNCTION(function (v) {
 				this.this.this.children.pushfront(
 					this.this.this.this.class.class(undefined, v, this)
 				)
-				return this
+				return this.this
 			}),
 			firstIndex: _FUNCTION(function (v) {
 				return this.indexesOf(v, true, this.one())
@@ -4970,7 +4981,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					: this.this.this.this.class.template.parentclass.template
 			) {
 				this.this.this = this.copy(f, isclass, template).this
-				return this
+				return this.this
 			}),
 			insert: _FUNCTION(function (multindex, v) {
 				if (multindex.length().get().equal(this.this.this.children.one())) {
@@ -4978,12 +4989,12 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 						multindex.read(),
 						this.this.this.this.class.class(undefined, v, this)
 					)
-					return this
+					return this.this
 				}
 				this.this.this.children
 					.read(multindex.read())
 					.insert(multindex.slice(multindex.one()), v)
-				return this
+				return this.this
 			}),
 			delval: _FUNCTION(function (v) {
 				return this.this.this.children.delval(v, {
@@ -4993,12 +5004,12 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			prune: _FUNCTION(function (multindex) {
 				if (multindex.length().get().equal(this.this.this.children.one())) {
 					this.this.this.children.delete(multindex.read())
-					return this
+					return this.this
 				}
 				this.this.this.children
 					.read(multindex.read())
 					.prune(multindex.slice(multindex.one()), v)
-				return this
+				return this.this
 			}),
 			*[Symbol.iterator]() {
 				for (const x of this.keys()) yield this.read(x)
@@ -5074,7 +5085,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				const n1val = this.read(ind1, multi)
 				this.write(ind1, this.read(ind2, multi))
 				this.write(in2, n1val)
-				return this
+				return this.this
 			}),
 			order: _FUNCTION(function () {
 				return dim({ form: treeForm(this.this.this.this.class) }).function(this)
@@ -5149,7 +5160,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}),
 			add: _FUNCTION(function (el) {
 				if (!this.includes(el)) this.this.this.genarr.pushback(el)
-				return this
+				return this.this
 			}),
 			delval: _FUNCTION(function (el) {
 				return this.this.this.genarr.delval(el)
@@ -5189,7 +5200,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				this.this.this.genarr = this.this.this.this.class.class(
 					this.this.this.genarr
 				).genarr
-				return this
+				return this.this
 			}),
 			map: _FUNCTION(function (
 				f = ID,
@@ -5200,7 +5211,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			) {
 				this.this.this = this.copy(f, isclass, template).this
 				this.fix()
-				return this
+				return this.this
 			})
 		},
 		static: (() => {
@@ -5264,12 +5275,12 @@ export const NTreeNode = TEMPLATE({
 				pushback(_r, _t, args) {
 					this.this.this.children.delete()
 					this.this.this.children.read().pushback(args[0])
-					return this
+					return this.this
 				},
 				pushfront(_r, _t, args) {
 					this.this.this.children.delete(this.init())
 					this.this.this.children.read().pushfront(args[0])
-					return this
+					return this.this
 				},
 				insert(_r, _t, args) {
 					const ind = args[0].copied("delete")
@@ -5280,7 +5291,7 @@ export const NTreeNode = TEMPLATE({
 						x.class.template.parentclass.staic.fromArray([x.init()]),
 						args[1]
 					)
-					return this
+					return this.this
 				}
 			}
 		)
@@ -5320,14 +5331,14 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				edges = this.this.this.this.class.template.parentclass.static.empty()
 			) {
 				this.this.this = this.copied("pushback", [Vertex(value, edges)])
-				return this
+				return this.this
 			}),
 			addedge: _FUNCTION(function (
 				index = this.init(),
 				edge = alinative.function.const(this.this.this.verticies.read(index))
 			) {
 				this.this.this = this.this.this.verticies.read(index).edges.pushback(edge)
-				return this
+				return this.this
 			}),
 			computevertex: _FUNCTION(function (indexv, indexe) {
 				return this.pushback(
@@ -5336,7 +5347,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			}),
 			write: _FUNCTION(function (index, value) {
 				this.this.this.verticies.read(index).value = value
-				return this
+				return this.this
 			}),
 			read: _FUNCTION(function (index = this.init()) {
 				return this.this.this.verticies.read(index).value()
@@ -5361,7 +5372,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				}
 				for (const td of todelete)
 					this.this.this.verticies.read(td[0]).edges.delete(td[1])
-				return this
+				return this.this
 			}),
 			copy: _FUNCTION(function (
 				f = ID,
@@ -5411,7 +5422,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				for (const x of edges.keys())
 					if (comparison(x().value(), value)) todelinds.pushback(x)
 				for (const ind of todelinds) edges.delete(ind)
-				return this
+				return this.this
 			})
 		},
 		recursive: true
@@ -5454,7 +5465,7 @@ export const heaps = {
 						}
 						return X(this, this.this.this, heaps[0])
 					}
-					return this
+					return this.this
 				}),
 				top: _FUNCTION(function () {
 					return this.this.this.treenode.value
@@ -5504,7 +5515,7 @@ export const heaps = {
 						ind = t
 					}
 
-					return this
+					return this.this
 				}),
 				topless: _FUNCTION(function () {
 					const top = this.top()
@@ -5539,7 +5550,7 @@ export const heaps = {
 				ordersort: _FUNCTION(function () {
 					// ! later, check if this sorts it from smallest-to-largest, or the reverse...
 					this.sort((x, y) => greateroe(...[x, y].map((x) => x.order())))
-					return this
+					return this.this
 				}),
 				order: _FUNCTION(function (i) {
 					if (!arguments.length) {
@@ -5590,11 +5601,11 @@ export const heaps = {
 									torders.write(i, torders.read(i).next())
 									hbmerged.write(j, true)
 								}
-						return this
+						return this.this
 					}
 					for (const x of heaps)
 						this.merge(this.template.parentclass.static.fromArray([x]))
-					return this
+					return this.this
 				}),
 				copy: _FUNCTION(function (f = ID) {
 					return this.this.this.this.class.class(this.this.this.trees.copy(f))
@@ -6483,7 +6494,8 @@ alarray.native = {
 			"isSub",
 			"join",
 			"common",
-			"concat"
+			"concat",
+			"split"
 		],
 		{ integer: true }
 	)

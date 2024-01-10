@@ -356,3 +356,21 @@ It gets changed actively.
 
 		Allows to save time and resources for execution of a thing until when it is truly needed; 
 		Additionally (far more beautiful), allows to make code with undefined (undeclared) variables work after they had been declared;
+
+	12.20. Good Abstract Function types: 
+
+		Add the Composable class implementation, which'd possess method '.compose', which would give the user the direct ability to perform function composition operation that'd return a new function. 
+
+			// ! Very vague Sketch... (supposed to give ability to encompas addition of new values to argument lists and so on...)
+			export function Composable (f) {
+				const F = _FUNCTION(f) // or something...
+				F.compose = function (...fs) {
+					return composition(FunctionCall([this, ...fs]))
+				}
+				return F
+			}
+		
+	12.21. Refactoring tests; 
+
+		Currently, the tests are (pretty) dirtily written. They still serve the purpose, yet refactoring could (most certainly) be in place...; 
+		Also - conduct corresponding procedures of 'beutification' of the tests output... (for fun!)

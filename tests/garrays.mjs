@@ -1,75 +1,260 @@
 // * Testing of GeneralArray and its instances
 
 // ! List [from 'types.mjs']:
+import { greateroe, lesser, next } from "../src/modules/exports/predicates.mjs"
 import { arrays } from "./../src/modules/exports/types.mjs"
 
 for (const garrclassname of ["LastIndexArray", "DeepArray", "CommonArray"]) {
 	const garrclass = arrays[garrclassname]()
+
+	// ! Create a new array for the '.currelem() + .next()' and '.previous()' tests;
+	const cuelarr = garrclass.class()
+	for (; lesser(cuelarr.currindex, cuelarr.length().get()); next(cuelarr))
+		console.log(cuelarr.currelem().get())
+
+	for (
+		cuelarr.currindex = cuelarr.finish();
+		greateroe(cuelarr.currindex, cuelarr.init());
+		cuelarr.previous()
+	)
+		console.log(cuelarr.currelem().get())
+
+	// ! Add new elements! [for .pushback() and .pushfront() tests here...];
+	cuelarr.pushback()
+	cuelarr.pushback()
+	console.log(cuelarr.array)
+
+	cuelarr.pushfront()
+	cuelarr.pushfront()
+	console.log(cuelarr)
+
+	console.log(cuelarr.finish())
+	console.log(cuelarr.init())
+
+	cuelarr.begin()
+	console.log(cuelarr.currelem().get())
+	cuelarr.end()
+	console.log(cuelarr.currelem().get())
+
+	cuelarr.go(cuelarr.one())
+	console.log(cuelarr.array)
+
+	cuelarr.jump(cuelarr.two())
+	console.log(cuelarr.array)
+
+	// ! add indexes, values for tests
+	console.log(cuelarr.read())
+	console.log(cuelarr.read())
+	console.log(cuelarr.write())
+	console.log(cuelarr.write())
+
+	// ! add new lengths (smaller, greater..)
+	console.log(cuelarr.length().get())
+	cuelarr.length().set()
+	console.log(cuelarr.array)
+	cuelarr.length().set()
+	console.log(cuelarr.array)
+
+	// ! Create arrays for these...
+	console.log(garrclass.static.fromArray())
+	console.log(garrclass.static.fromArray())
+	console.log(garrclass.static.fromArray())
+
+	console.log(garrclass.static.zero())
+	console.log(garrclass.static.one())
+	console.log(garrclass.static.two())
+
+	console.log(garrclass.pushfrontLoop.toString())
+	console.log(garrclass.pushbackLoop.toString())
+
+	// ! Add examples for these...
+	console.log(garrclass.static.fromCounter())
+	console.log(garrclass.static.fromCounter())
+	console.log(garrclass.static.fromCounter())
+
+	console.log(cuelarr.one())
+	console.log(cuelarr.two())
+
+	for (const x of cuelarr) console.log(x)
+	for (const x of cuelarr.keys()) console.log(x)
+
 	const e = garrclass.static.empty()
 	console.log(e.array)
-	// * List [tests' sketches/descriptions] - performed on the 'e' array and others (NOTE: EACH ONE MUST BE ALSO RUN WITH DEFAULTS TO CHECK THEM FOR VALIDITY...): 
-	// 1. currelem(), next(); Test Description: get the '.currelem()' of the array, while going over it with 'arr.next()'; 
-	// 2. previous(); same as the tests before...; 
-	// 3. pushback(); Add a couple of new elements to the array in question; 
-	// 4. pushfront(); Same as 'pushback'; 
-	// 5. begin(); run it with/without false, print out the .currindex/.currelem(); 
-	// 6. end(); same as begin()
-	// 7. init(); print out the result of the function
-	// 8. finish(); same as 'init()'; 
-	// 9. go(); run, print out the .currindex, .currelem(); 
-	// 10. jump(); same as 'go'; 
-	// 12. move(), movedirection(), movebackward(), moveforward(); decide some interesting (result not same as in '.go()') + standard (result same as '.go') arguments for these, run, all else - same as '.go' test; 
-	// 13. read(), write(); read, write for two separate indexes, print out the results; 
-	// 14. length(); print out the length, then do some different length-altering operations on it (.concat, .pushback, .delete, .delval), print out after each operation
-	// 15. copied(); run with a method, check that arrays aren't the same; 
-	// 16. multcall; choose a method, run it with 'multcall' (2 times is enough); 
-	// 17. copy(); choose two functions, run with them, then change a 'template' twice - once with isclass=true, another with isclass=false; 
-	// 18. delval(); choose 2 different values for a pair of different comparisons, run with each ;
-	// 19. shiftForward(); choose 2 different counter values, shift by each one of them;  
-	// 20. shiftBackward(); reverse the 'shiftForward' test, plus delete some additional elements with a 3rd test; 
-	// 21. repeat(); choose two arbitrary counters, repeat() the array for them; 
-	// 22. reverse(); reverse two different arrays; 
-	// 23. map(); map the current array to another one twice (each result to be printed out separately...), then - once with a new template, and another time - with a new class (same as '.copy'); 
-	// 24. isEmpty(); create an empty array, run on it, again - on a non-empty array; 
-	// 25. sort(); -  sort two arrays given wanted predicates; 
-	// 26. isSorted() - check six times - once, on an array sorted with one of the predicates (from 'sort' test), then - different predicate (same array), then same predicate (different array) and different predicate (different array), then check for both predicates on a completely new array that isn't supposed to be sorted over either of them...; 
-	// 27. slice() - do multiple 'copied("slice")' of the same array, print them, then do the same thing on the array in question (3rd - new slice); 
-	// 28. keys() - iterate over 'keys' for two arrays, print each key out via '.read()'; 
-	// 29. fillfrom() - twice, fill the arrays from differently decided points with distinct elements; 
-	// 30. convert() - choose two different templates for the array in question...;
-	// 31. [Symbol.iterator] - print out each of the elements of the array obtained in a loop (twice, 2 varying arrays); 
-	// 32. switchclass() - same as 'convert()', but with classes; 
-	// 33. swap() - 2 times swap elements of two distinct arrays (2*2 = 4 tests...); 
-	// 34. delete() - for an array, delete an element by the index twice (different indexes); 
-	// 35. deleteMult() - for two sections of array, perform twice...
-	// 36. projectComplete() - project one array on another, 2 times; 
-	// 37. projectFit() - same as 'projectComplete'; 
-	// 38. insert() - insert a new value inside two different arrays twice; 
-	// 39. indexesOf() - do thrice - once for 'halt=false', and two more for 'halt=true' and different values for haltAfter; 
-	// 40. firstIndex() - do two times on one array, first with default comparison, then with another one...
-	// 41. includes() - same as 'firstIndex'; 
-	// 42. suchthat() - get 2 array property-slices; 
-	// 43. any() - do two times on one array using two different predicates (one would return false, another - true); 
-	// 44. every() - same as 'any'; 
-	// 45. forEach() - take two functions to perform + do the defaults run (with VOID); 
-	// 46. intersection() - do twice, for two different arrays of arrays; 
-	// 47. permutations() - run twice for two different arrays
-	// 48. join() - join 2 arrays of arrays with different separators; 
-	// 49. strjoin () - join 2 unequal arrays into strings; 
-	// 50. split () - split an array twice using two different separators; 
-	// 51. splitlen() - split an array twice using two different lengths; 
-	// 52. splice() - from two different indexes and different times values, same array; 
-	// 53. one () - print out the result; 
-	// 54. two () - print out the result; 
-	// 55 [for DeepArray, LastIndexArray only] for potence - check (allocating additional memory for Node) if they go beyond the MAX_ARRAY_LENGTH lenght-point for lengths of their array instances, using '.pushback()'; 
-	// 	! NOTE: this means having values that would (potentially) cause the array to 'use' a new level...; 
+	console.log(e.isEmpty())
+	console.log(cuelarr.isEmpty())
 
-	// ! .static: 
-	// 1. fromArray - return garrclass.static.fromArray() for arrays of different sizes (1-2 samples is enough, see that they behave adequately...)
-	// 2. zero(), one(), two() - print out the results for each one of the classes; 
-	// 3. empty() - done at the beginning, at least once for each of the classes; print out the call's results; 
-	// 4. fromCounter() - for each one of the classes do twice-thrice for two different counters (2-3*3 = 6-9 cases); print out the results; 
-	// 5. pushbackLoop(), pushfrontLoop() - already tested in the '.copy()' and '.reverse()'; No need to add those, just in case - print out the .toString() values to ensure all's valid...; 
+	// ! Choose the i,j to be swapped...
+	cuelarr.swap()
+	console.log(cuelarr)
+	cuelarr.swap()
+	console.log(cuelarr)
+
+	// ! Add arguments...
+	console.log(cuelarr.firstIndex())
+	console.log(cuelarr.firstIndex())
+	console.log(cuelarr.firstIndex())
+
+	// ! Add arguments [exactly same as in the 'firstIndex'];
+	console.log(cuelarr.includes())
+	console.log(cuelarr.includes())
+	console.log(cuelarr.includes())
+
+	// ! Add arguments...
+	console.log(cuelarr.indexesOf())
+	console.log(cuelarr.indexesOf())
+	console.log(cuelarr.indexesOf())
+	console.log(cuelarr.indexesOf())
+	console.log(cuelarr.indexesOf())
+
+	console.log(cuelarr === cuelarr)
+	console.log(cuelarr.copy() === cuelarr)
+
+	// ! Add predicates for these two tests...
+	console.log(cuelarr.any())
+	console.log(cuelarr.any())
+	console.log(cuelarr.every())
+	console.log(cuelarr.every())
+
+	// ! fill the array...
+	const permarr = genarrclass.class()
+	console.log(cuelarr.permutations())
+	console.log(permarr.permutations())
+
+	// ! Add array definitions and arguments...
+	const joinarr1 = genarrclass.class()
+	const joinarr2 = genarrclass.class()
+	console.log(joinarr1.join())
+	console.log(joinarr2.join())
+
+	// ! Add indicies
+	cuelarr.slice()
+	console.log(cuelarr.array)
+	cuelarr.concat(joinarr1)
+	console.log(cuelarr.array)
+	console.log(joinarr1.array)
+
+	// ! Add values for tests...
+	cuelarr.delete()
+	console.log(cuelarr.array)
+	cuelarr.delval()
+	console.log(cuelarr.array)
+	cuelarr.delval()
+	console.log(cuelarr.array)
+
+	// ! Add values for the test...
+	cuelarr.deleteMult()
+	console.log(cuelarr.array)
+
+	// ! add infinite counters for arguments...
+	cuelarr.shiftForward()
+	console.log(cuelarr.array)
+	cuelarr.shiftBackward()
+	console.log(cuelarr.array)
+
+	// ! decide two interesting function-examples...
+	cuelarr.forEach()
+	console.log(cuelarr.array)
+	cuelarr.forEach()
+	console.log(cuelarr.array)
+
+	// ! Add methods and arguments arrays...
+	const methods = []
+	const args = []
+	for (const m of methods.keys()) {
+		const c = cuelarr.copied(methods[m], args[m])
+		console.log(c != cuelarr)
+		console.log(c.array)
+	}
+
+	// ! add the values to the mapargs...
+	const mapargs = []
+	for (const marg of mapargs) {
+		cuelarr.map(...marg)
+		console.log(cuelarr.array)
+	}
+
+	cuelarr.reverse()
+	console.log(cuelarr.array)
+
+	// ! Choose two different infinite counters;
+	const repeated = cuelarr.copied("repeat", [])
+	console.log(repeated.array)
+	cuelarr.repeat()
+	console.log(cuelarr.array)
+
+	// ! Choose arguments for this...
+	cuelarr.splice()
+	console.log(cuelarr.array)
+	cuelarr.splice()
+	console.log(cuelarr.array)
+
+	// ! Choose how to 'split'...
+	cuelarr.split()
+	console.log(cuelarr.array)
+
+	// ! decide 2 differing predicates for this test...
+	cuelarr.sort()
+	console.log(cuelarr.array)
+	console.log(cuelarr.isSorted()) // same as before -> true
+	cuelarr.sort()
+	console.log(cuelarr.array)
+	console.log(cuelarr.isSorted()) // same as before -> true
+	console.log(cuelarr.isSorted()) // original one -> false
+
+	// ! Add the index, value arguments...
+	cuelarr.insert()
+	console.log(cuelarr.array)
+	cuelarr.insert()
+	console.log(cuelarr.array)
+
+	// ! Choose methods, choose arguments...
+	const multmethods = []
+	const margs = []
+	for (const m of multmethods.keys()) {
+		cuelarr.multcall(multmethods[m], margs[m])
+		console.log(cuelarr)
+	}
+
+	// ! Pick 2 varying predicates-functions for this...
+	const x = cuelarr.copied("suchthat", [])
+	console.log(x.array)
+	cuelarr.suchthat()
+	console.log(cuelarr.array)
+
+	// ! Define the two arrays...
+	const pfitarr = garrclass.class()
+	const pcompletearr = garrclass.class()
+	cuelarr.projectFit(pfitarr)
+	console.log(cuelarr.array)
+	cuelarr.projectComplete(pcompletearr)
+	console.log(cuelarr.array)
+
+	// ! Add arguments...
+	cuelarr.fillfrom()
+	console.log(cuelarr.array)
+
+	// ! Choose two classes (class and a template) to convert to and to switch to...
+	cuelarr.convert()
+	console.log(cuelarr.array)
+	cuelarr.switchclass()
+	console.log(cuelarr.array)
+
+	// ! fill the intersarr with things...
+	const intersarr = genarrclass.class()
+	console.log(cuelarr.intersection(intersarr).array)
+
+	// ! Choose an arbitrary string...
+	console.log(cuelarr.strjoin())
+	
+	// ! Choose a length, onto which the thing should be split...
+	cuelarr.splitlen()
+	console.log(cuelarr.array)
+
+	// ! Add test: move(), movedirection(), movebackward(), moveforward(); decide some interesting (result not same as in '.go()') + standard (result same as '.go') arguments for these, run, all else - same as '.go' test;
 }
+
+// TODO: [for DeepArray, LastIndexArray only] for potence - check (allocating additional memory for Node) if they go beyond the MAX_ARRAY_LENGTH lenght-point for lengths of their array instances, using '.pushback()';
+// 	! NOTE: this means having values that would (potentially) cause the array to 'use' a new level...;
+// ^ DO THE THING FOR MULTIPLE DIFFERENT LEVELS, CHECKING EACH...; [mayhaps, better add these whilst already having done the rest of the testing?]; 
 
 // ! tests list for TypedArray: create 1-3 class examples, that would ensure that the types in question are preserved...

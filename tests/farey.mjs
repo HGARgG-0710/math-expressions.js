@@ -1,7 +1,22 @@
 // * Tests of the 'Farey' algorithm
 
-import { numbers } from "./../src/modules/exports/algorithms.mjs"
+import { number } from "./../src/modules/exports/algorithms.mjs"
 
-const Farey = numbers.farey
+const Farey = number.farey
 
-// Tests: test for different (in number of 2-4, depending on choice) TrueInteger and TrueRatio classes (2-4 is the number of PAIRS of different classes), and distinct beginning-ending numbers (3-4 per single class) and durations (1-2 per a case); 
+// ! Add the appropriate classes to that thing, pray...
+const classes = [
+	[{}, {}, {}],
+	[{}, {}, {}]
+]
+// ! Add the values for which the function is to be run...
+const values = [[null, null, null], [], []]
+
+for (const c of classes) {
+	const f = Farey({
+		tintclass: c[0],
+		tratioclass: c[1],
+		icclass: c[2]
+	})
+	for (const v of values) console.log(f(...v))
+}
