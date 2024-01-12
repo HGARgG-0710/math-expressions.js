@@ -1,10 +1,50 @@
 // * Tests for various search algorithms implementations
 
-// ! List [from 'algorithms.mjs']:
-// * For 3 different GeneralArray classes, run each 4-6 times for different array-instances, comparisons, and elements to be found...; 
-//  algorithms.search.sentinel
-//  algorithms.search.exponential
-//  algorithms.search.interpolation
-//  algorithms.search.jump
-//  algorithms.search.linear
-//  algorithms.search.binary
+import {
+	sentinelSearch,
+	exponentialSearch,
+	interpolationSearch,
+	jumpSearch,
+	linearSearch,
+	binarySearch
+} from "../src/modules/exports.mjs"
+
+const templates = []
+
+for (const t of templates) {
+	// ! Add arguments;
+	console.log(sentinelSearch(t).function())
+	console.log(sentinelSearch(t).function())
+	console.log(sentinelSearch(t).function())
+	console.log(sentinelSearch(t).function())
+
+	// ! Add arguments;
+	console.log(exponentialSearch(t).function())
+	console.log(exponentialSearch(t).function())
+	console.log(exponentialSearch(t).function())
+	console.log(exponentialSearch(t).function())
+
+	// ! Add arguments
+	console.log(interpolationSearch(t).function())
+	console.log(interpolationSearch(t).function())
+	console.log(interpolationSearch(t).function())
+	console.log(interpolationSearch(t).function())
+
+	// ! Add arguments
+	console.log(jumpSearch(t).function())
+	console.log(jumpSearch(t).function())
+	console.log(jumpSearch(t).function())
+	console.log(jumpSearch(t).function())
+
+	// ! Add arguments
+	console.log(linearSearch(t).function())
+	console.log(linearSearch(t).function())
+	console.log(linearSearch(t).function())
+	console.log(linearSearch(t).function())
+
+	// ! Add arguments
+	console.log(binarySearch(t).function())
+	console.log(binarySearch(t).function())
+	console.log(binarySearch(t).function())
+	console.log(binarySearch(t).function())
+}

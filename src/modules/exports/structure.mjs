@@ -19,6 +19,7 @@ export {
 	generalSearch,
 	findDeepUnfilled,
 	findDeepUnfilledArr,
+	findDeepLast, 
 	recursiveIndexation,
 	recursiveSetting,
 	repeatedApplication,

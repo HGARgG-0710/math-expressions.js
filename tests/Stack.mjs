@@ -2,16 +2,67 @@
 
 import { Queue, Stack, NTreeNode } from "../src/modules/exports/algorithms.mjs"
 
-// ! Add tests for 'algorithms.Queue', 'algorithms.Stack' and 'algorithms.NTreeNode'
-// 1. algorithms.Queue
-// 	1.1. enqueue - create 
-// 	1.2. dequeue - create two-three tests, print out the final Queue to check...; 
-// 	1.3. front - create two tests, print both, then - another two (for each, 2*2 = 4) to verify change before and after the 'push/pop'; 
-// 	1.4. copy - create two instances, copy each, verify via printing; 
-// 2. algorithms.Stack
-// 	2.1. pop() - create two-three cases, print out the results (the stacks before, and after...); 
-// 	2.2. push() - same as '.pop', reverse its tests; 
-// 	2.3. peek() - create three tests, print out their results (+ another 3*2, to verify changes after push/pop); 
-// 	2.4. copy() - create two instances, copy each, verify via printing;
-// 3. algorithms.NTreeNode - for all of its methods, ensure that it does have precisely less than or equal to 'n' elements within each '.children' array of Sub-Nodes. 
-//  * For this - 2-3 classes, for each - 3-7 methods checks, with 1-2 tests for each (2-3*3-7*1-2 = 6-42 tests); 
+// ! Either generalize to an array of templates for which to test, or pick a 'parentclass';
+const qc = Queue()
+const sc = Stack()
+const ntnc = NTreeNode()
+
+// ! add values for those (maybe, extend the tests instances list... as all this is simply renaming mostly, little necessity for that...);
+const queue = qc.class()
+const stack = sc.class()
+const ntreenode = ntnc.class()
+
+// ! Add values for this (namely, the '.enqueue' method)...
+console.log(queue.front())
+queue.enqueue()
+console.log(queue.front())
+queue.enqueue()
+console.log(queue.front())
+queue.enqueue()
+console.log(queue.front())
+
+queue.dequeue()
+console.log(queue.front())
+queue.dequeue()
+console.log(queue.front())
+queue.dequeue()
+console.log(queue.front())
+
+console.log(queue.copy() === queue)
+console.log(queue.copy().genarr.array)
+
+// ! Add values for this, pray...
+console.log(stack.peek())
+stack.push()
+console.log(stack.peek())
+stack.push()
+console.log(stack.peek())
+stack.push()
+console.log(stack.peek())
+
+console.log(stack.peek())
+stack.pop()
+console.log(stack.peek())
+stack.pop()
+console.log(stack.peek())
+stack.pop()
+console.log(stack.peek())
+
+console.log(stack.copy() === stack)
+console.log(stack.copy().genarr.array)
+
+// ! [ABOUT NTREENODE tests] Add arguments. Generalize - check for different values of 'n' what this ought to look like... [and, generalize the number of cases of 'insert' for each iteration - this is too little...]; 
+console.log(ntreenode.insert())
+console.log(ntreenode.insert())
+console.log(ntreenode.insert())
+console.log(ntreenode.insert())
+
+console.log(ntreenode.pushback())
+console.log(ntreenode.pushback())
+console.log(ntreenode.pushback())
+console.log(ntreenode.pushback())
+
+console.log(ntreenode.pushfront())
+console.log(ntreenode.pushfront())
+console.log(ntreenode.pushfront())
+console.log(ntreenode.pushfront())

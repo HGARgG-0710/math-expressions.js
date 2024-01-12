@@ -10,11 +10,41 @@ import {
 	fromIcc
 } from "../src/modules/exports/orders.mjs"
 
-// ! List [from "orders.mjs"]:
-// orders.linear - for two different arrays (of the same or different class), print out the result of this. 
-// orders.fixLinear - create two "repetitious" arrays, then 'fix' them...
-// orders.nonlinear - same as 'linear'; 
-// orders.most - create for 2-3 different templates, 2 test-cases, print out, confirm; 
-// orders.min - same as 'most'; (possibly without templates)
-// orders.max - same as 'min'; 
-// orders.fromIcc - construct from 3 different InfiniteCounter classes, see that they work properly ()...; 
+// ! pick different templates + arguments for this
+console.log(linear().function())
+console.log(linear().function())
+console.log(linear().function())
+console.log(linear().function())
+
+// ! Choose different templates, arguments
+console.log(fixLinear().function())
+console.log(fixLinear().function())
+console.log(fixLinear().function())
+console.log(fixLinear().function())
+
+// ! Choose different templates and arguments
+console.log(nonlinear().function())
+console.log(nonlinear().function())
+console.log(nonlinear().function())
+console.log(nonlinear().function())
+console.log(nonlinear().function())
+console.log(nonlinear().function())
+
+// ! Choose two different predicates, templates and arrays;
+console.log(most().function())
+console.log(most().function())
+
+// ! Choose different templates and arrays;
+console.log(max().function())
+console.log(max().function())
+console.log(max().function())
+
+// ! Choose different templates and arrays;
+console.log(min().function())
+console.log(min().function())
+console.log(min().function())
+
+// ! Choose templates, values for arguments...
+console.log(fromIcc().function())
+console.log(fromIcc().function())
+console.log(fromIcc().function())

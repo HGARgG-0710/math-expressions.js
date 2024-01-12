@@ -37,7 +37,7 @@ in one of the nearest future versions.
 
 Correspondently, some of the fundamental macro-API of it is not (as of yet) quite well-determeined, so may have a noticeable degree of 'edginess' and 'sketchiness' (which the future versions also aim to remedy). Although finally some aspects of its progress direction are already decided, the library still has a long way to develop.
 
-Note: the v1.0 version is the very-very first major release. While employing the library anywhere in practice, it's important to understand that, despite far more extensive testing efforts than before (as well as better understanding of its purpose and goals), it still may have bugs, incompletenesses, some few doubtful early-stage design decisions and other such qualities which may prevent one to be able to use it with full usage of all its potential benefits. Between v1.0 and v1.1., intermediate releases related to fixing such small design difficulties or minor issues may be anticipated.  
+Note: the v1.0 version is the very-very first major release. While employing the library anywhere in practice, it's important to understand that, despite far more extensive testing efforts than before (as well as better understanding of its purpose and goals), it still may have bugs, incompletenesses, some few doubtful early-stage design decisions and other such qualities which could prevent one to be able to apply it with the benefit of full usage of all its potential benefits. Between v1.0 and v1.1., intermediate releases related to fixing such small design difficulties or minor issues may be anticipated. Issues reports are appreciated. 
 
 ## Installation
 
@@ -81,10 +81,10 @@ A brief repository organization guide:
 -   tests/\* - the tests' directory, withing which for each and every abstraction and definition of the library has a test (thematically ordered, some are identical to the source files' names); If you find documentation absent/confusing, this may be the place to check out for further explanation.
 -   README.md - this file
 -   LICENSE - the MIT license
-- 	todos.txt - text file with unfinished 'TODO's of more general nature
-- 	package.json - the JSON file with information needed by the npm
-- 	entities.txt - text file with library entities (possibly temporary)
--	currtodo.txt - file with currently considered development problems of the project (temporary)
+-   todos.txt - text file with unfinished 'TODO's of more general nature
+-   package.json - the JSON file with information needed by the npm
+-   entities.txt - text file with library entities (possibly temporary)
+-   currtodo.txt - file with currently considered development problems of the project (temporary)
 
 For examples of library's usage, one may want to see the 'tests' directory or the documentation.
 

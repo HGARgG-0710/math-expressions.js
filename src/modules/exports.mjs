@@ -1,6 +1,7 @@
 // * This file handles all the exports from the project's separate modules
 
 // todo [GENERAL]: CHECK THE SPELLING OF NAMES AND IDENTIFIERS!!! So much text, there could have been a couple of occasional mistakes (maybe even more...);
+// ! RECHECK THAT ALL THE ITEMS FROM THE LIBRARY ARE, IN FACT, BEING EXPORTED [during the documentation - feverishly re-check everything, including spelling...]; 
 
 export * as algorithms from "./exports/algorithms.mjs"
 export * as aliases from "./exports/aliases.mjs"

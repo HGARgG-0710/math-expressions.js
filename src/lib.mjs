@@ -523,7 +523,6 @@ const refactor = {
 		}
 	},
 
-	// TODO: make the object of defaults that is to be used throughout the library...;
 	defaults: {
 		heap: (parentclass) => ({
 			check: true,
@@ -538,7 +537,7 @@ const refactor = {
 		}),
 		basicgenarr: (parentclass) => ({ parentclass: parentclass, names: ["genarr"] }),
 		basicheap: (heapclass) => ({ parentclass: heapclass, names: ["heap"] }),
-		// ! SEE IF ONE CAN REPLACE THESE KINDS OF THINGS WITH '.const' (ECMAScript standard does not permit implicit processing-on-request, only explicit, like so...)
+		// ! SEE IF (and when) ONE CAN REPLACE THESE KINDS OF THINGS WITH '.const' (ECMAScript standard does not permit implicit processing-on-request, only explicit, like so...)
 		polyd1: () => ({
 			ustrclass: general.DEFAULT_USTRCLASS,
 			tintclass: general.DEFAULT_TINTCLASS,
@@ -2003,10 +2002,13 @@ export const ponative = {
 				expressions.Expression(
 					"+",
 					[],
-					generate(0, nstr.length - 1).map(
-						(i) =>
-							this.template.alphabet.indexOf(nstr[i]) * alphabet.length ** i
-					)
+					alarray.native
+						.generate(0, nstr.length - 1)
+						.map(
+							(i) =>
+								this.template.alphabet.indexOf(nstr[i]) *
+								alphabet.length ** i
+						)
 				)
 			)
 		})
@@ -2027,7 +2029,9 @@ export const ponative = {
 				coefficients.push(k)
 				i--
 			}
-			return coefficients.map((i) => this.template.alphabet[i]).join("")
+			return coefficients
+				.map(alinative.function.rindex(this.template.alphabet))
+				.join("")
 		})
 	}).function,
 
@@ -2629,8 +2633,9 @@ export function max(template = {}) {
 }
 
 // * Constructs an infinte order from given Infinite Counter class;
-export function ofromIcc(icclass = general.DEFAULT_ICCLASS) {
-	return (x, y) => icclass.class(x).compare(icclass.class(y))
+export function ofromIcc(icclass = general.DEFAULT_ICCLASS, reflexive = true) {
+	const f = reflexive ? lesseroe : lesser
+	return (x, y) => f(icclass.class(x), icclass.class(y))
 }
 
 // ! use these four a lot...
@@ -2654,6 +2659,7 @@ export const dec =
 
 export const allUnique = (el, _key, _arr, subset) => !subset.includes(el)
 
+// ? 'Ensurer' somehow feels like a bit of a hack (largely, because it makes necessery the addition of the list of methods to be checked... See if want to do anything about it.)
 export const Ensurer = (_class, predicate = T, responses = {}) => {
 	const X = {}
 	for (const m of _class.methods)
@@ -5293,17 +5299,17 @@ export const NTreeNode = TEMPLATE({
 				this.template.n.compare(_this.this.this.children.length().get()),
 			{
 				// ? Question: how to choose the index for the child, to which the element from 'args' is pushed?
-				pushback(_r, _t, args) {
+				pushback: _FUNCTION(function (_r, _t, args) {
 					this.this.this.children.delete()
 					this.this.this.children.read().pushback(args[0])
 					return this.this
-				},
-				pushfront(_r, _t, args) {
+				}),
+				pushfront: _FUNCTION(function (_r, _t, args) {
 					this.this.this.children.delete(this.init())
 					this.this.this.children.read().pushfront(args[0])
 					return this.this
-				},
-				insert(_r, _t, args) {
+				}),
+				insert: _FUNCTION(function (_r, _t, args) {
 					const ind = args[0].copied("delete")
 					const lastind = args[0].read(args[0].finish())
 					const x = this.read(ind, false, false)
@@ -5313,7 +5319,8 @@ export const NTreeNode = TEMPLATE({
 						args[1]
 					)
 					return this.this
-				}
+				})
+				// ? Question: beside these methods, there are others that the TreeNode inherits from the GeneralArray class (namely, '.concat', '.write' and others...) - should they also be checked, or not?
 			}
 		)
 	}),
