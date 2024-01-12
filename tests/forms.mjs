@@ -1,14 +1,14 @@
 // * Tests related to forms
 
 import {
-	form,
 	constForm,
 	propertyForm,
 	objectForm,
 	classForm,
 	arrayForm,
 	garrayForm,
-	treeForm
+	treeForm,
+	structure
 } from "../src/modules/exports/structure.mjs"
 
 // ? structure.form - construct a new form, print it out; print out all the kinds of ready library forms;
@@ -23,6 +23,14 @@ const forms = [
 ]
 
 for (const f of forms) console.log(f)
-
-// ! test every method against all present forms (meaning - create an instance of the form, put in the instance + value of the form into the method, run)
-//  structure.structure - test for each case two or three times with differing templates;
+for (const f of forms.keys()) {
+	// ! construct the example for the form;
+	const formex = forms[f].new()
+	// ! Fill the 'structure' values...
+	const struct = structure({ form: forms[f] }).function(formex)
+	console.log(struct.equivalent(forms[(f + 1) % forms.length]))
+	console.log(struct.recisomorphic(struct.equivalent(forms[(f + 1) % forms.length])))
+	// ! Different form (not isomorphic...)
+	const difform = forms[(f + 1) % forms.length].new()
+	console.log(struct.recisomorphic(difform))
+}

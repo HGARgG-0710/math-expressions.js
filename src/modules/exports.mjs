@@ -1,6 +1,6 @@
 // * This file handles all the exports from the project's separate modules
 
-// todo [GENERAL]: CHECK THE SPELLING OF THINGS!!! So much text, there could have been a couple of occasional mistakes (maybe even more...);
+// todo [GENERAL]: CHECK THE SPELLING OF NAMES AND IDENTIFIERS!!! So much text, there could have been a couple of occasional mistakes (maybe even more...);
 
 export * as algorithms from "./exports/algorithms.mjs"
 export * as aliases from "./exports/aliases.mjs"
@@ -18,7 +18,12 @@ export * as variables from "./exports/variables.mjs"
 
 export * from "../lib.mjs"
 
+import * as algorithms from "./exports/algorithms.mjs"
+import * as types from "./exports/types.mjs"
+
+// ! repeat the procedure for ALL the desired sub-modules within the library...
 const { integer, array, search, sort, number } = algorithms
+const { numbers, arrays } = types
 
 // ? Wonder, if there's a more elegant solution to this dilemma, or not?
 // ? Ought one make the namesof exports different for all the things exported in this way, I wonder?
@@ -38,6 +43,7 @@ export const {
 	factorial,
 	binomial,
 	sumRepresentations,
+	// ? The more oneself thinks about it, the better it starts to sound - make all of these aliases...
 	native: inative
 } = integer
 
@@ -76,3 +82,6 @@ export const {
 } = sort
 
 export const { farey: Farey } = number
+
+export const { TrueInteger, TrueRatio } = numbers
+export const { LastIndexArray, DeepArray, CommonArray, TypedArray } = arrays

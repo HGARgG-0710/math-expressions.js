@@ -1,1 +1,18 @@
-export { general } from "../../lib.mjs"
+import { general } from "../../lib.mjs"
+
+export const {
+	fix,
+	StaticThisTransform,
+	recursiveOperation,
+	finiteobj,
+	DEFAULT_ICCLASS,
+	DEFAULT_GENARRCLASS,
+	DEFAULT_TINTCLASS,
+	DEFAULT_TRATIOCLASS,
+	DEFAULT_INFARR,
+	DEFAULT_TREENODECLASS,
+	DEFAULT_HEAPCLASS,
+	DEFAULT_USTRCLASS,
+	DEFAULT_GRAPHCLASS,
+	DEFAULT_PRIORITYQUEUE
+} = general

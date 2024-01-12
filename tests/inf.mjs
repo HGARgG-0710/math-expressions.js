@@ -1,21 +1,57 @@
 // * Tests for the InfiniteArray, InfiniteString and InfiniteSet
 
-import {
-	InfiniteArray,
-	InfiniteString,
-	InfiniteSet
-} from "../src/modules/exports/types.mjs"
+import { is } from "../src/modules/exports/aliases.mjs"
+import { next } from "../src/modules/exports/predicates.mjs"
+import { DEFAULT_INFARR } from "../src/modules/exports/general.mjs"
+import { InfiniteString, InfiniteSet } from "../src/modules/exports/types.mjs"
 
-// Tests:
-// 1. InfiniteArray (instances belong to different classes)
-//		1.1. read - read twice from each of the three different classes' instances (2*3 = 6); 
-// 		1.2. write - write twice to each of the three instances (2*3 = 6); 
-// 		1.3. subarr - for each of the instances, call '.subarr' twice, then print out some of their elements; 
-// 		1.4. copy - copy each one of the infinite array instances once; 
-// 		1.5. copied - choose a (different) method for each one of the classes' instances, perform 'copied' with each once...
-// 		1.6. map - map an infinite array to another 3 times, each print out; 
-// 		1.7. slice - create 3 different infinite arrays, for each print out a 'slice' (different)
-// 		1.8. init - return the value, print it out
-// 		1.9. [Symbol.iterator] - run through a given number of infinite array entries in each one of the three cases; 
-// 2. InfiniteString - same as 'InfiniteArray', but ENSURE THAT THE RESULTS OF THE METHODS ARE ALL STRINGS...; 
-// 3. InfiniteSet - same as 'InfiniteArray', but with re-determining that it is (indeed), a set...; 
+// ? Add one more test for the 'InfiniteSet' to check whether it is
+const classes = [DEFAULT_INFARR, InfiniteString, InfiniteSet]
+const predicates = [ID, is.str, ID]
+
+for (const i in classes) {
+	// ! Create instances for this...
+	// ! Fix all the tests (refactor them in this fashion - use arrays instead of variables, do not repeat code, put everything in loops + Beautify and add arguments - complete the tests...)
+	const instances = []
+
+	for (const infarr of instances) {
+		// ! Add indicies
+		console.log(infarr.read())
+		console.log(infarr.read())
+
+		// ! Add indicies, values
+		console.log(infarr.write())
+		console.log(infarr.write())
+
+		// ! Add predicates + indicies (same as in the previous 'read')
+		console.log(predicates[i](infarr.subarr().read()))
+		console.log(predicates[i](infarr.subarr().read()))
+
+		console.log(infarr.copy() === infarr)
+
+		// ! add two different sets of arguments here...
+		console.log(infarr.copied())
+		console.log(infarr.copied())
+
+		// ! Add some interesting functions (same reading indicies as before...);
+		infarr.map()
+		console.log(predicates[i](infarr.read()))
+		infarr.map()
+		console.log(predicates[i](infarr.read()))
+
+		// ! Add the indicies...
+		console.log(infarr.slice())
+		console.log(infarr.slice())
+		console.log(infarr.slice())
+
+		// ! DEFINE THE IC-LIMITS for each one of the instances!
+		let limit
+		let j = infarr.init()
+		console.log(j)
+		for (const x of infarr) {
+			if (i.equal(limit)) break
+			console.log(x)
+			j = next(j)
+		}
+	}
+}

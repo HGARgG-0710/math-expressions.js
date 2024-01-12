@@ -250,7 +250,15 @@ for (const garrclassname of ["LastIndexArray", "DeepArray", "CommonArray"]) {
 	cuelarr.splitlen()
 	console.log(cuelarr.array)
 
-	// ! Add test: move(), movedirection(), movebackward(), moveforward(); decide some interesting (result not same as in '.go()') + standard (result same as '.go') arguments for these, run, all else - same as '.go' test;
+	// ! Add the arguments for these function calls...
+	cuelarr.begin()
+	cuelarr.move()
+	console.log(cuelarr.currindex)
+	cuelarr.movdirection()	
+	console.log(cuelarr.currindex)
+	cuelarr.movebackward()	
+	console.log(cuelarr.currindex)
+	cuelarr.moveforward()
 }
 
 // TODO: [for DeepArray, LastIndexArray only] for potence - check (allocating additional memory for Node) if they go beyond the MAX_ARRAY_LENGTH lenght-point for lengths of their array instances, using '.pushback()';

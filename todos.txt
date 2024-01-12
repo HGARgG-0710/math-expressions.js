@@ -275,6 +275,7 @@ It gets changed actively.
 
 		Due to the library's style, solutions to certain computational mathematical problems can be expressed very fluently, for instance: 
 
+			// ^ IDEA: add (somewhere) to the project's repository, a file with such highly-abstract mathematical computational-problems-solutions-expressions use-cases (the elegancy of it is absolutely beautiful... All that is really required for the solution of these things now is the appropriate hardware...); 
 			const primes = InfiniteArray().class().subarr(isPrime) // infinite array of all the primes (ordered by size from smallest-to-largest); 
 			const perfect = InfiniteArray().class().subarr(isPerfect) // 
 			// ... and so on...
@@ -328,6 +329,9 @@ It gets changed actively.
 
 		Consider optional allowing to use 'static' memorization of certain things throughout, 
 			which (by default) will be off. 
+
+		Additionally, some of the methods and algorithms implementation may (most probably, do) have some room for optimization/improvement (especially, memory-wise). 
+		This has to be checked throroughly as well...
 		
 	12.19. Idea of atRequest (possibly, add to v1.1...): 
 
@@ -370,7 +374,39 @@ It gets changed actively.
 				return F
 			}
 		
-	12.21. Refactoring tests; 
+	12.21. Refactoring/generalizing the tests instances; 
 
 		Currently, the tests are (pretty) dirtily written. They still serve the purpose, yet refactoring could (most certainly) be in place...; 
 		Also - conduct corresponding procedures of 'beutification' of the tests output... (for fun!)
+
+		Possibly, create a different package specifically for tests (that'd be based off the "math-expressions.js"'s API)
+	
+	12.22. More 'specific' types-API: 
+
+		For instance, the entirety of the library provides merely 2 (!!!) options for an UnlimitedArray construction (LastIndexArray and DeepArray). 
+		There must be more. 
+
+		Same goes for counters, only the arrayCounter, objCounter and recursiveCounter (+its special cases) are really infinite. 
+		Must decide on more different 'specific' structures to use for the general library interfaces...
+
+			IDEAS [for them]: 
+
+				1. Arrays: 
+
+					1.1. InArray - effectively [[[...], e2], e1]; Generalize to make an arbitrary length - this is for 'length=1': [[...], e1, e2], ...
+					1.2. ReverseInArray (reverses the InArray - last elements are stored at higher levels, whilst first are - at the latter ones...); 
+				
+		More generally, instead of just creating more of special cases implementations, one could (and that is the FAR more preferred solution, as of present), 
+			just implement general means of their construction, in particular - the usage of 'forms' + differently TEMPLATEs, with some options being extremely general; 
+		The most desired option would be to do this, so that all the current 'particular' abstractions still remain, but only as aliases to the general version, whilst the 
+			general version itself would be the one-single unifier of all the inner structure of theirs...; 
+		
+		Especially important is the presence of choice due to generalization of the algorithms - various structures of arrays will allow different operations to take lesser/greater time
+			(for instance, the 'pop' operation of stack will be structurally closer to the ReverseInArray, than others); 
+		Try to implement the ways of structure-based optimization, that would permit this (namely, a way to retain the optimization techniques without sacrificing the generality...); 
+	
+	12.23. Package's code Modularity: 
+
+		Try to solve the issue that has appeared during the work on the modular aspects of the package (namely - try to 'flatten' all the imports/exports), so that 
+			none need to recursively import...
+		If that is (after all) not possible, keep the 'lib.mjs' as-is. 

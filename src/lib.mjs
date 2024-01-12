@@ -1,14 +1,18 @@
 // * The library's source code file (due to ESM's almost total ineffectiveness in handling anyhow complex recursive imports, the library's inner representation format was changed)
 
-// ! FIX THE 'general' module! Must export all one-by-one...;
-
-// ?[for v1.1?] CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
+// ? [for v1.1? maybe, not do at all?] CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
 // ! FIX THE ERRORS RELATED TO SOME MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
 
 export const refCompare = (a, b) => a === b
 export const ID = (a) => a
 // * Identity map (just a nice piece of notation, that's all);
 export const id = ID
+// ! generalize...
+export const empf =
+	(f) =>
+	(...dargs) =>
+	(...args) =>
+		f(...args)(...dargs)
 
 export const abs = Math.abs
 
@@ -41,8 +45,8 @@ export const is = {
 	class: (cl) => cl.is
 }
 
-// ! NOTE: a limitation - the function passed MUST NOT BE ALREADY BOUND!!! [see if there's a desireable way to check besides '.hasOwnProperty("prototype")'...];
-// ^ IDEA [note]: THIS ALLOWS FOR CLASS-INSTANCE-INHERITANCE! IMPLEMENT IT... ('toClass' method for turning a class instance into a class + 'sameClass' method for creating an instance of the same class as that of the passed one..);
+// ? NOTE: a minor limitation - the function passed MUST NOT BE ALREADY BOUND!!! [see if there's a desireable way to check besides '.hasOwnProperty("prototype")'...];
+// ^ IDEA [note]: THIS ALLOWS FOR CLASS-INSTANCE-INHERITANCE! IMPLEMENT IT... ('toClass' method for turning a class instance into a class + 'sameClass/fromInstance' method for creating an instance of the same class as that of the passed one..);
 export const BindableFunction = TEMPLATE({
 	// ? Decide for a better placeholder function?
 	defaults: { origin: ID, defaultThis: null },
@@ -253,6 +257,7 @@ export const alinative = {
 				(cond() ? a : b)(...args),
 
 		index: (i) => (x) => x[i],
+		rindex: (x) => (i) => x[i],
 
 		exparr: (f) => (arr) => f(...arr),
 		rexparr: (arr) => (f) => f(...arr),
@@ -554,7 +559,7 @@ export const general = {
 	) {
 		const remember = objs.map((obj, i) => readfunc(obj, keys[i]))
 		const returned = operation()
-		for (let i = 0; i < remember.length; i++) setfunc(objs[i], keys[i], remember[i])
+		for (let i = 0; i < remember.length; ++i) setfunc(objs[i], keys[i], remember[i])
 		return returned
 	},
 	StaticThisTransform: (templated) => {
@@ -859,7 +864,7 @@ export const EXTENSION = (template = {}) => {
 							this.template.parentclass.class(
 								...this.template.defaults.inter.bind(this)(args, i, X)
 							),
-							i++
+							++i
 						)
 					return X
 				},
@@ -1281,9 +1286,9 @@ export const InfiniteCounter = (() => {
 			R.whileloop = _FUNCTION(function (
 				end,
 				each,
-				start = this.this.class(),
-				iter = (x) => x.next(),
-				comparison = (x, y) => x.compare(y),
+				start = this.zero(),
+				iter = next,
+				comparison = greateroe,
 				init = undefined
 			) {
 				let curr = start.copy()
@@ -1372,7 +1377,7 @@ export const InfiniteCounter = (() => {
 			}),
 			jump: _FUNCTION(function (
 				x,
-				jumping = (k) => k.next(),
+				jumping = next,
 				counterclass = this.this.this.this.class
 			) {
 				return this.this.this.this.class.static.whileloop(
@@ -1386,7 +1391,8 @@ export const InfiniteCounter = (() => {
 			}),
 			loop: _FUNCTION(function (
 				body = () => {},
-				start = this.this.this.this.class.class()
+				start = this.this.this.this.class.class(),
+				init = undefined
 			) {
 				return this.this.this.this.class.static.whileloop(
 					this.this.this,
@@ -1394,14 +1400,14 @@ export const InfiniteCounter = (() => {
 					start,
 					undefined,
 					undefined,
-					undefined
+					init
 				)
 			}),
 			jumpForward: _FUNCTION(function (
 				x,
 				comparison = this.this.this.this.class.template.comparison
 			) {
-				return this.jump(x, (a) => a.next(), comparison)
+				return this.jump(x, next, comparison)
 			}),
 			jumpBackward: _FUNCTION(function (
 				x,
@@ -1432,9 +1438,11 @@ export const InfiniteCounter = (() => {
 				return this.compare(x) && x.compare(this)
 			}),
 			// ? Consider the matter of making generator-functions bindable like this...
+			// ! NOTE: one may have a need to rewrite their definitions using the bare 'Generator' protocol, without the usage of the 'function*' syntax sugar...;
+			// ^ For this, just 'copy' the Generator structure ({ next: () => {value: any, done: boolean}, return: () => void, throw: (error) => never, suspeneded: boolean, closed: boolean }), then the [Symbol.iterator] as a thing that returns the Gsenerator object, when called;
 			[Symbol.iterator]: function* () {
 				const predicate = this.direction() ? lesser : greater
-				const change = this.direction() ? (x) => x.next() : (x) => x.previous()
+				const change = this.direction() ? next : previous
 				for (
 					let i = this.this.this.this.class.class();
 					predicate(this);
@@ -1704,7 +1712,7 @@ export const naarray = {
 		// * Replaces values within an array and returns the obtained copy...
 		replaceArr: function (array, p, transformation = ID) {
 			const resArray = copy.flatCopy(array)
-			for (let i = 0; i < array.length; i++)
+			for (let i = 0; i < array.length; ++i)
 				if (p(array[i])) resArray[i] = transformation(array[i])
 			return resArray
 		}
@@ -1726,7 +1734,7 @@ export const naarray = {
 
 			// ? generalize conviniently...
 			const defobj = {}
-			for (let i = arguments.length; i < this.template.n + 1; i++) defobj[i] = []
+			for (let i = arguments.length; i < this.template.n + 1; ++i) defobj[i] = []
 			alinative.object.ensureProperties(args, defobj)
 
 			return stnative.repeatedApplication(
@@ -1742,7 +1750,7 @@ export const naarray = {
 		from = alinative.number.negind(from, a)
 		to = alinative.number.negind(to, a)
 		const copied = []
-		for (let i = 0; i < a.length; i++) {
+		for (let i = 0; i < a.length; ++i) {
 			if (i >= from && i <= to) {
 				copied.push(a.slice(from, to + 1))
 				i = to
@@ -2633,6 +2641,7 @@ export const greater = (a, b) => lesser(b, a)
 
 general.DEFAULT_PREDICATE = lesser
 
+export const previous = (x) => x.previous()
 export const next = (x) => x.next()
 export const inc =
 	(a = 1) =>
@@ -3107,7 +3116,7 @@ export const GeneralArray = (() => {
 							if (end) x.currindex = x.length().get()
 						},
 						comparison,
-						(x) => x.previous(),
+						previous,
 						stop
 					)
 				}),
@@ -3642,7 +3651,7 @@ export const garrays = {
 					}
 
 					if (withinbounds) {
-						index++
+						++index
 						continue
 					}
 
@@ -3886,7 +3895,7 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 			let fi = 0
 			let prevarrs = arrays.LastIndexArray().class()
 			let currarray = array.array
-			for (; !i.compare(array.currindex); fi++) {
+			for (; lesser(i, array.currindex); ++fi) {
 				if (currarray === array.array && fi === array.array.arr.length) {
 					const rx = array.currindex.difference(i)
 					return [rx.equal(array.one()) ? null : undefined, rx]
@@ -4063,7 +4072,19 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			multcall: refactor.classes.multcall,
 			[Symbol.iterator]: function* () {
 				for (const x of this.this.this.values) yield x
-			}
+			},
+			every: _FUNCTION(function (predicates = alarray.native.generate(2).map(T)) {
+				return (
+					this.this.this.keys.every(predicates[0]) &&
+					this.this.this.values.every(predicates[1])
+				)
+			}),
+			any: _FUNCTION(function (predicates = alarray.native.generate(2).map(T)) {
+				return (
+					this.this.this.keys.any(predicates[0]) ||
+					this.this.this.values.any(predicates[1])
+				)
+			})
 		},
 		static: (() => {
 			const R = {}
@@ -4107,7 +4128,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					let carryover = ""
 					for (const str of this.this.this.genarr) {
 						const postsplit = str.split(useparator)
-						for (let i = 0; i < postsplit.length; i++) {
+						for (let i = 0; i < postsplit.length; ++i) {
 							if (i === 0) {
 								general
 									.lengthSafeConcat(carryover, postsplit[i])
@@ -4464,7 +4485,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						newstr.pushback("")
 					}
 					newstr.write(biding, newstr.read(bigind) + x)
-					smallind++
+					++smallind
 				}
 				this.this.this = newstr.this
 				return this.this
@@ -5384,12 +5405,12 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				// ! THIS IS THE 'DE-INTERFACING' procedure... Pray, when starting to work on Interfaces (post v1.0), add this...
 				return this.this.this.this.class.class(
 					this.this.this.verticies.copy(
-						alinative.function.index("value"),
+						(x) => f(alinative.function.index("value")(x)),
 						isclass,
 						template
 					),
 					this.this.this.verticies.copy(
-						alinative.function.index("edges"),
+						(x) => f(alinative.function.index("edges")(x)),
 						isclass,
 						template
 					)
@@ -5430,6 +5451,8 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 }
 
 export const Vertex = (value, edges) => ({ value, edges })
+
+general.DEFAULT_GRAPHCLASS = Graph()
 
 // ? General issue [small] - currently, the niether TreeNode nor Heaps support the lacking '.value'; Pray think more on it... (implement a solution)
 // ! Add copy to each one of those...
@@ -5655,6 +5678,8 @@ export const PriorityQueue = (heapclass = general.DEFAULT_HEAPCLASS) => {
 		recursive: true
 	})
 }
+
+general.DEFAULT_PRIORITYQUEUE = PriorityQueue()
 
 export const sort = {
 	heap: TEMPLATE({
@@ -6442,7 +6467,7 @@ export const READONLY = (x) =>
 	})
 
 // ? Has no in-library use. Still keep?
-// ! Commented out for now. Decide later...
+// % See how it fares in v1.1, after introduction of Interfaces, then - if it has come to become redundant, delete, otherwise - uncomment and, if needed, repair/refactor;
 /* export function INHERIT(x, X) {
 	return {
 		template: {
@@ -6473,7 +6498,7 @@ export function OBJECT(keys = [], values = []) {
 		Array.from(arguments).map(alinative.function.index("length"))
 	)
 	const returned = {}
-	for (let i = 0; i < length; i++) returned[keys[i]] = values[i]
+	for (let i = 0; i < length; ++i) returned[keys[i]] = values[i]
 	return returned
 }
 

@@ -1,34 +1,177 @@
 // * Various integer-related algorithms tests
 
-import { integer } from "../src/modules/exports/algorithms.mjs"
+import {
+	allFactors,
+	areCoprime,
+	factorOut,
+	isPrime,
+	multiples,
+	multiplesBefore,
+	primesBefore,
+	lcm,
+	lcd,
+	isPerfect,
+	factorial,
+	binomial,
+	sumRepresentations,
+	inative as native
+} from "../src/modules/exports.mjs"
 
-const {...a} = integer
+// ! Create the list of templates
+const templates = []
 
-// ! List [from "algorithms.mjs"] (CONSIDER THE METHODS IN QUESTION FOR NEGATIVES AFTER HAVING WRITTEN THE POSITIVES TESTS... + THE 'native' ARE ALSO A CHECK OF THE 'finite' method...):
-// 	algorithms.integer.native.primesBefore - do twice for different arguments;  (note, all results -- print out...)
-// 	algorithms.integer.native.sumRepresentations - do three-four times for different arguments;
-// 	algorithms.integer.native.factorOut - do three-four times for different arguments
-// 	algorithms.integer.native.isPrime - do four-five times for different numbers (primes and non-primes, including the edge cases, such as 0, 1);
-// 	algorithms.integer.native.multiples - do four-five times for primes/non-primes, including special cases (such as 0, 1);
-// 	algorithms.integer.native.multiplesBefore - do three-four times for different numbers (primes and non-primes);
-// 	algorithms.integer.native.lcm - do three-five times for different arrays of numbers, CHECK THE MULTIPLE (>2) CASES...;
-// 	algorithms.integer.native.lcd - same as 'lcm'; Check for 'empty' cases additionally; (Such that, lcm(a1, ..., an) = a1*...*an)
-// 	algorithms.integer.native.areCoprime - same as 'lcd';
-// 	algorithms.integer.native.allFactors - same as 'factorOut'; 
-// 	algorithms.integer.native.isPerfect - same as 'isPrime'; 
-// 	algorithms.integer.native.factorial - compute for several (3-5) different values, ensure it works...
-// 	algorithms.integer.native.binomial - compute for 4-9 different pairs of numbers; 
-// * SAME AS 'native', but do it several times for different classes (2-3 summarily) to make sure...
-// 	algorithms.integer.factorOut
-// 	algorithms.integer.isPrime
-// 	algorithms.integer.primesBefore
-// 	algorithms.integer.multiples
-// 	algorithms.integer.multiplesBefore
-// 	algorithms.integer.lcm
-// 	algorithms.integer.lcd
-// 	algorithms.integer.areCoprime
-// 	algorithms.integer.allFactors
-// 	algorithms.integer.isPerfect
-// 	algorithms.integer.factorial
-// 	algorithms.integer.binomial
-// 	algorithms.integer.sumRepresentations
+for (const t of templates) {
+	// ! Add arguments
+	console.log(factorOut(t).function())
+	console.log(factorOut(t).function())
+	console.log(factorOut(t).function())
+
+	// ! Add arguments
+	console.log(isPrime(t).function())
+	console.log(isPrime(t).function())
+	console.log(isPrime(t).function())
+
+	// ! Add arguments
+	console.log(primesBefore(t).function())
+	console.log(primesBefore(t).function())
+	console.log(primesBefore(t).function())
+	console.log(primesBefore(t).function())
+
+	// ! Add arguments
+	console.log(multiples(t).function())
+	console.log(multiples(t).function())
+	console.log(multiples(t).function())
+	console.log(multiples(t).function())
+
+	// ! Add arguments
+	console.log(multiplesBefore(t).function())
+	console.log(multiplesBefore(t).function())
+	console.log(multiplesBefore(t).function())
+	console.log(multiplesBefore(t).function())
+
+	// ! Add arguments
+	console.log(lcm(t).function())
+	console.log(lcm(t).function())
+	console.log(lcm(t).function())
+	console.log(lcm(t).function())
+
+	// ! Add arguments
+	console.log(lcd(t).function())
+	console.log(lcd(t).function())
+	console.log(lcd(t).function())
+	console.log(lcd(t).function())
+
+	// ! Add arguments
+	console.log(areCoprime(t).function())
+	console.log(areCoprime(t).function())
+	console.log(areCoprime(t).function())
+	console.log(areCoprime(t).function())
+
+	// ! Add arguments
+	console.log(allFactors(t).function())
+	console.log(allFactors(t).function())
+	console.log(allFactors(t).function())
+
+	// ! Add arguments
+	console.log(isPerfect(t).function())
+	console.log(isPerfect(t).function())
+	console.log(isPerfect(t).function())
+
+	// ! Add arguments
+	console.log(factorial(t).function())
+	console.log(factorial(t).function())
+	console.log(factorial(t).function())
+
+	// ! Add arguments
+	console.log(binomial(t).function())
+	console.log(binomial(t).function())
+	console.log(binomial(t).function())
+	console.log(binomial(t).function())
+
+	// ! Add arguments
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+	console.log(sumRepresentations(t).function())
+}
+
+// ! Add arguments
+console.log(native.factorOut(t).function())
+console.log(native.factorOut(t).function())
+console.log(native.factorOut(t).function())
+
+// ! Add arguments
+console.log(native.isPrime(t).function())
+console.log(native.isPrime(t).function())
+console.log(native.isPrime(t).function())
+
+// ! Add arguments
+console.log(native.primesBefore(t).function())
+console.log(native.primesBefore(t).function())
+console.log(native.primesBefore(t).function())
+console.log(native.primesBefore(t).function())
+
+// ! Add arguments
+console.log(native.multiples(t).function())
+console.log(native.multiples(t).function())
+console.log(native.multiples(t).function())
+console.log(native.multiples(t).function())
+
+// ! Add arguments
+console.log(native.multiplesBefore(t).function())
+console.log(native.multiplesBefore(t).function())
+console.log(native.multiplesBefore(t).function())
+console.log(native.multiplesBefore(t).function())
+
+// ! Add arguments
+console.log(native.lcm(t).function())
+console.log(native.lcm(t).function())
+console.log(native.lcm(t).function())
+console.log(native.lcm(t).function())
+
+// ! Add arguments
+console.log(native.lcd(t).function())
+console.log(native.lcd(t).function())
+console.log(native.lcd(t).function())
+console.log(native.lcd(t).function())
+
+// ! Add arguments
+console.log(native.areCoprime(t).function())
+console.log(native.areCoprime(t).function())
+console.log(native.areCoprime(t).function())
+console.log(native.areCoprime(t).function())
+
+// ! Add arguments
+console.log(native.allFactors(t).function())
+console.log(native.allFactors(t).function())
+console.log(native.allFactors(t).function())
+
+// ! Add arguments
+console.log(native.isPerfect(t).function())
+console.log(native.isPerfect(t).function())
+console.log(native.isPerfect(t).function())
+
+// ! Add arguments
+console.log(native.factorial(t).function())
+console.log(native.factorial(t).function())
+console.log(native.factorial(t).function())
+
+// ! Add arguments
+console.log(native.binomial(t).function())
+console.log(native.binomial(t).function())
+console.log(native.binomial(t).function())
+console.log(native.binomial(t).function())
+
+// ! Add arguments
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())
+console.log(native.sumRepresentations(t).function())

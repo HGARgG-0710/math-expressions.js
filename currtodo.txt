@@ -1,4 +1,4 @@
-This file contains currently pursued TODOs and self-created tasks for the development of the library...; 
+This file contains currently pursued short-term TODOs and self-created tasks for the development of the library...; 
 
 1. Code polishing (parallel with testing): 
 	1.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
@@ -17,12 +17,15 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 
 	Due to the intertwined nature of the library, testing's going to be far quicker with this scheme (as then, one needs not spend additional time on writing the tests themselves, only needing to do the testing itself after they've been written + writing tests takes less time than checking them...); 
 
+	NOTE [additional]: 
+		Test all the files for workability - the 'math-expressions.mjs', all the derivatives, make sure of ABSOLUTELY EVERYTHING...
+
 3. Documentation: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 
 
 	NOTE: base the GitHub documentation on the tests that are present + actively employ the 'entities.txt' list; 
 
-4. Extension of domains: 
+4. Extension of package domains: 
 
 	Add the CommonJS modules, work the 'todos.txt' file, final bits of work. 
 	After that is done, 'npm publish'!
@@ -40,16 +43,13 @@ This file contains currently pursued TODOs and self-created tasks for the develo
 		IDEA: add various types to the package? (For TypeScript programs...)
 			DIFFICULTY - these types don't align AT ALL with the results of the code (meaning, they're useless...);  
 
-
-5. Possible Methods for future addition: 
+5. Possible Class Methods for future addition: 
 
 	GeneralArray:
-		copyWithin<generator>(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
+		copyWithin(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
 		reduce(initial, direction, callback) [like Array.reduce(), under question?] // 'direction' would correspond to 'the way' that this thing is working: generalized reduce/reduceRight
-		entries<generator=defaultgenerator>() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
+		entries() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
 	
 	UnlimitedMap:
-		entries<generator>() // like Object.entries()
-		every((value, key) => boolean) // same as Array.
-		[Symbol.iterator]
+		entries() // like Object.entries()
 		
