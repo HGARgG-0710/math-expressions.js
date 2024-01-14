@@ -1587,11 +1587,19 @@ export const InfiniteCounter = (() => {
 			equal: _FUNCTION(function (x) {
 				return greateroe(this, x) && greateroe(x, this)
 			}),
+			zero: _FUNCTION(function () {
+				return this.this.this.this.class.static.zero()
+			}),
+			one: refactor.classes.one,
+			two: refactor.classes.two
+		},
+		symbols: {
 			// ? Consider the matter of making generator-functions bindable like this...
 			// ! NOTE: one may have a need to rewrite their definitions using the bare 'Generator' protocol, without the usage of the 'function*' syntax sugar...;
 			// ^ For this, just 'copy' the Generator structure ({ next: () => {value: any, done: boolean}, return: () => void, throw: (error) => never, suspeneded: boolean, closed: boolean }), then the [Symbol.iterator] as a thing that returns the Gsenerator object, when called;
-			// TODO: do that,  + put the 'Symbol.iterator' into 'CLASS'es' '.symbols'...
-			[Symbol.iterator]: function* () {
+			// * Slightly too complicated (requires manually keeping track of all the variables' states from the last call (even though the structure itself can be preserved easily...)); Think about it for the v1.1.
+			// ! IF THE CODE STILL DOESN'T WORK BECAUSE OF LACK OF 'BIND', THEN DO [checked, it ought to...];
+			iterator: function* () {
 				const predicate = this.direction() ? lesser : greater
 				const change = this.direction() ? next : previous
 				for (
@@ -1600,12 +1608,7 @@ export const InfiniteCounter = (() => {
 					i = change(i)
 				)
 					yield i
-			},
-			zero: _FUNCTION(function () {
-				return this.this.this.this.class.static.zero()
-			}),
-			one: refactor.classes.one,
-			two: refactor.classes.two
+			}
 		},
 		recursive: true
 	})
@@ -3370,14 +3373,6 @@ export const GeneralArray = (() => {
 					for (let c = this.init(); lesser(c, this.length().get()); c = next(c))
 						yield c
 				},
-				// ! PROBLEM: the 'Symbol.' properties aren't considered by the 'for-in' loops used...
-				// ? What to do about that, pray tell?
-				// * Technically, the 'Symbol.'-values are not methods of the object in question. For them, a special section of the CLASS macro ought to be given (like for the 'properties' and 'methods');
-				// ^ IDEA: DO THE FOLLOWING WAY - let keys 'x' of the 'symbol:' represent the 'Symbol[x]'; That way, the library need not work with particularly given expressions... (When unknown symbol is given (!(x in Symbol)), invoke Symbol as a function);
-				[Symbol.iterator]: function* () {
-					for (let c = this.init(); lesser(c, this.length().get()); c = next(c))
-						yield this.read(c)
-				},
 				// ? refactor using the other GeneralArray methods;
 				// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
 				// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
@@ -3619,6 +3614,12 @@ export const GeneralArray = (() => {
 			)
 			return X
 		})(),
+		symbols: {
+			iterator: function* () {
+				for (let c = this.init(); lesser(c, this.length().get()); c = next(c))
+					yield this.read(c)
+			}
+		},
 		recursive: true,
 		isthis: true
 	})
@@ -4172,9 +4173,6 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			multcall: refactor.classes.multcall,
-			[Symbol.iterator]: function* () {
-				for (const x of this.this.this.values) yield x
-			},
 			every: _FUNCTION(function (predicates = alarray.native.generate(2).map(T)) {
 				return (
 					this.this.this.keys.every(predicates[0]) &&
@@ -4187,6 +4185,11 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.values.any(predicates[1])
 				)
 			})
+		},
+		symbols: {
+			iterator: function* () {
+				for (const x of this.this.this.values) yield x
+			}
 		},
 		static: (() => {
 			const R = {}
@@ -4612,14 +4615,16 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				this.this.this = ustring.copied("concat", [this.this]).this
 				return this.this
 			}),
-			[Symbol.iterator]: function* () {
-				for (const str of this.this.this.genarr) for (const sym of str) yield sym
-			},
 			suchthat: refactor.classes.suchthat,
 			any: refactor.classes.any,
 			every: refactor.classes.every,
 			forEach: refactor.classes.forEach,
 			multcall: refactor.classes.multcall
+		},
+		symbols: {
+			iterator: function* () {
+				for (const str of this.this.this.genarr) for (const sym of str) yield sym
+			}
 		},
 		static: (() => {
 			const R = {}
@@ -5523,9 +5528,6 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					])
 				)
 			}),
-			[Symbol.iterator]: function* () {
-				for (const x of this.keys()) yield this.read(x)
-			},
 			// ? Add 'comparison' template variable to the 'Graph'? (generally, avoid using the 'parentclass' template variables, allow setting one's own for each class?);
 			// ! NOTE: this thing works ONLY with finite/static graphs that have 'const EDGEGARR = GeneralArray(...).class(...); edges = alinative.function.const(EGEARR)'; (When it references a single separately allocated array); For such situations, pray make an alias, + consider generalizing this method to be more general... (same with 'edges', more work is needed on them...);
 			deledgeval: _FUNCTION(function (
@@ -5542,6 +5544,11 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				for (const ind of todelinds) edges.delete(ind)
 				return this.this
 			})
+		},
+		symbol: {
+			iterator: function* () {
+				for (const x of this.keys()) yield this.read(x)
+			}
 		},
 		recursive: true
 	})

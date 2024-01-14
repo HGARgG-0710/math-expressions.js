@@ -479,3 +479,42 @@ It gets changed actively.
 
 		One was (for some time)	 considering getting rid of the 'macros' part of the package, decomposing all that is inside it heavily, and putting inside the 'types'. 
 		Also, the concept of a 'macro' is far less consistent with the library's essential image and nature, than that of a type. 
+	
+	9.30. Native JS Generators
+
+		Was thinking of generalizing the shape of a native JS 'Generator' function (the 'function*' syntax). 
+		One could simply re-create its shape, but the proper 'yield'-imitation additionally requires the preservation of the variables' states. 
+		(An extremely curious case to implement generally)
+
+		An example of an implementation attempt (without some of the fields of the 'Generator'): 
+
+			export function Generator (f) {
+				const varspace = {}
+				let i = 0
+				let state = false
+				return () => {
+					next() {
+						const fr = !state ? f(i++) : [undefined, state]
+						return { value: fr[0], done: (state = fr[1]) }
+					}, 
+					return() {
+						state = true
+					}, 
+					throw(e) {
+						throw e
+					},
+					// ... here, the rest of it goes ...
+				}
+			}
+		
+		The downside of this implementation is that, while preserving the pattern desired, it still requires some code-changes in order to work with already created 'function*' functions. 
+		Also, it won't work with the current CLASS macro definition...
+	
+	9.31. Domain extensions? 
+
+		Due to the vast changes in the library's general style, oneself was considering for its domains to change as well. 
+			For now, while defining and enabling the ability to interact with general types, its "most direct/immediate" applications do not travel far beyond stated in the README.md file. 
+			However, during the writing of the tests, the desire appeared to refactor them (which cut down the lengthiness of the file and added to the general readability). 
+			One may want to to consider further domain extension via the alias-space (for example - testing). 
+
+			These 'more applied' bits would adhere to the same stylistic "standard" as that set by the rest of the library and will serve, largely, as a mere addition related to the rest of the thing. 
