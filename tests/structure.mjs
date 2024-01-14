@@ -1,5 +1,7 @@
 // * Tests of methods from 'structure.mjs' source file
 
+// ! REFACTOR TESTS HARDCORELY - create a separate module in 'tests' directory with the definitions for the testing scripts;
+
 import {
 	countrecursive,
 	arrElems,
@@ -9,19 +11,70 @@ import {
 	recursiveSetting,
 	repeatedApplication,
 	repeatedApplicationWhilst,
-	native
+	native,
+	totalElems
 } from "../src/modules/exports/structure.mjs"
 
-// ! List [from 'structure.mjs']:
-// * For each one, create 2-3 tests summarily, one for each desired form (either pick 2-4 forms to test for each, or do all of the ones available within the library) with 1-2 different InfiniteCounter-class cases (for each method, choose independently...); 
-// structure.countrecursive
-// structure.arrElems
-// structure.nonArrElems
-// structure.totalElems
-// structure.dim
-// structure.recusriveIndexation
-// structure.recursiveSetting
-// structure.repeatedApplication
-// structure.repeatedApplicationWhilst
-// * This one, do separately - write 3-5 tests-cases, with varying functions, beginning and ending times; 
-// structure.native.repeatedApplication
+// ! Fill the templates' array (they include the forms' setting);
+const templates = []
+
+for (const t of templates) {
+	// ! Add argument values to this
+	console.log(countrecursive(t).function())
+	console.log(countrecursive(t).function())
+	console.log(countrecursive(t).function())
+	console.log(countrecursive(t).function())
+
+	// ! Add argumetnts for this
+	console.log(arrElems(t).function())
+	console.log(arrElems(t).function())
+	console.log(arrElems(t).function())
+	console.log(arrElems(t).function())
+
+	// ! Add arguments
+	console.log(nonArrElems(t).function())
+	console.log(nonArrElems(t).function())
+	console.log(nonArrElems(t).function())
+	console.log(nonArrElems(t).function())
+
+	// ! Add arguments
+	console.log(totalElems(t).function())
+	console.log(totalElems(t).function())
+	console.log(totalElems(t).function())
+	console.log(totalElems(t).function())
+
+	// ! Add arguments
+	console.log(dim(t).function())
+	console.log(dim(t).function())
+	console.log(dim(t).function())
+	console.log(dim(t).function())
+	console.log(dim(t).function())
+
+	// ! Add arguments
+	console.log(recursiveIndexation(t).function())
+	console.log(recursiveIndexation(t).function())
+	console.log(recursiveIndexation(t).function())
+	console.log(recursiveIndexation(t).function())
+	console.log(recursiveIndexation(t).function())
+
+	// ! Add arguments
+	console.log(recursiveSetting(t).function())
+	console.log(recursiveSetting(t).function())
+	console.log(recursiveSetting(t).function())
+	console.log(recursiveSetting(t).function())
+	console.log(recursiveSetting(t).function())
+
+	// ! Add arguments
+	console.log(repeatedApplication(t).function())
+	console.log(repeatedApplication(t).function())
+	console.log(repeatedApplication(t).function())
+
+	// ! Add arguments
+	console.log(repeatedApplicationWhilst(t).function())
+	console.log(repeatedApplicationWhilst(t).function())
+	console.log(repeatedApplicationWhilst(t).function())
+}
+
+console.log(native.repeatedApplication(t).function())
+console.log(native.repeatedApplication(t).function())
+console.log(native.repeatedApplication(t).function())

@@ -1,14 +1,54 @@
 // * Tests of methods and predicates related to TreeNode
 
-import { TreeNode } from "../src/modules/exports/types.mjs"
+import { DEFAULT_TREENODECLASS } from "../src/modules/exports/general.mjs"
+
+const tnclass = DEFAULT_TREENODECLASS
+
+// ! Define the test-cases array... [instances of 'tnclass'];
+const cases = []
+for (const c of cases) {
+	console.log(c.getall())
+	
+	// ! Create arguments, structure for their organization...
+	console.log(c.getpart())
+	console.log(c.getpart())
+	console.log(c.getpart())
+	console.log(c.getpart())
+
+	// ! Arguments, structure for them...
+	console.log(c.pushback())
+	console.log(c.pushback())
+	console.log(c.pushback())
+	console.log(c.pushback())
+	console.log(c.pushback())
+
+	// ! Arguments, structure for them...
+	console.log(c.pushfront())
+	console.log(c.pushfront())
+	console.log(c.pushfront())
+	console.log(c.pushfront())
+	console.log(c.pushfront())
+	
+	// ! Arguments, structure for them...
+	console.log(c.firstIndex())
+	console.log(c.firstIndex())	
+	console.log(c.firstIndex())	
+	console.log(c.firstIndex())	
+	console.log(c.firstIndex())	
+
+	// ! args...
+	console.log(c.indexesOf())
+	console.log(c.indexesOf())
+	console.log(c.indexesOf())
+	console.log(c.indexesOf())
+
+	console.log(c.copy() === c)
+	console.log(c.copy())
+
+
+}
 
 // ! List [TreeNode] (make 2-3 tests for different GeneralArray classes - applies for all of these...):
-// 1.  getall - create 2*3 tests cases (3 different TreeNode instances, with/without 'nodes' for each one...); See that the structure of each is preserved (recursive ones included):
-// 2.  getpart - create 2*3 tests for different a, b (arguments - two of the same tests with/without 'nodes' argument...) and node instancesa;
-// 3.  pushback - create 2*3 tests at least (3 instances, at least 2 times called for each one, ensure structure preservation...);
-// 4.  pushfront - same as 'pushback';
-// 5.  firstIndex - create 2-3 tests for 3-4 different instances;
-// 6.  indexesOf - same as 'firstIndex', only (maybe) change the instances...;
 // 7.  copy - run once for 2-3 different instances;
 // 8.  copied - same as 'copy', for two arbitrarily chosen methods...;
 // 9.  map - same as 'copy' for various functions;

@@ -34,8 +34,9 @@ export {
 	trimBeginning,
 	trimEnd,
 	is,
+	istype,
 	cdieach,
 	hasFunction,
-	inarr, 
+	inarr,
 	abs
 } from "../../lib.mjs"

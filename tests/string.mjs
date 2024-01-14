@@ -1,14 +1,73 @@
 // * Various methods related to strings
 
-// ! List [from 'native.mjs']:
-// 	string.strmethod - do not check, instead see how the other methods behave, just print out the '.toString()' of it, see it is properly formed...; 
-// 	string.replace.sreplaceFirst - write 2-4 tests cases, each different one; 
-// 	string.replace.sreplaceIndex - same as 'replaceIndex' for arrays + ensure types; 
-// 	string.replace.sreplaceIndexes - same as 'replaceIndexes' for arrays + ensure types; 
-// 	string.replace.sreplace - same as 'replace' for arrays + ensure types; 
-// 	string.replace.sreplaceArr - same as 'replaceArr' for arrays + ensure types; 
-// 	string.replace.sreplaceIndexesMult - same as 'replaceMany'; 
-// 	string.replace.sreplaceMany - run 3-5 cases, different lenghts, make sure it works as intended with printing; 
-// 	string.UTF16 - write 4-6 test cases, print out different continuous bits of the UTF16-table (particularly, the more 'exotic', non-Latin symbols/scripts); 
-// 	string.reverse - write 3-5 tests cases, different lengths; 
-// 	string.map - write 3-4 tests for varying strings, ensure types-correctness, proper (desired) definition; 
+import { string } from "../src/modules/exports/native.mjs"
+
+const { strmethod, reverse, map, replace, UTF16 } = string
+
+console.log(strmethod.toString())
+console.log(reverse.toString())
+console.log(map.toString())
+
+// ! add arguments
+console.log(reverse())
+console.log(reverse())
+console.log(reverse())
+console.log(reverse())
+
+// ! add arguments
+console.log(map())
+console.log(map())
+console.log(map())
+console.log(map())
+
+// ! Add arguments
+console.log(replace.sreplaceFirst())
+console.log(replace.sreplaceFirst())
+console.log(replace.sreplaceFirst())
+console.log(replace.sreplaceFirst())
+
+// ! Add arguments
+console.log(replace.sreplaceIndex())
+console.log(replace.sreplaceIndex())
+console.log(replace.sreplaceIndex())
+console.log(replace.sreplaceIndex())
+
+// ! Add arguments
+console.log(replace.sreplaceIndexes())
+console.log(replace.sreplaceIndexes())
+console.log(replace.sreplaceIndexes())
+console.log(replace.sreplaceIndexes())
+
+// ! Add arguments [include the 'exotic' value ranges, single symbols, latin, non-latin, everything...];
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+console.log(UTF16())
+
+// ! Add arguments
+console.log(replace.sreplace())
+console.log(replace.sreplace())
+console.log(replace.sreplace())
+console.log(replace.sreplace())
+
+// ! Add arguments
+console.log(replace.sreplaceArr())
+console.log(replace.sreplaceArr())
+console.log(replace.sreplaceArr())
+console.log(replace.sreplaceArr())
+
+// ! Add arguments for the test
+console.log(replace.sreplaceIndexesMult())
+console.log(replace.sreplaceIndexesMult())
+console.log(replace.sreplaceIndexesMult())
+console.log(replace.sreplaceIndexesMult())
+console.log(replace.sreplaceIndexesMult())
+
+// ! Add arguments for the test
+console.log(replace.replaceMany())
+console.log(replace.replaceMany())
+console.log(replace.replaceMany())
