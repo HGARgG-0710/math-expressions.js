@@ -15,7 +15,7 @@ export const generalCall = TEMPLATE({
 		const read = readdirSync(dirname)
 		let r = null
 		for (const file of read) {
-			if (this.template.isdir(fname)) {
+			if (this.template.isdir(file)) {
 				r = this.function(file)
 				continue
 			}

@@ -1,5 +1,7 @@
 // * Various tests of counters
 
+// ! Refactor this one slightly later...
+
 import { abs } from "../src/modules/exports/aliases.mjs"
 import {
 	number,

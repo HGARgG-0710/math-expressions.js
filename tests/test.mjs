@@ -1,4 +1,6 @@
 // ! CLEAN THIS UP LATER... [dirty, not general enough... USE 'composition'!!!!];
+// ^ Also - generalize. It's not 'integral'/united. Doesn't allow for very many things... Ought to be rewritten as 'composition' of more elementary functions... (like everything in the library...)
+// * For now, not a proper module of the library, but more of a 'refactor'-like internal usage purpose (still can be imported, though...); 
 
 import { native } from "../src/modules/exports/aliases.mjs"
 import { ID } from "../src/modules/exports/macros.mjs"
@@ -41,4 +43,12 @@ export function testOn(
 ) {
 	for (const x in methods)
 		multtestobjmethod(object, methods[x], args[x], templates[x], testf)
+}
+
+export function formatOut(string, fs, labels = []) {
+	for (const x in fs) {
+		console.log(labels[x])
+		fs[x]()
+		console.log(string)
+	}
 }

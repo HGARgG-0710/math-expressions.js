@@ -1,79 +1,78 @@
 // * Tests of 'BindableFunction' export
 
+import { native } from "../src/modules/exports/aliases.mjs"
 import { BindableFunction } from "../src/modules/exports/types.mjs"
 import { FUNCTION } from "./../src/modules/macros.mjs"
+import { refCompare } from "../src/modules/exports/comparisons.mjs"
+import { testmultcases as tmc, test } from "./test.mjs"
 
 const f = FUNCTION.function(function () {
 	return this
 })
 
-const a = {}
-const b = { ch: 455 }
-const c = { tutu: true }
+const abc = [{}, { ch: 455 }, { tutu: true }]
+const fabc = [f.bind(abc[0])]
+abc.slice(1).forEach((x, i) => fabc.push(fabc[i - 1].bind(x)))
+const isF = (o) => (d) => refCompare(d(), o)
 
-const fa = f.bind(a)
-const fb = fa.bind(b)
-const fc = fb.bind(c)
+for (const x in abc) test(isF(abc[x]), [fabc[x]])
+for (let i = 0; i < fabc.length; i++)
+	test((y) => refCompare((i > 0 ? fabc[i] : f).origin, y), [fabc[i].origin])
 
-console.log(fa() === a)
-console.log(fb() === b)
-console.log(fc() === c)
-console.log(f.origin === fa.origin && fa.origin === fb.origin && fb.origin === fc.origin)
+const isClass = (c) => (f) => refCompare(f.class, c)
+const sameOrigin = (a, b) => refCompare([a, b].map((x) => x.origin))
+const sameThis = (a, b) => refCompare([a, b].map((x) => x.this))
+
+// ! Create different test contexts, argument lists and classes...;
+const contexts = [{}, {}, {}]
+const args = [[], [], []]
+const classes = [{}, {}, {}]
 
 // ! Add the templates array...
-const templates = []
-
-for (const t of templates) {
+tmc([], (t) => {
 	const bfc = BindableFunction(t).function
-	console.log(bfc)
+	test(native.function.const(bfc))
 
 	// ! Add a function...
 	const f = bfc.function()
 	// ! Add a function + 'this' context...
 	const tf = bfc.function()
-
-	console.log(bfc === f.class)
-	console.log(bfc === tf.class)
+	tmc([t, tf], (x) => test(isClass(bfc), [x]))
 
 	// ! Create a definition for context 'c'
 	const c = {}
 
 	const _f = f.bind(c)
-	console.log(_f.origin === f.origin)
-	console.log(_f())
+	test(sameOrigin, [_f, f])
+	test(_f)
 
 	// ! ADD arguments this time...
 	const _farg = f.bind(c)
-	console.log(_farg.origin === f.origin)
-	console.log(_farg.this === f.this)
-	console.log(_farg())
+	test(sameOrigin, [_farg, f])
+	test(sameThis, [_farg, f])
+	test(_farg)
 
 	// ! ADD arguments this time...
 	const _farr = f.bindArr(c)
-	console.log(_farr.origin === f.origin)
-	console.log(_farr())
+	test(sameOrigin, [_farr, f])
+	test(_farr)
 
 	// ! ADD arguments this time...
 	const _fargarr = f.bindArr(c)
-	console.log(_fargarr.origin === f.origin)
-	console.log(_fargarr.this === f.this)
-	console.log(_fargarr())
-
-	// ! Create different test contexts, argument lists and classes...;
-	// TODO [general]: refactor the tests, pray...
-	const contexts = [{}, {}, {}]
-	const args = [[], [], []]
-	const classes = [{}, {}, {}]
+	test(sameOrigin, [_fargarr, f])
+	test(sameThis, [_fargarr, f])
+	test(_fargarr)
 
 	for (i of contexts.keys()) {
-		console.log(f.apply(contexts[i], args[i]))
-		console.log(f.call(contexts[i], ...args[i]))
+		test(f.apply, [contexts[i], args[i]])
+		test(f.call, [contexts[i], ...args[i]])
+
 		const fclass = f.switchclass(classes[i])
 
-		console.log(fclass.class)
-		console.log(fclass.class === f.class)
+		test(native.function.const(fclass.class))
+		test(sameClass(fclass), [f])
 	}
 
-	console.log(f.toString())
-	console.log(_f.toString())
-}
+	test(f.toString)
+	test(_f.toString)
+})

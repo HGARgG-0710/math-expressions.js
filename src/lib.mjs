@@ -92,7 +92,7 @@ export const object = {
 
 // ^ IDEA: do this sort of thing all-around the library...
 export const istype = function (x, typename) {
-	return typeof x === typename
+	return refCompare(typeof x, typename)
 }
 export const is = function (instance, instanced) {
 	return instance instanceof instanced
@@ -377,6 +377,7 @@ export const alinative = {
 		and: (a, b) => a & b,
 		or: (a, b) => a | b,
 		modulo: (a, b) => a % b,
+		// ! Starting to doubt the usefulness of these two... (only, maybe, if passing the second argument as a function, id est: (x, y) => x && y())?
 		dand: (a, b) => a && b,
 		dor: (a, b) => a || b
 	}
@@ -393,7 +394,7 @@ export const trimEnd =
 
 // ! use the 'composition' and 'wrapper' especially much with the 'aliases' to obtain new ones...;
 export const cdieach = (x, i) => [x[i]]
-export const hasFunction = (x, m) => obj.hasOwn(x, m) && typeof x[m] === "function"
+export const hasFunction = (x, m) => obj.hasOwn(x, m) && istype(x[m], "function")
 export const inarr = (x) => [x]
 
 export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
@@ -654,15 +655,23 @@ export const general = {
 		ftemplates = []
 	) {
 		const newobj = {}
-		const xf = !is.arr(templates)
+		const xf = is.arr(templates)
 			? (x) => templates[x]
 			: alinative.function.const(templates)
 		for (const x in names)
-			newobj[names[x]] = finite(xf(x)).function(
-				(aretemplates[x] ? (f) => f(ftemplates[x]) : ID)(target[names[x]]),
-				outtransform[x],
-				insequences[x]
-			)
+			newobj[names[x]] = (
+				aretemplates[x]
+					? (f) => TEMPLATE({ defaults: ftemplates[x], function: f }).function
+					: ID
+			)(function (...args) {
+				return finite(xf(x)).function(
+					(aretemplates[x] ? (f) => f(this.template).function : ID)(
+						target[names[x]]
+					),
+					outtransform[x],
+					insequences[x]
+				)(...args)
+			})
 
 		return newobj
 	},
@@ -1096,7 +1105,7 @@ export const valueCompare = TEMPLATE({
 	function: _FUNCTION(function (...args) {
 		function TWOCASE(oneway = false, objs = []) {
 			return (a, b) => {
-				if (typeof a !== typeof b) return false
+				if (!istype(a, typeof b)) return false
 				switch (typeof a) {
 					case "object":
 						if (
@@ -1656,7 +1665,7 @@ export const copy = {
 		function typeTransform(x) {
 			if (x === "array" || x === "arrayFlat") return is.arr
 			if (x === "objectFlat") return is.obj
-			return (p) => typeof p === x
+			return (p) => istype(p, x)
 		}
 		return TEMPLATE({
 			defaults: { list: [] },
@@ -2359,7 +2368,7 @@ export const objCounter = GENERATOR({
 	range: _FUNCTION(function (a) {
 		return (
 			this.template.comparison(a, this.template.start) ||
-			(typeof a === "object" && this.range(this.inverse(a)))
+			(istype(a, "object") && this.range(this.inverse(a)))
 		)
 	})
 }).function
@@ -3542,9 +3551,10 @@ export const GeneralArray = (() => {
 					return this.this
 				}),
 				permutations: _FUNCTION(function () {
-					return alarray.permutations({
+					this.this.this = alarray.permutations({
 						genarrclass: this.this.this.this.class
-					})(this.this)
+					})(this.this).this
+					return this
 				}),
 				// For an array of arrays only;
 				join: _FUNCTION(function () {

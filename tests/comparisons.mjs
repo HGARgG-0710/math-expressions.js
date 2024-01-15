@@ -3,6 +3,7 @@
 import { sym } from "../src/modules/exports/aliases.mjs"
 import { valueCompare, refCompare } from "../src/modules/exports/comparisons.mjs"
 import { copy } from "../src/modules/exports/native.mjs"
+import { formatOut, test } from "./test.mjs"
 
 // ! NOTE: without the explicit 'bind', this thing don't work as wanted to! CONCLUSION - CREATE AN ALIAS FOR 'bound' objects...
 const aob = {
@@ -11,21 +12,31 @@ const aob = {
 aob.f = aob.f.bind(aob)
 const bob = copy.deepCopy(aob)
 
-console.log(refCompare(bob.f, aob.f))
-console.log(valueCompare().function(aob.f, bob.f))
-console.log()
-
 const s = sym("t")
 const sco = copy.flatCopy(s)
-console.log(refCompare(s, sco))
-console.log(valueCompare().function(s, sco))
-console.log()
 
 const xarr = ["hello!"]
 const xanarr = copy.flatCopy(xarr)
-console.log(refCompare(xarr, xanarr))
-console.log(valueCompare().function(xarr, xanarr))
-console.log()
 
 const anxanarr = ["ppu"]
-console.log(valueCompare().function(xarr, anxanarr))
+
+formatOut(undefined, [
+	() => {
+		test(
+			refCompare,
+			[bob, aob].map((x) => x.f)
+		)
+		test(valueCompare, [aob, bob], {})
+	},
+	() => {
+		test(refCompare, [s, sco])
+		test(valueCompare, [s, sco], {})
+	},
+	() => {
+		test(refCompare, [xarr, xanarr])
+		test(valueCompare, [xarr, xanarr], {})
+	},
+	() => {
+		test(valueCompare, [xarr, anxanarr], {})
+	}
+])
