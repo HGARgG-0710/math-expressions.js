@@ -1,75 +1,34 @@
 // * Tests for the 'Graph' and 'Vertex' classes
 
-import { DEFAULT_GRAPHCLASS } from "../src/modules/exports/general.mjs"
+import { refCompare } from "../src/modules/exports/comparisons.mjs"
+import { Graph } from "../src/modules/exports/types.mjs"
 // ! later:
 // import { Vertex } from "../src/modules/exports/algorithms.mjs"
+import {
+	test,
+	testmultcases as tmc,
+	testobjmethod as tom,
+	multtestobjmethod as mtom,
+	testOn
+} from "./test.mjs"
 
-// * They are, effectively, the same, so there oughtn't be any difficulty regarding the matter of the workability of the others if the Default works just as well...
-const graphclass = DEFAULT_GRAPHCLASS
+const outarr = (x) => console.log(x.verticies.array)
 
-// ! Fill the graph... (with Verticies...)
-const graph = graphclass.class()
+// ! Choose classes, for which to test (possibly, only 1-2, no more...);
+tmc([].map(Graph), (graphclass) => {
+	// ! Fill the graph... (with Verticies...)
+	const graph = graphclass.class()
 
-// ! Insert indicies for tests...
-console.log(graph.getAdjacent())
-console.log(graph.getAdjacent())
-console.log(graph.getAdjacent())
+	// ! Add arguments...
+	tom(graph, "getAdjacent")
+	testOn(graph, ["addvertex", "addedge", "computevertex"], [], [], outarr)
+	mtom(graph, "read")
+	testOn(graph, ["write", "deledge"], [], [], outarr)
 
-// ! Add arguments...
-graph.addvertex()
-console.log(graph.verticies.array)
-graph.addvertex()
-console.log(graph.verticies.array)
-graph.addvertex()
-console.log(graph.verticies.array)
-
-// ! Add arguments... + 'console.log()' the appropriate indexes' verticies edges general arrays...
-graph.addedge()
-console.log()
-graph.addedge()
-console.log()
-graph.addedge()
-console.log()
-
-// ! Add arguments...
-graph.computevertex()
-console.log(graph.verticies.array)
-graph.computevertex()
-console.log(graph.verticies.array)
-graph.computevertex()
-console.log(graph.verticies.array)
-
-// ! Add indicies to read from...
-console.log(graph.read())
-console.log(graph.read())
-console.log(graph.read())
-
-// ! Add indicies, values to read-write...
-graph.write()
-console.log(graph.verticies.array)
-graph.write()
-console.log(graph.verticies.array)
-graph.write()
-console.log(graph.verticies.array)
-
-// ! Add arguments...
-graph.deledge()
-console.log(graph.verticies.array)
-graph.deledge()
-console.log(graph.verticies.array)
-graph.deledge()
-console.log(graph.verticies.array)
-
-console.log(graph.copy() === graph)
-console.log(graph === graph)
-// ! Add some interesting function to the thing in question...
-console.log(graph.copy())
-
-// ! Pick two predicates...
-console.log(graph.suchthat())
-console.log(graph.suchthat())
-
-for (const x of graph) console.log(x)
-
-// ! Choose arguments...
-graph.deledgeval()
+	test(refCompare, [graph.copy(), graph])
+	// ! Add arguments...
+	testOn(graph, ["copy", "suchthat"])
+	tmc(graph)
+	// ! Add arguments...
+	mtom(graph, "deledgeval")
+})

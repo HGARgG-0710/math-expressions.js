@@ -1,37 +1,37 @@
 // * Tests for the InfiniteArray, InfiniteString and InfiniteSet
 
+import { refCompare } from "../src/modules/exports/comparisons.mjs"
 import { is } from "../src/modules/exports/aliases.mjs"
 import { next } from "../src/modules/exports/predicates.mjs"
 import { DEFAULT_INFARR } from "../src/modules/exports/general.mjs"
 import { InfiniteString, InfiniteSet } from "../src/modules/exports/types.mjs"
+import {
+	testmultcases as tmc,
+	testobjmethod as tom,
+	multtestobjmethod as mtom,
+	multtests as mt,
+	test
+} from "./test.mjs"
 
 // ? Add one more test for the 'InfiniteSet' to check whether it is
 const classes = [DEFAULT_INFARR, InfiniteString, InfiniteSet]
 const predicates = [ID, is.str, ID]
 
-for (const i in classes) {
+tmc(classes.keys(), (i) => {
 	// ! Create instances for this...
 	// ! Fix all the tests (refactor them in this fashion - use arrays instead of variables, do not repeat code, put everything in loops + Beautify and add arguments - complete the tests...)
 	const instances = []
 
-	for (const infarr of instances) {
-		// ! Add indicies
-		console.log(infarr.read())
-		console.log(infarr.read())
+	tmc(instances, (infarr) => {
+		// ! Add arguments...
+		mtom(infarr, "read")
+		mtom(infarr, "write")
 
-		// ! Add indicies, values
-		console.log(infarr.write())
-		console.log(infarr.write())
-
-		// ! Add predicates + indicies (same as in the previous 'read')
-		console.log(predicates[i](infarr.subarr().read()))
-		console.log(predicates[i](infarr.subarr().read()))
-
-		console.log(infarr.copy() === infarr)
-
-		// ! add two different sets of arguments here...
-		console.log(infarr.copied())
-		console.log(infarr.copied())
+		// ! add arguments...
+		mt((p, ind) => predicates[i](infarr.subarr(p)).read(ind), [])
+		test(refCompare, infarr.copy() === infarr)
+		tom(infarr, "copied")	
+		mt((i) => console.log(predicates[i](infarr.read(j)), []))
 
 		// ! Add some interesting functions (same reading indicies as before...);
 		infarr.map()
@@ -53,5 +53,5 @@ for (const i in classes) {
 			console.log(x)
 			j = next(j)
 		}
-	}
-}
+	})
+})

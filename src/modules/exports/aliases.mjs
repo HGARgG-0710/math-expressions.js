@@ -38,5 +38,7 @@ export {
 	cdieach,
 	hasFunction,
 	inarr,
-	abs
+	abs,
+	poststr,
+	prestr
 } from "../../lib.mjs"

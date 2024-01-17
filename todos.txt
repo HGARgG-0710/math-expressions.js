@@ -264,11 +264,12 @@ It gets changed actively.
 			(use arguments for )
 		One could also generalize the 'scheme' as a part of the 'toProperty' definition, and then just use the desired one...
 
-		Due to the library's style, solutions to certain computational mathematical problems can be expressed very fluently, for instance: 
+		Due to the library's style, solutions to certain computational mathematical problems can be expressed very fluently, for instance (sketch, actual code probably requires a TrueInteger conversion): 
 
 			// ^ IDEA: add (somewhere) to the project's repository, a file with such highly-abstract mathematical computational-problems-solutions-expressions use-cases (the elegancy of it is absolutely beautiful... All that is really required for the solution of these things now is the appropriate hardware...); 
+			const naturals = InfiniteArray().class()
 			const primes = InfiniteArray().class().subarr(isPrime) // infinite array of all the primes (ordered by size from smallest-to-largest); 
-			const perfect = InfiniteArray().class().subarr(isPerfect) // 
+			const perfect = InfiniteArray().class().subarr(isPerfect) // infinite array of all teh perfect numbers (ordered by size, smallest-to-largest); 
 			// ... and so on...
 		
 		The 'property-oriented' programming would allow one for greater reliance on contents and, hence, advanced closeness of style with the mathematical computational issues of such nature, 
@@ -518,3 +519,21 @@ It gets changed actively.
 			One may want to to consider further domain extension via the alias-space (for example - testing). 
 
 			These 'more applied' bits would adhere to the same stylistic "standard" as that set by the rest of the library and will serve, largely, as a mere addition related to the rest of the thing. 
+		
+	9.32. Programming Style
+
+		Some of the objectives related to the ensuring of the unity of style of library were not yet achieved (due to size and time matters). 
+		The v1.0 has some wonderful examples of what is desired 
+			(composition-only functional-like dataflow, in which objects are treated as objects/passables/data themselves,
+				and every function is either just a composition of other functions, or is elementary and is given as an alias within the 
+					context of the package...), 
+		but also that of uncompleted bits and parts; 
+	
+	9.33. Debugging
+
+		This, largely, relates to the 'printing' API part of the note in question. 
+		The process of debugging apps written with the usage of the library's current typesystem is an absolute pain. 
+
+		It ought to be fixed. 
+		Create proper printing and debugging APIs for it (ones that would permit accessing particular pieces of type's data, without the necessity of knowing the entirety of it...); 
+		[Also - create a complete debugger - withe namespaces and so forth. DO NOT RELY UPON console.log. THERE MUST BE PROPER REPRESENTATION MEANS IN PLACE INSTEAD OF THIS...]

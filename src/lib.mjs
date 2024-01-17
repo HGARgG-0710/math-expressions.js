@@ -3,14 +3,16 @@
 // ? [for v1.1? maybe, not do at all?] CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
 // ! FIX THE ERRORS RELATED TO SOME MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
 
-// ! Go through all the classes/EXTENSIONS and fix the 'symbols:' argument, where needed;
-
 // ? Create a 'types.native' for types that extend the native JS types functionality directly? (the BindableFunction is a wonderful candidate for it...);
+
+// TODO [currrent agenda]: pray fix all the 'comparisons' - change default value of 'comparison' (everywhere) to '(x, y) => x.equal(y)', and the usage of theirs within the 'InfiniteCounter' to ''
 
 export const greateroe = (a, b) => a.compare(b)
 export const lesseroe = (a, b) => greateroe(b, a)
 export const lesser = (a, b) => !greateroe(a, b)
 export const greater = (a, b) => lesser(b, a)
+
+export const equal = (x, y) => x.equal(y)
 
 export const previous = (x) => x.previous()
 export const next = (x) => x.next()
@@ -36,7 +38,10 @@ export const empf =
 	(...args) =>
 		f(...args)(...dargs)
 
+// ? Relocate to 'native?' (preferably, there ought to be very few exports of 'aliases' outside of it; particularly, non-general specific-type-associated ones...);
 export const abs = Math.abs
+export const poststr = (s) => (x) => `${x}${s}`
+export const prestr = (s) => (x) => `${s}${x}`
 
 export const bool = Boolean
 export const str = String
@@ -223,18 +228,16 @@ export const alinative = {
 
 	array: {
 		// * What about 'firstSuch' and 'lastSuch' instead??? Then, '_first' and '_last' would be just 'first' and 'last' correspondently...
-		last: (arr, obj, comparison = valueCompare) => {
+		last: (arr, obj, comparison = _valueCompare) => {
 			return max(
 				alarray.native
 					.indexesOf({ comparison: comparison })
 					.function(arr, obj, comparison)
 			)
 		},
-		first: (arr, obj, comparison = valueCompare) => {
+		first: (arr, obj, comparison = _valueCompare) => {
 			return min(
-				alarray.native
-					.indexesOf({ comparison: comparison })
-					.function(arr, obj, comparison)
+				alarray.native.indexesOf({ comparison: comparison }).function(arr, obj)
 			)
 		},
 		_last: (arr) => arr[arr.length - 1],
@@ -456,11 +459,14 @@ const refactor = {
 				this.copied("suchthat", [predicate]).length().get()
 			)
 		}),
-		every: _FUNCTION(function (predicate = TRUTH) {
-			return this.this.this.class.template.icclass.template.comparison(
-				this.copied("suchthat", [predicate]).length().get(),
-				this.length().get()
-			)
+		every: _FUNCTION(function (
+			predicate = TRUTH,
+			comparison = this.this.this.this.class.template.icclass.template.comparison
+		) {
+			return this.copied("suchthat", [predicate])
+				.length()
+				.get()
+				.equal(this.length().get(), comparison)
 		}),
 		forEach: _FUNCTION(function (method = VOID) {
 			for (const x of this.keys()) method(this.read(x), x, this)
@@ -872,7 +878,7 @@ export const CLASS = (ptemplate = {}) => {
 			// ^ NOTE: the code is nigh-exactly-the-same. For v1.1 - this is the first place that the new-refactoring phase ought to start...
 			for (const s in this.symbols) {
 				const isarr = is.arr(this.symbols[s])
-				if (isarr || obj.hasOwn(this.isgeneral.symbols, x)) {
+				if (isarr || obj.hasOwn(this.isgeneral.symbols, s)) {
 					const B = isarr
 						? this.symbols[s]
 						: [this.isgeneral.symbols[s], this.symbols[s]]
@@ -920,7 +926,7 @@ export const CLASS = (ptemplate = {}) => {
 			return V
 		}).bind(p)
 		p[p.isname] = _FUNCTION(function (x, classword = this.classref) {
-			return obj.hasOwn(x, classword) && valueCompare(this, x[classword])
+			return obj.hasOwn(x, classword) && _valueCompare(this, x[classword])
 		}).bind(p)
 		// * Note: this __doesn't__ (and isn't supposed to) check for presence of methods within the class in question - only for the presence of it in the recursive 'names-chain';
 		p[Symbol.hasInstance] = _FUNCTION(function (x) {
@@ -993,7 +999,6 @@ export const EXTENSION = (template = {}) => {
 			},
 			...template.defaults
 		},
-		// ! Define...
 		symbols: {
 			...((x) => {
 				return OBJECT(
@@ -1029,11 +1034,12 @@ export const EXTENSION = (template = {}) => {
 						)
 					])
 				)
-			})((y) =>
-				(template.toextend.symbols === true
-					? y
-					: INTERSECTION(y, template.toextend.symbols))(
-					object.keys(template.defaults.parentclass.symbols)
+			})(
+				((y) =>
+					template.toextend.symbols === true
+						? y
+						: INTERSECTION(y, template.toextend.symbols))(
+					obj.keys(template.defaults.parentclass.symbols)
 				)
 			),
 			...template.symbols
@@ -1110,20 +1116,23 @@ export const valueCompare = TEMPLATE({
 					case "object":
 						if (
 							!objs.some((x) =>
-								alinative.binary.dand(...[a, b].map(x[0].includes))
+								alinative.binary.dand(...[a, b].map((y) => x.includes(y)))
 							)
 						) {
 							objs.push([a, b])
 							for (const a_ in a)
-								if (!TWOCASE(false, objs)(b[a_], a[a_])) return false
+								if (!TWOCASE(false, objs)(a[a_], b[a_])) return false
+
 							if (!oneway) return TWOCASE(true)(b, a)
 						}
 						return true
 					case "function":
 					case "symbol":
-						return a.toString() === b.toString()
+						return refCompare(
+							...[a, b].map(alinative.object.rproperty("toString")())
+						)
 					default:
-						return a === b
+						return refCompare(a, b)
 				}
 			}
 		}
@@ -1132,6 +1141,10 @@ export const valueCompare = TEMPLATE({
 			.every((x, i) => TWOCASE(this.template.oneway)(x, args[i + 1]))
 	})
 }).function
+
+// ? Keep this? Or not?
+export const _valueCompare = valueCompare().function
+general.DEFAULT_COMPARISON = _valueCompare
 
 export const alarray = {
 	native: {
@@ -1157,7 +1170,7 @@ export const alarray = {
 		defaults: {
 			// ! ISSUE [about the 'finite' again] - what to do with cases such as this - when the default 'genarrclass' is given, whereas it must be finite (CommonArray?);
 			// ^ 'finite' does permit the usage of arbitrary templates... Could just create a 'general.[something...]' property for storing the Defualt 'Finitization' template, which can then be used where needed via spread {...general.[whatever], ...{(rest of the good things)}};
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
@@ -1215,7 +1228,7 @@ export const alarray = {
 			_FUNCTION(function () {
 				return {
 					unfound: undefined,
-					comparison: valueCompare,
+					comparison: general.DEFAULT_COMPARISON,
 					halt: false,
 					icclass: general.DEFAULT_ICCLASS
 				}
@@ -1251,7 +1264,7 @@ export const alarray = {
 		defaults: [
 			_FUNCTION(function () {
 				return {
-					comparison: valueCompare,
+					comparison: general.DEFAULT_COMPARISON,
 					copy: false,
 					genarrclass: general.DEFAULT_GENARRCLASS,
 					icclass: general.DEFAULT_ICCLASS
@@ -1281,7 +1294,7 @@ export const alarray = {
 	isSub: TEMPLATE({
 		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
 		defaults: {
-			comparison: valueCompare
+			comparison: general.DEFAULT_COMPARISON
 		},
 		function: _FUNCTION(function (
 			arrsub,
@@ -1360,7 +1373,6 @@ export const alarray = {
 	}).function,
 	split: TEMPLATE({
 		defaults: {
-			// ! DEFINE!
 			comparison: general.DEFAULT_COMPARISON,
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
@@ -1394,7 +1406,7 @@ export const arrayCounter = GENERATOR({
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
 		// ? What to do in that case? ["poorly" chosen argument - out of typical scope...]
-		if (!obj.hasOwn(a, 0)) return
+		if (!is.obj(a) || !obj.hasOwn(a, 0)) return a
 		return a[0]
 	},
 	range: _FUNCTION(function (a) {
@@ -1418,7 +1430,7 @@ export const InfiniteCounter = (() => {
 	// * Note: 'this.template.unacceptable' is thrown out of the function's scope for the sake of providing the 'InfiniteCounter(...).class()' syntax for simplified zero-creation;
 	return CLASS({
 		defaults: {
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			unacceptable: undefined,
 			initialcheck: refCompare,
 			...general.DEFUAULT_COUNTER
@@ -1450,11 +1462,11 @@ export const InfiniteCounter = (() => {
 			) {
 				let curr = start.copy()
 				let r = init
-				while (comparison(curr, end)) {
+				while (!curr.equal(end, comparison)) {
 					r = each(curr, r)
 					curr = iter(curr)
 				}
-				return curr
+				return r
 			}).bind(R)
 			R.reverse = _FUNCTION(function () {
 				const _this = this
@@ -1498,24 +1510,24 @@ export const InfiniteCounter = (() => {
 				let pointerback = ic
 
 				while (
-					!comparison(pointerfor, this.this.this) &&
-					!comparison(pointerback, this.this.this)
+					!pointerfor.equal(this.this.this, comparison) &&
+					!pointerback.equal(this.this.this, comparison)
 				) {
 					pointerfor = next(pointerfor)
 					pointerback = previous(pointerback)
 				}
 
-				return comparison(pointerfor, this.this.this)
+				return pointerfor.equal(this.this.this, comparison)
 			}),
 			difference: _FUNCTION(function (
 				ic,
 				comparison = this.this.this.this.class.template.comparison
 			) {
-				// ! CONSIDER - whether to extend the 'greateroe, lesser, lesseroe, greater' methods to allow for arbitrary comparison or not...
-				const next = property(
+				// ! CONSIDER - whether to extend the 'greateroe, lesser, lesseroe, greater' methods to allow for arbitrary comparison (greateroe(x,y)->greateroe(x,y,comparison=refCompare)) or not...
+				const next = alinative.object.property(
 					ic.compare(this.this.this, comparison) ? "previous" : "next"
 				)
-				this.this.this.this.class.static.whileloop(
+				return this.this.this.this.class.static.whileloop(
 					this.this.this.copy(),
 					(current) => next(current)(),
 					ic,
@@ -1523,7 +1535,6 @@ export const InfiniteCounter = (() => {
 					comparison,
 					this.this.this.this.class.class()
 				)
-				return current
 			}),
 			jumpDirection: _FUNCTION(function (
 				ic,
@@ -1531,11 +1542,12 @@ export const InfiniteCounter = (() => {
 			) {
 				return this.this.this.this.class.static.direction(ic)
 					? this.this.this.jumpForward(ic, comparison)
-					: this.this.this.jumpBackward(ic)
+					: this.this.this.jumpBackward(ic, comparison)
 			}),
 			jump: _FUNCTION(function (
 				x,
 				jumping = next,
+				comparison = this.this.this.this.class.template.comparison,
 				counterclass = this.this.this.this.class
 			) {
 				return this.this.this.this.class.static.whileloop(
@@ -1543,8 +1555,8 @@ export const InfiniteCounter = (() => {
 					jumping,
 					counterclass.class(),
 					jumping,
-					undefined,
-					deepCopy(this.this.this)
+					comparison,
+					copy.deepCopy(this.this.this)
 				)
 			}),
 			loop: _FUNCTION(function (
@@ -1571,16 +1583,20 @@ export const InfiniteCounter = (() => {
 				x,
 				comparison = this.this.this.this.class.template.comparison
 			) {
-				return this.jump(x, (k) => k.previous(), comparison)
+				return this.jump(x, previous, comparison)
 			}),
 			map: _FUNCTION(function (
-				icClass = this.class,
+				icClass = this.this.this.this.class,
 				comparison = this.this.this.this.class.template.comparison
 			) {
+				if (this.this.this.this.class === icClass) return this
+				const nextf = this.direction() ? next : previous
 				let current = this.this.this.this.class.class()
 				let alterCurrent = icClass.class()
-				while (!comparison(current, this.this.this))
-					alterCurrent = next(alterCurrent)
+				while (!comparison(current.value, this.this.this.value)) {
+					alterCurrent = nextf(alterCurrent)
+					current = nextf(current)
+				}
 				return alterCurrent
 			}),
 			reverse: _FUNCTION(function () {
@@ -1593,8 +1609,12 @@ export const InfiniteCounter = (() => {
 			copy: _FUNCTION(function () {
 				return this.this.this.this.class.class(this.this.this.value)
 			}),
-			equal: _FUNCTION(function (x) {
-				return greateroe(this, x) && greateroe(x, this)
+			equal: _FUNCTION(function (
+				x,
+				comparison = this.this.this.this.class.template.comparison
+			) {
+				x = x.map(this.this.this.this.class)
+				return comparison(...[this, x].map(alinative.function.index("value")))
 			}),
 			zero: _FUNCTION(function () {
 				return this.this.this.this.class.static.zero()
@@ -1671,8 +1691,17 @@ export const copy = {
 			defaults: { list: [] },
 			function: _FUNCTION(function (a) {
 				for (const x of this.template.list)
-					if (typeTransform(x)(a))
-						return copy.copy().function()[x](a, this.function)
+					if (typeTransform(x)(a)) {
+						return copy
+							.copy()
+							.function()
+							[x](
+								a,
+								(x === "object" || x === "array") && a.length
+									? this.function
+									: undefined
+							)
+					}
 				return a
 			})
 		}).function
@@ -1766,7 +1795,7 @@ object.objInherit(object, {
 	},
 
 	ismapped: function (...args) {
-		return valueCompare().function(...args.map(obj.keys))
+		return _valueCompare().function(...args.map(obj.keys))
 	},
 
 	gutInnerObjs(obj_ = {}, keys = obj.keys(obj_)) {
@@ -2379,7 +2408,7 @@ export const objCounter = GENERATOR({
 export function recursiveCounter(template = {}) {
 	const returned = {
 		defaults: {
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			maxarrlen: MAX_ARRAY_LENGTH.get,
 			type: TRUTH,
 			...template
@@ -2447,18 +2476,18 @@ export function recursiveCounter(template = {}) {
 
 					// TODO: generalize the construction [[...]] of depth 'n'; Create the simple alias-functions for quick creation of recursive arrays;
 					// * Including the infinite versions of them...
-					result = repeatedApplication()(
-						(value) => {
-							value.push([])
-							return value[value.length - 1]
-						},
+					result = repeatedApplication().function(
+						result,
 						dim({
 							icclass: indexes.class.template.icclass
 						})
 							.function(x)
-							.difference(indexes.length())
+							.difference(indexes.length().get())
 							.previous(),
-						result
+						(value) => {
+							value.push([])
+							return value[value.length - 1]
+						}
 					)
 					result.push(thisobject.template.lower)
 					return x
@@ -2468,6 +2497,7 @@ export function recursiveCounter(template = {}) {
 					result,
 					indexes.copied("slice", [undefined, indexes.finish().previous()])
 				)
+
 				const endind = indexes.read(indexes.finish())
 				result[endind] = thisobject.template[sign ? "forward" : "backward"](
 					result[endind]
@@ -2855,7 +2885,7 @@ export const form = (
 export const structure = TEMPLATE({
 	defaults: {
 		form: general.DEFAULT_FORM,
-		comparison: valueCompare,
+		comparison: general.DEFAULT_COMPARISON,
 		// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
 		compequiv: function (...args) {
 			if (args.length === 1) return args[1]
@@ -3184,8 +3214,7 @@ export const GeneralArray = (() => {
 				move: _FUNCTION(function (
 					index = this.init(),
 					preface = VOID,
-					comparison = this.this.this.this.class.template.icclass.template
-						.comparison,
+					comparison = equal,
 					each = next,
 					stop = (x) => comparison(x.length().get(), x.currindex)
 				) {
@@ -3200,9 +3229,7 @@ export const GeneralArray = (() => {
 				moveforward: _FUNCTION(function (
 					index = this.init(),
 					begin = false,
-					// ? Fix the '.comparison' argument for this thing, pray... [Get rid of it or redo even, maybe?];
-					comparison = this.this.this.this.class.template.icclass.template
-						.comparison,
+					comparison = equal,
 					stop = (x) => comparison(next(x.length().get()), x.currindex)
 				) {
 					return this.move(
@@ -3218,8 +3245,7 @@ export const GeneralArray = (() => {
 				movebackward: _FUNCTION(function (
 					index = this.init(),
 					end = false,
-					comparison = this.this.this.this.class.template.icclass.template
-						.comparison,
+					comparison = equal,
 					stop = (x) => comparison(x.init(), x.currindex)
 				) {
 					return this.move(
@@ -3235,21 +3261,22 @@ export const GeneralArray = (() => {
 				movedirection: _FUNCTION(function (
 					index,
 					init = false,
-					comparison,
-					stop = (x) => comparison(x.init(), x.currindex)
+					comparison = equal,
+					stop
 				) {
 					return greateroe(this.this.this.currindex, index)
 						? this.moveforward(
 								index,
 								init,
 								comparison,
-								stop || ((x) => comparison(x.currindex, x.length().get()))
+								is.fun(stop) ||
+									((x) => comparison(x.currindex, x.length().get()))
 						  )
 						: this.movebackward(
 								index,
 								init,
 								comparison,
-								stop || ((x) => comparison(x.currindex, x.init()))
+								is.fun(stop) || ((x) => comparison(x.currindex, x.init()))
 						  )
 				}),
 				jump: _FUNCTION(function (
@@ -3260,6 +3287,7 @@ export const GeneralArray = (() => {
 					return (this.this.this.currindex =
 						this.this.this.currindex.jumpDirection(index, comparison))
 				}),
+				// TODO: in ALL the library algorithms, pray create ways to ensure user choice between fast/not-fast and all the appropriate 'move'-related arguments (by default, always make 'fast=true'... AND ALSO - try not to use the 'leftovers', or do something about them - dangling there always like so... unnerving);
 				read: _FUNCTION(function (
 					index = this.init(),
 					fast = this.this.this.this.class.template.fast
@@ -3328,6 +3356,10 @@ export const GeneralArray = (() => {
 					)
 				}),
 				multcall: refactor.classes.multcall,
+				clear: _FUNCTION(function () {
+					this.this.this = this.empty().this
+					return this
+				}), 
 				empty: _FUNCTION(function (
 					template = this.this.this.this.class.template
 				) {
@@ -3369,7 +3401,7 @@ export const GeneralArray = (() => {
 						}).function,
 						undefined,
 						alinative.function.const((t) =>
-							greateroe(end, t.object().currindex)
+							lesser(end, t.object().currindex)
 						),
 						(t) => {
 							t.object().begin()
@@ -3780,7 +3812,6 @@ general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
 export const dim = TEMPLATE({
 	defaults: {
 		icclass: general.DEFAULT_ICCLASS,
-		// ! ISSUE : need to be able to convert arbitrary forms to a 'genarrclass' - as in this case, the form is known to be flat, so there is little necessity in assuming its recursiveness. Hence, one can
 		genarrclass: general.DEFAULT_GENARRCLASS,
 		form: general.DEFAULT_FORM
 	},
@@ -3790,18 +3821,20 @@ export const dim = TEMPLATE({
 			const togarr = this.template.genarrclass.static.empty()
 
 			// ! Create a GeneralArray method - fromForm (generalization of this...);
+			// * Note: the need to use the 'GeneralArray' PARTICULARLY arises due to the presence of knowledge that this is, indeed, GeneralArray-specific. (that being, that one would not need another form...); Here, desire for code repetition is shown semantically...;
 			for (const x of this.template.form.keys(copied))
-				togarr.pushback(this.template.form.index(copied, x))
+				togarr.pushback(this.template.form.read(copied, x))
 
 			return this.template.icclass.static
 				.one()
 				.jumpForward(max(this.template).function(togarr))
 		}
-		return this.template.icclass.class()
+		return this.template.icclass.static.zero()
 	})
 }).function
 
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
+// ! THIS DOESN'T WORK... AT ALL!
 export const generalSearch = TEMPLATE({
 	defaults: {
 		self: false,
@@ -3859,7 +3892,7 @@ export const findDeepUnfilled = TEMPLATE({
 	defaults: [
 		alinative.function.const({
 			form: general.DEFAULT_FORM,
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			bound: MAX_INT.get
 		}),
 		_FUNCTION(function () {
@@ -3910,7 +3943,7 @@ export const recursiveIndexation = TEMPLATE({
 			icclass: fields.class.template.icclass,
 			...this.template
 		}).function(object, fields.length().get(), (x, i) =>
-			this.form.read(x, fields.read(i))
+			this.template.form.read(x, fields.read(i))
 		)
 	})
 }).function
@@ -6116,7 +6149,7 @@ export const search = {
 	interpolation: TEMPLATE({
 		defaults: {
 			defelem: undefined,
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			unfound: undefined
 		},
 		function: function (
@@ -6212,7 +6245,7 @@ export const search = {
 	binary: TEMPLATE({
 		defaults: {
 			defelem: undefined,
-			comparison: valueCompare,
+			comparison: general.DEFAULT_COMPARISON,
 			unfound: undefined
 		},
 		function: function (
