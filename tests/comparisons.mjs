@@ -44,7 +44,7 @@ formatOut("", [
 	() => {
 		test(valueCompare, [xarr, anxanarr], {})
 		// todo: TEST MORE THROROUGHLY WITH RECURSIVE OBJECTS. THIS IS NOT ENOUGH...
-		// ! There's known a bug associated with it somewhere in the library (apparently, with comparing the InfiniteCounter objects as-are via 'valueCompare(ic1, ic2)'; The source of the bug seems to be treatment of recursive objects (and, particularly, the 'this.this.this'...)); 
+		// ! There may be a bug associated with it somewhere in the library (apparently, with comparing the InfiniteCounter objects as-are via 'valueCompare(ic1, ic2)'; The source of the bug seems to be treatment of recursive objects (and, particularly, the 'this.this.this'...)); 
 		test(valueCompare, [recarr, arecarr], {})
 	}
 ])

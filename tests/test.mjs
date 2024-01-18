@@ -12,7 +12,8 @@ export function test(f, args = [], template = false, testf = console.log) {
 }
 
 export function multtests(f, aargs = [], templates = [], testf = console.log) {
-	for (const x in aargs) test(f, aargs[x], templates[x], testf)
+	for (const x in aargs)
+		test(f, aargs[x], !(templates instanceof Array) ? templates : templates[x], testf)
 }
 
 export function testobjmethod(obj, method, args, template = false, testf = console.log) {
@@ -42,7 +43,13 @@ export function testOn(
 	testf = console.log
 ) {
 	for (const x in methods)
-		multtestobjmethod(object, methods[x], args[x], templates[x], testf)
+		multtestobjmethod(
+			object,
+			methods[x],
+			args[x],
+			!(templates instanceof Array) ? templates : templates[x],
+			testf
+		)
 }
 
 export function formatOut(string, fs, labels = []) {

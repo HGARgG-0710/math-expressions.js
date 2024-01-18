@@ -1,10 +1,7 @@
 This file contains currently pursued short-term TODOs and self-created tasks for the development of the library...; 
 
 1. Code polishing (parallel with testing): 
-	1.1. Undetermined yet, go around finishing small undone things and tasks - plenty of those yet... Start preparing the code for testing;
-		1.1.1. Algorithm for efficient todo-finishing: 
-			Walk over all the '!', 'todo', '?' and '*', consider and fulfill each and every case transiently; 			
-	1.2. STYLE [maybe, leave for the project's future?]: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
+	1.1. STYLE [maybe, leave for the project's future?]: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
 	
 2. Testing; 
 	CONCLUSION: original plan for the testing procedure organization did not work out. 
@@ -17,8 +14,12 @@ This file contains currently pursued short-term TODOs and self-created tasks for
 
 	Due to the intertwined nature of the library, testing's going to be far quicker with this scheme (as then, one needs not spend additional time on writing the tests themselves, only needing to do the testing itself after they've been written + writing tests takes less time than checking them...); 
 
-	NOTE [additional]: 
+	NOTE [additional 1]: 
 		Test all the files for workability - the 'math-expressions.mjs', all the derivatives, make sure of ABSOLUTELY EVERYTHING...
+	NOTE [additional 2]: 
+		Check the rest of package for workability - the package.json, for example. 
+		Also - the way that the final NPM package gets assembled (via 'npm pack') - check that it's possible to import it via the 'node_modules' (one of the previous versions was extremely poorly tested in this particular regard, so from now on one does this for every single package...); 
+		CHECK THAT IT'S USABLE WITH DENO!!!
 
 3. Documentation: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 

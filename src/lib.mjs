@@ -5,7 +5,7 @@
 
 // ? Create a 'types.native' for types that extend the native JS types functionality directly? (the BindableFunction is a wonderful candidate for it...);
 
-// TODO [currrent agenda]: pray fix all the 'comparisons' - change default value of 'comparison' (everywhere) to '(x, y) => x.equal(y)', and the usage of theirs within the 'InfiniteCounter' to ''
+// ^ idea: how about seeking to minimize the number of class methods? For instance, getting rid of things like 'next()', instead replacing them with definition of 'jump()' with default being such, so as to mimic 'next'? (Consider, whether this general design pattern ought to become part of the library's style in v1.1. or later...)
 
 export const greateroe = (a, b) => a.compare(b)
 export const lesseroe = (a, b) => greateroe(b, a)

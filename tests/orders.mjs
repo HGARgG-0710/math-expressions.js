@@ -10,41 +10,13 @@ import {
 	fromIcc
 } from "../src/modules/exports/orders.mjs"
 
-// ! pick different templates + arguments for this
-console.log(linear().function())
-console.log(linear().function())
-console.log(linear().function())
-console.log(linear().function())
+import { multtests as mt } from "./test.mjs"
 
-// ! Choose different templates, arguments
-console.log(fixLinear().function())
-console.log(fixLinear().function())
-console.log(fixLinear().function())
-console.log(fixLinear().function())
-
-// ! Choose different templates and arguments
-console.log(nonlinear().function())
-console.log(nonlinear().function())
-console.log(nonlinear().function())
-console.log(nonlinear().function())
-console.log(nonlinear().function())
-console.log(nonlinear().function())
-
-// ! Choose two different predicates, templates and arrays;
-console.log(most().function())
-console.log(most().function())
-
-// ! Choose different templates and arrays;
-console.log(max().function())
-console.log(max().function())
-console.log(max().function())
-
-// ! Choose different templates and arrays;
-console.log(min().function())
-console.log(min().function())
-console.log(min().function())
-
-// ! Choose templates, values for arguments...
-console.log(fromIcc().function())
-console.log(fromIcc().function())
-console.log(fromIcc().function())
+// ! Choose templates, arguments
+mt(linear, [], [])
+mt(fixLinear, [], [])
+mt(nonlinear, [], [])
+mt(most, [], [])
+mt(max, [], [])
+mt(min, [], [])
+mt(fromIcc, [], [])

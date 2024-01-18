@@ -8,43 +8,16 @@ import {
 	linearSearch,
 	binarySearch
 } from "../src/modules/exports.mjs"
+import { multtests as mt, testmultcases as tmc } from "./test.mjs"
 
+// ! ADD TEMPLATES...
 const templates = []
-
-for (const t of templates) {
-	// ! Add arguments;
-	console.log(sentinelSearch(t).function())
-	console.log(sentinelSearch(t).function())
-	console.log(sentinelSearch(t).function())
-	console.log(sentinelSearch(t).function())
-
-	// ! Add arguments;
-	console.log(exponentialSearch(t).function())
-	console.log(exponentialSearch(t).function())
-	console.log(exponentialSearch(t).function())
-	console.log(exponentialSearch(t).function())
-
+tmc(templates, (t) => {
 	// ! Add arguments
-	console.log(interpolationSearch(t).function())
-	console.log(interpolationSearch(t).function())
-	console.log(interpolationSearch(t).function())
-	console.log(interpolationSearch(t).function())
-
-	// ! Add arguments
-	console.log(jumpSearch(t).function())
-	console.log(jumpSearch(t).function())
-	console.log(jumpSearch(t).function())
-	console.log(jumpSearch(t).function())
-
-	// ! Add arguments
-	console.log(linearSearch(t).function())
-	console.log(linearSearch(t).function())
-	console.log(linearSearch(t).function())
-	console.log(linearSearch(t).function())
-
-	// ! Add arguments
-	console.log(binarySearch(t).function())
-	console.log(binarySearch(t).function())
-	console.log(binarySearch(t).function())
-	console.log(binarySearch(t).function())
-}
+	mt(sentinelSearch, [], t)
+	mt(exponentialSearch, [], t)
+	mt(interpolationSearch, [], t)
+	mt(jumpSearch, [], t)
+	mt(linearSearch, [], t)
+	mt(binarySearch, [], t)
+})

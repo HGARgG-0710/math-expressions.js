@@ -8,50 +8,29 @@ import {
 	native
 } from "../src/modules/exports/numeric.mjs"
 
-// ! Add templates
-const templates = []
+import {
+	testmultcases as tmc,
+	multtestobjmethod as mtom,
+	multtests as mt
+} from "./test.mjs"
 
-for (const t of templates) {
-	// ! Add arguments
-	console.log(polystring(t).function())
-	console.log(polystring(t).function())
-	console.log(polystring(t).function())
-
-	// ! Add arguments (reverse the previous one...)
-	console.log(fromPolystring(t).function())
-	console.log(fromPolystring(t).function())
-	console.log(fromPolystring(t).function())
-
-	// ! Add arguments
-	console.log(sameLength(t).function())
-	console.log(sameLength(t).function())
-	console.log(sameLength(t).function())
-
-	// ! Add different values here (for varying bases...);
-	console.log(baseconvert(t).function())
-	console.log(baseconvert(t).function())
-	console.log(baseconvert(t).function())
-	console.log(baseconvert(t).function())
-	console.log(baseconvert(t).function())
+const usual = {
+	polystring,
+	fromPolystring,
+	baseconvert
 }
 
-const nativetemplates = []
+const f = (isnative = false) => (isnative ? native : usual)
 
-for (const t of nativetemplates) {
-	// ! Add arguments
-	console.log(nativetemplates.polystring(t).function())
-	console.log(nativetemplates.polystring(t).function())
-	console.log(nativetemplates.polystring(t).function())
+tmc([false, true].map(f), (scope) => {
+	// ! Add templates...
+	tmc([], (t) => {
+		// ! Add arguments
+		mtom(scope, "polystring", [], t)
+		mtom(scope, "fromPolystring", [], t)
+		mtom(scope, "baseconvert", [], t)
+	})
+})
 
-	// ! Add arguments (reverse the previous one...)
-	console.log(nativetemplates.fromPolystring(t).function())
-	console.log(nativetemplates.fromPolystring(t).function())
-	console.log(nativetemplates.fromPolystring(t).function())
-
-	// ! Add different values here (for varying bases...);
-	console.log(nativetemplates.baseconvert(t).function())
-	console.log(nativetemplates.baseconvert(t).function())
-	console.log(nativetemplates.baseconvert(t).function())
-	console.log(nativetemplates.baseconvert(t).function())
-	console.log(nativetemplates.baseconvert(t).function())
-}
+// ! Add templates and arguments...
+mt(sameLength, [], [])

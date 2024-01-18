@@ -7,25 +7,12 @@ import {
 	findDeepLast
 } from "../src/modules/exports/structure.mjs"
 
-// ! Add argvalues for the tests...
-console.log(generalSearch().function.array)
-console.log(generalSearch().function.array)
-console.log(generalSearch().function.array)
+import { multtests as mt } from "./test.mjs"
 
-// ! Add argvalues for the tests...
-console.log(findDeepUnfilled().function.array)
-console.log(findDeepUnfilled().function.array)
-console.log(findDeepUnfilled().function.array)
-console.log(findDeepUnfilled().function.array)
+const outarr = (x) => console.log(x.array)
 
-// ! Add argvalues for the tests...
-console.log(findDeepUnfilledArr().function.array)
-console.log(findDeepUnfilledArr().function.array)
-console.log(findDeepUnfilledArr().function.array)
-console.log(findDeepUnfilledArr().function.array)
-
-// ! Add argvalues for the tests...
-console.log(findDeepLast().function.array)
-console.log(findDeepLast().function.array)
-console.log(findDeepLast().function.array)
-console.log(findDeepLast().function.array)
+// ! Add test arguments for these...
+mt(generalSearch, [], [], outarr)
+mt(findDeepUnfilled, [], [], outarr)
+mt(findDeepUnfilledArr, [], [], outarr)
+mt(findDeepLast, [], [], outarr)

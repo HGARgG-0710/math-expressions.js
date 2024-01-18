@@ -1,7 +1,7 @@
 {
 	"name": "math-expressions.js",
 	"version": "1.0.0",
-	"description": "math-expressions.js is a general-purpose JavaScript programming library. It provides various handy utils and infinite apis, some being in a certain sense equivalent to those native to JavaScript amongst other things; It has an origin as a library concerned with number arrays, surfaces, statistics, algorithms, equation parsing and solving and other such things...",
+	"description": "math-expressions.js is an abstract-types JavaScript library, distributed via NPM  ",
 	"main": "src/math-expressions.mjs",
 	"type": "module",
 	"scripts": {
