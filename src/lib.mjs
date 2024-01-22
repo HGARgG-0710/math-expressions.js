@@ -249,7 +249,7 @@ export const alinative = {
 				.concat(arr.slice(replacing ? (x) => x + values.length : index)),
 		_insert: (arr, index, val) => alinative.array.insert(arr, index, [val]),
 		remove: (arr, start, end) => arr.slice(0, start).concat(arr.slice(end + 1)),
-		_remove: (arr, index) => remove(arr, index, index),
+		_remove: (arr, index) => alinative.array.remove(arr, index, index),
 		minlen: (...arrs) => flen(min, ...arrs),
 		maxlen: (...arrs) => flen(max, ...arrs),
 		flen: (f, ...arrs) => {
@@ -296,7 +296,7 @@ export const alinative = {
 			return this.composition(fc)(...args)
 		},
 		// ! Use this one extensively...
-		// ? Not general enough... Do the same thing as with the 'finite' - then, rewrite 'finite' using wrapper...;
+		// ? Add the possibility of using with Genarrclasses?
 		wrapper: TEMPLATE({
 			defaults: {
 				inarr: false,
@@ -305,10 +305,13 @@ export const alinative = {
 				deff: id
 			},
 			function: _FUNCTION(function (f = this.template.deff) {
+				const inofi = is.arr(this.template.in)
+					? (i) => this.template.in[i] || ID
+					: alinative.function.const(this.template.in)
 				return this.template.inarr
-					? (x, ...rest) =>
-							this.template.out(f(...this.template.in(x), ...rest))
-					: (x, ...rest) => this.template.out(f(this.template.in(x), ...rest))
+					? (...vals) =>
+							this.template.out(f(...vals.map((x, i) => inofi(i)(x))))
+					: (...vals) => this.template.out(f(vals.map((x, i) => inofi(i)(x))))
 			})
 		}).function,
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
@@ -385,6 +388,13 @@ export const alinative = {
 		dor: (a, b) => a || b
 	}
 }
+
+// ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
+export const TRUTH = alinative.function.const(true)
+export const T = TRUTH
+export const FALLACY = alinative.function.const(false)
+export const F = FALLACY
+export const VOID = alinative.function.void
 
 export const trimBeginning =
 	(n = 1) =>
@@ -667,7 +677,14 @@ export const general = {
 		for (const x in names)
 			newobj[names[x]] = (
 				aretemplates[x]
-					? (f) => TEMPLATE({ defaults: ftemplates[x], function: f }).function
+					? (f) =>
+							TEMPLATE({
+								defaults: ftemplates[x] || {
+									genarrclass: garrays.CommonArray(),
+									icclass: InfiniteCounter(addnumber())
+								},
+								function: f
+							}).function
 					: ID
 			)(function (...args) {
 				return finite(xf(x)).function(
@@ -716,6 +733,7 @@ export function TEMPLATE(template = {}) {
 			}
 		}
 		_class[this.template.templateword] = {
+			..._class[this.template.templateword],
 			...K(this.template.defaults, -1),
 			...template
 		}
@@ -766,15 +784,20 @@ export const finite = TEMPLATE({
 			? ID
 			: general.DEFAULT_TINTCLASS.static.fromCounter
 		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
-		const tin = (out) => (out ? fu(native.number.fromNumber) : garrays.CommonArray())
+		const tin = (out) =>
+			out === true
+				? fu(alinative.number.fromNumber)
+				: out === false
+				? garrays.CommonArray().class
+				: ID
 		const tout = (out) =>
 			out
-				? (x) => x.map(InfiniteCounter(addnumber())).value
-				: (x) => x.copied("switchclass", [arrays.CommonArray()]).array
+				? (x) => x.map(InfiniteCounter(addnumber()).class).value
+				: (x) => x.copied("switchclass", [garrays.CommonArray()]).array
 		return alinative.function
 			.wrapper({
 				out: tout(out),
-				in: inseq.map(tin),
+				in: is.arr(inseq) ? inseq.map(tin) : tin(inseq),
 				inarr: true
 			})
 			.function(f)
@@ -1245,15 +1268,21 @@ export const alarray = {
 			halt = this.template.halt,
 			haltAfter = this.template.haltAfter
 		) {
-			return general.fix([arr.this.this], ["currindex"], () => {
-				const inds = this.empty()
+			arr = arr.copy()
+			return general.fix([arr], ["currindex"], () => {
+				const inds = arr.empty()
 				const cond = halt
 					? (inds) => greateroe(inds.length().get(), haltAfter)
 					: TRUTH
-				let currind
-				while (currind !== this.template.unfound && !cond(inds, this)) {
-					currind = search.linear(this.template).function(el, arr)
+				let currind = search.linear(this.template).function(el, arr)
+				let isfound = !refCompare(currind, this.template.unfound)
+				while (isfound && cond(inds)) {
 					inds.pushback(currind)
+					currind = search
+						.linear(this.template)
+						.function(el, arr.delete(currind))
+					if ((isfound = !refCompare(currind, this.template.unfound)))
+						currind = currind.next()
 				}
 				return inds
 			})
@@ -1278,7 +1307,7 @@ export const alarray = {
 		],
 		function: alinative.function.const(
 			_FUNCTION(function (arr, el, tokeep = this.template.tokeep) {
-				const firstMet = array.indexesOf(this.template).function(arr, el)
+				const firstMet = alarray.indexesOf(this.template).function(arr, el)
 				const pred = (a, i) =>
 					lesser(firstMet.firstIndex(i).map(tokeep.class), tokeep) ||
 					!this.template.comparison(a, el)
@@ -1306,19 +1335,31 @@ export const alarray = {
 		})
 	}).function,
 	join: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: _FUNCTION(function (
-			arrs = this.template.genarrclass.static.empty(),
-			separators = this.template.separators
-		) {
-			return repeatedApplication(
-				this.template.genarrclass.static.empty(),
-				arrs.length().get(),
-				(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
-			)
-		})
+		defaults: [
+			function () {
+				return {
+					genarrclass: general.DEFAULT_GENARRCLASS
+				}
+			},
+			function () {
+				return {
+					separators: this.template.genarrclass.static.fromArray([undefined])
+				}
+			}
+		],
+		function: alinative.function.const(
+			_FUNCTION(function (
+				arrs = this.template.genarrclass.static.empty(),
+				separators = this.template.separators
+			) {
+				return repeatedApplication(
+					this.template.genarrclass.static.empty(),
+					arrs.length().get(),
+					(x, i) => x.concat(arrs.read(i).copied("concat", [separators]))
+				)
+			})
+		),
+		isthis: true
 	}).function,
 	generate: TEMPLATE({
 		defaults: {
@@ -1374,7 +1415,8 @@ export const alarray = {
 	split: TEMPLATE({
 		defaults: {
 			comparison: general.DEFAULT_COMPARISON,
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			separator: undefined
 		},
 		function: _FUNCTION(function (
 			array = this.template.genarrclass.static.empty(),
@@ -2403,7 +2445,7 @@ export const objCounter = GENERATOR({
 }).function
 
 // ? Generalize with the usage of 'forms'? [the present implementation uses the 'DEFAULT_FORM...'];
-// * A maximally efficient (structurally, that being) counter based on array recursion and finite orders;
+// * A counter based on array recursion and finite orders;
 // ! Note: the counters are way too slow as of present (seeking potential ways of remedying it...).
 export function recursiveCounter(template = {}) {
 	const returned = {
@@ -2436,25 +2478,25 @@ export function recursiveCounter(template = {}) {
 		(returned) =>
 		(t = true) =>
 			findDeepUnfilled({
-				soughtProp: (x) =>
-					returned.template.type(x) && (t ? id : n)(returned.template.sign(x)),
+				soughtProp: returned.template.type,
 				bound: t ? returned.template.upper : returned.template.rupper,
 				comparison: returned.template.comparison
 			}).function()
 	const findDeepUnfilledArr_ = (returned) =>
 		findDeepUnfilledArr({
 			bound: returned.template.maxarrlen
-		})
+		})()
 	const findDeepLast_ = (returned) =>
 		findDeepLast({
 			soughtProp: returned.template.type
 		})
 
+	// ! In the default value of the 't' as an 'undefined-like' value, generalize to allow for ranges that include 'undefined'...
 	const keys = ["inverse", "function"]
 	keys.map(
 		(x, i) =>
 			(returned[x] = (x === "function" ? alinative.function.const : ID)(
-				_FUNCTION(function (t = [this.template.lower]) {
+				_FUNCTION(function (t) {
 					return generalgenerator(t, !!i, this)
 				})
 			))
@@ -2493,6 +2535,7 @@ export function recursiveCounter(template = {}) {
 					return x
 				}
 
+				// ! BUG 1: the '1-layeredness' (fixed same way as in the 'signedDelete...');
 				result = rindexation(
 					result,
 					indexes.copied("slice", [undefined, indexes.finish().previous()])
@@ -2511,28 +2554,42 @@ export function recursiveCounter(template = {}) {
 			return function (x) {
 				if (
 					!findDeepUnfilled_(thisobject)(sign)(x) &&
-					findDeepUnfilledArr_(thisobject)(x) &&
+					!findDeepUnfilledArr_(thisobject)(x) &&
 					x.length === 1
 				)
 					return x[0]
 
+				let isSingle = false
 				let lastIndexes = findDeepLast_(thisobject)(x)
-				const finind = lastIndexes.final()
+				const finind = lastIndexes.finish()
 				const ffinind = finind.previous()
 
-				// ? do the 'ppointer' stuff after having made sure that the 'lastIndexes.length().get().compare(lastNumIndexes.two())'
+				if (lastIndexes.length().get().equal(lastIndexes.one())) {
+					isSingle = true
+					lastIndexes.pushfront(0)
+					x = [x]
+				}
+
 				let ppointer = rindexation(
 					x,
-					lastIndexes.slice(undefined, ffinind.previous())
+					lastIndexes.copied("slice", [undefined, ffinind.previous()])
 				)
-				let pointer = rindexation(x, lastIndexes.slice(undefined, ffinind))
+				let pointer = rindexation(
+					x,
+					lastIndexes.copied("slice", [undefined, ffinind])
+				)
 
 				const lindex = lastIndexes.read(finind)
-				if (thisobject.template.sign(pointer[lindex])) {
+				if (
+					!thisobject.template.comparison(
+						thisobject.template.lower,
+						pointer[lindex]
+					)
+				) {
 					pointer[lindex] = thisobject.template[sign ? "forward" : "backward"](
 						pointer[lindex]
 					)
-					return x
+					return (isSingle ? (x) => x[0] : ID)(x)
 				}
 				const llindex = lastIndexes.read(ffinind)
 
@@ -2560,7 +2617,7 @@ export function recursiveCounter(template = {}) {
 					)
 				}
 
-				return x
+				return (isSingle ? (x) => x[0] : ID)(x)
 			}
 		}
 	}
@@ -2570,14 +2627,19 @@ export function recursiveCounter(template = {}) {
 		sdt = signedDelete(true),
 		sdf = signedDelete(false)
 
-	function boolfunctswitch(f, bool) {
-		return f ? (bool ? sat : saf) : bool ? sdt : sdf
+	// TODO: problem - currently, does not work with 'broken' (outside) values, like 'generator([POS, NEG])' - here, it will start with increasing POS, instead of 'fixing' the NEG (this isn't supposed to happen...); Fix later...;
+	function boolfunctswitch(fsign, signbool) {
+		return fsign ? (signbool ? sat : sdt) : signbool ? sdf : saf
 	}
 
 	function generalgenerator(x, bool, thisobj) {
-		if (!thisobj.range(x)) return [thisobj.template.lower]
-		let r = copy.deepCopy(x)
-		return boolfunctswitch(thisobj.template.globalsign(r), bool)(thisobj)(r)
+		if (!thisobj.range(x)) return thisobj.template.init(thisobj)
+		const r = copy.deepCopy(x)
+		// ? Think on whether the '_valueCompare' is a good choice here... [or if one ought to generalize, for instance...];
+		const globsign = thisobj.template.globalsign(r)
+		const isinit =
+			_valueCompare(x, thisobj.template.init(thisobj)) || globsign === null
+		return boolfunctswitch(bool, isinit ? bool : globsign)(thisobj)(r)
 	}
 
 	return GENERATOR(returned).function()
@@ -2592,25 +2654,29 @@ export function numberCounter(template = {}) {
 		upper: MAX_INT.get,
 		lower: 0,
 		rupper: -MAX_INT.get,
-		// ? So... should the 'sign', then, involve '.lower', or not?
-		sign: (x) => x >= 0,
-		globalsign: function (x) {
-			return (
+		// ! PROBLEM WITH 'globalsign' - it must work for BOTH positive and negative sign, namely, it must check for whether they are COMPLETE (this way, there's actually 3 types - complete negative, complete positive and incomplete; Incomplete gets a different treatment from complete types, which get equivalent treatment, but have different function sets...);
+		sign: (x) => x > 0,
+		globalsign: function (x, pr = true) {
+			let r = pr
+			const final =
 				is.arr(x) &&
-				x.some(
-					(a) =>
-						alinative.function.argscall(a)(this.sign) ||
-						alinative.function.argscall(a)(this.globalsign)
-				)
-			)
+				x.every((a) => {
+					if (refCompare(a, this.lower)) return (r = null)
+					const gs = this.globalsign(a, r)
+					return gs ? gs : this.sign(a)
+				})
+			if (refCompare(r, null)) return r
+			return final
 		},
 		type: negate(is.nan),
 		forward: inc(),
 		backward: dec(),
+		init: (thisobj) => [thisobj.template.lower],
 		...template
 	})
 }
 
+// TODO: some (many) of the templates have their dependencies of variables messed up completely (some are fluid - relying upon 'this', whilst others - upon 'template' or such others local variables, that are to be used for definition of the context-ones...);
 // A special case of 'recusiveCounter';
 // * Uses array-orders (by default);
 export function orderCounter(template = {}) {
@@ -2618,16 +2684,24 @@ export function orderCounter(template = {}) {
 		upper: template.order[template.order.length - 1],
 		lower: template.order[Math.floor(template.order.length / 2)],
 		rupper: template.order[0],
-		forward: (x) => template.order[inc(template.order.indexOf(x))],
-		backward: (x) => template.order[dec(template.order.indexOf(x))],
-		globalsign: _FUNCTION(function (x) {
-			return x.any((a) =>
-				alinative.binary.dor(
-					...[this.sign, this.globalsign].map(alinative.function.argscall(a))
-				)
-			)
-		}),
-		sign: (x) => strorder.indexOf(x) > Math.floor(template.order.length / 2),
+		forward: (x) => template.order[inc()(template.order.indexOf(x))],
+		backward: (x) => template.order[dec()(template.order.indexOf(x))],
+		// ? Wonder - should one not make take this thing out of the 'template' that gets passed to the 'recursiveCounter'?
+		globalsign: function (x, pr = true) {
+			let r = pr
+			const final =
+				is.arr(x) &&
+				x.every((a) => {
+					if (refCompare(a, this.lower)) return (r = null)
+					const gs = this.globalsign(a, r)
+					return gs ? gs : this.sign(a)
+				})
+			if (refCompare(r, null)) return r
+			return final
+		},
+		// ! Bugged - must rely upon 'this', not 'template'...
+		sign: (x) => template.order.indexOf(x) >= Math.floor(template.order.length / 2),
+		init: (thisobj) => [thisobj.template.lower],
 		...template
 	})
 }
@@ -2640,11 +2714,161 @@ export function stringCounter(template = {}) {
 	})
 }
 
+export const form = (
+	_new,
+	is,
+	index,
+	// ? What about this? Not really used by anything except for the 'constForm'...; Perhaps, decide means of individual extension of forms?
+	isomorphic = TRUTH,
+	copy = (x, f) => x.copy(f),
+	read = (x, i) => x.read(i),
+	write = (x, i, v) => x.write(i, v),
+	keys = (x) => x.keys(),
+	init = (x) => x.init()
+) => {
+	// ? Should one be using the 'arrow-functions' like that, or will 'form->this+function' be a more prefereable option?
+	const X = { new: _new, is, index, isomorphic }
+	X.init = (x) => init(x)
+	X.flatmap = (x, f) => X.new(copy(X.index(x), f))
+	X.read = (x, i = X.init(x)) => read(X.index(x), i)
+	X.write = (x, i) => write(X.index(x), i, v)
+	X.keys = (x) => keys(X.index(x))
+	X.copy = (x, f) => copy(X.index(x), f)
+	return X
+}
+
+// * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'refCompare' and the out-of-scope object constant;
+export function typeConst(f = ID, n = 1) {
+	const TCONST = alinative.object.empty()
+	// ! make an alias for the function in the map;
+	const arr = [TCONST].concat(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
+	return f(Object.freeze(arr))
+}
+
+// * Some forms aliases for immidiate work with the 'structure';
+
+export function constForm(
+	fieldname = "",
+	contentsname = "contents",
+	n = true,
+	defaultval = []
+) {
+	return typeConst((c) => {
+		let _new = (x = defaultval) => ({ [contentsname]: x })
+		let is = (checked) => is.obj(checked) && obj.hasOwn(checked, contentsname)
+		const index = (x) => x[contentsname]
+		let isomorphic = undefined
+		if (n) {
+			c = c[0]
+			_new = (x = defaultval) => ({ [fieldname]: c, [contentsname]: x })
+			is = (checked) =>
+				is.obj(checked) &&
+				checked[fieldname] === c &&
+				obj.hasOwn(checked, contentsname)
+			isomorphic = (x, y) => x[fieldname] === y[fieldname]
+		}
+		return form(_new, is, index, isomorphic)
+	}, n)
+}
+
+export function propertyForm(contentsname = "", defaultval = {}) {
+	return constForm("", contentsname, false, defaultval)
+}
+
+export const objectForm = form(
+	obj,
+	is.obj,
+	obj.values,
+	TRUTH,
+	(x, f = ID) => {
+		let c = copy.flatCopy(x)
+		for (const y in x) c[y] = f(c[y])
+		return c
+	},
+	// ? aliases? [or, are they defined already?]
+	(x, i) => x[i],
+	(x, i, v) => (x[i] = v),
+	obj.keys,
+	(x) => obj.keys(x)[0]
+)
+export const arrayForm = form(
+	arr,
+	is.arr,
+	ID,
+	TRUTH,
+	(x, f = ID) => x.map(f),
+	(x, i = 0) => x[i],
+	(x, i, v) => (x[i] = v),
+	naarray.keys,
+	alinative.function.const(0)
+)
+
+general.DEFAULT_FORM = arrayForm
+
+export const structure = TEMPLATE({
+	defaults: {
+		form: general.DEFAULT_FORM,
+		comparison: general.DEFAULT_COMPARISON,
+		// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
+		compequiv: function (...args) {
+			if (args.length === 1) return args[1]
+			return true
+		}
+	},
+	function: _FUNCTION(function (obj = this.template.form.new()) {
+		return {
+			template: {
+				template: this.template,
+				compequiv: this.template.compequiv,
+				comparison: this.template.comparison,
+				form: this.template.form,
+				object: obj
+			},
+			equivalent: function (form = general.DEFAULT_FORM) {
+				const o = form.new()
+				for (const x of this.template.form.keys(this.template.object)) {
+					const rresult = this.template.form.read(this.template.object, x)
+					o.write(
+						x,
+						this.template.form.is(rresult)
+							? this.function(rresult).equivalent()
+							: this.template.compequiv(rresult)
+					)
+				}
+				return o
+			},
+			recisomorphic(object = this.template.object, current = this.template.object) {
+				if (!this.template.form.is(object)) {
+					return (
+						!this.template.form.is(current) &&
+						this.template.compequiv(object, current)
+					)
+				}
+				const keys = this.template.form.keys(object)
+				return (
+					this.template.comparison(keys, this.template.form.keys(current)) &&
+					keys.every((k) =>
+						this.recisomorphic(
+							...[object, current].map((x) => this.template.form.read(x, k))
+						)
+					)
+				)
+			}
+		}
+	})
+}).function
+
+export const classForm =
+	(_class) =>
+	(template = {}, index = ID, additional = []) => {
+		const Class = _class(template)
+		return form(Class.class, Class.is, index, TRUTH, ...additional)
+	}
+
 export const circularCounter = (() => {
 	const final = {
 		defaults: {
 			values: [],
-			form: general.DEFAULT_FORM,
 			hop: 1
 		},
 		range(x) {
@@ -2653,22 +2877,27 @@ export const circularCounter = (() => {
 	}
 
 	const generalized = (name, sign) =>
-		_FUNCTION(function (x) {
-			if (this.template.form.is(x)) return this.template.form.flatmap(x, this[name])
-			const vals = alinative.array
-				.indexesOf(this.template.values, x)
-				.map(
-					(i) =>
-						this.template.values[
-							(i + sign * this.template.hop) % this.template.values
-						]
-				)
-			if (vals.length == 1) return vals[0]
-			return this.template.form.new(vals)
-		})
+		(name === "function" ? alinative.function.const : ID)(
+			_FUNCTION(function (x) {
+				if (this.template.form.is(x))
+					return this.template.form.flatmap(x, this[name])
+				const vals = alarray.native
+					.indexesOf()
+					.function(this.template.values, x)
+					.map(
+						(i) =>
+							this.template.values[
+								(i.value + sign * this.template.hop) %
+									this.template.values.length
+							]
+					)
+				if (!vals.length) return this.template.values[0]
+				if (vals.length == 1) return vals[0]
+				return this.template.form.new(vals)
+			})
+		)
 	const arr = ["function", "inverse"]
 	for (const i of [0, 1]) final[arr[i]] = generalized(arr[i], (-1) ** i)
-
 	return GENERATOR(final).function
 })()
 
@@ -2679,6 +2908,7 @@ export function arrCircCounter(template = {}) {
 	})
 }
 
+// ? Make a nice out-of-scope error message/special value, that it gets "stuck" on?
 export const finiteCounter = (() => {
 	const F = {}
 	const keys = ["function", "inverse"]
@@ -2796,13 +3026,6 @@ export function ofromIcc(icclass = general.DEFAULT_ICCLASS, reflexive = true) {
 	return (x, y) => f(icclass.class(x), icclass.class(y))
 }
 
-// ^ IDEA [for a future project]: JSpace - a package for alias and function namespaces from various programming languages implementations (they'd work in an exactly the same fashion, but work in JavaScript);
-export const TRUTH = alinative.function.const(true)
-export const T = TRUTH
-export const FALLACY = alinative.function.const(false)
-export const F = FALLACY
-export const VOID = alinative.function.void
-
 // ? 'Ensurer' somehow feels like a bit of a hack (largely, because it makes necessery the addition of the list of methods to be checked... See if want to do anything about it.)
 export const Ensurer = (_class, predicate = T, responses = {}) => {
 	const X = {}
@@ -2858,157 +3081,6 @@ export const stnative = {
 		-2
 	)
 } */
-
-export const form = (
-	_new,
-	is,
-	index,
-	// ? What about this? Not really used by anything except for the 'constForm'...; Perhaps, decide means of individual extension of forms?
-	isomorphic = TRUTH,
-	copy = (x, f) => x.copy(f),
-	read = (x, i) => x.read(i),
-	write = (x, i, v) => x.write(i, v),
-	keys = (x) => x.keys(),
-	init = (x) => x.init()
-) => {
-	// ? Should one be using the 'arrow-functions' like that, or will 'form->this+function' be a more prefereable option?
-	const X = { new: _new, is, index, isomorphic }
-	X.init = (x) => init(x)
-	X.flatmap = (x, f) => X.new(copy(X.index(x), f))
-	X.read = (x, i = X.init(x)) => read(X.index(x), i)
-	X.write = (x, i) => write(X.index(x), i, v)
-	X.keys = (x) => keys(X.index(x))
-	X.copy = (x, f) => copy(X.index(x), f)
-	return X
-}
-
-export const structure = TEMPLATE({
-	defaults: {
-		form: general.DEFAULT_FORM,
-		comparison: general.DEFAULT_COMPARISON,
-		// * Note: this is a complex example - for 1 argument, it must return the expected 'equivalent', but for 2 - whether they are, in fact, equivalent, (id est: compequiv(a, compequiv(a)) == true);
-		compequiv: function (...args) {
-			if (args.length === 1) return args[1]
-			return true
-		}
-	},
-	function: _FUNCTION(function (obj = this.template.form.new()) {
-		return {
-			template: {
-				template: this.template,
-				compequiv: this.template.compequiv,
-				comparison: this.template.comparison,
-				form: this.template.form,
-				object: obj
-			},
-			equivalent: function (form = general.DEFAULT_FORM) {
-				const o = form.new()
-				for (const x of this.template.form.keys(this.template.object)) {
-					const rresult = this.template.form.read(this.template.object, x)
-					o.write(
-						x,
-						this.template.form.is(rresult)
-							? this.function(rresult).equivalent()
-							: this.template.compequiv(rresult)
-					)
-				}
-				return o
-			},
-			recisomorphic(object = this.template.object, current = this.template.object) {
-				if (!this.template.form.is(object)) {
-					return (
-						!this.template.form.is(current) &&
-						this.template.compequiv(object, current)
-					)
-				}
-				const keys = this.template.form.keys(object)
-				return (
-					this.template.comparison(keys, this.template.form.keys(current)) &&
-					keys.every((k) =>
-						this.recisomorphic(
-							...[object, current].map((x) => this.template.form.read(x, k))
-						)
-					)
-				)
-			}
-		}
-	})
-}).function
-
-// * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'refCompare' and the out-of-scope object constant;
-export function typeConst(f = ID, n = 1) {
-	const TCONST = alinative.object.empty()
-	// ! make an alias for the function in the map;
-	const arr = [TCONST].concat(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
-	return f(Object.freeze(arr))
-}
-
-// * Some forms aliases for immidiate work with the 'structure';
-
-export function constForm(
-	fieldname = "",
-	contentsname = "contents",
-	n = true,
-	defaultval = []
-) {
-	return typeConst((c) => {
-		let _new = (x = defaultval) => ({ [contentsname]: x })
-		let is = (checked) => is.obj(checked) && obj.hasOwn(checked, contentsname)
-		const index = (x) => x[contentsname]
-		let isomorphic = undefined
-		if (n) {
-			c = c[0]
-			_new = (x = defaultval) => ({ [fieldname]: c, [contentsname]: x })
-			is = (checked) =>
-				is.obj(checked) &&
-				checked[fieldname] === c &&
-				obj.hasOwn(checked, contentsname)
-			isomorphic = (x, y) => x[fieldname] === y[fieldname]
-		}
-		return form(_new, is, index, isomorphic)
-	}, n)
-}
-
-export function propertyForm(contentsname = "", defaultval = {}) {
-	return constForm("", contentsname, false, defaultval)
-}
-
-export const objectForm = form(
-	obj,
-	is.obj,
-	obj.values,
-	TRUTH,
-	(x, f = ID) => {
-		let c = copy.flatCopy(x)
-		for (const y in x) c[y] = f(c[y])
-		return c
-	},
-	// ? aliases? [or, are they defined already?]
-	(x, i) => x[i],
-	(x, i, v) => (x[i] = v),
-	obj.keys,
-	(x) => obj.keys(x)[0]
-)
-export const arrayForm = form(
-	arr,
-	is.arr,
-	ID,
-	TRUTH,
-	(x, f = ID) => x.map(f),
-	(x, i = 0) => x[i],
-	(x, i, v) => (x[i] = v),
-	naarray.keys,
-	alinative.function.const(0)
-)
-
-general.DEFAULT_FORM = arrayForm
-
-export const classForm =
-	(_class) =>
-	(template = {}, index = ID, additional = []) => {
-		const Class = _class(template)
-		return form(Class.class, Class.is, index, TRUTH, ...additional)
-	}
 
 export const GeneralArray = (() => {
 	return CLASS({
@@ -3110,13 +3182,13 @@ export const GeneralArray = (() => {
 					const a = {
 						template: {
 							indexiter: (x) => next(x.object()),
-							end: (x) => x.object().this.class.template.isEnd(x.object()),
+							end: (x) => x.object().class.template.isEnd(x.object()),
 							begin: (x) => x.object().begin(),
 							icclass: this.this.this.this.class.template.icclass,
 							after: ID,
 							...template
 						},
-						object: alinative.function.const(this),
+						object: alinative.function.const(this.this),
 						broke: false,
 						continued: false
 					}
@@ -3140,20 +3212,25 @@ export const GeneralArray = (() => {
 						begin = this.template.begin,
 						after = this.template.after
 					) {
-						const index = this.object().this.this.currindex
-						begin(this)
-						let r = undefined
-						let is = this.yield(alinative.function.const(null), end(), false)
-						while (!is) {
-							r = each(this, r)
-							is = this.yield(iter(), end())
-							if (this.broke) break
-						}
-						this.restart()
-						this.broke = false
-						this.object().currindex = index
+						const t = general.fix([this.object()], ["currindex"], () => {
+							begin(this)
+							let r = undefined
+							let is = this.yield(
+								alinative.function.const(null),
+								end(),
+								false
+							)
+							while (!is) {
+								r = each(this, r)
+								is = this.yield(iter(), end())
+								if (this.broke) break
+							}
+							this.restart()
+							this.broke = false
+							return r
+						})
 						after(this)
-						return r
+						return t
 					}).bind(a)
 					// * The difference between '.full()' and '._full()' is that the former is based on latter and allows for 'break' and 'continue'...
 					// ? [later?] generalize to a function for a truly general loop (the 'while', that'd use this system for the 'separation' of an iteration into a GeneralArray of functions suceptible to inner 'this.break()' or 'this.continue()' calls...)
@@ -3349,17 +3426,18 @@ export const GeneralArray = (() => {
 					return this.this
 				}),
 				concat: _FUNCTION(function (array = this.empty()) {
-					return array.loop()._full(
+					array.loop()._full(
 						this.pushbackLoop({
 							arguments: []
 						}).function
 					)
+					return this.this
 				}),
 				multcall: refactor.classes.multcall,
 				clear: _FUNCTION(function () {
 					this.this.this = this.empty().this
 					return this
-				}), 
+				}),
 				empty: _FUNCTION(function (
 					template = this.this.this.this.class.template
 				) {
@@ -3372,7 +3450,6 @@ export const GeneralArray = (() => {
 						? this.this.this.this.class
 						: this.this.this.this.class.template
 				) {
-					// ! The problem's with '.empty()' - apparently, it doesn't create an empty GeneralArray, but instead just references the current one... [somehow, see how this happens and fix...]
 					const copied = this.empty()
 					copied.class = isclass
 						? template
@@ -3408,7 +3485,8 @@ export const GeneralArray = (() => {
 							t.object().go(begin)
 						}
 					)
-					return (this.this.this = sliced.this)
+					this.this.this = sliced.this
+					return this.this
 				}),
 				keys: function* () {
 					for (let c = this.init(); lesser(c, this.length().get()); c = next(c))
@@ -3431,11 +3509,13 @@ export const GeneralArray = (() => {
 				convert: _FUNCTION(function (
 					template = this.this.this.this.class.template
 				) {
-					return (this.this.this = this.copy(ID, false, template).this)
+					this.this.this = this.copy(ID, false, template).this
+					return this.this
 				}),
 				// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
 				switchclass: _FUNCTION(function (arrclass = this.this.this.this.class) {
-					return (this.this.this = this.copy(ID, true, arrclass).this)
+					this.this.this = this.copy(ID, true, arrclass).this
+					return this.this
 				}),
 				swap: _FUNCTION(function (i, j) {
 					const ival = this.read(i)
@@ -3485,7 +3565,7 @@ export const GeneralArray = (() => {
 							},
 							undefined,
 							(x) =>
-								x.object().this.class.template.isEnd(x.object()) ||
+								x.object().class.template.isEnd(x.object()) ||
 								array.this.class.template.isEnd(array),
 							(t) => t.object().go(index)
 						)
@@ -3863,6 +3943,7 @@ export const generalSearch = TEMPLATE({
 			boundprop(i.currelem().get());
 			i.currelem().set(i.currelem().get() + (-1) ** reversed)
 		) {
+			// TODO: extend the '.soughtProp' to allow for working with the index 'i.currelem().get()';
 			if (
 				this.template.soughtProp(
 					this.template.form.read(arrrec, i.currelem().get())
@@ -3920,14 +4001,14 @@ export const findDeepUnfilledArr = _FUNCTION(function (template = {}) {
 		comparison: (a, b) => a <= b.length,
 		self: true,
 		...template
-	}).function()
+	}).function
 })
 
 export const findDeepLast = _FUNCTION(function (template = {}) {
 	return generalSearch({
 		reversed: true,
 		...template
-	}).function()
+	}).function
 })
 
 export const recursiveIndexation = TEMPLATE({
@@ -4794,7 +4875,7 @@ export const tnumbers = {
 				}).bind(R)
 
 				R.fromCounter = _FUNCTION(function (ic) {
-					return number.TrueInteger(ic.class)(ic.value)
+					return tnumbers.TrueInteger(ic.class).class(ic.value)
 				}).bind(R)
 
 				return R
@@ -6102,7 +6183,7 @@ export const sort = {
 	}).function
 }
 
-// ? Add search algorithms: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...);
+// ? [For future]: Add search algorithms: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...);
 export const search = {
 	sentinel: TEMPLATE({
 		defaults: { defelem: undefined, unfound: undefined },
@@ -6285,14 +6366,8 @@ export const search = {
 	}).function
 }
 
-// ? Want to 'de-objectivise' these, pray? [user may want to get the methods as-are...];
 export const integer = {
-	native: {
-		primesBefore: function (x = 1) {
-			return alarray.generate(x).filter(this.isPrime)
-		}
-	},
-
+	native: {},
 	factorOut: TEMPLATE({
 		defaults: {
 			tintclass: general.DEFAULT_TINTCLASS,
@@ -6335,27 +6410,20 @@ export const integer = {
 		}
 	}).function,
 
-	primesBefore: TEMPLATE({
-		defaults: { icclass: general.DEFAULT_ICCLASS },
-		function: function (x = this.template.icclass.class()) {
-			return array.generate(this.template)(x).suchthat(integer.isPrime)
-		}
-	}).function,
-
 	multiples: TEMPLATE({
-		default: { includezero: false },
+		defaults: { includezero: false },
 		function: function (
 			n = this.template.tintclass.static.one(),
 			range = this.template.tintclass.static.one()
 		) {
-			return array
-				.generate()
+			return alarray
+				.generate(this.template)
 				.function(
-					(this.template.includezero ? ID : next)(n.class.class()).value,
+					(this.template.includezero ? ID : next)(n.zero()).value,
 					range.value,
 					this.template.step
 				)
-				.map((a) => this.template.tintclass(a.value).multiply(n))
+				.map((a) => this.template.tintclass.static.fromCounter(a).multiply(n))
 		}
 	}).function,
 
@@ -6367,27 +6435,7 @@ export const integer = {
 			n = this.template.tintclass.static.one(),
 			x = this.template.tintclass.static.one()
 		) {
-			return number.multiples(n, x.divide(n))
-		}
-	}).function,
-
-	commonDivisors: TEMPLATE({
-		defaults: {},
-		function: function (...tints) {
-			return array
-				.common({ f: integer.factorOut, ...this.template })
-				.function(tints)
-		}
-	}).function,
-
-	commonMultiples: TEMPLATE({
-		defaults: {},
-		function: function (...nums) {
-			return array
-				.common({
-					f: (x) => integer.native.multiples(x, this.template.range)
-				})
-				.function(nums)
+			return number.multiples(n, x.difference().divide(n))
 		}
 	}).function,
 
@@ -6521,45 +6569,90 @@ export const integer = {
 					res.push(this.template.genarrclass.static.fromArray([i]).concat(r))
 			return res
 		}
+	}).function,
+
+	commonDivisors: TEMPLATE({
+		defaults: {},
+		function: function (...tints) {
+			return array
+				.common({ f: integer.factorOut, ...this.template })
+				.function(tints)
+		}
+	}).function,
+
+	commonMultiples: TEMPLATE({
+		defaults: {},
+		function: function (...nums) {
+			return array
+				.common({
+					f: (x) => integer.native.multiples(x, this.template.range)
+				})
+				.function(nums)
+		}
+	}).function,
+
+	primesBefore: TEMPLATE({
+		defaults: { icclass: general.DEFAULT_ICCLASS },
+		function: function (x = this.template.icclass.class()) {
+			return array.generate(this.template)(x).suchthat(integer.isPrime)
+		}
 	}).function
 }
 
+// ? Generalize these two as well using the 'finiteobj'?
 integer.native.commonDivisors = function (...nums) {
-	return alarray.common({ f: integer.native.factorOut }).function(nums)
+	return alarray.native.common({ f: integer.native.factorOut }).function(nums)
 }
 
 integer.native.commonMultiples = TEMPLATE({
 	defaults: { range: 100 },
 	function: function (...nums) {
-		return array
+		return array.native
 			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
 			.function(nums)
 	}
 }).function
 
-// ! fix the missing in- and out-'sequences' for the determination of the types conversion at the beginning and ending...;
+const methNames = [
+	"factorOut",
+	"isPrime",
+	"multiples",
+	"multiplesBefore",
+	"lcm",
+	"lcd",
+	"areCoprime",
+	"allFactors",
+	"isPerfect",
+	"factorial",
+	"binomial",
+	"sumRepresentations"
+]
+const mt = methNames.map(TRUTH)
+
+// ! PROBLEM: the '{integer: true}' here. IT MUST BE ASSIGNED INDIVIDUALLY [for 'sumRepresentations' and such, in particular...];
+// ? Add this '[true, ...]' information to specialized objects designed for storing method signature-related items? [Consider making a Method type/class/Interface...];
 integer.native = {
 	...integer.native,
 	...general.finiteobj(
 		integer,
-		[
-			"factorOut",
-			"isPrime",
-			"multiples",
-			"multiplesBefore",
-			"lcm",
-			"lcd",
-			"areCoprime",
-			"allFactors",
-			"isPerfect",
-			"factorial",
-			"binomial",
-			"sumRepresentations"
-		],
+		methNames,
 		{ integer: true },
-		[],
-		[],
-		[alarray.native.generate(obj.keys(integer).length).map(TRUTH)]
+		[
+			[true],
+			[true],
+			[true, true],
+			[true, true],
+			true,
+			true,
+			true,
+			[true],
+			[true],
+			[true],
+			[true, true],
+			[true, true, true]
+		],
+		mt,
+		mt
 	)
 }
 integer.native.primesBefore = finite().function(integer.primesBefore)
@@ -6629,8 +6722,8 @@ export const READONLY = (x) =>
 	}
 } */
 
-export function DEOBJECT(obj = {}) {
-	return ["keys", "values"].map((x) => Object[x](obj))
+export function DEOBJECT(object = {}) {
+	return ["keys", "values"].map((x) => obj[x](object))
 }
 
 export function OBJECT(keys = [], values = []) {
@@ -6646,23 +6739,42 @@ export function NOMODULE(moduleobj) {
 	return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
 }
 
-// ! Note [on reassembling the code by pieces so as for it to work...]: Uses such as this must be moved to the end...
+const arrmethNames = [
+	"intersection",
+	"permutations",
+	"indexesOf",
+	"norepetitions",
+	"isSub",
+	"join",
+	"common",
+	"concat",
+	"split"
+]
+
+// TODO: fix the way that the 'icclass' and 'genarrclass' 'defaults'-variables are treated; They must not have such 'significance' (generalize greatly to a proper finite-infinite type systems... Consider how else to do this...);
+// ! DESSSSSSSSSSSSSSSSSSSSSSSIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIGNNNNNNNNNNNNNNNNN ISSSUEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE: (Seeeeeemingly, of unfixable nature currently)
+// ^ 'Recursively infinite' types, such as a GeneralArray of InfiniteCounters DO NOT HAVE A GOOD REPRESENTATION...
+// * Current solution [not a solution; Doesn't solve it... At all...]: do nothing about it. Add this as a part of the library, fix in the v1.1;
+// ^ For the v1.1. solution - create a PROPER __RECURSIVE__ transformation procedures for finite and non-finite types, based off the typeConst typesystems (particularly - make EVERYTHING generalizable as a context - create a TypeSystem class for creation of a sequence of constants for finite/infinite types, that would work desireably...);
 alarray.native = {
 	...alarray.native,
 	...general.finiteobj(
 		alarray,
+		arrmethNames,
+		{ integer: false },
 		[
-			"intersection",
-			"permutations",
-			"indexesOf",
-			"norepetitions",
-			"isSub",
-			"join",
-			"common",
-			"concat",
-			"split"
+			false,
+			[false],
+			[false, undefined, undefined, true],
+			[false, undefined, true],
+			[false, false],
+			[false, false],
+			false,
+			[false],
+			[false, undefined]
 		],
-		{ integer: true }
+		arrmethNames.map(FALLACY),
+		arrmethNames.map(TRUTH)
 	)
 }
 

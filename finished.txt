@@ -1,0 +1,22 @@
+List of files in 'tests/', that have been successfully run; 
+
+1. array.mjs
+2. object.mjs
+3. comparisons.mjs
+4. copy.mjs
+5. counters.mjs [mostly, still need GeneralArray, InfiniteCounter and TrueInteger to finish]; 
+6. number.mjs
+
+Next to run [testing order]: 
+
+1. InfiniteCounter.mjs
+2. Pointer.mjs
+3. garrays.mjs
+4. umap.mjs
+5. ustr.mjs
+6. string.mjs
+7. typeConst.mjs
+8. variables.mjs
+9. aliases.mjs
+10. predicates.mjs
+[Pray decide the rest...]

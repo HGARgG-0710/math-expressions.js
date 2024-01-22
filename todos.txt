@@ -171,7 +171,7 @@ It gets changed actively.
 
 			// ? Add error handling for 'n'? (Then, it will also have a 'restricting' quality + make it optional then...)
 			// ? Add the additional template layer (or turn this into an 'isthis: true'-kind of template?) for 'names' [Allows to change the stuff on the go...]?
-			export const Interface = TEMPLATE({ defaults: { n: 1 }, function: function (names = alinative.generate(this.template.n)) { return function (...args) { const R = {}; for (const x of this.template.names) { R[x] = args[i] }; return R } } })
+			export const Interface = TEMPLATE({ defaults: { n: 1 }, function: function (names = alarray.native.generate(this.template.n)) { return function (...args) { const R = {}; for (const x of this.template.names) { R[x] = args[i] }; return R } } })
 		
 		It generalizes many of the library's concepts, in particular, allowing for a convinient mean of handling varying property names (by means of saving 'n' and 'names', one can obtain precisely the shape of the object of desire - the only essential issue is keeping it all somewhere); 
 		Its' expansion also gives way to refactoring of many other, more complex name-involving cases (such as classes methods, for instance?); 
@@ -186,8 +186,17 @@ It gets changed actively.
 		The library would, then, utilize the Interfaces on LITERALLY EVERY step, thus achieving the name-independence... 
 		(AND completely generalizing all the structures present within it, allowing for a far barer and more abstract expression of the ideas desired...)
 
+		Instead of '.map', one could use the plain 'object' methods. The only true difficulty becomes deciding where to store the names; 
+		Due to the fact that each property of 'Interfaces' has a different meaning, names must be distinguishable; 
+		So, one could have the following (again, crude sketch, final version will probably differ): 
+
+			export const Named = Template({defaults: {names: []}, function: function (names = this.template.names) {
+				return Interfaces({n: names.length}).function(names)
+			}}).function	
+
 	9.10. Leaks! 
 		Check the library for possible memory leaks (in particular, everything related to 'this.this.this' and recursive classes); 
+		Generally, optimize it memory-allocation-wise (see if there are any issues related); 
 	
 	9.11. Library porting. 
 
@@ -373,12 +382,13 @@ It gets changed actively.
 
 		Possibly, create a different package specifically for tests (that'd be based off the "math-expressions.js"'s API)
 	
-	9.22. More 'specific' types-API: 
+	9.22. More of the 'specific' types-API (and not only): 
 
 		For instance, the entirety of the library provides merely 2 (!!!) options for an UnlimitedArray construction (LastIndexArray and DeepArray). 
 		There must be more. 
 
 		Same goes for counters, only the arrayCounter, objCounter and recursiveCounter (+its special cases) are really infinite. 
+		IDEA: polynomialCounter/naryCounter - effectively an orderArray, in which the values are changed in accordance to an n-ary representation of a given counter ([0] -> [1] -> ... -> [n-1] -> [0, 1] -> ... [n - 1, 1] -> [0, 2] -> ... -> [n - 1, n - 1, 0] -> [0, 0, 1] -> ...); With recursion - that being, one either applies the same pattern for recursion ([a...] -> [[a...]] -> ...), or a different one... (consider); 
 		Must decide on more different 'specific' structures to use for the general library interfaces...
 
 			IDEAS [for them]: 
@@ -396,6 +406,25 @@ It gets changed actively.
 		Especially important is the presence of choice due to generalization of the algorithms - various structures of arrays will allow different operations to take lesser/greater time
 			(for instance, the 'pop' operation of stack will be structurally closer to the ReverseInArray, than others); 
 		Try to implement the ways of structure-based optimization, that would permit this (namely, a way to retain the optimization techniques without sacrificing the generality...); 
+	
+		Same applies to things like 'comparisons' - there's only 3 for the entire library. Thin. 
+		Some new examples to add: 
+
+			// NOTE: apart from any X, on which there's X[Symbol.iterator] and '.keys()', works with GeneralArrays, UnlimitedMaps and UnlimitedStrings (because, unlike valueCompare, uses 'of', not 'in'); 
+			1. arrayCompare := (x, y, oneSide = false, comparison = valueCompare) => {
+				// ! This can be done more compactly (without explicit remembering) using TableFunctions...
+				const v = (x) => (Symbol.iterator in x && "keys" in x)
+				const vx = v(x)
+				if (!vx || !(refCompare(vx, v(y)))) return false 
+				for (const ix of x.keys()) 
+					if(!comparison(x.read(ix),y.read(ix))) return false
+				if (!oneSide) return arrayCompare(y, x, true, comparison)
+				return true 
+			}
+			// A comparison version of 'structure' without need for forms (all that's required is the '.keys()')
+			2. recarrCompare := (x, y, oneSide = false, comparison = _valueCompare) => {	
+				return arrayCompare(x, y, oneSide, (x, y) => comparison(x, y) || recarrComparison(x, y, oneSide, comparison))
+			}
 	
 	9.23. Package's code Modularity: 
 
@@ -475,6 +504,14 @@ It gets changed actively.
 		IDEA for an implementation - use 'typeConst' for individual type-identification (this is perfect and absolutely foolproof, as the reference to the type isn't stored anywhere but in the memory allocated for the identifier, it can't be meddled with.)
 			ALSO, one could possibly allow for multi-typing, so instead of carrying around a 'type: object' property on self, the instance'd have 'type: object[]', and check if 'instance.types.includes(x.type)'; 
 			The '.is' structure, hence, would be separated from CLASSes, and instead given to Types (hence, decomposing the macro further...). 
+		
+		Also, one could tinker with the type-inheritance idea. So, for example (sketchy pseud-code...): 
+
+			Type(x).inherit = function (y) {
+				return Type([...y, x])
+			}
+		
+		As a simple example. 
 
 	9.29. Uniting 'macros' and types: 
 
@@ -537,3 +574,61 @@ It gets changed actively.
 		It ought to be fixed. 
 		Create proper printing and debugging APIs for it (ones that would permit accessing particular pieces of type's data, without the necessity of knowing the entirety of it...); 
 		[Also - create a complete debugger - withe namespaces and so forth. DO NOT RELY UPON console.log. THERE MUST BE PROPER REPRESENTATION MEANS IN PLACE INSTEAD OF THIS...]
+	
+	9.34. Method signature information. 
+
+		Another small funny thing, that'd be nice to have in the library. 
+		Objects that collect/contain information regarding particular type instances that can later be used generally. 
+		For instance - method signature. Given some readable signature object 'S(f)', for a function 'f', one can determine number of arguments
+			and (sometimes) their types. 
+
+		So, an example of a basic implementation sketch would be (no arbitrary number of arguments, no GeneralArrays yet): 	
+
+			export const MethodSignature = (f, narguments = 1, types = VOID) => {
+				return {	
+					function: f, 
+					types: is.arr(types) ? alarray.native.generator(0, narguments - 1).map((i) => types[i]) : narguments.map(types), 
+					n: narguments, 
+				}
+			}
+		
+		Which can be refactored+generalized name-wise using Interfaces. 
+		These things are particularly useful when dealing with methods such as 'finiteobj' frequently.
+		Allows to separate the signature from actual functions, then use the data where needed, by means of connecting everything with '.map'; 
+
+		These would be a vast generalization of what can be observed in the 'general.finiteobj' function usage (there, only 2 (4, with TrueInteger and Any types) type-generalizations are available currently...); 
+		An alternative way to implement it (much more beloved by myself) is creating a new function, that'd have all the properies of the previous one attached: 
+
+			export const MethodSignature = (f, narguments = 1, types = VOID) => {
+				const nf = function (...arguments) {
+					return f(...arguments)
+				}
+				
+				for (const x in f) 
+					nf[x] = f[x]	
+
+				nf.types = is.arr(types) ? alarray.native.generator(0, narguments - 1).map((i) => types[i]) : narguments.map(types)
+				nf.n = narguments
+
+				return nf
+			}
+		
+		This way, no need to require for the MethodSignature additionally (as a separate Interface), however, it also opens possibilities to type errors introduction (due to missing signature when it is required...); 
+		For that, an additional type can be created, so as to track the presence of signature and throw early; 
+	
+	9.35. Code Cleanup
+
+		Besides, stylistic changes, one would love to clear all the redundant comments and all such undesired items. 
+		Check for things that are redundant/over-specific, repeating definitions, delete them (after having generalized and refactored), or keep as a part of the alias-space. 
+
+		Also - introduce global aliasing of non-generalizable, or default, naming constants (such as ["keys", "values"] for 'Object.') into the library; 
+		Try to use varnames (identifiers) as much as possible and abstract from particular; 
+	
+	9.36. On replacing TEMPLATEs with TableFunctions: 
+
+		The concept of templates can (largely) be replaced with 'TableFunctions', so as to reduce the memory-usage/unneeded copying, when doing: 
+
+			templated(templateobj).function(...)
+
+		Then, the only meaning of pre-saving would be semantical (no memory over-usage);  	
+		Think deeper on the matter of precise definition (and the way that it would incorporate TableFunction);
