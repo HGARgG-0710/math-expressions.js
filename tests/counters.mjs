@@ -53,12 +53,13 @@ const firstN = (n, c, counter) => {
 // console.log(firstN(-98, och, occounter))
 // console.log()
 
-// const nccounter = numberCounter()
-// console.log(nccounter)
-// console.log(firstN(-20, [-(2**53 - 1) + 6], nccounter))
-// console.log(firstN(-4, nccounter.generator(), nccounter))
-// console.log(firstN(10, [2 ** 53 - 1, 2 ** 53 - 1], nccounter))
-// console.log()
+const nccounter = numberCounter()
+console.log(nccounter)
+console.log(firstN(-20, [-(2**53 - 1) + 6], nccounter))
+console.log(firstN(-4, nccounter.generator(), nccounter))
+console.log(firstN(10, [2 ** 53 - 1, 2 ** 53 - 1], nccounter))
+console.log(firstN(40, [-21], nccounter))
+console.log()
 
 // const scounter = stringCounter()
 // console.log(scounter)
@@ -67,20 +68,20 @@ const firstN = (n, c, counter) => {
 
 // TODO: make more tests specifically for different kinds of flat forms...
 // ? Suggestion: generalize forms to flatForms? [So, as to mimic the interfaces for GeneralArray-like behaviour (structure-wise, only)?] Consider it for the v1.1. [along with the Interface(s) introduction]
-const cccounter = circularCounter()
-console.log(cccounter)
-console.log()
+// const cccounter = circularCounter()
+// console.log(cccounter)
+// console.log()
 
-// ! For v1.1. - fix issue with lacking properly generalized finite/infinite user-defined type systems... (and typeConst-basedness...); 
-const accounter = arrCircCounter({ values: [0, 1, 2, "Hello!"] })
-console.log(accounter)
-console.log(accounter.generator())
-console.log(accounter.inverse())
-console.log(firstN(1, accounter.generator(), accounter))
-console.log(firstN(2, accounter.generator(), accounter))
-console.log(firstN(3, accounter.generator(), accounter))
-console.log(firstN(4, accounter.generator(), accounter))
-console.log()
+// // ! For v1.1. - fix issue with lacking properly generalized finite/infinite user-defined type systems... (and typeConst-basedness...); 
+// const accounter = arrCircCounter({ values: [0, 1, 2, "Hello!"] })
+// console.log(accounter)
+// console.log(accounter.generator())
+// console.log(accounter.inverse())
+// console.log(firstN(1, accounter.generator(), accounter))
+// console.log(firstN(2, accounter.generator(), accounter))
+// console.log(firstN(3, accounter.generator(), accounter))
+// console.log(firstN(4, accounter.generator(), accounter))
+// console.log()
 
 // ^ TESTED SUCCESSFULLY
 

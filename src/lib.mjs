@@ -92,6 +92,12 @@ export const object = {
 	// * Note: no, they're not the same! The 'Object.assign' uses all the enumerable own properties, while this
 	objInherit: function (obj, parObj = {}) {
 		for (const ap in parObj) obj[ap] = parObj[ap]
+	},
+
+	boundObj(o, c = false) {
+		if (c) return this.boundObj(copy.deepCopy(o))
+		for (const x in o) if (is.fun(o[x])) o[x] = o[x].bind(o)
+		return o
 	}
 }
 
@@ -741,12 +747,13 @@ export function TEMPLATE(template = {}) {
 			this.template.function
 		).bind(_class)
 		for (const x in this.template.rest)
-			_class[x] =
-				is.obj(this.template.rest[x]) && !this.template.remain.includes(x)
-					? { ...this.template.rest[x] }
-					: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
-							this.template.rest[x]
-					  )
+			_class[x] = is.obj(this.template.rest[x])
+				? (this.template.tobind.includes(x) ? object.boundObj : ID)({
+						...this.template.rest[x]
+				  })
+				: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
+						this.template.rest[x]
+				  )
 		return this.template.transform(_class, template)
 	}
 	const X = {
@@ -761,7 +768,6 @@ export function TEMPLATE(template = {}) {
 			transform: ID,
 			templateword: "template",
 			tobind: [],
-			remain: [],
 			...template
 		}
 	}
@@ -837,9 +843,7 @@ export const PRECLASS = NOREST(
 		"isname",
 		"symbols"
 	],
-	{
-		remain: ["static"]
-	}
+	{ tobind: ["static"] }
 )
 
 // ! Generlization to another macro is require d(for the sake of refactoring...);
@@ -1137,6 +1141,7 @@ export const valueCompare = TEMPLATE({
 				if (!istype(a, typeof b)) return false
 				switch (typeof a) {
 					case "object":
+						if (a == null || b == null) return refCompare(a, b)
 						if (
 							!objs.some((x) =>
 								alinative.binary.dand(...[a, b].map((y) => x.includes(y)))
@@ -1145,7 +1150,6 @@ export const valueCompare = TEMPLATE({
 							objs.push([a, b])
 							for (const a_ in a)
 								if (!TWOCASE(false, objs)(a[a_], b[a_])) return false
-
 							if (!oneway) return TWOCASE(true)(b, a)
 						}
 						return true
@@ -1437,26 +1441,31 @@ export const alarray = {
 // * Probably the "simplest" infinite counter one would have in JS is based off this generator;
 export const arrayCounter = GENERATOR({
 	defaults: {
-		start: null
+		start: null,
+		label: ""
 	},
 	function: alinative.function.const(
-		_FUNCTION(function (a = this.template.start) {
-			if (!this.range(a)) this.template.start = a
-			return [a]
+		_FUNCTION(function (a) {
+			if (a !== this.template.start && a === undefined) return this.template.start
+			return a === this.template.start || is.arr(a) ? [a] : a[this.template.label]
 		})
 	),
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
-		// ? What to do in that case? ["poorly" chosen argument - out of typical scope...]
-		if (!is.obj(a) || !obj.hasOwn(a, 0)) return a
+		// ? What to do in that case? [arrayCounter HAS no negatives definition...]
+		if (!is.arr(a) || !obj.hasOwn(a, 0)) return { [this.template.label]: a }
 		return a[0]
 	},
 	range: _FUNCTION(function (a) {
-		return a === this.template.start || (is.arr(a) && this.range(this.inverse(a)))
+		return (
+			a === this.template.start ||
+			(is.arr(a) && this.range(this.inverse(a))) ||
+			(is.obj(a) && this.template.label in a)
+		)
 	})
 }).function
 
-general.DEFUAULT_COUNTER = arrayCounter()
+general.DEFAULT_COUNTER = arrayCounter()
 alinative.number.iterations = TEMPLATE({
 	defaults: { iterated: general.DEFUAULT_COUNTER, defnum: 1 },
 	function: _FUNCTION(function (n = this.template.defnum) {
@@ -1475,10 +1484,10 @@ export const InfiniteCounter = (() => {
 			comparison: general.DEFAULT_COMPARISON,
 			unacceptable: undefined,
 			initialcheck: refCompare,
-			...general.DEFUAULT_COUNTER
+			...general.DEFAULT_COUNTER
 		},
 		properties: {
-			value: _FUNCTION(function (previous = this.template.unacceptable) {
+			value: _FUNCTION(function (previous) {
 				return this.template.initialcheck(previous, this.template.unacceptable)
 					? this.template.generator()
 					: previous
@@ -1499,7 +1508,7 @@ export const InfiniteCounter = (() => {
 				each,
 				start = this.zero(),
 				iter = next,
-				comparison = greateroe,
+				comparison = this.this.template.comparison,
 				init = undefined
 			) {
 				let curr = start.copy()
@@ -1513,8 +1522,9 @@ export const InfiniteCounter = (() => {
 			R.reverse = _FUNCTION(function () {
 				const _this = this
 				return InfiniteCounter({
-					generator(x) {
-						if (x === undefined) return _this.this.template.generator()
+					generator: function (x) {
+						if (refCompare(x, undefined))
+							return _this.this.template.generator()
 						return _this.this.template.inverse(x)
 					},
 					inverse: this.this.template.generator
@@ -1566,14 +1576,12 @@ export const InfiniteCounter = (() => {
 				comparison = this.this.this.this.class.template.comparison
 			) {
 				// ! CONSIDER - whether to extend the 'greateroe, lesser, lesseroe, greater' methods to allow for arbitrary comparison (greateroe(x,y)->greateroe(x,y,comparison=refCompare)) or not...
-				const next = alinative.object.property(
-					ic.compare(this.this.this, comparison) ? "previous" : "next"
-				)
+				const nextf = ic.compare(this.this, comparison) ? previous : next
 				return this.this.this.this.class.static.whileloop(
 					this.this.this.copy(),
-					(current) => next(current)(),
+					(_x, y) => nextf(y),
 					ic,
-					(x) => next(x)(),
+					nextf,
 					comparison,
 					this.this.this.this.class.class()
 				)
@@ -1582,9 +1590,13 @@ export const InfiniteCounter = (() => {
 				ic,
 				comparison = this.this.this.this.class.template.comparison
 			) {
-				return this.this.this.this.class.static.direction(ic)
-					? this.this.this.jumpForward(ic, comparison)
-					: this.this.this.jumpBackward(ic, comparison)
+				return this.jump(ic, ic.direction() ? next : previous, comparison)
+			}),
+			jumpReverse: _FUNCTION(function (
+				ic,
+				comparison = this.this.this.this.class.template.comparison
+			) {
+				return this.jumpDirection(ic.reverse(), comparison)
 			}),
 			jump: _FUNCTION(function (
 				x,
@@ -1594,38 +1606,26 @@ export const InfiniteCounter = (() => {
 			) {
 				return this.this.this.this.class.static.whileloop(
 					x,
-					jumping,
+					(_x, y) => jumping(y),
 					counterclass.class(),
 					jumping,
 					comparison,
-					copy.deepCopy(this.this.this)
+					this.copy()
 				)
 			}),
 			loop: _FUNCTION(function (
-				body = () => {},
+				body = VOID,
 				start = this.this.this.this.class.class(),
-				init = undefined
+				init = udef
 			) {
 				return this.this.this.this.class.static.whileloop(
 					this.this.this,
 					body,
 					start,
-					undefined,
-					undefined,
+					this.direction() ? next : previous,
+					udef,
 					init
 				)
-			}),
-			jumpForward: _FUNCTION(function (
-				x,
-				comparison = this.this.this.this.class.template.comparison
-			) {
-				return this.jump(x, next, comparison)
-			}),
-			jumpBackward: _FUNCTION(function (
-				x,
-				comparison = this.this.this.this.class.template.comparison
-			) {
-				return this.jump(x, previous, comparison)
 			}),
 			map: _FUNCTION(function (
 				icClass = this.this.this.this.class,
@@ -1642,15 +1642,12 @@ export const InfiniteCounter = (() => {
 				return alterCurrent
 			}),
 			reverse: _FUNCTION(function () {
-				const REVERSED = this.this.this.this.class.static.reverse()
-				// ? generalize this construction (looks a little bit like '.fix');
-				let revres = REVERSED.class()
-				this.loop(() => (revres = next(revres)))
-				return revres
+				return this.zero().difference(this.this.this)
 			}),
 			copy: _FUNCTION(function () {
 				return this.this.this.this.class.class(this.this.this.value)
 			}),
+			// ! BUG: for some reason, '.equal' works poorly with arrayCounter-mapped counters...
 			equal: _FUNCTION(function (
 				x,
 				comparison = this.this.this.this.class.template.comparison
@@ -1670,29 +1667,32 @@ export const InfiniteCounter = (() => {
 			// ^ For this, just 'copy' the Generator structure ({ next: () => {value: any, done: boolean}, return: () => void, throw: (error) => never, suspeneded: boolean, closed: boolean }), then the [Symbol.iterator] as a thing that returns the Gsenerator object, when called;
 			// * Slightly too complicated (requires manually keeping track of all the variables' states from the last call (even though the structure itself can be preserved easily...)); Think about it for the v1.1.
 			// ! IF THE CODE STILL DOESN'T WORK BECAUSE OF LACK OF 'BIND', THEN DO [checked, it ought to...];
+			// ! SEMI-PROBLEM : the 'iterator's all have a different context from the rest of the methods - they GET COPIED AND REASSIGNED THEIR CONTEXT; So, for instance, it CAN work, one just needs to get rid or add a '.this' here and there
+			// TODO: [later, v1.1] try to find a way to bypass this (without the need to force user to abandon the pretty and universal 'for-of' syntax of GeneralArray iteration...); 
 			iterator: function* () {
 				const predicate = this.direction() ? lesser : greater
 				const change = this.direction() ? next : previous
 				for (
-					let i = this.this.this.this.class.class();
-					predicate(this);
+					let i = this.this.this.class.class();
+					predicate(i, this);
 					i = change(i)
 				)
 					yield i
 			}
 		},
 		recursive: true
-	})
-})().function
+	}).function
+})()
 
 general.DEFAULT_ICCLASS = InfiniteCounter()
 alinative.number.fromNumber = TEMPLATE({
 	defaults: {
+		start: 0,
+		nstart: 0,
 		icclass: general.DEFAULT_ICCLASS
 	},
-	function: _FUNCTION(function (x = this.template.start) {
-		return types
-			.InfiniteCounter(addnumber(this.template))
+	function: _FUNCTION(function (x = this.template.nstart) {
+		return InfiniteCounter(addnumber({}, this.template))
 			.class(x)
 			.map(this.template.icclass)
 	})
@@ -1769,7 +1769,7 @@ export const nanumber = {
 		})
 	}).function,
 
-	// TODO: generalize [put into the 'numerics', use with 'polystring'];
+	// TODO: generalize [then put into the 'numerics', use with 'polystring'];
 	// ? also -- conversion between the number systems for both old and new api too...; Generalize the thing for it as well (as well as the character-by-character function and many more others...);
 	floor: TEMPLATE({
 		defaults: { defacc: 16 },
@@ -1863,12 +1863,6 @@ object.objInherit(object, {
 			encircled[y] = obj_[y]
 		}
 		return encircled
-	},
-
-	boundObj(o, c = false) {
-		if (c) return this.boundObj(copy.deepCopy(o))
-		for (const x in o) if (is.fun(o[x])) o[x] = o[x].bind(o)
-		return o
 	},
 
 	// method for converting objects into a JSON-like String format
@@ -2535,7 +2529,6 @@ export function recursiveCounter(template = {}) {
 					return x
 				}
 
-				// ! BUG 1: the '1-layeredness' (fixed same way as in the 'signedDelete...');
 				result = rindexation(
 					result,
 					indexes.copied("slice", [undefined, indexes.finish().previous()])
@@ -2561,14 +2554,15 @@ export function recursiveCounter(template = {}) {
 
 				let isSingle = false
 				let lastIndexes = findDeepLast_(thisobject)(x)
-				const finind = lastIndexes.finish()
-				const ffinind = finind.previous()
 
 				if (lastIndexes.length().get().equal(lastIndexes.one())) {
 					isSingle = true
 					lastIndexes.pushfront(0)
 					x = [x]
 				}
+
+				const finind = lastIndexes.finish()
+				const ffinind = finind.previous()
 
 				let ppointer = rindexation(
 					x,
@@ -3170,10 +3164,7 @@ export const GeneralArray = (() => {
 						get: () =>
 							this.this.this.this.class.template.elem(this.this.this),
 						set: (newval) =>
-							this.this.this.this.class.template.newvalue(
-								this.this.this,
-								newval
-							)
+							this.this.this.this.class.template.newvalue(this.this, newval)
 					}
 				}),
 				// * For loops; Allows to loop over an array, with a changing index; Usage examples may be found across the default GeneralArray methods definitions:
@@ -3761,7 +3752,7 @@ export const countrecursive = TEMPLATE({
 			.fromNumber({ icclass: this.template.icclass })(
 				this.template.predicate(array)
 			)
-			.jumpForward(
+			.jumpDirection(
 				this.template.form.is(array)
 					? expressions
 							.uevaluate()
@@ -3816,15 +3807,15 @@ export const garrays = {
 				maxarrlen: MAX_ARRAY_LENGTH.get,
 				filling: null,
 				...template,
-				bound: _FUNCTION(function (i) {
-					return i < this.template.maxarrlen - 1
-				}),
+				bound: function (i) {
+					return i < this.maxarrlen - 1
+				},
 				...template
 			}
 		}
 		return GeneralArray({
 			this: A,
-			elem: _FUNCTION(function (
+			elem: function (
 				arrobj,
 				array = arrobj.array,
 				pointer = false,
@@ -3833,16 +3824,9 @@ export const garrays = {
 			) {
 				let currarr = array
 				let ic = beginningobj
-				let isReturn = [false, undefined]
 				let index = beginningind
-				for (
-					;
-					!arrobj.this.class.template.icclass.template.comparison(
-						ic,
-						arrobj.currindex
-					);
-					ic = next(ic)
-				) {
+				let isReturn = [false, index]
+				for (; lesser(ic, arrobj.currindex); ic = next(ic)) {
 					const withinbounds = this.this.template.bound(index)
 
 					if (!(index in currarr)) {
@@ -3859,28 +3843,28 @@ export const garrays = {
 					currarr = currarr[index]
 					index = 0
 				}
-				const returned = arrobj.currindex
 				return isReturn[0]
 					? pointer
-						? [isReturn[1], currarr, index, returned]
+						? [isReturn[1], currarr, index, ic]
 						: undefined
 					: !pointer
 					? currarr[index]
 					: [currarr, index]
-			}),
-			newvalue: _FUNCTION(function (array, value) {
+			},
+			newvalue: function (array, value) {
 				let pointer = this.elem(array, undefined, true)
-				while (!pointer[0]) {
+				while (oldCompare(pointer[0], null)) {
 					pointer[1][pointer[2]] = (pointer[0] === undefined ? (x) => [x] : id)(
 						this.this.template.filling
 					)
 					pointer = this.elem(array, pointer[1], true, pointer[3], pointer[2])
 				}
 				return (pointer[0][pointer[1]] = value)
-			}),
-			isEnd: _FUNCTION(function (array) {
-				return !!this.elem(array, undefined, true)[0]
-			}),
+			},
+			isEnd: function (array) {
+				const pointer = this.elem(array, undefined, true)
+				return !pointer[0] || !(pointer[1] in pointer[0])
+			},
 			icclass: A.template.icclass,
 			...garrtemplate
 		})
@@ -3907,7 +3891,7 @@ export const dim = TEMPLATE({
 
 			return this.template.icclass.static
 				.one()
-				.jumpForward(max(this.template).function(togarr))
+				.jumpDirection(max(this.template).function(togarr))
 		}
 		return this.template.icclass.static.zero()
 	})
@@ -4109,8 +4093,8 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 
 				for (const y of e[1].previous())
 					general.fix([array], ["currindex"], () => {
-						array.currindex = array.currindex.jumpBackward(
-							e[1].previous().jumpBackward(y)
+						array.currindex = array.currindex.jumpReverse(
+							e[1].previous().jumpReverse(y)
 						)
 						this.newvalue(array, this.this.template.filling)
 					})
@@ -4134,7 +4118,7 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 						currarray = currarray.arr[fi]
 						continue
 					}
-					i = i.jumpForward(
+					i = i.jumpDirection(
 						alinative.number.fromNumber(
 							native.number.min([
 								this.this.template.maxlen,
@@ -4409,7 +4393,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							// ! ISSUE [general]: with the passed instances of recursive classes - decide which parts of them are to be passed, how they should be read, and so on...
 							// * Current decision: by the 'this.this.this->.class' part... [the inner, that is...];
 							if (
-								this.read(currcounter.jumpForward(backupcounter)) !=
+								this.read(currcounter.jumpDirection(backupcounter)) !=
 								useparator.read(backupcounter)
 							) {
 								hasBroken = true
@@ -4423,7 +4407,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							prevcounter = native.deepCopy(currcounter)
 						}
 						hasBroken = false
-						currcounter = currcounter.jumpForward(backupcounter)
+						currcounter = currcounter.jumpDirection(backupcounter)
 						backupcounter = this.init()
 						continue
 					}
@@ -4442,10 +4426,10 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				for (const x of this.this.this.genarr
 					.copied("slice", [this.init(), previous(ind)])
 					.keys())
-					final = final.jumpForward(
+					final = final.jumpDirection(
 						alinative.number.fromNumber(genarr.read(x).length)
 					)
-				return final.jumpForward(alinative.number.fromNumber().function(subind))
+				return final.jumpDirection(alinative.number.fromNumber().function(subind))
 			}),
 			finish: refactor.classes.finish,
 			go: _FUNCTION(function (index) {
@@ -4463,7 +4447,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				)) {
 					inarrind = next(inarrind)
 					currstr = x
-					present = present.jumpForward(x)
+					present = present.jumpDirection(x)
 					if (greateroe(present, index)) break
 				}
 				return [
@@ -4676,7 +4660,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							)
 						) {
 							if (
-								this.read(currcounter.jumpForward(backupcounter)) !=
+								this.read(currcounter.jumpDirection(backupcounter)) !=
 								useparator.read(backupcounter)
 							) {
 								hasBroken = true
@@ -4687,7 +4671,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 
 						if (!hasBroken) indexes.pushback(currcounter)
 						hasBroken = false
-						currcounter = currcounter.jumpForward(backupcounter)
+						currcounter = currcounter.jumpDirection(backupcounter)
 						backupcounter = this.init()
 						continue
 					}
@@ -5287,10 +5271,10 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				if (this.this.this.children.isEmpty())
 					return this.this.this.children.init()
 				// ! problem here is the default 'uevaluate' table, which doesn't currently have any predefined operations on the infinite Counters (add them, pray...);
-				return this.this.this.children.one().jumpForward(
+				return this.this.this.children.one().jumpDirection(
 					uevaluate().function(
 						Expression(
-							"jumpForward",
+							"jumpDirection",
 							this.this.this.this.class.parentclass.static.empty(),
 							this.this.this.children.copy((x) => x.depth())
 						)
@@ -5352,7 +5336,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				)
 					res = multi
 						.read()
-						.jumpForward(
+						.jumpDirection(
 							this.this.this.children
 								.read(multi.read())
 								.multitoflat(multi.slice(multi.one())),
@@ -5372,7 +5356,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 						multi.pushback(x)
 						continue
 					}
-					currindex = currindex.jumpBackward(
+					currindex = currindex.jumpReverse(
 						this.this.this.children.read(x).length().get()
 					)
 					currindex = this.this.this.children
@@ -5462,7 +5446,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		},
 		static: (() => {
 			const R = {}
-			// ! REFACTOR THE '_FUNCTION's! (due to infinite Bindability, this can be done easily...);
+			// ? Refactor the '_FUNCTION's? (due to infinite Bindability, this can be done easily...);
 			R.empty = _FUNCTION(function () {
 				return this.this.class()
 			}).bind(R)
@@ -6104,7 +6088,7 @@ export const sort = {
 			for (let i = garr.init(); lesser(i, garr.length().get()); i = next(i))
 				for (
 					let j = garr.init();
-					lesser(j, garr.length().get().jumpBackward(i));
+					lesser(j, garr.length().get().jumpReverse(i));
 					j = next(j)
 				)
 					if (!this.template.predicate(garr.read(i), garr.read(j)))
@@ -6152,8 +6136,12 @@ export const sort = {
 						for (
 							;
 							lesser(
-								fc.jump(sc),
-								t.object().currelem.length().get().jump(fn.length().get())
+								fc.jumpDirection(sc),
+								t
+									.object()
+									.currelem.length()
+									.get()
+									.jumpDirection(fn.length().get())
 							);
 
 						) {
@@ -6274,7 +6262,7 @@ export const search = {
 		}
 	}).function,
 	jump: typeConst((FORBIDDEN_) => {
-		const FORBIDDEN = FORBIDDEN_[0]
+		const [FORBIDDEN] = FORBIDDEN_
 		return TEMPLATE({
 			defaults: { defelem: undefined },
 			function: function (
@@ -6780,8 +6768,8 @@ alarray.native = {
 
 // * Constructs a counter from an InfiniteCounter class;
 export const cfromIcc = refactor.general.counterFrom([
-	"jumpForward",
-	"jumpBackward"
+	"jumpDirection",
+	"jumpReverse"
 ]).function
 
 // * Constructs a counter from a TrueInteger class (additive);

@@ -333,6 +333,38 @@ It gets changed actively.
 
 		Additionally, some of the methods and algorithms implementation may (most probably, do) have some room for optimization/improvement (especially, memory-wise). 
 		This has to be checked throroughly as well...
+
+		ALSO - on the general speed. JS seems to be a really terrible choice for implementing something like that (in the sense of performance); 
+		Seek ways to speed up the library ANYHOW AT ALL...
+		Work on the general structure (without loss of generality...), create implementations of yet untried by self methods of optimization, 
+			[MOST IMPORTANTLY - consider how to optimize the work with recursive objects]
+		
+		IDEA: for an optimization technique of counters: 
+			One could do the following - save a Table with functions of object-values for a given pair of '(x, y)' for 'x.jumpDirection(y)'; 
+			As a result, whenever one encounters an expression 'a.jumpDirection(b)' for some a,b - they're being looked up in the computed table. 
+			If it's nonempty, then the computation is done from the nearest point, and the result is remembered; 
+			Otherwise - do from nil, and then - remember. 
+			This can (and, most probably, will, effectively), double all the used memory, but can improve the speed A LOT in applications that are 
+				intense on counter usage. 
+			That is ESPECIALLY useful, considering just how slow some of them are.
+		
+		IDEA [general]: add an option for EVERY method of the library to become a different kind of Table; 
+			This will permit to speed up computations A LOT, with the cost of higher constant memory-consumption; 
+			[NOTE: the remembered results can just be 'deepCopied' and released, when needed, so that is (by far) not an issue either]; 
+			Similarly, for classes, types and so forth, one remembers the objects, then just copies from them, instead of re-running the actual constructor. 
+			It'll be ESPECIALLY fast for apps that reuse a lot of the same objects time-wise; 
+		
+		IDEA [for counters]: fix all the counters that rely upon native builtin JS methods, instead replace them with faster alternatives; 
+			EXCELLENT EXAMPLES - '.push->a[a.length]=y'; 
+			See how much the performance will increase...; 
+		
+		IDEA [for Array.includes]:
+			Replace all the Arrays.includes with 'Set.has()' (PARTICULARLY IN SIMPLE, FREQUENTLY-USED METHODS!!!)
+		
+		IDEA [general]: 
+			scrutinize the native datatypes usage, make everything as performant as possible...
+
+		NOTE: some of these optimizations are, actually, fairly simple. Should one do them in v1.0 instead, then? 
 		
 	9.19. Idea of atRequest (possibly, add to v1.1...): 
 
@@ -632,3 +664,20 @@ It gets changed actively.
 
 		Then, the only meaning of pre-saving would be semantical (no memory over-usage);  	
 		Think deeper on the matter of precise definition (and the way that it would incorporate TableFunction);
+	
+	9.37. Naming conventions. 
+
+		The issue of naming conventions was (still) fairly uresolved by the time that the v1.0 version was getting finished. 
+		Current decisions in its regard: 
+
+			1. PascalCase - for classes, types and other object constructors; 
+			2. flatcase or camelCase for functions/methods/variables' names (with typical preference to flatcase); 
+			3. NEVER use common snake_case; 
+			4. MACRO_CASE for macros (planned for deletion) and constants
+		
+		Question [1]: WHAT ABOUT LOCAL CONSTANTS? 
+			They are (typically) named without much of a second thought. 
+			Consider whether that is truly desirable (with the size more and more rapidly so approaching 10000+ lines of code with each new version...)
+		
+		Question [2]: (Possibly?) Rethink the library names; 
+			Re-read through them (yet again), then pray decide...

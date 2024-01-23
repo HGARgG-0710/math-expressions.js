@@ -1,5 +1,6 @@
 List of files in 'tests/', that have been successfully run; 
 
+[Some still need the refactoring done on them...]
 1. array.mjs
 2. object.mjs
 3. comparisons.mjs
@@ -14,9 +15,29 @@ Next to run [testing order]:
 3. garrays.mjs
 4. umap.mjs
 5. ustr.mjs
-6. string.mjs
-7. typeConst.mjs
-8. variables.mjs
-9. aliases.mjs
-10. predicates.mjs
+6. uset.mjs
+7. numbers.mjs
+8. numeric.mjs
+9. string.mjs
+10. typeConst.mjs
+11. orders.mjs
+12. variables.mjs
+13. aliases.mjs
+14. predicates.mjs
+15. integer.mjs
+16. algarray.mjs
+17. mdarrsearch.mjs
+18. structure.mjs
+19. Stack.mjs
+20. sort.mjs
+21. search.mjs
+22. farey.mjs
+23. expressions.mjs
+24. Graph.mjs
+25. heaps.mjs
+26. BindableFunction.mjs
+27. TreeNode.mjs
+28. forms.mjs
+29. inf.mjs
+30. integrity.mjs
 [Pray decide the rest...]
