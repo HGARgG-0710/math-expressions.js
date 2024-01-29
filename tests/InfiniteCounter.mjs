@@ -14,7 +14,7 @@ import { testobjmethod as tom, testmultcases as tmc, test } from "./test.mjs"
 const templates = [
 	{ ...numberCounter() },
 	{
-		...stringCounter(),
+		...stringCounter()
 		// ^ Sum of digits - fun stuff. Unfortunately, lacking proper tests for it (maybe, write them a bit later...)
 		// unacceptable: "Feeeffffffa",
 		// initialcheck: (x, y) =>
@@ -24,7 +24,7 @@ const templates = [
 		// 		.map((x) => parseInt(`0x${x}`))
 		// 		.reduce((r, i) => r + i) <= x
 	},
-	{ ...addnumber() }, 
+	{ ...addnumber() },
 	undefined
 ]
 
@@ -32,7 +32,7 @@ const outval = (x) => console.log(x.value)
 
 tmc(templates.keys(), (t) => {
 	const icc = InfiniteCounter(templates[t])
-	const convert = native.number.fromNumber({ start: -1, icclass: icc }).function
+	const convert = native.number.fromNumber({ icclass: icc }).function
 
 	// ! MY GOD, IT'S SLOW! Even with numbers like 100, already chokes to death on relatively simple operations...
 	const ics = [
@@ -87,16 +87,21 @@ tmc(templates.keys(), (t) => {
 		tom(ic, "equal", [ic], false)
 		test(refCompare, [ic, ic.copy()])
 
-		// ^ tested up to here...
-		
 		const mapped = ic.map(InfiniteCounter(templates[(t + 1) % templates.length]))
 		test(() => mapped, [], false, outval)
 		tom(ic, "equal", [mapped])
 
-		tom(ic, "loop", [
-			(init) => init.jumpDirection(icc.static.two()),
-			icc.static.zero(),
-			ic.one()
-		], false, outval)
+		tom(
+			ic,
+			"loop",
+			[(_init, nextone) => {
+				const t = nextone.jumpDirection(icc.static.two())
+				outval(t)
+				return t
+			}, icc.static.zero(), ic.one() ],
+			false,
+			outval
+		)	
+		console.log("\n\n")
 	})
 })

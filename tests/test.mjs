@@ -24,7 +24,7 @@ export function testobjmethod(obj, method, args, template = false, testf = conso
 export function multtestobjmethod(
 	obj,
 	method,
-	args,
+	args = [[]],
 	templates = [],
 	testf = console.log
 ) {

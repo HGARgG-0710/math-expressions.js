@@ -363,8 +363,46 @@ It gets changed actively.
 		
 		IDEA [general]: 
 			scrutinize the native datatypes usage, make everything as performant as possible...
+		
+		IDEA [general]: 
+			Create a 'benchmarks' directory for performance testing of the library; 
+			[Particular attention is to be paid to counters/InfiniteCounter performance, native object methods, ]
+			Create benchmarks for BOTH memory usage and speed...
 
-		NOTE: some of these optimizations are, actually, fairly simple. Should one do them in v1.0 instead, then? 
+		IDEA: Generalize the process-interruption.
+			Changing operations like: 
+
+				const x = arr.filter(p)[0]
+			
+			To (for instance): 
+
+				function X(p) {
+					return (arr) => {					
+						for (const a of arr) if (p(a)) return a
+						return undefined
+					}
+				}
+				let x = X(p)(arr)
+			
+			Can SIGNIFICANTLY increase productivity of code; 
+			The only problem now becomes - writing things in a functional-declarative fashion, that would utilize the 
+				optimization benefits of the iterative approach to such functions' definitions...
+			
+			In order for the general optimization to work, however, one ought to formalize it: 
+
+				1. Implement the 'Process' class, that'd return an object; 
+				2. Process object structure: 
+					2.1. steps - GeneralArray of function-steps, each of which gets called in its own turn; 
+					2.2. is_interrupted (for seeing, whether the previous step halted); 
+					2.3. nextf(i) - function, which determines the next 'i' for the execution (element of the 'steps' GeneralArray) based on the previous i; 
+					2.4. execute(i, j) - execute the process from indicies 'i' to 'j' (initial is 'i', while the final must be outside of 'j'); 
+				
+			This the so-long desired generalization of 'GeneralArray.loop().full()' method, with it infinite loops and complex looping patterns are particularly easily created in an object-oriented+declarative+functional paradigms...; 
+			TODO: check if Process, indeed, adheres to the wished for properties; 
+			One (then) rewrites the library in such a fashion so as to utilize this particular optimization technique on every-single-step-of-the-way, BUT without needing to rewrite the methods in question; 
+			That (in particular), would pose a far more curious problem, as one would have to be also (somehow) specifying the particular point of exit for the function in question based on various external parameters... 
+			['Process' would prooooooooooooooobably require some modification/extension...]
+
 		
 	9.19. Idea of atRequest (possibly, add to v1.1...): 
 
@@ -667,12 +705,12 @@ It gets changed actively.
 	
 	9.37. Naming conventions. 
 
-		The issue of naming conventions was (still) fairly uresolved by the time that the v1.0 version was getting finished. 
+		The "issue" of naming conventions was (still) fairly uresolved by the time that the v1.0 version was getting finished. 
 		Current decisions in its regard: 
 
 			1. PascalCase - for classes, types and other object constructors; 
 			2. flatcase or camelCase for functions/methods/variables' names (with typical preference to flatcase); 
-			3. NEVER use common snake_case; 
+			3. RARELY use common snake_case (decide intuitively); 
 			4. MACRO_CASE for macros (planned for deletion) and constants
 		
 		Question [1]: WHAT ABOUT LOCAL CONSTANTS? 
@@ -681,3 +719,17 @@ It gets changed actively.
 		
 		Question [2]: (Possibly?) Rethink the library names; 
 			Re-read through them (yet again), then pray decide...
+	
+	9.38. Error-handling
+
+		This is (in effect), the expansion of the 'type-assertion' v1.1 todo; 
+		Summarily, one needs: 
+
+			1. General types-constructor for Errors; 
+			2. Various frequently-appearing or just curious special cases of the constructor; 
+				2.1. Note: they must be such, so as to cover the entirety of the possible issues related to the library-handling; 
+					Especial attention is to be paid to the inconsistencies between the permitted/defined usage of a interface, and its actual definition (examples - missing arguments, Type-Assertions). 
+			3. Ways to throw the resulting exceptions (they must be non-Error and non-throw based, to allow for usage of Interfaces... For instance, using process.exit() or Deno.exit()); 
+			4. It (the final error-message) must possess a general format; 
+			5. It must allow for arbitrary Callstacks; 
+				5.1. For this - IMPLEMENT THE CALLSTACK STRUCTURE of a Debug module (maybe, make into another package, or make a part of the current thing...); 

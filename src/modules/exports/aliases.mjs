@@ -37,6 +37,7 @@ export {
 	istype,
 	cdieach,
 	hasFunction,
+	boundMethod, 
 	inarr,
 	abs,
 	poststr,

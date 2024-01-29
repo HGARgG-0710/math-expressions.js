@@ -7,37 +7,37 @@ List of files in 'tests/', that have been successfully run;
 4. copy.mjs
 5. counters.mjs [mostly, still need GeneralArray, InfiniteCounter and TrueInteger to finish]; 
 6. number.mjs
+7. InfiniteCounter.mjs
+8. Pointer.mjs
 
 Next to run [testing order]: 
 
-1. InfiniteCounter.mjs
-2. Pointer.mjs
-3. garrays.mjs
-4. umap.mjs
-5. ustr.mjs
-6. uset.mjs
-7. numbers.mjs
-8. numeric.mjs
-9. string.mjs
-10. typeConst.mjs
-11. orders.mjs
-12. variables.mjs
-13. aliases.mjs
-14. predicates.mjs
-15. integer.mjs
-16. algarray.mjs
-17. mdarrsearch.mjs
-18. structure.mjs
-19. Stack.mjs
-20. sort.mjs
-21. search.mjs
-22. farey.mjs
-23. expressions.mjs
-24. Graph.mjs
-25. heaps.mjs
-26. BindableFunction.mjs
-27. TreeNode.mjs
-28. forms.mjs
-29. inf.mjs
-30. integrity.mjs
+1. garrays.mjs
+2. umap.mjs
+3. ustr.mjs
+4. uset.mjs
+5. numbers.mjs
+6. numeric.mjs
+7. string.mjs
+8. typeConst.mjs
+9. orders.mjs
+10. variables.mjs
+11. aliases.mjs
+12. predicates.mjs
+13. integer.mjs
+14. algarray.mjs
+15. mdarrsearch.mjs
+16. structure.mjs
+17. Stack.mjs
+18. sort.mjs
+19. search.mjs
+20. farey.mjs
+21. expressions.mjs
+22. Graph.mjs
+23. heaps.mjs
+24. BindableFunction.mjs
+25. TreeNode.mjs
+26. forms.mjs
+27. inf.mjs
+28. integrity.mjs
 [Pray decide the rest...]

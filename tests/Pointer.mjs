@@ -1,23 +1,30 @@
 // * Tests for the Pointer class
 
+import { sym } from "../src/modules/exports/aliases.mjs"
 import { refCompare } from "../src/modules/exports/comparisons.mjs"
 import { Pointer } from "../src/modules/exports/types.mjs"
 
 import { test, testmultcases as tmc } from "./test.mjs"
 
-// ! Tests: create various kinds of pointers, access them (2-3 cases is enough);
-
-// ! Add templates
-tmc([], (pt) => {
-	// ! Add instances definitions and also the 'vs' values...
+tmc([{ label: "abbbeii", nullptr: true }, { label: "!!", nullptr: {} }, {}], (pt) => {
 	const pclass = Pointer(pt)
-	const insts = [].map(pclass.function)
-	const vs = []
+	test(() => pclass)
+	const insts = [
+		10,
+		"Howdy!",
+		false,
+		92,
+		undefined,
+		{ s: "Hello Johny! How are you today?" }
+	].map(pclass.class)
+	const vs = ["Wududubooolooohaiii", null, sym(""), 10, 443, 100, "fhfhd"]
 	tmc(insts.keys(), (i) => {
-		test(() => insts[i][pt.label])
-		const prevval = insts[i][pt.label]
-		test(() => (insts[i][pt.label] = vs[i]))
-		test(refCompare, [insts[i][pt.label], prevval])
-		test(refCompare, [insts[i][pt.label], vs[i]])
+		console.log("\n")
+		test(() => insts[i][pclass.template.label])
+		const prevval = insts[i][pclass.template.label]
+		test(() => (insts[i][pclass.template.label] = vs[i]))
+		test(refCompare, [insts[i][pclass.template.label], prevval])
+		test(refCompare, [insts[i][pclass.template.label], vs[i]])
+		console.log("\n")
 	})
 })
