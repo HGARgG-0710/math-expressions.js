@@ -11,7 +11,7 @@ import {
 	testOn,
 	test
 } from "./test.mjs"
-import { refCompare, oldCompare } from "../src/modules/exports/comparisons.mjs"
+import { refCompare, oldCompare, _valueCompare } from "../src/modules/exports/comparisons.mjs"
 import { id, native, sym, obj, boundMethod } from "../src/modules/exports/aliases.mjs"
 
 const outarr = (arr) => test(native.function.const(arr.array))
@@ -226,11 +226,8 @@ tmc(
 					outarr(joinarr)
 				})
 
-				// ^ All good at least 'til here...;
-				
-				throw new Error("!!!")
-
-				// ! Add values for tests...
+				// TODO[general]: add the ability for dynamic evaluation (as a function) of values of variables into the current 'testing' API (a very rough sketch, not a part of the library yet...);
+				// * Here, the indexes are done very dirtily (counted off manually...);
 				testOn(
 					cuelarr,
 					[
@@ -241,42 +238,71 @@ tmc(
 						"shiftBackward",
 						"forEach"
 					],
-					[[], []],
+					[
+						[cuelarr.two(), cuelarr.finish().previous()].map((x) => [x]),
+						[11, 48].map((x) => [x]),
+						[
+							[cuelarr.init(), cuelarr.one()],
+							[cuelarr.two().next(), cuelarr.two().next().next().next()]
+						],
+						[cuelarr.two(), cuelarr.init(), cuelarr.one()].map((x) => [x]),
+						[[cuelarr.two(), cuelarr.init()]],
+						[[(x) => console.log(x)]]
+					],
 					[],
 					outarr
 				)
 
-				const methods = []
-				const args = []
-				tmc(methods.keys(), (m) => {
-					const c = cuelarr.copied(methods[m], args[m])
-					test(negate(oldCompare), [c, cuelarr])
-					outarr(c)
-				})
-
-				mtom(cuelarr, "map", [], [], outarr)
+				mtom(
+					cuelarr,
+					"map",
+					[[], [(x) => ["boolean", "string"].includes(typeof x)]],
+					[],
+					outarr
+				)
 				tom(cuelarr, "reverse", [], false, outarr)
 
+				const ccuelarr = cuelarr.copy()
+
 				testOn(
-					cuelarr,
-					["copied", "repeat", "splice", "split"],
-					[[["repeat", []]], [], []],
+					ccuelarr,
+					["copied", "repeat", "splice"],
+					[
+						[
+							["repeat", [cuelarr.two()]],
+							["repeat", [cuelarr.init()]]
+						],
+						[[cuelarr.two()]],
+						[
+							[cuelarr.finish().previous()],
+							[
+								cuelarr.finish().previous().previous().previous(),
+								cuelarr.two().next()
+							]
+						]
+					],
 					[],
 					outarr
 				)
+				// ! NOTE: 'split's are SOOOOOOUOUOUOU SLOOOOOOOOOUUUUUOOOUOUOUOUWWWWWWWWW.....
+				tom(ccuelarr, "split", [true], false, (x) =>
+					outarr(x.copy((x) => x.array))
+				)
 
-				tom(cuelarr, "sort", [], false, outarr)
-				tom(cuelarr, "isSorted", [], false)
-				tom(cuelarr, "sort", [], false, outarr)
-				mtom(cuelarr, "isSorted", [], [])
+				tom(cuelarr, "sort", [(x, y) => x > y], false, outarr)
+				tom(cuelarr, "sort", [(x, y) => x < y], false, outarr)
+				
+				// ^ All good at least 'til here...;
 
 				testOn(
 					cuelarr,
-					["insert", "multcall", "copied", "suchthat"],
-					[[], [], [["suchthat", []]]],
+					["multcall", "copied", "suchthat"],
+					[[], [["suchthat", []]]],
 					false,
 					outarr
 				)
+				
+				throw new Error("!!!")
 
 				// ! add arguments...
 				testOn(

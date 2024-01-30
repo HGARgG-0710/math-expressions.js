@@ -1438,11 +1438,15 @@ export const alarray = {
 		) {
 			const farr = array.empty()
 			let prev = array.init()
-			for (const x of array.keys().copied("slice", [array.one()]))
+			for (let x = array.one(); lesser(x, array.length().get()); ) {
 				if (this.template.comparison(separator, array.read(x))) {
-					farr.pushback(array.copied("slice", [prev, x]))
+					farr.pushback(array.copied("slice", [prev, x.previous()]))
+					x = next(x)
 					prev = x
+					continue
 				}
+				x = next(x)
+			}
 			return farr
 		})
 	}).function
@@ -3468,7 +3472,8 @@ export const GeneralArray = (() => {
 					comparison = this.this.this.this.class.template.comparison
 				) {
 					const x = this.this.this.firstIndex(value, comparison)
-					if (!(x === this.this.this.template.unfound)) return this.delete(x)
+					if (!refCompare(x, this.this.this.this.class.template.unfound))
+						return this.delete(x)
 					return this.this
 				}),
 				slice: _FUNCTION(function (begin = this.init(), end = this.finish()) {
@@ -3489,10 +3494,12 @@ export const GeneralArray = (() => {
 					this.this.this = sliced.this
 					return this.this
 				}),
-				keys: function* () {
+				keys: _FUNCTION(function () {
+					const keyarr = this.empty()
 					for (let c = this.init(); lesser(c, this.length().get()); c = next(c))
-						yield c
-				},
+						keyarr.pushback(c)
+					return keyarr
+				}),
 				// ? refactor using the other GeneralArray methods;
 				// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
 				// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
@@ -3642,7 +3649,7 @@ export const GeneralArray = (() => {
 				) {
 					return general.fix([this.this.this], ["currindex"], () => {
 						this.begin()
-						return isend(this)
+						return isend(this.this)
 					})
 				}),
 				sort: _FUNCTION(function (predicate) {
@@ -3653,12 +3660,18 @@ export const GeneralArray = (() => {
 						.function(this.this.this).this
 					return this.this
 				}),
-				isSorted: _FUNCTION(function (predicate, comparison) {
-					return comparison(
-						this.this.this,
-						this.copied("sort", [predicate], undefined)
-					)
-				}),
+				// TODO: there must be an array-wise equality defined upon GeneralArrays; Not this. (Either not general enough or too general, possibly in-structure dependant); 
+				// ^ THIS IS AN AMAZING IDEA FOR A METHOD... 
+				// ! Unfortunately, adding it requires also the inclusion of a class-independent array-equivalence relation into the library (and this was noticed on the late stage of testing of the v1.0 version of it...); So, implementation of this goes into the v1.1 (along with the said equivalence); 
+				// isSorted: _FUNCTION(function (
+				// 	predicate,
+				// 	comparison = this.this.this.this.class.template.comparison
+				// ) {
+				// 	return comparison(
+				// 		this.this.this,
+				// 		this.copied("sort", [predicate], undefined)
+				// 	)
+				// }),
 				includes: refactor.classes.includes,
 				suchthat: refactor.classes.suchthat,
 				any: refactor.classes.any,
@@ -3688,23 +3701,28 @@ export const GeneralArray = (() => {
 						.join(separator)
 				}),
 				split: _FUNCTION(function (
+					separator,
 					comparison = this.this.this.this.class.template.comparison
 				) {
 					this.this.this = alarray
 						.split({ comparison })
-						.function(this.this).this
+						.function(this.this, separator).this
 					return this.this
 				}),
 				splitlen: _FUNCTION(function (length = this.length().get()) {
-					let arrs = this.empty()
-					let currarr = this.copy()
+					const arrs = this.empty()
+					const currarr = this.copy()
 					while (greateroe(currarr.length().get(), length)) {
-						arrs.pushback(currarr.copied("slice", [this.init(), length]))
+						arrs.pushback(
+							currarr.copied("slice", [this.init(), length.previous()])
+						)
 						currarr.slice(length)
 					}
-					return arrs.pushback(currarr)
+					if (!currarr.isEmpty()) arrs.pushback(currarr)
+					this.this.this = arrs.this
+					return this.this
 				}),
-				splice: _FUNCTION(function (index, times = this.one()) {
+				splice: _FUNCTION(function (index = this.init(), times = this.one()) {
 					const c = this.copy()
 					this.this.this = c
 						.slice(c.init(), index.previous())
@@ -6132,56 +6150,75 @@ export const sort = {
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (array = this.template.genarrclass.static.empty()) {
-			const CONSTOBJ = {}
+			// TODO: replace the forms' 'default' with a dynamically evaluated function. This way, such 'allocation conondrums' need not happen...;
+			const mergeForm = constForm(0, 1, 1, this.template.genarrclass.static.empty())
+
 			function split(a) {
-				return a.copied("splitlen", [a.one()]).map((x) => [CONSTOBJ, x])
+				return a.copied("splitlen", [a.one()]).map(mergeForm.new)
 			}
 			function merge(a) {
-				if (greateroe(a.init(), a.length().get())) return a.read()[1]
+				if (a.length().get().equal(a.one())) return mergeForm.index(a.read())
 				const b = a.empty()
 				a.loop()._full(
 					(t) => {
-						if (greateroe(next(t.object().currindex), t.length().get()))
+						if (
+							greateroe(
+								t.object().currindex,
+								t.object().length().get().previous()
+							)
+						) {
+							b.pushback(t.object().currelem().get())
 							return
-						const fn = t.object().read(next(t.object().currindex))[1]
-						const ca = t.object().currelem[1]
+						}
+
+						const ca = mergeForm.index(t.object().currelem().get())
+						const fn = mergeForm.index(
+							t.object().read(next(t.object().currindex))
+						)
 						const newarr = t.object().empty()
 						let fc = t.object().init(),
 							sc = t.object().init()
-						for (
-							;
-							lesser(
-								fc.jumpDirection(sc),
-								t
-									.object()
-									.currelem.length()
-									.get()
-									.jumpDirection(fn.length().get())
-							);
+						let ffit = true,
+							sfit = true
 
+						while (
+							((sfit = lesser(sc, fn.length().get())) &&
+								lesseroe(fc, ca.length().get())) ||
+							((ffit = lesser(fc, ca.length().get())) &&
+								lesseroe(sc, fn.length().get()))
 						) {
-							let m = CONSTOBJ
-							const firarrel = ca.read(fc)
-							const secarrel = fn.read(sc)
+							// ? Oughtn't one be using 'mergeForm.read' instead of the GeneralArray class methods? [yes, later - fix that as well...]
+							let m = {}
 
-							if (this.template.predicate(firarrel, secarrel)) {
+							const firarrel = ffit ? ca.read(fc) : null
+							const secarrel = sfit ? fn.read(sc) : null
+
+							if (
+								!sfit ||
+								(ffit && this.template.predicate(firarrel, secarrel))
+							) {
 								m = firarrel
 								fc = next(fc)
 							}
-							if (m === CONSTOBJ) {
+							if (!refCompare(m, firarrel)) {
 								m = secarrel
 								sc = next(sc)
 							}
 
 							newarr.pushback(m)
 						}
-						b.pushback([CONSTOBJ, newarr])
+						b.pushback(mergeForm.new(newarr))
 					},
-					alinative.function.const((x) => x.next().next())
+					alinative.function.const((x) => {
+						const t = x.object()
+						t.next()
+						t.next()
+						return t
+					})
 				)
-				return merge(b)
+				return merge.call(this, b)
 			}
-			return merge(split(array))
+			return merge.call(this, split(array))
 		}
 	}).function
 }
