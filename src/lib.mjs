@@ -468,7 +468,8 @@ const refactor = {
 			// ? After all - is it 'this.this' or 'this.this.this.this'? Repeat the deliberation in question with some greater diligence...
 			const subset = this.this.this.this.class.class()
 			for (const key of this.keys())
-				if (predicate(this.read(key), key, this, subset)) subset.pushback(key)
+				if (predicate(this.read(key), key, this, subset))
+					subset.pushback(this.read(key))
 			this.this.this = subset.this
 			return this.this
 		}),
@@ -503,11 +504,10 @@ const refactor = {
 			isclass = false,
 			template = isclass
 				? this.this.this.this.class
-				: this.this.this.this.class.template,
-			leftovers = {}
+				: this.this.this.this.class.template
 		) {
 			const empty = this.this.this.this.class.class()
-			empty.genarr = this.this.this.genarr.copy(f, isclass, template, leftovers)
+			empty.genarr = this.this.this.genarr.copy(f, isclass, template)
 			return empty
 		}),
 		peek: _FUNCTION(function () {
@@ -517,10 +517,10 @@ const refactor = {
 			return this.this.this.genarr.delete()
 		}),
 		// * Note: the 'args' does __not__ have to be a native JS array; (This uses the Symbol.iterator...);
-		multcall: _FUNCTION(function (method, args = [], arrs = false, leftovers = {}) {
+		multcall: _FUNCTION(function (method, args = [], arrs = false) {
 			for (let x of args) {
 				if (!arrs) x = [x]
-				this.this.this[method](...x, leftovers)
+				this[method](...x)
 			}
 			return this.this
 		}),
@@ -1140,12 +1140,14 @@ export const valueCompare = TEMPLATE({
 		oneway: false
 	},
 	function: _FUNCTION(function (...args) {
+		const T = this
 		function TWOCASE(oneway = false, objs = []) {
 			return (a, b) => {
 				if (!istype(a, typeof b)) return false
 				switch (typeof a) {
 					case "object":
-						if (a == null || b == null) return refCompare(a, b)
+						if (oldCompare(a, null) || oldCompare(b, null))
+							return refCompare(a, b)
 						if (
 							!objs.some((x) =>
 								alinative.binary.dand(...[a, b].map((y) => x.includes(y)))
@@ -1158,6 +1160,16 @@ export const valueCompare = TEMPLATE({
 						}
 						return true
 					case "function":
+						return (
+							(!oneway && refCompare(a, b)) ||
+							("origin" in a &&
+								(T.function(a.origin, b) ||
+									("origin" in b &&
+										T.function(
+											[a, b].map(alinative.function.index("origin"))
+										)))) ||
+							(!oneway && TWOCASE(true)(b, a))
+						)
 					case "symbol":
 						return refCompare(
 							...[a, b].map(alinative.object.rproperty("toString")())
@@ -1414,14 +1426,12 @@ export const alarray = {
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: _FUNCTION(function (arrays = this.template.genarrclass.static.empty()) {
-			if (greateroe(arrays.two(), arrays.length().get()))
-				return (arrays.one().equal(arrays.length().get()) ? (x) => x.read() : ID)(
-					arrays
-				)
+			if (arrays.length().get().equal(arrays.one())) return arrays.read()
 			if (arrays.length().get().equal(arrays.two()))
 				return arrays.read().concat(arrays.read(arrays.one()))
+			// ? refactor using repeatedApplication?
 			let r = arrays.read()
-			for (const x of arrays.slice(arrays.one()))
+			for (const x of arrays.copied("slice", [arrays.one()]))
 				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
 			return r
 		})
@@ -1729,7 +1739,8 @@ export const copy = {
 			return {
 				array: (a, method = arrmeth) => a.map(method),
 				object: (a, method = objmeth) => object.objFmap(a, method),
-				function: (a, context = dcontext()) => a.bind(context),
+				// ^ For now - a 'compromise' - the functions that are effectively the same (use the native JS '.bind' will NOT be recognized as equivalent in the sense of valueCompare...);
+				function: (a, context = dcontext()) => _FUNCTION(a).bind(context),
 				symbol: (a) => Symbol(trimBeginning(7)(trimEnd(1)(str(a)))),
 				arrayFlat: (a) => [...a],
 				objectFlat: (a) => ({ ...a })
@@ -1738,6 +1749,7 @@ export const copy = {
 	}).function,
 
 	// ? find the definition for the general _switch() from a different library of self's, place in this one, then use here...
+	// ! THE 'function' version is NOT GOOD!!! DOES-NOT-WORK!
 	copyFunction: (() => {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
@@ -1749,17 +1761,18 @@ export const copy = {
 			defaults: { list: [] },
 			function: _FUNCTION(function (a) {
 				for (const x of this.template.list)
-					if (typeTransform(x)(a)) {
+					if (typeTransform(x)(a))
 						return copy
 							.copy()
 							.function()
 							[x](
 								a,
-								(x === "object" || x === "array") && a.length
+								(x === "object" && obj.keys(a).length) ||
+									(x === "array" && a.length)
 									? this.function
 									: undefined
 							)
-					}
+
 				return a
 			})
 		}).function
@@ -2743,7 +2756,7 @@ export const form = (
 	X.init = (x) => init(x)
 	X.flatmap = (x, f) => X.new(copy(X.index(x), f))
 	X.read = (x, i = X.init(x)) => read(X.index(x), i)
-	X.write = (x, i) => write(X.index(x), i, v)
+	X.write = (x, i, v) => write(X.index(x), i, v)
 	X.keys = (x) => keys(X.index(x))
 	X.copy = (x, f) => copy(X.index(x), f)
 	return X
@@ -2751,10 +2764,7 @@ export const form = (
 
 // * An SUPERBLY useful technique for recursive type-creation and working with layers; Allows one to separate one layer from another using 'refCompare' and the out-of-scope object constant;
 export function typeConst(f = ID, n = 1) {
-	const TCONST = alinative.object.empty()
-	// ! make an alias for the function in the map;
-	const arr = [TCONST].concat(alarray.native.generate(n - 1).map(() => ({ ...TCONST })))
-	return f(Object.freeze(arr))
+	return f(Object.freeze(alarray.native.generate(n).map(alinative.object.empty)))
 }
 
 // * Some forms aliases for immidiate work with the 'structure';
@@ -2763,7 +2773,8 @@ export function constForm(
 	fieldname = "",
 	contentsname = "contents",
 	n = true,
-	defaultval = []
+	defaultval = [],
+	...rest
 ) {
 	return typeConst((c) => {
 		let _new = (x = defaultval) => ({ [contentsname]: x })
@@ -2779,7 +2790,7 @@ export function constForm(
 				obj.hasOwn(checked, contentsname)
 			isomorphic = (x, y) => x[fieldname] === y[fieldname]
 		}
-		return form(_new, _is, index, isomorphic)
+		return form(_new, _is, index, isomorphic, ...rest)
 	}, n)
 }
 
@@ -3108,7 +3119,6 @@ export const GeneralArray = (() => {
 		},
 		properties: {
 			array: _FUNCTION(function (array = this.template.empty) {
-				// ! ISSUE [general, for GeneralArray's first constructor argument]: array-copying - how is it to be done? Consider, pray...;
 				return this.template.treatfinite
 					? this.static.fromArray(array).array
 					: copy.deepCopy(array)
@@ -3180,8 +3190,7 @@ export const GeneralArray = (() => {
 			const X = {
 				currelem: _FUNCTION(function () {
 					return {
-						get: () =>
-							this.this.this.this.class.template.elem(this.this.this),
+						get: () => this.this.this.this.class.template.elem(this.this),
 						set: (newval) =>
 							this.this.this.this.class.template.newvalue(this.this, newval)
 					}
@@ -3455,10 +3464,7 @@ export const GeneralArray = (() => {
 						? this.this.this.this.class
 						: this.this.this.this.class.template
 				) {
-					const copied = this.empty()
-					copied.class = isclass
-						? template
-						: { ...copied.class, template: { ...template } }
+					const copied = isclass ? template.class() : this.empty(template)
 					this.loop()._full(
 						copied.pushbackLoop({
 							transform: f,
@@ -3517,12 +3523,16 @@ export const GeneralArray = (() => {
 				convert: _FUNCTION(function (
 					template = this.this.this.this.class.template
 				) {
-					this.this.this = this.copy(ID, false, template).this
+					const c = this.copy(ID, false, template)
+					this.this.this = c.this
+					this.this.class = c.class
 					return this.this
 				}),
 				// * NOTE: the difference between this thing and the '.convert' is the fact that '.switchclass' is capable of preserving "reference-connections" of different objects to the same one object class's instance;
 				switchclass: _FUNCTION(function (arrclass = this.this.this.this.class) {
-					this.this.this = this.copy(ID, true, arrclass).this
+					const c = this.copy(ID, true, arrclass)
+					this.this.this = c.this
+					this.this.class = c.class
 					return this.this
 				}),
 				swap: _FUNCTION(function (i, j) {
@@ -3660,9 +3670,9 @@ export const GeneralArray = (() => {
 						.function(this.this.this).this
 					return this.this
 				}),
-				// TODO: there must be an array-wise equality defined upon GeneralArrays; Not this. (Either not general enough or too general, possibly in-structure dependant); 
-				// ^ THIS IS AN AMAZING IDEA FOR A METHOD... 
-				// ! Unfortunately, adding it requires also the inclusion of a class-independent array-equivalence relation into the library (and this was noticed on the late stage of testing of the v1.0 version of it...); So, implementation of this goes into the v1.1 (along with the said equivalence); 
+				// TODO: there must be an array-wise equality defined upon GeneralArrays; Not this. (Either not general enough or too general, possibly in-structure dependant);
+				// ^ THIS IS AN AMAZING IDEA FOR A METHOD...
+				// ! Unfortunately, adding it requires also the inclusion of a class-independent array-equivalence relation into the library (and this was noticed on the late stage of testing of the v1.0 version of it...); So, implementation of this goes into the v1.1 (along with the said equivalence);
 				// isSorted: _FUNCTION(function (
 				// 	predicate,
 				// 	comparison = this.this.this.this.class.template.comparison
@@ -3933,7 +3943,6 @@ export const dim = TEMPLATE({
 }).function
 
 // * A general algorithm for search inside a recursive array [of arbitrary depth]; Uses GeneralArray for layer-depth-indexes;
-// ! THIS DOESN'T WORK... AT ALL!
 export const generalSearch = TEMPLATE({
 	defaults: {
 		self: false,
@@ -4096,7 +4105,17 @@ export const repeatedApplicationWhilst = TEMPLATE({
 // ! Refactor; Consider the optimization...
 // * Note: this one requires another GeneralArray class to be used;
 garrays.DeepArray = function (template = {}, garrtemplate = {}) {
-	const daform = constForm("TOKEN", "arr", 1, [])
+	const daform = constForm(
+		"TOKEN",
+		"arr",
+		1,
+		[],
+		(x, f = ID) => x.map(f),
+		(x, i = 0) => x[i],
+		(x, i, v) => (x[i] = v),
+		naarray.keys,
+		alinative.function.const(0)
+	)
 	const X = {
 		template: {
 			icclass: InfiniteCounter(numberCounter()),
@@ -4109,68 +4128,90 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 	return GeneralArray({
 		this: X,
 		empty: daform.new(),
-		// ! make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
-		newvalue: _FUNCTION(function (array, value) {
+		// ? [old todo...] make defaults for the 'newvalue' work here, pray... (so that the user can 'initialize' the index without actually assigning an 'acceptable' value to it...);
+		newvalue: function (array, value) {
 			let e = this.elem(array, true)
-			if (e[0] == undefined) {
-				if (e[0] === null) {
-					// ! ensure the proper template here, pray...
-					const flayer = structure
-						.findDeepUnfilled({ form: daform })
-						.function(array.array)
+			if (oldCompare(e[0], undefined)) {
+				if (refCompare(e[0], null)) {
+					const flayer = findDeepUnfilledArr({ form: daform })()(array.array)
 					if (flayer) {
+						// ? repeatedApplication refactoring?
+						// ? General refactoring of these kinds of operations (namely - finding the multiindex of the first unfilled flat array in a recursive array, then getting access to it?);
 						let p = array.array
-						for (const x of flayer) p = p[x].arr
-						p.push(value)
+						for (const x of flayer) p = daform.read(p, x)
+						daform.index(p).push(value)
 						return value
 					}
 				}
-
-				for (const y of e[1].previous())
+				for (const y of e[1].previous()) {
 					general.fix([array], ["currindex"], () => {
 						array.currindex = array.currindex.jumpReverse(
 							e[1].previous().jumpReverse(y)
 						)
 						this.newvalue(array, this.this.template.filling)
 					})
+				}
 			}
-			return (e[0][e[1]] = value)
-		}),
-		elem: _FUNCTION(function (array, pointer = false) {
+			return daform.write(e[0], e[1], value)
+		},
+		elem: function (array, pointer = false) {
+			const T = this
+			// ? Take this out of the local context? [Decompose, generalize? Pray consider...]
+			function walkDeep(
+				currarray,
+				fi = 0,
+				i = T.this.template.icclass.static.zero(),
+				endind = T.this.template.icclass.static.zero(),
+				fis = T.this.template.genarrclass.static.empty()
+			) {
+				let farr = currarray
+				let isEmergency = false
+				if (!daform.is(daform.read(farr, fi)))
+					return [fi, next(i), farr, isEmergency]
+				for (const t of daform.keys(daform.read(currarray, fi))) {
+					if (greateroe(i, endind)) {
+						isEmergency = true
+						break
+					}
+					;[fi, i, farr, isEmergency] = walkDeep(
+						daform.read(currarray, fis.read(fis.finish())),
+						fi,
+						i,
+						fis.copied("pushback", [t])
+					)
+					if (isEmergency) break
+					++fi
+					i = next(i)
+				}
+				return [fi, i, farr, isEmergency]
+			}
 			let i = array.init()
 			let fi = 0
-			let prevarrs = arrays.LastIndexArray().class()
 			let currarray = array.array
+			let isem = false
 			for (; lesser(i, array.currindex); ++fi) {
-				if (currarray === array.array && fi === array.array.arr.length) {
-					const rx = array.currindex.difference(i)
-					return [rx.equal(array.one()) ? null : undefined, rx]
-				}
-				const isfibelow = fi < currarray.length
-				if (isfibelow) {
-					while (daform.is(currarray.arr[fi])) {
-						prevarrs.pushback(currarray)
-						currarray = currarray.arr[fi]
-						continue
-					}
-					i = i.jumpDirection(
-						alinative.number.fromNumber(
-							native.number.min([
-								this.this.template.maxlen,
-								currarray.arr.length
-							])
-						)
+				isem = false
+				// ! [general] Create aliases for ALL standard native JS operations (both binary and unary...);
+				if (fi < daform.index(currarray).length) {
+					;[fi, i, currarray, isem] = walkDeep(
+						currarray,
+						fi,
+						i,
+						array.currindex
 					)
+					if (isem) {
+						const rx = array.currindex.difference(i)
+						return pointer
+							? [rx.equal(array.one()) ? null : undefined, rx]
+							: undefined
+					}
 				}
-				fi = isfibelow ? fi : 0
-				currarray = prevarrs.read(prevarrs.finish())
-				prevarrs.delete()
 			}
-			return pointer ? [[currarray, fi]] : [[currarray[fi]]]
-		}),
-		isEnd: _FUNCTION(function (array) {
-			return this.elem(array)[0] == undefined
-		}),
+			return pointer ? [currarray, fi] : daform.read(currarray, fi)
+		},
+		isEnd: function (array) {
+			return oldCompare(this.elem(array), undefined)
+		},
 		icclass: X.template.icclass,
 		...garrtemplate
 	})
@@ -4178,28 +4219,25 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 
 garrays.CommonArray = function (template = {}, garrtemplate = {}) {
 	// ? Change the shape of this 'this.this' object?
+	// ? Generalize the 'InfiniteCounter' class used here ? [Or, at least, refactor? Repeated usage of InfiniteCounter(addnumber()) all over...];
 	const X = {
-		template: { offset: -1, ...template }
+		template: { offset: 0, ...template }
 	}
 	return GeneralArray({
 		this: X,
 		newvalue: _FUNCTION(function (arr, value) {
-			return (arr.array[arr.currindex.value] = value)
+			return (arr.array[arr.currindex.map(InfiniteCounter(addnumber())).value] =
+				value)
 		}),
 		elem: _FUNCTION(function (arr) {
-			return arr.array[arr.currindex.value]
+			return arr.array[arr.currindex.map(InfiniteCounter(addnumber())).value]
 		}),
 		isEnd: _FUNCTION(function (arr) {
-			return arr.array.length <= arr.currindex.value
-		}),
-		icclass: InfiniteCounter(
-			addnumber(
-				{},
-				{
-					start: X.template.offset
-				}
+			return (
+				arr.array.length <= arr.currindex.map(InfiniteCounter(addnumber())).value
 			)
-		),
+		}),
+		icclass: InfiniteCounter(addnumber()),
 		...garrtemplate
 	})
 }
@@ -4414,7 +4452,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 
 					for (
 						;
-						lesser(currcounter.length().get, this.length().get());
+						lesser(currcounter.length().get(), this.length().get());
 						currcounter = next(currcounter)
 					) {
 						while (this.read(currcounter) !== first) continue
@@ -5710,7 +5748,7 @@ export const heaps = {
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
 				) {
 					if (greateroe(heaps.length().get(), heaps.one())) {
-						if (greateroe(!heaps.one(), heaps.length().get()))
+						if (greateroe(heaps.one(), heaps.length().get()))
 							return this.merge(
 								this.this.this.this.class.template.parentclass.template.parentclass.static.fromArray(
 									[heaps.read()]
@@ -5731,7 +5769,7 @@ export const heaps = {
 							}
 							return X(ac, b, a, true)
 						}
-						return X(this, this.this.this, heaps[0])
+						return X(this, this.this.this, heaps.read())
 					}
 					return this.this
 				}),
@@ -6376,7 +6414,7 @@ export const search = {
 		) {
 			if (greateroe(this.template.icclass.static.zero(), garr.length().get()))
 				return this.template.unfound
-			const lenint = this.template.tintclass.class(garr.length().get().value)
+			const lenint = this.template.tintclass.static.fromCounter(garr.length().get())
 			const middleind = lenint
 				.divide(this.template.icclass.static.two())
 				.add(

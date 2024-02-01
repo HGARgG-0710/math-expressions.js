@@ -197,6 +197,11 @@ It gets changed actively.
 	9.10. Leaks! 
 		Check the library for possible memory leaks (in particular, everything related to 'this.this.this' and recursive classes); 
 		Generally, optimize it memory-allocation-wise (see if there are any issues related); 
+
+		Note: seem to have found a leak - with the 'this.this.this' process; 
+			THERE IS NOT A GOOD DEFINITION FOR RESETTING THE VALUE OF 'THIS.THIS.THIS' IN A RECURSIVE CLASS! 
+			One additionally may require the change of classes, and so forth, and so forth, and so forth - all the referenced bits of it; 
+				Problem is - they're non-dynamic, so due to this errors can occurr...; 
 	
 	9.11. Library porting. 
 
@@ -556,6 +561,41 @@ It gets changed actively.
 			}
 		
 		Note: this kind of a precomputed function is ONLY useful, when there are no object-allocation operations in play under the hood (and one does not intend to keep the exactly same object in-place...).
+	
+		For objects [when copying and reference-independence are needed] - check each of already rememebered results for valueCompare (or a different comparison, which would be more class-neglection-oriented [THINK ABOUT WHICH ONE TO PICK...]), 
+			then - copy the initial (this way, only the comparison and copying procedures actually take any time); 
+		Although (truth be told), one doesn't (truly) NEED the copies of objects which are IDENTICAL in structure; 
+		That being, one could do the following (maximize the memory-efficiency + add the generality): 
+
+			1. Create a single ComparisonPool (or ComparisonMemoizer) object for the entire program; 
+			2. Allocate an object within the ComparisonPool; 
+			3. Use the object within the program's portion that uses the 'comparison', off which the Pool is based in order to get the object in question: 
+				3.1. What the Pool does is - store an GeneralArray-representation of the structure of all the allocated objects; 
+				3.2. Walk through the entire array in question, in search for the asked object for allocation: 
+					3.2.1. If it's there - return the already allocated version; 
+					3.2.2. If not - allocate the new object (add its ORIGINAL [no copy] to the GeneralArray of all the allocated objects), then return it (reference to it); 
+			4. The ComparisonMemoizer also gets the set of functions/methods and their according names/aliases, which would be wrapped in a function of memoization: 
+				4.1. One could (rather, instead) be passing an AliasSpace object, which would be composed of different kinds of aliases/names for methods/constants; 
+				4.2. The AliasSpace, would itself accept the methods for definition of variables (functions, that get called to receive the value), the methods themselves - Callable-s all, and other AliasSpaces (subspaces)...
+				4.3. A Callable is (effectively) a function, which is a dynamic composition of other functions (a GeneralArray of which is stored within it); 
+					4.3.1. Essentially, a Callable is a single PrecomputedFunction, that is 'precomputed' in regards to values of composition-functions and the values for its 'dynamic composition array'; 
+					4.3.2. A Callable 'f' can be called via 'f()' [again, it's a function]; 
+				4.4. Alias-subspaces, effectively, only add the desired prefix-name to the operation of obtaining the desired name (so, they simply add another layer of abstraction, purpose lies in further structure introduction); 
+				4.5. An AliasSpace itself is an Interface (so it can be mapped to a different set of names);
+					4.5.1. Also - the methods of it are to be defined in such a fashion, so as to be capable of using the AliasSpace's names' list pointer, instead of particular names; 
+						Note: this can allow to build far more structurally flexible programs, which would retain the EXACTLY same conceptual structure, while abstracting from the particular meanings; 
+			5. All the library's elements, then (the functions) are kept as functions, to which the according wrapper can be assigned...; 
+			6 [Additional]. Create some particular Memoizer-versions of the library (namely, create examples of storage of the entire library as a ComparisonMemoizer + an Alias Space...); 
+		
+		Using these several steps, one creates a single system, in terms of which all the library's operations can be generalized purely from the style standpoint, 
+			plus allowing for elimination of the precomputation as a separate step over a united structure; 
+
+		BIG NOTE: 
+			for optimization purposes - some of the 'comparisons' and the trivial/(incredibly light)/basic functions WILL NOT get the PrecomputedFunction structure embedding, due to the fact of it being (generally) quicker/(more memory performant)
+				to simply compute them, then to go over the entirety of their values list; 
+		ANOTHER BIG NOTE: 
+			See, whether there are any cases, when the 'unoptimized' (without the lookup table) versions of methods/functions are actually quicker; 
+			If (sometimes) that is the case (see when, how they change/progress) - 
 
 	
 	9.27. Matters of data-exposition and encapsulation within the library's design: 
@@ -677,7 +717,7 @@ It gets changed actively.
 				for (const x in f) 
 					nf[x] = f[x]	
 
-				nf.types = is.arr(types) ? alarray.native.generator(0, narguments - 1).map((i) => types[i]) : narguments.map(types)
+				nf.types = is.arr(types) ? alarray.native.generator(narguments).map((i) => types[i]) : narguments.map(types)
 				nf.n = narguments
 
 				return nf
@@ -733,3 +773,26 @@ It gets changed actively.
 			4. It (the final error-message) must possess a general format; 
 			5. It must allow for arbitrary Callstacks; 
 				5.1. For this - IMPLEMENT THE CALLSTACK STRUCTURE of a Debug module (maybe, make into another package, or make a part of the current thing...); 
+			
+	9.39. Recursive 'general' types and their finitization; 
+		For the 'finite' function - given a function, it constructs an alterante one, which is a wrapping of the original into 
+			a transform of one type into another. 
+
+		There are two major problems with it currently: 
+
+			1. It's not general enough - no ability to set the desired transforms; 
+			2. It does not work with recursive return types; 
+
+		The [2] is actually a special case of [1] (due to the fact that if one were to allow for arbitrary transformations, 
+			an unlimitedly-recursive type-transform could be added to the desired template of 'finite' and, thus, solve the [2]); 
+		
+	9.40. The '.function' repetition; 
+		Some templated functions (currently) have an extremely inconvinient structure, like the following - 
+		
+			a() - the template; 
+			a()() - the template; 
+			...
+			a()()...() - the actual call; 
+		
+		Think about how they could be changed to just a 'a().function() - call', like the usual; 
+		This, PARTICUARLY, relates to the mdaarrsearch.mjs functions (namely, the findDeepUnfilledArr and others);  
