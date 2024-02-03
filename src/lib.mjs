@@ -29,6 +29,7 @@ export const dec =
 
 export const allUnique = (el, _key, _arr, subset) => !subset.includes(el)
 
+export const oldCompare = (a, b) => a == b
 export const refCompare = (a, b) => a === b
 export const ID = (a) => a
 // * Identity map (just a nice piece of notation, that's all);
@@ -1210,39 +1211,56 @@ export const alarray = {
 	// ? Question [general]: which one should the library prefer the 'GeneralArray'-based multiple arguments, or the spread syntax? (GeneralArray permits unlimited number of arguments for a function that uses it...);
 	// ! THE 'finite' is not currently suited to transform methods such as this... PRAY FIX IT... [allow for arguments-arrays transformations..., such as here...];
 	intersection: TEMPLATE({
-		defaults: {
+		defaults: [
 			// ! ISSUE [about the 'finite' again] - what to do with cases such as this - when the default 'genarrclass' is given, whereas it must be finite (CommonArray?);
 			// ^ 'finite' does permit the usage of arbitrary templates... Could just create a 'general.[something...]' property for storing the Defualt 'Finitization' template, which can then be used where needed via spread {...general.[whatever], ...{(rest of the good things)}};
-			comparison: general.DEFAULT_COMPARISON,
-			preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: _FUNCTION(function (...arrs) {
-			if (!arrs.length) return this.template.genarrclass.empty()
-			if (arrs.length == 1) return arrs[0].copy()
-			if (arrs.length == 2) {
-				const inter = this.template.genarrclass.class()
-				for (
-					let i = this.template.icclass.class();
-					lesser(i, arrs[0].length().get());
-					i = next(i)
-				)
-					for (
-						let j = this.template.icclass.class();
-						lesser(j, arrs[1].length().get());
-						j = next(j)
-					) {
-						const x = arrs[0].read(i),
-							y = arrs[1].read(j)
-						if (this.template.comparison(x, y))
-							inter.pushback(
-								this.template.preferred(x, y, comparison, ...arrs, i, j)
-							)
-					}
-				return inter
+			function () {
+				return {
+					comparison: general.DEFAULT_COMPARISON,
+					preferred: (fel, sel, comp, farr, sarr, find, sind) => fel,
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					icclass: general.DEFAULT_ICCLASS
+				}
 			}
-			return this.function(arrs[0], this.function(arrs.slice(1)))
-		})
+		],
+		function: alinative.function.const(
+			_FUNCTION(function (...arrs) {
+				if (!arrs.length) return this.template.genarrclass.empty()
+				if (refCompare(arrs.length, 1)) return arrs[0].copy()
+				if (refCompare(arrs.length, 2)) {
+					const inter = this.template.genarrclass.static.empty()
+					arrs = arrs.map(ensureSet)
+					for (
+						let i = this.template.icclass.class();
+						lesser(i, arrs[0].length().get());
+						i = next(i)
+					) {
+						const x = arrs[0].read(i)
+						for (
+							let j = this.template.icclass.class();
+							lesser(j, arrs[1].length().get());
+							j = next(j)
+						) {
+							const y = arrs[1].read(j)
+							if (this.template.comparison(x, y))
+								inter.pushback(
+									this.template.preferred(
+										x,
+										y,
+										this.template.comparison,
+										...arrs,
+										i,
+										j
+									)
+								)
+						}
+					}
+					return ensureSet(inter)
+				}
+				return this.function(arrs[0], this.function(arrs.slice(1)))
+			})
+		),
+		isthis: true
 	}).function,
 	permutations: TEMPLATE({
 		defaults: {
@@ -2963,8 +2981,6 @@ export const finiteCounter = (() => {
 	}).function
 })()
 
-export const oldCompare = (a, b) => a == b
-
 export const linear = TEMPLATE({
 	defaults: {
 		reflexive: true
@@ -3106,6 +3122,8 @@ export const stnative = {
 	)
 } */
 
+// ^ IDEA [suggestion]: create GeneralArray models, that'd allow writing on negative (!.direction()) indexes? [And fix the way that 'length' is defined, maybe?];
+// * Possibly, replace the single 'length()' with two other functions - 'maxind' and 'minind'; They'd be defined in the same fashion as the 'length', but 'maxind=length' as with current length, whilst the 'minind' would work in the opposite direction...;
 export const GeneralArray = (() => {
 	return CLASS({
 		defaults: {
@@ -3307,75 +3325,78 @@ export const GeneralArray = (() => {
 				go: _FUNCTION(function (index = this.init()) {
 					return (this.this.this.currindex = index)
 				}),
-				move: _FUNCTION(function (
-					index = this.init(),
-					preface = VOID,
-					comparison = equal,
-					each = next,
-					stop = (x) => comparison(x.length().get(), x.currindex)
-				) {
-					preface(arguments, this.this.this)
-					while (
-						!comparison(this.this.this.currindex, index) &&
-						!stop(this.this.this)
-					)
-						each(this.this.this)
-					return this.this.this.currindex
-				}),
-				// TODO: check these (move, moveforward, movebackward, movedirection...) for correctness...
-				moveforward: _FUNCTION(function (
-					index = this.init(),
-					begin = false,
-					comparison = equal,
-					stop = (x) => comparison(next(x.length().get()), x.currindex)
-				) {
-					return this.move(
-						index,
-						(args, x) => {
-							if (begin) x.currindex = x.init()
-						},
-						comparison,
-						next,
-						stop
-					)
-				}),
-				movebackward: _FUNCTION(function (
-					index = this.init(),
-					end = false,
-					comparison = equal,
-					stop = (x) => comparison(x.init(), x.currindex)
-				) {
-					return this.move(
-						index,
-						(args, x) => {
-							if (end) x.currindex = x.length().get()
-						},
-						comparison,
-						previous,
-						stop
-					)
-				}),
-				movedirection: _FUNCTION(function (
-					index,
-					init = false,
-					comparison = equal,
-					stop
-				) {
-					return greateroe(this.this.this.currindex, index)
-						? this.moveforward(
-								index,
-								init,
-								comparison,
-								is.fun(stop) ||
-									((x) => comparison(x.currindex, x.length().get()))
-						  )
-						: this.movebackward(
-								index,
-								init,
-								comparison,
-								is.fun(stop) || ((x) => comparison(x.currindex, x.init()))
-						  )
-				}),
+				// ^ These are WONDERFUL ideas for methods!
+				// * Unfortunately, the user can't apply them in their full force (due to the 'leftovers' design problem), so they are getting cut out of the v1.0;
+				// ! RETURN BACK IN V1.1 IN FULL FORCE!
+				// move: _FUNCTION(function (
+				// 	index = this.init(),
+				// 	preface = VOID,
+				// 	comparison = equal,
+				// 	each = next,
+				// 	stop = (x) => comparison(x.length().get(), x.currindex)
+				// ) {
+				// 	preface(arguments, this.this.this)
+				// 	while (
+				// 		!comparison(this.this.this.currindex, index) &&
+				// 		!stop(this.this.this)
+				// 	)
+				// 		each(this.this.this)
+				// 	return this.this.this.currindex
+				// }),
+				// // TODO: check these (move, moveforward, movebackward, movedirection...) for correctness...
+				// moveforward: _FUNCTION(function (
+				// 	index = this.init(),
+				// 	begin = false,
+				// 	comparison = equal,
+				// 	stop = (x) => comparison(next(x.length().get()), x.currindex)
+				// ) {
+				// 	return this.move(
+				// 		index,
+				// 		(args, x) => {
+				// 			if (begin) x.currindex = x.init()
+				// 		},
+				// 		comparison,
+				// 		next,
+				// 		stop
+				// 	)
+				// }),
+				// movebackward: _FUNCTION(function (
+				// 	index = this.init(),
+				// 	end = false,
+				// 	comparison = equal,
+				// 	stop = (x) => comparison(x.init(), x.currindex)
+				// ) {
+				// 	return this.move(
+				// 		index,
+				// 		(args, x) => {
+				// 			if (end) x.currindex = x.length().get()
+				// 		},
+				// 		comparison,
+				// 		previous,
+				// 		stop
+				// 	)
+				// }),
+				// movedirection: _FUNCTION(function (
+				// 	index,
+				// 	init = false,
+				// 	comparison = equal,
+				// 	stop
+				// ) {
+				// 	return greateroe(this.this.this.currindex, index)
+				// 		? this.moveforward(
+				// 				index,
+				// 				init,
+				// 				comparison,
+				// 				is.fun(stop) ||
+				// 					((x) => comparison(x.currindex, x.length().get()))
+				// 		  )
+				// 		: this.movebackward(
+				// 				index,
+				// 				init,
+				// 				comparison,
+				// 				is.fun(stop) || ((x) => comparison(x.currindex, x.init()))
+				// 		  )
+				// }),
 				jump: _FUNCTION(function (
 					index = this.init(),
 					comparison = this.this.this.this.class.template.icclass.template
@@ -3386,20 +3407,20 @@ export const GeneralArray = (() => {
 				}),
 				// TODO: in ALL the library algorithms, pray create ways to ensure user choice between fast/not-fast and all the appropriate 'move'-related arguments (by default, always make 'fast=true'... AND ALSO - try not to use the 'leftovers', or do something about them - dangling there always like so... unnerving);
 				read: _FUNCTION(function (
-					index = this.init(),
-					fast = this.this.this.this.class.template.fast
+					index = this.init()
+					/* fast = this.this.this.this.class.template.fast */
 				) {
 					return general.fix([this.this.this], ["currindex"], () => {
-						if (fast) this.go(index)
-						else this.moveforward(index, true)
+						/* if (fast) */ this.go(index)
+						// else this.moveforward(index, true)
 						return this.currelem().get()
 					})
 				}),
 				// ? Question: mayhaps, return 'this.this' for that one as well?
-				write: _FUNCTION(function (index, value, fast = true) {
+				write: _FUNCTION(function (index, value /* , fast = true */) {
 					return general.fix([this.this.this], ["currindex"], () => {
-						if (fast) this.go(index)
-						else this.moveforward(index, true)
+						/* if (fast) */ this.go(index)
+						// else this.moveforward(index, true)
 						return this.currelem().set(value)
 					})
 				}),
@@ -3510,14 +3531,11 @@ export const GeneralArray = (() => {
 				// * Do it using '.project() + InfiniteCounter.difference() + repeat()...';
 				// Sketch: 'this.this.this.projectComplete(index, this.this.this.static.fromArray([value]).repeat(this.this.this.length().get().difference(index)))'
 				fillfrom: _FUNCTION(function (index, value) {
-					const indexsaved = this.this.this.currindex
-					this.go(index)
-					while (!comparison(this.this.this.currindex, this.finish())) {
-						this.currelem().set(value)
-						next(this)
-					}
-					this.this.this.currindex = indexsaved
-					// * It must always return 'this', not 'this.this.this';
+					general.fix([this.this.this], ["currindex"], () => {
+						this.go(index)
+						for (const x of this.keys().copied("slice", [index]))
+							this.write(x, value)
+					})
 					return this.this
 				}),
 				convert: _FUNCTION(function (
@@ -3582,9 +3600,11 @@ export const GeneralArray = (() => {
 								next(array)
 							},
 							undefined,
-							(x) =>
-								x.object().class.template.isEnd(x.object()) ||
-								array.this.class.template.isEnd(array),
+							alinative.function.const(
+								(x) =>
+									x.object().class.template.isEnd(x.object()) ||
+									array.class.template.isEnd(array)
+							),
 							(t) => t.object().go(index)
 						)
 					})
@@ -3687,8 +3707,14 @@ export const GeneralArray = (() => {
 				any: refactor.classes.any,
 				every: refactor.classes.every,
 				forEach: refactor.classes.forEach,
-				intersection: _FUNCTION(function (arr = this.empty()) {
-					this.this.this = alarray.intersection().function(this.this, arr).this
+				// ! Change to allow for multiple different arrays [take out the 'comparison' somewhere in a desireable fashion];
+				intersection: _FUNCTION(function (
+					arr = this.empty(),
+					comparison = this.this.this.this.class.template.comparison
+				) {
+					this.this.this = alarray
+						.intersection({ comparison })
+						.function(this.this, arr).this
 					return this.this
 				}),
 				permutations: _FUNCTION(function () {

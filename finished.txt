@@ -9,35 +9,35 @@ List of files in 'tests/', that have been successfully run;
 6. number.mjs
 7. InfiniteCounter.mjs
 8. Pointer.mjs
+9. garrays.mjs [mostly, still need UnlimitedString]; 
 
 Next to run [testing order]: 
 
-1. garrays.mjs
-2. umap.mjs
-3. ustr.mjs
-4. uset.mjs
-5. numbers.mjs
-6. numeric.mjs
-7. string.mjs
-8. typeConst.mjs
-9. orders.mjs
-10. variables.mjs
-11. aliases.mjs
-12. predicates.mjs
-13. integer.mjs
-14. algarray.mjs
-15. mdarrsearch.mjs
-16. structure.mjs
-17. Stack.mjs
-18. sort.mjs
-19. search.mjs
-20. farey.mjs
-21. expressions.mjs
-22. Graph.mjs
-23. heaps.mjs
-24. BindableFunction.mjs
-25. TreeNode.mjs
-26. forms.mjs
-27. inf.mjs
-28. integrity.mjs
+1. umap.mjs
+2. ustr.mjs
+3. uset.mjs
+4. numbers.mjs
+5. numeric.mjs
+6. string.mjs
+7. typeConst.mjs
+8. orders.mjs
+9. variables.mjs
+10. aliases.mjs
+11. predicates.mjs
+12. integer.mjs
+13. algarray.mjs
+14. mdarrsearch.mjs
+15. structure.mjs
+16. Stack.mjs
+17. sort.mjs
+18. search.mjs
+19. farey.mjs
+20. expressions.mjs
+21. Graph.mjs
+22. heaps.mjs
+23. BindableFunction.mjs
+24. TreeNode.mjs
+25. forms.mjs
+26. inf.mjs
+27. integrity.mjs
 [Pray decide the rest...]

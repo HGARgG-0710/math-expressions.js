@@ -1,5 +1,7 @@
 // * Testing of GeneralArray and its instances
 
+// TODO: check the 'is' methods for arrays... (particularly, the GeneralArray, InfiniteCounter, UnlimitedString and other types...)
+
 // ! List [from 'types.mjs']:
 import { greateroe, lesser, next } from "../src/modules/exports/predicates.mjs"
 import { arrays, InfiniteCounter } from "./../src/modules/exports/types.mjs"
@@ -28,7 +30,7 @@ tmc(arrs.keys(), (gkey) => {
 			[],
 			[345, "gggeieieododisoooooooiii....", null],
 			[true, false, true, false, undefined],
-			[({}, {}, { c: 33 }, { g: 1777 })]
+			[{}, {}, { c: 33 }, { g: 1777 }]
 		],
 		(garrvalue) => {
 			console.log("\n\n")
@@ -159,16 +161,16 @@ tmc(arrs.keys(), (gkey) => {
 				["firstIndex", "includes", "indexesOf"],
 				[
 					["???", 48, true, 27].map((x) => [x]),
-					[27, 345, null].map((x) => [x]),
+					[27, 345, null, "???"].map((x) => [x]),
 					[undefined, "???", false].map((x) => [x])
 				],
 				[],
 				(x) => {
-					if (x && "value" in x) {
+					if (x && typeof x === "object" && "value" in x) {
 						console.log(x.value)
 						return
 					}
-					if (x && "array" in x) {
+					if (x && typeof x === "object" && "array" in x) {
 						console.log(
 							x.array.map((y) => {
 								if ("value" in y) return y.value
@@ -317,7 +319,7 @@ tmc(arrs.keys(), (gkey) => {
 			)
 
 			const karr = [1, 2, 0].map((x) => arrs[(gkey + x) % arrs.length])
-			
+
 			mtom(
 				cuelarr,
 				"convert",
@@ -332,37 +334,65 @@ tmc(arrs.keys(), (gkey) => {
 				[],
 				outarr
 			)
-			
-			// ^ All good at least 'til here...;
 
-			// ! add arguments...
-			// * NOTE: each one of the methods has to have their own array (not cuelarr - that one's used out already...)
-			testOn(
+			mtom(
 				cuelarr,
+				"copied",
 				[
-					"projectFit",
-					"projectComplete",
-					"fillfrom",
-					"intersection",
-					"strjoin",
-					"splitlen"
+					cuelarr.one(),
+					cuelarr.two(),
+					cuelarr.two().next(),
+					cuelarr.two().next().next()
+				].map((x) => ["splitlen", [x]]),
+				[],
+				(x) => console.log(x.array.map((y) => y.array))
+			)
+			mtom(
+				cuelarr,
+				["fillfrom"],
+
+				[
+					[cuelarr.two().next(), "It is I, LeClerc!"],
+					[cuelarr.two().next().next().next(), 443]
 				],
-				[[[garrclass.class()]], [[garrclass.class()]]],
 				[],
 				outarr
 			)
-			
-			throw new Error("Checking the 'switchclass' and 'convert'; ")
 
-			// ! Add the arguments for these function calls...
-			cuelarr.begin()
-			testOn(
+			const projarr = garrclass.static.fromArray([
+				100,
+				"adfa",
+				true,
+				null,
+				sym(";lksdjf"),
+				function () {}
+			])
+			tom(
 				cuelarr,
-				["move", "movdirection", "movebackward", "moveforward"],
-				[],
-				[],
-				outindex
+				"projectFit",
+				[projarr, cuelarr.two().next().next()],
+				false,
+				outarr
 			)
+			tom(cuelarr, "projectComplete", [projarr, cuelarr.finish()], false, outarr)
+
+			// ^ IDEA : for a static GeneralArray method [v1.1] - recursive 'fromArray' (would take a recursive array like, say, [[a, [b, c, [d]]], [[[[[[[e]]]]]]]] and return its counterpart, which would be General on every layer;);
+			mtom(
+				garrclass.static.fromArray(["11", 22, true, null, false, null]),
+				"intersection",
+				[
+					["11", null, 41, "Seiiieieieiegrin", false, null],
+					["11", null, 41, "Seiiieieieiegrin"]
+				].map((x) => [garrclass.static.fromArray(x)]),
+				[],
+				outarr
+			)
+
+			// ^ All good at least 'til here...;
+
+			// ? After the UnlimitedString has been completely tested?
+			// ! TEST:
+			// "strjoin",
 		}
 	)
 })

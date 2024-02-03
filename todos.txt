@@ -126,13 +126,19 @@ It gets changed actively.
 
 8. Dubious but interesting structural ideas that may have a return: 
 
-	11.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
+	8.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
 		Currently - no application + trashes the code for no apparent reason. 
 		If return, only after v1.1. and when working on generalization of things. 
 			Reconsider their deletion, plus (generally, the way that the templates work). 
 				For some methods (like 'GeneralArray.permutations' and 'GeneralArray.intersection'), they work quite well as 'template-substitutes', 
 				and so shall be kept (even in the v1.0); 
-	11.2. 'transforms.mjs' - a file with various transformations upon the library objects that may come in useful 
+			
+		IDEA: bring them back as a special case of a concept of 'ArgumentSignature' wrapper for functions - a special object, which creates certain objects 
+			(that are given specific pattern-defined locations in the function's arguments upon calling), 
+				that explicify the process of setting certain given arguments (effectively, the current TEMPLATEs, but generalized); 
+			The TEMPLATE macro could also go under the knife, be replaced with a Template class, which may become the special case of ArgumentSignature; 
+			(Or Templates would get a different generalization? [that being, they would remain as-are currently, but be simplified and made more general?]); 
+	8.2. 'transforms.mjs' - a file with various transformations upon the library objects that may come in useful 
 		Originally boasted a 'noTemplates' method, that'd return the version of the 'instance()' call without the need to do '.function().function', 
 		Ended up being way too thin to be added to the package in a full capacity.
 		Similarly, the 'instance()' method got deleted for no wanted use could be found for it... (although, the idea does sound slightly promising, once the according object-form manipulation procedures have been implemented on an alias-level...); 
@@ -623,6 +629,8 @@ It gets changed actively.
 		
 		As a simple example. 
 
+		NOTE: as more and more one does work on the project's testing, the more dire does the wish for Type-assertion present self...; 
+
 	9.29. Uniting 'macros' and types: 
 
 		One was (for some time)	 considering getting rid of the 'macros' part of the package, decomposing all that is inside it heavily, and putting inside the 'types'. 
@@ -796,3 +804,28 @@ It gets changed actively.
 		
 		Think about how they could be changed to just a 'a().function() - call', like the usual; 
 		This, PARTICUARLY, relates to the mdaarrsearch.mjs functions (namely, the findDeepUnfilledArr and others);  
+	
+	9.41. Functional-like declarative programming and the current GeneralArray/InfiniteCounter; 
+
+		Currently, most of their code (if one neglects the 'alias' bits), are written in a predominantly imperative/procedural styles; 
+			That's not good. One would seek to rewrite them in terms of functional approach. For example: 
+
+				InfiniteCounter.compare = (a,b) => a.equal(b) ? true : ???
+			
+			The proble with the further definition is that, if one was to attempt translating the thing DIRECTLY into separate function calls, 
+				then they must be dependent upon one another (because, whilst one will cause infinite recursion - other will finish safely, and there is NO WAY to initially know which is which). 
+			This way, one ought to give these manner of things particular attention and thought. 
+			THE ONLY parts of the code in InfiniteCounter/GeneralArray that need be rewritten like that currnetly (and cause troubles)
+				are loops; 
+
+			The finite ones can be reduced to finite recursion cases. 
+			However, more intricate ones (such as this) pose a little more of a conondrum. 
+			Anyways, do it later. 
+		
+	9.42. No more 'selective' feature-addition; 
+
+		In places such as, for instance, 'GeneralArray.loop()' (where there is ability to have 'end' as a function with dynamic value - function that returns a function), 
+			one can see an example of so-called 'selective feature introduction'. 
+		In short - a feature that applies to a particularly chosen class of objects/items of the library, whilst it just as well could to others, yet it doesn't. 	
+		That sort of thing ought to be rooted out from the library entirely. The library must possess a singular and consistent (here - in the sense of features) style. 
+				
