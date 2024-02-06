@@ -136,6 +136,7 @@ export const BindableFunction = TEMPLATE({
 	defaults: { origin: ID, defaultThis: null },
 	function: function (f = null, thisObj = this.template.defaultThis, ...defargs) {
 		// ! ISSUE: with the purely template-based approach for functions - it doesn't work, functions (generally) don't have means of accessing themselves...;
+		// TODO: this keeps popping up when 'console.log'ing the FUNCTIONs. Rename into something more... presentable? Or simply, change the way that BindableFunction-s are outputted... [more fiddling with native Symbol[...] constants on objects...];
 		const newfun = function (...args) {
 			return (
 				is.fun(ownerobj.f.origin) ? ownerobj.f.origin : ownerobj.f.class.origin
@@ -421,8 +422,8 @@ export const hasFunction = (x, m) => obj.hasOwn(x, m) && istype(x[m], "function"
 export const inarr = (x) => [x]
 
 export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
-		defaults: defaults.basicgenarr(parentclass),
+	return EXTENSION(parentclass, {
+		defaults: defaults.basicgenarr(),
 		toextend: { methods: [], symbols: true },
 		methods: {
 			// ! work on such 'renamed' methods, pray; The possibilities for extension, currently, are, extremely narrow-cased;
@@ -621,9 +622,8 @@ const refactor = {
 	},
 
 	defaults: {
-		heap: (parentclass) => ({
+		heap: () => ({
 			check: true,
-			parentclass: parentclass,
 			names: ["treenode"],
 			defaults: {
 				outer: _FUNCTION(function (trNode) {
@@ -632,8 +632,8 @@ const refactor = {
 			},
 			predicate: general.DEFAULT_PREDICATE
 		}),
-		basicgenarr: (parentclass) => ({ parentclass: parentclass, names: ["genarr"] }),
-		basicheap: (heapclass) => ({ parentclass: heapclass, names: ["heap"] }),
+		basicgenarr: () => ({ names: ["genarr"] }),
+		basicheap: () => ({ names: ["heap"] }),
 		// ! SEE IF (and when) ONE CAN REPLACE THESE KINDS OF THINGS WITH '.const' (ECMAScript standard does not permit implicit processing-on-request, only explicit, like so...)
 		polyd1: () => ({
 			ustrclass: general.DEFAULT_USTRCLASS,
@@ -817,7 +817,7 @@ export const finite = TEMPLATE({
 export function NOREST(labels = [], btemplate = {}) {
 	return function (template = {}) {
 		const X = { ...btemplate }
-		// ! refactor! [make a method for array disjunction...];
+		// ? refactor? [make a method for array disjunction...];
 		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
 		X.rest = {}
 		// ! refactor!
@@ -850,8 +850,7 @@ export const PRECLASS = NOREST(
 	{ tobind: ["static"] }
 )
 
-// ! Generlization to another macro is require d(for the sake of refactoring...);
-// * Use all over the place...
+// ! Generlization to another macro is required (for the sake of refactoring...);
 export const CLASS = (ptemplate = {}) => {
 	alinative.object.ensureProperties(ptemplate, {
 		word: "class",
@@ -925,7 +924,7 @@ export const CLASS = (ptemplate = {}) => {
 			// ! CREATE THE ABILITY TO DEFINE CONSTANTS!!! [using obj.defineProperty(..., ..., { writable: false, value: ... }, or manually throwing an error in the higher-level getter-setter structure...)]
 			const O = this.recursive ? V[this.selfname] : V
 			for (const pr in this.properties)
-				O[pr] = this.properties[pr].bind(this)(...args)
+				O[pr] = this.properties[pr].bind(this)(...args)	
 
 			// ? refactor...
 			if (this.recursive) {
@@ -976,9 +975,10 @@ export const CLASS = (ptemplate = {}) => {
 // * 	IF one decides to copy a thing in question, then the keywords for reference ('name'), must be exactly the same; Namely, one doesn't really utilize the fact that there is a TEMPLATE underneath all this... [it works as if there isn't one...]; Consider making it different from that...
 // 		% In particular, it's because there is not a reference to the object in question that'd be available to the user - the value is simply copied from the original 'template', so as to work with the default value;
 // ! ADD THE ABILITY TO INHERIT FROM MULTIPLE CLASSES! [change the general structure of the '.names' and '.parentclass'];
-// ? ADD THE ABILITY TO USE THE '.function' on EXTENSIONs;
+// ! Add proper templates to 'EXTENSIONs' (generally, re-work and re-do them...);
 // ^ NOTE: wondering about the general structure of EXTENSIONs - ought that change (or an alternative be created) as well? Instead of storing the parentclass's instance (and, thus, causing the variable-space) to shrink, how about simply "dumping" all the desired properties of the parent inside the child, then, reassigning them? The information regarding the parentclass still remains in the 'template'.
-export const EXTENSION = (template = {}) => {
+// ^ NOTE: what the 'EXTENSION' is implementing looks VERY-VERY much like a TEMPLATE-ing layer that uses a single 'parentclass' parameter, So why not just replace with that? The 'PRECLASS' will get scoured, instead being replaced with Interfaces, while this whole 'packing-unpacking' procedure will get hidden more thoroughly behind more different functions;
+export const EXTENSION = (parentclass, template = {}) => {
 	// ? refactor this repeating 'ensureProperties';
 	// ! NOTE: about the 'toextend' - create an alias for some sort of a 'recursive ensureProperties...' (can be done manually, look at the potential use-cases...);
 	alinative.object.ensureProperties(template, {
@@ -997,38 +997,36 @@ export const EXTENSION = (template = {}) => {
 		index: {}
 	})
 	const ftemplate = {
-		function: function (template = {}) {
-			return CLASS({
-				...this,
-				function: function (...args) {
-					alinative.object.ensureProperties(
-						args,
-						this.template.defaults.constructor.map((x) => x.bind(this)())
+		function: (template.isthis ? alinative.function.const : ID)(
+			_FUNCTION(function (...args) {
+				alinative.object.ensureProperties(
+					args,
+					this.template.defaults.constructor.map((x) => x.bind(this)())
+				)
+				const X = {}
+				let i = 0
+				for (const y of this.template.names) {
+					X[y] = this.template.defaults.outer(
+						this.template.parentclass.class(
+							...this.template.defaults.inter.bind(this)(args, i, X)
+						),
+						++i
 					)
-					const X = {}
-					let i = 0
-					for (const y of this.template.names)
-						X[y] = this.template.defauls.outer(
-							this.template.parentclass.class(
-								...this.template.defaults.inter.bind(this)(args, i, X)
-							),
-							++i
-						)
-					return X
-				},
-				...template
+				}
+				return X
 			})
-		},
+		),
 		...template,
 		defaults: {
+			parentclass: parentclass,
 			names: ["sub"],
+			...template.defaults,
 			defaults: {
 				constructor: [],
 				inter: cdieach,
 				outer: ID,
 				...template.defaults.defaults
-			},
-			...template.defaults
+			}
 		},
 		symbols: {
 			...((x) => {
@@ -1070,7 +1068,7 @@ export const EXTENSION = (template = {}) => {
 					template.toextend.symbols === true
 						? y
 						: INTERSECTION(y, template.toextend.symbols))(
-					obj.keys(template.defaults.parentclass.symbols)
+					obj.keys(parentclass.symbols || [])
 				)
 			),
 			...template.symbols
@@ -1118,23 +1116,21 @@ export const EXTENSION = (template = {}) => {
 						? y
 						: // ! was - alarray.native.intersection - FIX! [decide when to PROPERLY define them...];
 						  INTERSECTION(y, template.toextend.methods))(
-					Object.keys(template.defaults.parentclass.methods)
+					Object.keys(parentclass.methods || [])
 				)
 			),
 			...template.methods
 		}
 	}
 	// ! CONSIDER, whether to change this to letting the '.toextend' stay + making it more flexible [id est, either adding another abstraction layer or changing the way that the '.toextend' is treated here...];
-	delete ftemplate.toextend
-	return PRECLASS(ftemplate).function()
+	return CLASS(PRECLASS(ftemplate).function()).function()
 }
 
 // * A useful algorithm from a different project of mine; value-wise comparison of two arbitrary things...
 //
 // ! Problem: with the currently chosen solution for the handling of the function arguments;
 // * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
-// TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray
-// TODO [additionally; maybe, if it's implementable...] - use the UnlimitedString for this stuff... [problem is that the seemingly only way to obtain the code of a function from within the code itself is via '.toString()', which returns the native JS string instead of the UnlimitedString];
+// TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray do;
 // ? Wonder - how about trying to compare the 'prototypes' chains? (in particular - does the function work with the prototype of objects? Technically (from the code), ought to be - _valueCompare({a: b}, {__proto__: {a: b}}) == true)
 export const valueCompare = TEMPLATE({
 	defaults: {
@@ -1767,7 +1763,6 @@ export const copy = {
 	}).function,
 
 	// ? find the definition for the general _switch() from a different library of self's, place in this one, then use here...
-	// ! THE 'function' version is NOT GOOD!!! DOES-NOT-WORK!
 	copyFunction: (() => {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
@@ -1785,7 +1780,7 @@ export const copy = {
 							.function()
 							[x](
 								a,
-								(x === "object" && obj.keys(a).length) ||
+								(x === "object" && a && obj.keys(a).length) ||
 									(x === "array" && a.length)
 									? this.function
 									: undefined
@@ -3098,9 +3093,9 @@ export const ensureHeap = (
 	return tree
 }
 
-export const ensureSet = (genarr = general.DEFAULT_GENARRCLASS.static.empty()) => {
+export const ensureSet = _FUNCTION(function(genarr = general.DEFAULT_GENARRCLASS.static.empty()) {
 	return genarr.copied("suchthat", [allUnique])
-}
+})
 
 export const stnative = {
 	repeatedApplication: function (initial, times, f, offset = 0, iter = (x) => x + 1) {
@@ -3130,7 +3125,8 @@ export const GeneralArray = (() => {
 			empty: [],
 			unfound: undefined,
 			treatfinite: false,
-			fast: false,
+			// ! (was) used for 'move' methods... [to be reintroduced in v1.1];
+			// fast: false,
 			default: alinative.function.const(undefined),
 			icclass: general.DEFAULT_ICCLASS,
 			comparison: refCompare
@@ -4296,10 +4292,9 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 		return f(ind, ...args)
 	}
 	const NAMESLIST = ["keys", "values"]
-	return EXTENSION({
+	return EXTENSION(parentclass, {
 		defaults: {
 			names: NAMESLIST,
-			parentclass: parentclass,
 			defaults: {
 				constructor: alarray.native.generate(2).map(
 					alinative.function.const(function () {
@@ -4848,9 +4843,8 @@ general.DEFAULT_USTRCLASS = UnlimitedString()
 
 export const tnumbers = {
 	TrueInteger: function (parentclass = general.DEFAULT_ICCLASS) {
-		return EXTENSION({
+		return EXTENSION(parentclass, {
 			defaults: {
-				parentclass: parentclass,
 				names: ["value"]
 			},
 			methods: {
@@ -4968,9 +4962,8 @@ export const tnumbers = {
 	},
 	TrueRatio: function (parentclass = general.DEFAULT_TINTCLASS) {
 		const nameslist = ["numerator", "denomenator"]
-		return EXTENSION({
+		return EXTENSION(parentclass, {
 			defaults: {
-				parentclass: parentclass,
 				names: nameslist,
 				inter: cdieach,
 				defaults: {
@@ -5152,9 +5145,8 @@ export const InfiniteArray = CLASS({
 general.DEFAULT_INFARR = InfiniteArray()
 
 export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = false) => {
-	const _class = EXTENSION({
+	const _class = EXTENSION(parentclass, {
 		defaults: {
-			parentclass: parentclass,
 			ustrclass: general.DEFAULT_USTRCLASS,
 			names: ["infarr"],
 			deff: TRUTH,
@@ -5202,9 +5194,8 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 }
 
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
+	return EXTENSION(parentclass, {
 		defaults: {
-			parentclass: parentclass,
 			names: ["children"],
 			defaults: {
 				inter: _FUNCTION(function (args, _i, instance) {
@@ -5469,16 +5460,19 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 general.DEFAULT_TREENODECLASS = TreeNode()
 
 export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
+	return EXTENSION(parentclass, {
 		defaults: {
-			parentclass: parentclass,
 			names: ["genarr"],
 			defaults: {
-				inter: _FUNCTION(function (
-					genarr = this.template.genarrclass.static.empty()
-				) {
-					return [ensureSet(genarr)]
-				})
+				inter: _FUNCTION(function (genarr) {
+					alinative.object.ensureProperty(
+						genarr,
+						0,
+						this.template.parentclass.static.empty()
+					)
+					return [genarr[0]]
+				}), 
+				outer: ensureSet
 			}
 		},
 		methods: {
@@ -5547,8 +5541,20 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			R.empty = _FUNCTION(function () {
 				return this.this.class()
 			}).bind(R)
+			// TODO: generalize - create a general interface for different kinds of types'-to-types' transitions (instead of creating a static 'from' method for each and every type/class for another type/class);
+			R.fromArray = _FUNCTION(function (array) {
+				return this.this.class(
+					this.this.template.parentclass.static.fromArray(array).array
+				)
+			}).bind(R)
+			R.fromCounter = _FUNCTION(function (counter) {
+				return this.this.class(
+					this.this.template.parentclass.static.fromCounter(counter).array
+				)
+			})
 			return R
 		})(),
+		transform: general.StaticThisTransform,
 		recursive: true
 	})
 }
@@ -5633,21 +5639,30 @@ export const NTreeNode = TEMPLATE({
 // ^ NOTE: the verticies in the graph DON'T HAVE TO BE CONNECTED - one can use one Graph instance as a combination of two unrelated graphs
 // ? Add some such 'concat/combine/unite/union' method for it, then?
 export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
-	return EXTENSION({
-		defaults: {
-			parentclass: parentclass,
-			names: ["verticies"],
-			defaults: function () {
+	return EXTENSION(parentclass, {
+		defaults: [
+			function () {
 				return {
-					constructor: [this.template.parentclass.static.empty],
-					inter: function (args, _i) {
-						return [
-							ensureSet(args[0].copy((x, i) => Vertex(x, args[1].read(i))))
-						]
+					names: ["verticies"]
+				}
+			},
+			function () {
+				return {
+					defaults: function () {
+						return {
+							constructor: [this.template.parentclass.static.empty],
+							inter: function (args, _i) {
+								return [
+									ensureSet(
+										args[0].copy((x, i) => Vertex(x, args[1].read(i)))
+									)
+								]
+							}
+						}
 					}
 				}
 			}
-		},
+		],
 		methods: {
 			getAdjacent: _FUNCTION(function (index = this.init()) {
 				return this.this.this.verticies
@@ -5755,7 +5770,8 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				for (const x of this.keys()) yield this.read(x)
 			}
 		},
-		recursive: true
+		recursive: true,
+		isthis: true
 	})
 }
 
@@ -5764,11 +5780,12 @@ export const Vertex = (value, edges) => ({ value, edges })
 general.DEFAULT_GRAPHCLASS = Graph()
 
 // ? General issue [small] - currently, the niether TreeNode nor Heaps support the lacking '.value'; Pray think more on it... (implement a solution)
-// ! Add copy to each one of those...
+// ! Add '.copy' to each one of those...
+// TODO: check if any of them have a 'difficulty' with detemining 'what ought to be where' (namely, with the '.treenode' and '.value' properties of heapclasses and TreeNode...);
 export const heaps = {
 	PairingHeap(parentclass = general.DEFAULT_TREENODECLASS) {
-		return EXTENSION({
-			defaults: refactor.defaults.heap(parentclass),
+		return EXTENSION(parentclass, {
+			defaults: refactor.defaults.heap(),
 			methods: {
 				merge: _FUNCTION(function (
 					heaps = this.this.this.this.class.template.parentclass.template.parentclass.static.empty()
@@ -5813,8 +5830,8 @@ export const heaps = {
 		})
 	},
 	NAryHeap(parentclass = general.DEFAULT_TREENODECLASS) {
-		return EXTENSION({
-			defaults: refactor.defaults.heap(parentclass),
+		return EXTENSION(parentclass, {
+			defaults: refactor.defaults.heap(),
 			methods: {
 				top: _FUNCTION(function () {
 					return this.this.this.treenode.value
@@ -5863,10 +5880,9 @@ export const heaps = {
 	},
 	BinomialHeap: function (parentclass = general.DEFAULT_GENARRCLASS) {
 		let bintreeform = treeForm(parentclass)
-		return EXTENSION({
+		return EXTENSION(parentclass, {
 			defaults: {
 				treenodeclass: general.DEFAULT_TREENODECLASS,
-				parentclass: parentclass,
 				names: ["trees"],
 				defaults: {
 					inter: function (args, _i) {
@@ -5976,8 +5992,8 @@ export const heaps = {
 general.DEFAULT_HEAPCLASS = heaps.PairingHeap()
 
 export const PriorityQueue = (heapclass = general.DEFAULT_HEAPCLASS) => {
-	return EXTENSION({
-		defaults: refactor.defaults.basicheap(heapclass),
+	return EXTENSION(heapclass, {
+		defaults: refactor.defaults.basicheap(),
 		methods: {
 			// ? Create a shorter EXTENSION-based expression for the self-referencing method-aliases;
 			pull: _FUNCTION(function () {
@@ -6290,7 +6306,11 @@ export const sort = {
 // ? [For future]: Add search algorithms: metabinary? (maybe sometime later, after BinaryArray has been implemented...), fibonacci? (if doing that, add the number sequences to the library...);
 export const search = {
 	sentinel: TEMPLATE({
-		defaults: { defelem: undefined, unfound: undefined },
+		defaults: {
+			defelem: undefined,
+			unfound: undefined,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
 			garr = this.template.genarrclass.static.empty()
@@ -6309,7 +6329,8 @@ export const search = {
 	exponential: TEMPLATE({
 		// ! set the 'defaults' to have the 'factor' as '.fromNumber(2)' by default;
 		defaults: {
-			defelem: undefined
+			defelem: undefined,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
@@ -6335,7 +6356,8 @@ export const search = {
 		defaults: {
 			defelem: undefined,
 			comparison: general.DEFAULT_COMPARISON,
-			unfound: undefined
+			unfound: undefined,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
@@ -6380,7 +6402,7 @@ export const search = {
 	jump: typeConst((FORBIDDEN_) => {
 		const [FORBIDDEN] = FORBIDDEN_
 		return TEMPLATE({
-			defaults: { defelem: undefined },
+			defaults: { defelem: undefined, genarrclass: general.DEFAULT_GENARRCLASS },
 			function: _FUNCTION(function (
 				sought = this.template.defelem,
 				garr = this.template.genarrclass.static.empty()
@@ -6416,7 +6438,11 @@ export const search = {
 		}).function
 	}, 1),
 	linear: TEMPLATE({
-		defaults: { defelem: undefined, unfound: undefined },
+		defaults: {
+			defelem: undefined,
+			unfound: undefined,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
 			garr = this.template.genarrclass.static.empty()
@@ -6431,7 +6457,8 @@ export const search = {
 		defaults: {
 			defelem: undefined,
 			comparison: general.DEFAULT_COMPARISON,
-			unfound: undefined
+			unfound: undefined,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
@@ -6608,7 +6635,10 @@ export const integer = {
 	}).function,
 
 	factorial: TEMPLATE({
-		defaults: { tintclass: general.DEFAULT_TINTCLASS },
+		defaults: {
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
+		},
 		function: function (tint = this.template.tintclass.class()) {
 			const numbers = this.template.genarrclass.static.fromArray([
 				this.template.tintclass.static.one()

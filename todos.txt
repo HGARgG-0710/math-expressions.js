@@ -829,3 +829,110 @@ It gets changed actively.
 		In short - a feature that applies to a particularly chosen class of objects/items of the library, whilst it just as well could to others, yet it doesn't. 	
 		That sort of thing ought to be rooted out from the library entirely. The library must possess a singular and consistent (here - in the sense of features) style. 
 				
+	9.43. Non-templated classes; 
+
+		Another observation obtained from looking more closely at 'CLASS'es - the result is ALWAYS, NECESSERILY, a template; 
+		That is not (as of itself) a design limitation, however, having to do '.function()' manually does look (somewhat) ugly and unwanted; 
+		In v1.1 - definitely do something about it; 
+	
+	9.44. About using objects as the native-JS mean of defining the library's items... 
+
+		It's not a terribly good choice. Maps are far more suitable; 
+
+			1. They're (generally) faster and more memory-efficient; 
+			2. Allow working with non-(string|Symbol) keys; 
+		
+		The point 2. is ESPECIALLY important due to the matter of 'Interfaces' - one could even make names that are themselves objects using them; 
+	
+	9.45. IDEA: Make library objects into functions with properties, that are defined as 'a: a() = a'; 
+
+		The beauty of the concept is that its implementation allows for creation of syntax-level compatibility layer 
+			for various things, such as: 
+
+				// For UnlimitedMap
+				for (const x of a.values){...}
+				// For Map 
+				for (const x of a.values()){...}
+
+		While the first piece __won't__ work for Map, the second won't work for UnlimitedMap (without introduction of this feature). 
+		Adding it, however, allows to use the previous; 
+
+		SIDENOTE 1: It could also make debugging without type-assertion and other requested library features MUCH MUCH MUCH harder due to acceptability of different syntaxes for the library's types API; 	
+		SIDENOTE 2: due to limitations of native JS's objects, there exist (in particular situations) prefereable ways of working with the library's types; 
+		SIDENOTE 3: after this change, the library has ("officially") deserved a status of 'function-only-consisting' ;D (because, literally, everything is a function in it...); 
+	
+	9.46. Computation contexts; 
+
+		They are generalizations of 'Callable's: 
+
+			Given an arbitrary set of argument variables, one is interested to predefinedly separate the variables into different 'computation contexts'
+				(that being - ability to take a single method, then compute different arguments for its execution at different times); 
+			
+		The computation contexts must have the following interface on them: 
+
+			1. merge(f, PREFERENCE)(c1, ..., cn) - merge contexts from 1 to n (ON THE SAME FUNCTION F!!!), return new one (this, effectively, merges different 'levels' of contexts into that of one, by using the 'PREFERENCE' predicate to determine which are which... If true - in a pair, first is preferred - otherwise, second);  
+			2. break(c, BREAKPREDICATE) - breaks a single context into multiple disjoint ones based off BREAKPREDICATE predicate ('() => true' breaks it on each, while '() => false' does not break it at all - returns the array with the current one (Effectively, walks the array of arguments, separating one if BREAKPREDICATE(...) is true, otherwise - puts them together...)); 
+
+		Those are EXTREMELY USEFUL generally, and particularly for things like abstraction, refactoring and asynchronous programming; 
+
+		COMPUTATION CONTEXTS ELEGANTLY GENERALIZE THE TEMPLATES!!!!
+		REPLACE/GENERALIZE IMPLEMENTATION OF TEMPLATES WITH COMPUTATION CONTEXTS!!!
+	
+	9.47. Make the 'Defaults' easily configurable; 
+
+		Provide interfaces for changing their values easily (and globally); 
+		Possibly, create a whole 'Space' class for that - a VariableSpace, for instance...; 
+		[And have the library export various default versions with varying values for the 'Defaults']; 
+	
+	9.48. Testing thoroughness; 
+
+		Some of the tests that were considered 'trivial' (such as certain checks of general structure classes implementations when using different comparisons) were skipped initially. 
+		When writing tests for v1.1. and later - do no such thing...
+	
+	9.49. Create a separate library term for the first (zero-th) argument of the 'GeneralArray.class', and the ACCORDING MODEL-FUNCTIONS!!!
+
+		Currently, the 'GeneralArray.class' is (extremely) under-used and is simply not good enough for actual application. 
+		Problem is - there's no way to SEPARATELY create the array of the desired 'type'/'kind'/(inner '.array'-structure), and THEN pass it to the '.class'
+			function. 
+		Initially, the idea was to HAVE such 'array kinds/types/models', and use the GeneralArray ONLY as a way of generalizing transition between them; 
+		Instead, the GeneralArray ended up 'taking the semantic reigns', and what was originally considered to be a set of specially defined array-types, that simply can use 
+			the same format for transition, into a whole blown type, that 'consumed' all the representations into itself...; 
+
+		The v1.1. seeks to remedy this. Keep the GeneralArray as a type, BUT separate the 'kinds' of arrays; 
+		They must be distinct from correspondent GeneralArray classes the GeneralArray must have the 'three functions (elem, newvalue, isEnd) and property (empty)' more 'separated'
+			(namely, have them separately from the rest of the stuff... - icclass, comparison, unfound, treatfinite, default); MEANING - another layer of templates (another computation layer/context...); 	
+		ALSO create 'arrayTransition' function, that would allow transition from one internal type of array to another using GeneralArray; 
+		ADDITIONALLY - consider separating the 'copying' procedure for array-transition, and the 'algorithms' part, that is to be used with each and every single one of the arrays...; 
+			The 'algorithms' bit is intended for usage 'on' the array instances, while transition isn't (or, more precisely, it must be separate, with a local object's-method-alias); 
+			ALSO-ALSO-ALSO - the 'elem/newvalue/isEnd/empty' must be in a template-like structure, while 'currindex' - in a SEPARATE FROM THE 'algorithms' PART STRUCTURE!!!! 
+				Currently, it's a large mess that the gigantic 'GeneralArray' class has the access to it, while NO SINGLE ONE DEFINITION in it, apart from a very small DIRECTLY-RELATED number, 
+				are actually using it; 
+				RE-DO. PROVIDE ANOTHER INTERFACE LAYER! 
+			
+		ALSO [possibility]: 
+			break down the GeneralArray on set of different Interfaces (greater structure diversity, like with 'currindex/elem/isEnd/empty'); 
+			Do it the following way - re-create the implementations for the library in a semantically sound way, so that one may rewrite the thing 
+				by breaking it up in a desired 'Inner-Dependency-Closed chain' of Interfaces, that the final one will be using the methods from. 
+			
+		NOTE: for all that to work, one needs another method - 'Interface.inherit()'; 
+		[
+			The Interface now has at least 2 methods beside constructor: 
+
+				1. map(A) - returns a new Interface with the new (given) set of names; 
+				2. inherit(a, A) - returns 'a' - the interface, which inherits all the things from A; 
+		]
+
+	9.50. Generalize 'composition's to work with context-ed functions...: 
+
+		What it says in the title; 
+		Sometimes, a function needed for composition is available ONLY in the context, from which the composition is being run; 
+		So, one would want some AtRequest datatype specifically for representation of these situations in the library's code...; 
+
+10. List of general methods to be present within v1.1: 
+
+	Some good ideas for methods that are certainly to be included into v1.1 [note - all of their appropriate versions (namely, with different orders of computation contexts, and so forth, are given there as-are...)]:
+
+		1. methodN = (f) => (n, sp1, ..., spn, strict = false) => (...a1)_1 => ... => (...an)_n => (...args)_n => f(a1.slice(0, sp1), ..., an.slice(0, spn), ...(strict ? [] : args)) // (very) approximate pseudocode-sketch...
+		2. wrapper - REWORK WRAPPERS INTO A STRUCTURE! Proper, separate self-contained ___named___ structure, that is intended more for passing around, rather than using as a template; 
+			For these kinds of purposes, create cases, when same template object is NOT referenced; 
+			Either a new one is created (once a thing has been edited), or it is only referenced in non-changing cases... (CREATE MEANS OF TRACKING CHANGE IN A DIFFERENT OBJECT - IF AN OBJECT HAS BEEN CHANGED, THEN ALL OF ITS 'DEPENDEES ARE CHANGED AS WELL!'); 

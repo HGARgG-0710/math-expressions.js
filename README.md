@@ -98,7 +98,7 @@ The package uses ES modules.
 
 ## Current Status
 
-It is currently in late-development, testing, documentation and polishing stages (v1.0).
+It is currently in testing, documentation and polishing stages (v1.0).
 
 The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...).
 
