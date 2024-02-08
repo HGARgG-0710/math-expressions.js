@@ -927,6 +927,18 @@ It gets changed actively.
 		What it says in the title; 
 		Sometimes, a function needed for composition is available ONLY in the context, from which the composition is being run; 
 		So, one would want some AtRequest datatype specifically for representation of these situations in the library's code...; 
+	
+	9.51. Unelegant from type-polymorphisms standpoint-of-view code: 
+
+		Sometimes (especially in 'low-level' places), the library requires checking the type of a primitive; 
+		Those checks range from very pretty and laconic ('is.arr(x)') to slightly ugly and overloaded ('is.obj(x) && !is.arr(x)'); 
+		Problem is - there are either: 
+
+			1. Not sufficiently large number of predicate-aliases for this (which just means adding more definitions to the library); 
+			2. Insufficiently great amount of variations on the native JS types' functions that would enable type-polymorphism (for instance - X: X.is(a) <-> !is.arr(a) && is.obj(a) && a); 
+		
+		One decides to look in the direction of '2.'; 
+		Create more such examples of types, define means of quick creation of theirs (effectively - working with types as with sets: union, complement, and so forth...); 
 
 10. List of general methods to be present within v1.1: 
 
