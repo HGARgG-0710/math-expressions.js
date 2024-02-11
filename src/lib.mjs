@@ -548,24 +548,29 @@ const refactor = {
 		twoadd: _FUNCTION(function () {
 			return this.one().add()
 		}),
-		copied: _FUNCTION(function (
-			method,
-			_arguments = [],
-			f = id,
-			isclass = false,
-			template = isclass
-				? this.this.this.this.class
-				: this.this.this.this.class.template
-		) {
-			const c = this.copy(f, isclass, template)
-			if (hasFunction(c, method)) c[method](..._arguments)
-			return c
-		}),
+		copied: (highlevel = true) =>
+			_FUNCTION(function (
+				method,
+				_arguments = [],
+				f = id,
+				isclass = false,
+				template = highlevel
+					? undefined
+					: isclass
+					? this.this.this.this.class
+					: this.this.this.this.class.template
+			) {
+				const c = this.copy(f, isclass, template)
+				// ? Note: what should one do in cases, when a method is missing? (Currently, just runs silently; For future library versions - enable type-assertions;)
+				if (hasFunction(c, method)) c[method](..._arguments)
+				return c
+			}),
 		usetmeth: function (name) {
 			return _FUNCTION(function (uset = this.this.this.this.class.static.empty()) {
-				return this.this.this.this.class.class(
-					this.this.this.genarr.copied(name, [uset.genarr])
-				)
+				this.this.this = this.this.this.this.class.class(
+					this.this.this.genarr.copied(name, [uset.genarr]).array
+				).this
+				return this.this
 			})
 		}
 	},
@@ -1778,7 +1783,7 @@ export const copy = {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
 			if (x === "array" || x === "arrayFlat") return is.arr
-			if (x === "objectFlat") return is.obj
+			if (x === "objectFlat" || x === "object") return is.obj
 			return (p) => istype(p, x)
 		}
 		return TEMPLATE({
@@ -3177,7 +3182,8 @@ export const GeneralArray = (() => {
 				return GeneralArray(template).class()
 			}).bind(R)
 
-			R.fromArray = _FUNCTION(function (arr) {
+			// ! use the alias for empty array all over the place;
+			R.fromArray = _FUNCTION(function (arr = []) {
 				const generalized = this.empty({
 					...this.this.template,
 					treatfinite: false
@@ -3459,7 +3465,8 @@ export const GeneralArray = (() => {
 						}
 					}
 				}),
-				copied: refactor.classes.copied,
+				copied: refactor.classes.copied(false),
+				// ? Add capability to pass multiple values? [was in other places as well...];
 				pushback: _FUNCTION(function (value) {
 					return this.write(this.length().get(), value)
 				}),
@@ -4365,7 +4372,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.values.copy(f[1], isclass, template)
 				)
 			}),
-			copied: refactor.classes.copied,
+			copied: refactor.classes.copied(),
 			map: _FUNCTION(function (
 				f = ID,
 				isclass = false,
@@ -4663,7 +4670,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 			}),
-			copied: refactor.classes.copied,
+			copied: refactor.classes.copied(),
 			insert: _FUNCTION(function (index, value) {
 				this.this.this = this.copied("slice", [this.init(), index.previous()])
 					.concat(value)
@@ -5124,7 +5131,7 @@ export const InfiniteArray = CLASS({
 		copy: _FUNCTION(function () {
 			return this.class.class(this.f)
 		}),
-		copied: refactor.classes.copied,
+		copied: refactor.classes.copied(),
 		map: _FUNCTION(function (g) {
 			const x = this.f
 			this.f = _FUNCTION(function (i) {
@@ -5169,7 +5176,7 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 			copy: _FUNCTION(function () {
 				return this.this.this.this.class.class(this.this.this.infarr.f)
 			}),
-			copied: refactor.classes.copied,
+			copied: refactor.classes.copied(),
 			slice: _FUNCTION(function (beg = this.init(), end) {
 				// ! generalize this;
 				if (arguments.length === 1) {
@@ -5297,7 +5304,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					this.this.this.root
 				)
 			}),
-			copied: refactor.classes.copied,
+			copied: refactor.classes.copied(),
 			map: _FUNCTION(function (
 				f = ID,
 				isclass = false,
@@ -5322,9 +5329,10 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			delval: _FUNCTION(function (v) {
-				return this.this.this.children.delval(v, {
+				this.this.this.children.delval(v, {
 					comparison: (x, y) => comparison(x.node, y)
 				})
+				return this.this
 			}),
 			prune: _FUNCTION(function (multindex) {
 				if (multindex.length().get().equal(this.this.this.children.one())) {
@@ -5472,7 +5480,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 					alinative.object.ensureProperty(
 						args,
 						0,
-						this.parentclass.static.empty()
+						this.parentclass.template.empty
 					)
 					return [args[0]]
 				}),
@@ -5488,20 +5496,15 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			delval: _FUNCTION(function (el) {
-				return this.this.this.genarr.delval(el)
+				this.this.this.genarr.delval(el)
+				return this.this
 			}),
-			copy: _FUNCTION(function (
-				f = ID,
-				isclass = false,
-				template = isclass
-					? this.this.this.this.class
-					: this.this.this.this.class.template
-			) {
+			copy: _FUNCTION(function (f = ID, isclass = false, template) {
 				return this.this.this.this.class.class(
-					this.this.this.genarr.copy(f, isclass, template)
+					this.this.this.genarr.copy(f, isclass, template).array
 				)
 			}),
-			copied: refactor.classes.copied,
+			copied: refactor.classes.copied(),
 			union: refactor.classes.usetmeth("concat"),
 			intersection: refactor.classes.usetmeth("intersection"),
 			complement: _FUNCTION(function (
@@ -5509,21 +5512,23 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			) {
 				return this.suchthat((x) => !uset.ni(x))
 			}),
-			subsets: _FUNCTION(function (fix = false) {
-				if (fix) this.fix()
-				const subs = this.this.this.this.class.parentclass.static.empty()
-				for (const i of this.keys()) {
-					const c = this.copied("delete", [i])
-					subs.pushback(c)
-					subs.concat(c.subsets().genarr)
-				}
-				return this.this.this.this.class.class(subs)
-			}),
+			// ^ Another absolutely marvelous method taken out of v1.0; Reason - in order to consistently (and cleanly) ensure subset-uniqueness (and without rewriting the algorithm in a 'hacky' ad-hoc manner), one has to first implement the GeneralArray equivalences (which are scheduled for v1.1);
+			// subsets: _FUNCTION(function (fix = false) {
+			// 	if (fix) this.fix()
+			// 	const subs = this.this.this.this.class.parentclass.static.empty()
+			// 	for (const i of this.keys()) {
+			// 		const c = this.copied("delete", [i])
+			// 		subs.pushback(c)
+			// 		subs.concat(c.subsets(false).genarr)
+			// 	}
+			// 	this.this.this = this.this.this.this.class.class(subs.array).this
+			// 	return this.this
+			// }),
 			// * manually 'fixes' a potentially 'broken' set - allows usage of sets as arrays in algorithms, then returning them to their desired state (and also - explicit manipulation of orders on sets);
 			fix: _FUNCTION(function () {
 				// ? Dilemma - use 'ensureSet' directly, or keep as this? [that way, reference is 'linked', whereas otherwise it is 'parallel']
 				this.this.this.genarr = this.this.this.this.class.class(
-					this.this.this.genarr
+					this.this.this.genarr.array
 				).genarr
 				return this.this
 			}),
@@ -5555,6 +5560,10 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this.class(
 					this.this.parentclass.static.fromCounter(counter).array
 				)
+			})
+			// ? Use in different places?
+			R.fromGarray = _FUNCTION(function (garray) {
+				return this.this.class(garray.array)
 			})
 			return R
 		})(),
@@ -5671,7 +5680,7 @@ export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				value,
 				edges = this.this.this.this.class.parentclass.static.empty()
 			) {
-				this.this.this = this.copied("pushback", [Vertex(value, edges)])
+				this.this.this = this.copied("pushback", [Vertex(value, edges)]).this
 				return this.this
 			}),
 			addedge: _FUNCTION(function (
@@ -5951,7 +5960,7 @@ export const heaps = {
 				copy: _FUNCTION(function (f = ID) {
 					return this.this.this.this.class.class(this.this.this.trees.copy(f))
 				}),
-				copied: refactor.classes.copied,
+				copied: refactor.classes.copied(),
 				top: _FUNCTION(function () {
 					return orders
 						.most({

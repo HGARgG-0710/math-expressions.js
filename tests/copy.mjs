@@ -26,6 +26,11 @@ const same = (p) => (x, y) => refCompare(...[x, y].map(native.function.index(p))
 const s = sym("hieee!")
 const sc = copy.copyFunction({ list: ["symbol"] }).function(s)
 
+const ea = []
+const eadeec = copy.deepCopy(ea)
+const eadac = copy.dataCopy(ea)
+const eafc = copy.flatCopy(ea)
+
 formatOut("", [
 	() => {
 		test(() => afc)
@@ -48,5 +53,14 @@ formatOut("", [
 	() => {
 		test(refCompare, [s, sc])
 		test(_valueCompare, [s, sc])
+	},
+	() => {
+		test(refCompare, [copy.flatCopy(null), null])
+		test(refCompare, [copy.deepCopy(null), null])
+	},
+	() => {
+		test(refCompare, [ea, eadeec])
+		test(refCompare, [ea, eadac])
+		test(refCompare, [ea, eafc])
 	}
 ])

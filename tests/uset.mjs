@@ -2,13 +2,17 @@
 
 import { sym } from "../src/modules/exports/aliases.mjs"
 import { arrays, UnlimitedSet } from "../src/modules/exports/types.mjs"
-import { testmultcases as tmc, test, testOn, multtestobjmethod as mtom } from "./test.mjs"
+import {
+	testmultcases as tmc,
+	test,
+	testOn,
+	multtestobjmethod as mtom,
+	testobjmethod as tom
+} from "./test.mjs"
+import { refCompare } from "../src/modules/exports/comparisons.mjs"
 
-// ! SOME SERIOUSLY STRANGE SHIT IS HAPPENING WITH THE 'EXTENSION' macro... Reconsider it again...;
 const outset = (x) => console.log(x.genarr.array)
 
-// ! That is the way that all the tests must look from now on...
-// ? Refactor further? [just .forEach an array of 'methods-names' with the corresponding arguments?];
 tmc(
 	["LastIndexArray", "DeepArray", "CommonArray"].map((x) => UnlimitedSet(arrays[x]())),
 	(usclass) => {
@@ -38,28 +42,63 @@ tmc(
 					"ni",
 					["Villia", true, 11].map((x) => [x])
 				)
-				// ! BUUUUUUUUUUUGGGGGG [with GeneralArray] - passing those arrays with 'null' to 'GeneralArray.class' SOMEWHY causes the 'null's to transform to {}! Investigate; 
-				// testOn(
-				// 	instance,
-				// 	[
-				// 		"add",
-				// 		"delval",
-				// 		"copy",
-				// 		"copied",
-				// 		"union",
-				// 		"intersection",
-				// 		"complement",
-				// 		"subsets",
-				// 		"fix"
-				// 	],
-				// 	[],
-				// 	[],
-				// 	outset
-				// )
+				testOn(
+					instance,
+					["add", "delval"],
+					[
+						["Javdajava", "Javdajava", "Javdajava", 343, 11, null].map(
+							(x) => [x]
+						),
+						[null, 25, false].map((x) => [x])
+					],
+					[],
+					outset
+				)
+				tom(instance, "copy", [(x) => !!x], false, outset)
+				test(refCompare, [instance, instance.copy()])
+				mtom(
+					instance,
+					"copied",
+					[
+						["union", [instance]],
+						[
+							"union",
+							[usclass.static.fromArray([10, "abababababababbbafadfs", 25])]
+						],
+						["union", [usclass.static.empty()]],
+						[
+							"intersection",
+							[["Javdajava", "aaklfa;", 343, "ddd"]].map(
+								usclass.static.fromArray
+							)
+						],
+						["intersection", [usclass.static.empty()]],
+						[
+							"complement",
+							[
+								usclass.static.fromArray([
+									343,
+									"ddd",
+									"aaklfa;",
+									"Javdajava"
+								])
+							]
+						],
+						["complement", [usclass.static.empty()]]
+					],
+					[],
+					outset
+				)
+				outset(instance)
+				for (let i = 0; i < 5; i++) instance.pushback(10 + i)
+				outset(instance)
+				tom(instance, "fix", [], false, outset)
+				tmc(instance)
 			}
 		)
-		test(usclass.static.empty, [], false, outset)
+		test(usclass.static.empty, [], false, (x) => {
+			console.log()
+			outset(x)
+		})
 	}
 )
-
-// TODO: add test for 'Symbol.iterator' (see, whether symbols' instantiation via EXTENSIONs in CLASSes works, or not)
