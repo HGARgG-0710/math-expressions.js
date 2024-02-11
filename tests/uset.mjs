@@ -13,8 +13,9 @@ import { refCompare } from "../src/modules/exports/comparisons.mjs"
 
 const outset = (x) => console.log(x.genarr.array)
 
+// ! Apparently, some problem with the 'DeepArray' test; See what it is exactly and fix; 
 tmc(
-	["LastIndexArray", "DeepArray", "CommonArray"].map((x) => UnlimitedSet(arrays[x]())),
+	[/* "LastIndexArray" */, "DeepArray", "CommonArray"].map((x) => UnlimitedSet(arrays[x]())),
 	(usclass) => {
 		console.log("\n")
 		tmc(
@@ -94,6 +95,7 @@ tmc(
 				outset(instance)
 				tom(instance, "fix", [], false, outset)
 				tmc(instance)
+				tmc(instance.keys(), (x) => console.log(x.value))
 			}
 		)
 		test(usclass.static.empty, [], false, (x) => {

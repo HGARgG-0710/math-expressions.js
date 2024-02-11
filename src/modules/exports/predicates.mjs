@@ -16,5 +16,6 @@ export {
 	TRUTH,
 	T,
 	FALLACY,
-	F
+	F, 
+	divides
 } from "../../lib.mjs"

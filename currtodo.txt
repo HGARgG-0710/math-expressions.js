@@ -1,9 +1,6 @@
 This file contains currently pursued short-term TODOs and self-created tasks for the development of the library...; 
-
-1. Code polishing (parallel with testing): 
-	1.1. STYLE [maybe, leave for the project's future?]: replace all the usages of '(x) => (....)(x)' and such with compositions - use EXCLUSIVELY compositions...; 
 	
-2. Testing; 
+1. Testing; 
 	CONCLUSION: original plan for the testing procedure organization did not work out. 
 	NEW PLAN [repeat for each and every test]: 
 
@@ -21,12 +18,12 @@ This file contains currently pursued short-term TODOs and self-created tasks for
 		Also - the way that the final NPM package gets assembled (via 'npm pack') - check that it's possible to import it via the 'node_modules' (one of the previous versions was extremely poorly tested in this particular regard, so from now on one does this for every single package...); 
 		CHECK THAT IT'S USABLE WITH DENO!!!
 
-3. Documentation: 	
+2. Documentation: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 
 
 	NOTE: base the GitHub documentation on the tests that are present + actively employ the 'entities.txt' list; 
 
-4. Extension of package domains: 
+3. Extension of package domains: 
 
 	Add the CommonJS modules, work the 'todos.txt' file, final bits of work. 
 	After that is done, 'npm publish'!
@@ -44,7 +41,7 @@ This file contains currently pursued short-term TODOs and self-created tasks for
 		IDEA: add various types to the package? (For TypeScript programs...)
 			DIFFICULTY - these types don't align AT ALL with the results of the code (meaning, they're useless...);  
 
-5. Possible Class Methods for future addition: 
+4. Possible Class Methods for future addition: 
 
 	GeneralArray:
 		copyWithin(beginind, endind, targetind) // like Array.copyWithin(), but 0th argument becomes 2nd and the 'endind' is inclusive; 
@@ -52,5 +49,5 @@ This file contains currently pursued short-term TODOs and self-created tasks for
 		entries() // same as Array.entries, but uses 'generator' for indexes; Note: doesn't 'loop' already do that?
 	
 	UnlimitedMap:
-		entries() // like Object.entries()
+		entries() // akin to Object.entries()
 		

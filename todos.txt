@@ -6,17 +6,17 @@ It gets changed actively.
     Separate it onto different versions, including <= 0.8 (for each one separate, maybe based on the old readme.md files)
     Change immensely the general style of the in-editor JSDoc documentation...
 
+	NOTE: add also the alerts regarding speed of DeepArray (note that it is very-very poor); 
+
 2. [REMINDER] Finish the package.json and the rest of the package-organization related things; 
 
-	2.1. This includes the GitHub repository organization (things like description, for instance...); 
+	2.1. This includes the GitHub repository organization (things like a proper description, for instance...); 
 	2.2. IDEA: for the package.json and 'npm run test', of the package make the following work:
 			Let the 'test' script that is being run accept an argument of an array of test files/cases to be executed, 
 			which will then be used to produce the appropriate testing procedure [namely, run the appropriate files]; 
 			If none are passed, then all the tests are executed in the alphabetic order...;
 
-3. Work on the comments separately: 	
-	3.1. Decide their looks, style (stars? No stars?), average compactness/largeness, and other minor particularities; 
-	3.2. Redo the introductions for the code files and modules (relook through them most throroughly and affect to one's liking...);  
+3. Redo the introductions for the code files and modules (relook through them most throroughly and affect to one's liking...);  
 
 4. [Plan] for 1.1. - [along with many other new things,] restructure the library by adding the 'returnless' version of all the previous and new APIs; 
 
@@ -38,27 +38,23 @@ It gets changed actively.
 	SOLUTION: the math-expressions.js will [already after the 1.0 release; there'll be a special library for that...] a 'returnless' API for that sort of stuff; 
 	will get tied to the corresponding library, so that user have a way of accessing it more directly from it... 
 
-5. Later - add better support for platform- and standard-dependent aspects of the library. 
-	For instance, the native ecmascript String uses the UTF-16 standard. 
-	The JS has within the String class methods for more intimate working with it.
+5. Things to add to the library [for the later versions]: 
 
-6. Things to add to the library [for the later versions]: 
-
-	7.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and "skinny" to be added. 
+	5.1. Statistics - the decision was made because the present 'statistics.mjs' was simply way too thin and "skinny" to be added. 
 		Even though that is (historically), is also an origin of the library, it must be first properly revised and (especially) finished - new methods, abstractions - things;
 		New things to add to it (besides the already present): 
 			1. regression analysis tools implementation; 
-	7.2. Number sequences; 
+	5.2. Number sequences; 
 		Amongst them - fibonacci, Lucas numbers, primes, perfect numbers, and so on...
 		[One general method to be implemented - InfiniteUntil(ic, f, predicate) - will get all the objects of 'f(i)' of possession of predicate 'predicate', can be implemented via InfiniteArray]; 
-	7.3. Linear algebra; 
-	7.4. (Possibly, possibly a separate project, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
-	7.5. (Possibly?) More combinatorics? 
-	7.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
-	7.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
+	5.3. Linear algebra; 
+	5.4. (Possibly, possibly a separate project, a very general thing) Theorems/axioms/object-properties (things for the automatic theorem prover software implementations); 
+	5.5. (Possibly?) More combinatorics? 
+	5.6. (Possibly???) Extend the 'types' further - return back to the MultiInfiniteCounter and MultiGeneralArray ideas...; 
+	5.7. Real-numbered functions - introduce various implementations of general real-valued functions computations with unlimited precision; 
 		Things that are elementary, give a way for their composition production; 
 		Then, allow for such infinite composition, and consequently - partial computation of them too...; 
-	7.8. Real - class of real numbers, based off rational functions over which nth digit is to be calculated; 
+	5.8. Real - class of real numbers, based off rational functions over which nth digit is to be calculated; 
 		Recently, done some derivation (still checking for correctness), seem to have found a proof for the 
 		statement that there is a general algorithm using which any real number's arbitrary digit in any number base
 		can be calculated (+ definition for the thing in question). Originally was planned for the v1.0, but now letting it rest for slightly later; 
@@ -80,7 +76,7 @@ It gets changed actively.
 
 			Thus, a decision has been made to think about it further in the v1.1; 
 
-	7.9. RealEquality - a variable equality involving real numbers; 
+	5.9. RealEquality - a variable equality involving real numbers; 
 		Was originally a part of the package as a far simpler finite-decimal-rational-only version of 2 sides, but due to violent generalization, was remade into a purely
 			Real multi-sided equality implementation. Unfortunately, due to the 'Real' not being quite suitable for this particular release, it won't be possible to implement 
 				the thing in question within the v1.0 either. 
@@ -88,7 +84,7 @@ It gets changed actively.
 		Supposed to boast a generalization for an arbitrary syntax (user-given parsing functions) + another one - for arbitrary sequences of objects in possession of 
 		properties same as Real (see if that's really necessary, or they're all isomorphic and, thus, representable via Real itself). 
 
-	7.10. InfiniteNumber - an InfiniteArray-based arbitrarily-based TrueInteger infinite sequence defined by the user's function (like InfiniteArray); 
+	5.10. InfiniteNumber - an InfiniteArray-based arbitrarily-based TrueInteger infinite sequence defined by the user's function (like InfiniteArray); 
 		Supposed to implement (minimum, later - add new beautiful creative ideas here): 
 			1. addition (infnum)
 			2. additive inverse ()
@@ -102,12 +98,12 @@ It gets changed actively.
 		
 		THIS INCLUDES THE PREVIOUS InfiniteSum (deleted from v1.0 due to the definition domain issues); 
 
-	7.11. NAryArray (s) classes, and their arithmetic: 
+	5.11. NAryArray (s) classes, and their arithmetic: 
 		Add the bitwise operators to the 'variables.udefaultTable', based upon the special case of a new class NAryArray (based off an 'n' - InfiniteCounter), 
 			which is a GeneralArray-wrapper, filled with n-bits, that interact with one another by means of predefined operations 
 				(which themselves, are just a generalization of the binary bitwise-operators...); 
 			
-	7.12.? Integral/Differential Calculus (on real-valued functions): 
+	5.12.? Integral/Differential Calculus (on real-valued functions): 
 		The issue with adding an implementation of this is that the library does not boast a general definition of a limit. 
 		The solution to the problem of defining the derviatives/antiderivatives in a desirable fashion would be: 
 
@@ -116,17 +112,9 @@ It gets changed actively.
 		
 		The first one is currently preferred...
 
-7. [for v1.1] MAJOR NAME GENERALIZATION: allow for arbitrary 'isword', 'classref', and other such expressions in the library methods: 
+6. Dubious but interesting structural ideas that may have a return: 
 
-	Most of them make use of the predefined defaults only, forcing the user to either rewrite the code manually for this trivial matter, 
-	or to use the default package code convention; Not good at all. 
-	(Note: one can do it using further 'templates'; Additionally, fix the default recurring template names like 'genarrclass', 'tintclass', 'icclass', 'comparison' and so on...);
-
-	Solved on conceptual level - 'Interface' helps with this...; 
-
-8. Dubious but interesting structural ideas that may have a return: 
-
-	8.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
+	6.1. 'leftovers' - the ending argument of every method and every class that allows to extend its possibilities; 
 		Currently - no application + trashes the code for no apparent reason. 
 		If return, only after v1.1. and when working on generalization of things. 
 			Reconsider their deletion, plus (generally, the way that the templates work). 
@@ -138,38 +126,38 @@ It gets changed actively.
 				that explicify the process of setting certain given arguments (effectively, the current TEMPLATEs, but generalized); 
 			The TEMPLATE macro could also go under the knife, be replaced with a Template class, which may become the special case of ArgumentSignature; 
 			(Or Templates would get a different generalization? [that being, they would remain as-are currently, but be simplified and made more general?]); 
-	8.2. 'transforms.mjs' - a file with various transformations upon the library objects that may come in useful 
+	6.2. 'transforms.mjs' - a file with various transformations upon the library objects that may come in useful 
 		Originally boasted a 'noTemplates' method, that'd return the version of the 'instance()' call without the need to do '.function().function', 
 		Ended up being way too thin to be added to the package in a full capacity.
 		Similarly, the 'instance()' method got deleted for no wanted use could be found for it... (although, the idea does sound slightly promising, once the according object-form manipulation procedures have been implemented on an alias-level...); 
 
-9. General matters left until v1.1: 
-	9.1. TEMPLATEs state - whether '.function()' should be kept or left out of the user's scope; 
+7. General matters left until v1.1: 
+	7.1. TEMPLATEs state - whether '.function()' should be kept or left out of the user's scope; 
 		The question relates to the fact that, while the changes to the templates in question that the second-level '.template' field provides are either too general (read 'f'), or too brisk (read 'word'), 
 			they DO allow for vast library extension by means of function-wrappers and semantic-changing (and making the macro in question SUPERBLY useful for such things...); 
 		Due to the fact that this is not the originally intended purpose of the many of the package's code components, the '.function()'s were taken out, 
 			but this matter remained (for the most part) unanswered - SHOULD THEY REMAIN? 
-	9.2. Should 'math-expressions.js' split into several libraries? 
+	7.2. Should 'math-expressions.js' split into several libraries? 
 		In particular, should 'macros' be made a separate npm package? While they do happen to have been meant for 'math-expressions.js', their usage is far-extending. 
 		More than that, they are also: 
 			
 			1. thematically independent (and thus, can be wanted by a user for completely different reasons from that of the 'math-expressions.js' rest of the contents); 
 			2. ~20 times slimmer than the rest of the library [and so, if the rest is unwanted, have to be used in this fashion...]; 
 
-	9.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
+	7.3. Hardcore refactoring - there were some minor, but somewhat unambigious possibilities for refactoring left untouched within the current release. 
 		The 'v1.1.' is supposed to bring those back to consideration.
-	9.4. Related to the 'TEMPLATE.function' question - optional names. Allow for user-defined names for class instances [namely, the active usage of 'classref', 'isname' and so on... Currently, they are not used, just sort of 'hang' there...];
-	9.5. Edge cases handling - due to urgency, one don't have enough time to fix all the wanted issues regarding the edge cases, so (in the end) only the most essential pieces of the library have this issue dealt with...
-	9.6. Far more widespread usage of forms: 
+	7.4. Related to the 'TEMPLATE.function' question - optional names. Allow for user-defined names for class instances [namely, the active usage of 'classref', 'isname' and so on... Currently, they are not used, just sort of 'hang' there...];
+	7.5. Edge cases handling - due to urgency, one don't have enough time to fix all the wanted issues regarding the edge cases, so (in the end) only the most essential pieces of the library have this issue dealt with...
+	7.6. Far more widespread usage of forms: 
 		They can be used to generalize vast swarthes of repeating algorithms for different recursive data structures. 
-	9.7. Fix the TEMPLATEs semantics: 
+	7.7. Fix the TEMPLATEs semantics: 
 		They're unnecesserily complex, exceedingly buggy, barely serve the purposes of the library in question and (worst of all) lack single form in handling of the same operations. 
 		Do hardcore refactorings + generalize where possible (then, in the uses, utilize the special case)...
 
 		Pay particular attention to the 'counters', and the usage of 'aliases.native.const' for 'this'-binding functions...
 		Also - the classes, and the way that the 'edge cases' are handled - unacceptably dirty and particular (need generality, like with the rest of the project). 
-	9.8. Add more means for working with strings... - in particular the strings functions, their formatting (examples are throughout the library - for instance, the 'readable'...); 
-	9.9. IDEA: Interfaces! 
+	7.8. Add more means for working with strings... - in particular the strings functions, their formatting (examples are throughout the library - for instance, the 'readable'...); 
+	7.9. IDEA: Interfaces! 
 		The issues connected with arbitriety of names could be a result of mixing the functionality of templates 
 			[function self-referenece + convinient-recursion-semantics + connection of data] with purely conventional issues like those of names. 
 		For their handling, INTERFACES can be created - they are nothing more than (conceptually, the structural complexity of the actual implementation/first-sketch may increase...): 
@@ -200,7 +188,7 @@ It gets changed actively.
 				return Interfaces({n: names.length}).function(names)
 			}}).function	
 
-	9.10. Leaks! 
+	7.10. Leaks! 
 		Check the library for possible memory leaks (in particular, everything related to 'this.this.this' and recursive classes); 
 		Generally, optimize it memory-allocation-wise (see if there are any issues related); 
 
@@ -209,7 +197,7 @@ It gets changed actively.
 			One additionally may require the change of classes, and so forth, and so forth, and so forth - all the referenced bits of it; 
 				Problem is - they're non-dynamic, so due to this errors can occurr...; 
 	
-	9.11. Library porting. 
+	7.11. Library porting. 
 
 		Despite its conceptual beauty and usefulness, the library's main resources are stuggling enormously due to the fact that it is implemented in JavaScript, 
 		or, more particularly, IT CANNOT BE USED PROPERLY (due to how long it takes for functions to run)... 
@@ -218,7 +206,7 @@ It gets changed actively.
 			1. More optimization of the current implementation; 
 			2. An execution environment of greater performance; 
 		
-	9.12. States!
+	7.12. States!
 
 		The idea for the State class is, effectively, such (generalize from native JS numbers...): 
 
@@ -242,7 +230,7 @@ It gets changed actively.
 		They are extremely useful for creation and then consequent re-updating/refreshing (see, for instance, React Hooks...); 
 		Especially useful in terms of graphs, and other places which allow for function-arguments to be evaluated (IN v1.1., POPULARIZE THEM HEAVILY...); 
 
-	9.13. Generalization/Alias-elementarization-deconstruction of counters? 
+	7.13. Generalization/Alias-elementarization-deconstruction of counters? 
 		Due to the appearence of State in the v1.1. of the library, one may consider generalizing counters to a bunch of functions needed for connection of different kinds of objects... 
 		For this, one may want to use various numeric/array functions (Real-based) to establish a structure 
 			(for instance, an array of [0, 1, ..., 9], in which the "d_pi(i)"'th element (where 'd_pi(i)' is the i'th digit of pi in decimal) is equal to 82), and so on...	
@@ -250,7 +238,7 @@ It gets changed actively.
 		This way, one may want to create a specialized 'Counter' class for it... (although, there is a GENERATOR macro in place already... Consider how to organize...)
 		Alternatively, one may want to consider a potential finite set of various special cases of functions, from which any manner of counters can be constructed (using 'composition' and their permutations); 
 
-	9.14. Property- and elementary-transformation-oriented programming: 
+	7.14. Property- and elementary-transformation-oriented programming: 
 
 		During the course of development, many a time did it occurr that one was faced a special case of the following general programming concept: 
 
@@ -300,12 +288,12 @@ It gets changed actively.
 		
 		That - is the "height and essence" of the library's programming style...; 
 
-	9.15. Refactoring. 
+	7.15. Refactoring. 
 
 		During testing and consequent code-review, various (A LOT OF) new refactoring possibilities revealed themselves. 
 		Due to scheduilng matters, however, one does not feel it desired to include them into v1.0, but instead leave for v1.1.	
 	
-	9.16. UnlimitedString.print(); 
+	7.16. UnlimitedString.print(); 
 
 		Previously, the library had included an attempt for a simple printing function for UnlimitedStrings. 
 		However, though well-intended, it was poorly implemented from the organization- and domains- points of view...
@@ -315,7 +303,7 @@ It gets changed actively.
 			2. Make environment-independent, allowing for arbitrary printing functions (meaning - this is a either a separate in-class template, or a method relying upon class's template...); 
 			3. Possible generalization? (look further...)
 		
-	9.17. Output-Readable Structure-Representation: 
+	7.17. Output-Readable Structure-Representation: 
 
 		Generalization of the 12.16. issue (UnlimitedString.print()) - adding interfaces that would allow to output arbitrarily large 
 			structures in a readable (with 'readable' being here a term-variable) format, namely, general replacement for things like: 
@@ -327,7 +315,7 @@ It gets changed actively.
 			the essential nature (the Interface) of theirs still remains the same. The output ought to be completely representative
 				of this, despite the size-unlimitedness requirement. 
 
-	9.18. OPTIMIZATION: 
+	7.18. OPTIMIZATION: 
 
 		By far, one of the weakest points of the library is the optimization matters - namely, the following: 
 
@@ -415,7 +403,7 @@ It gets changed actively.
 			['Process' would prooooooooooooooobably require some modification/extension...]
 
 		
-	9.19. Idea of atRequest (possibly, add to v1.1...): 
+	7.19. Idea of atRequest (possibly, add to v1.1...): 
 
 		In a sense, a (generalization-of)/(similarly-structured-as) the Promises - an implementation of the 'at-request' computation: 
 
@@ -443,7 +431,7 @@ It gets changed actively.
 		Allows to save time and resources for execution of a thing until when it is truly needed; 
 		Additionally (far more beautiful), allows to make code with undefined (undeclared) variables work after they had been declared;
 
-	9.20. Good Abstract Function types: 
+	7.20. Good Abstract Function types: 
 
 		Add the Composable class implementation, which'd possess method '.compose', which would give the user the direct ability to perform function composition operation that'd return a new function. 
 
@@ -456,14 +444,14 @@ It gets changed actively.
 				return F
 			}
 		
-	9.21. Refactoring/generalizing the tests instances; 
+	7.21. Refactoring/generalizing the tests instances; 
 
 		Currently, the tests are (pretty) dirtily written. They still serve the purpose, yet refactoring could (most certainly) be in place...; 
 		Also - conduct corresponding procedures of 'beutification' of the tests output... (for fun!)
 
 		Possibly, create a different package specifically for tests (that'd be based off the "math-expressions.js"'s API)
 	
-	9.22. More of the 'specific' types-API (and not only): 
+	7.22. More of the 'specific' types-API (and not only): 
 
 		For instance, the entirety of the library provides merely 2 (!!!) options for an UnlimitedArray construction (LastIndexArray and DeepArray). 
 		There must be more. 
@@ -507,18 +495,18 @@ It gets changed actively.
 				return arrayCompare(x, y, oneSide, (x, y) => comparison(x, y) || recarrComparison(x, y, oneSide, comparison))
 			}
 	
-	9.23. Package's code Modularity: 
+	7.23. Package's code Modularity: 
 
 		Try to solve the issue that has appeared during the work on the modular aspects of the package (namely - try to 'flatten' all the imports/exports), so that 
 			none need to recursively import...
 		If that is (after all) not possible, keep the 'lib.mjs' as-is. 
 	
-	9.24. Functions as objects
+	7.24. Functions as objects
 
 		Oneself is much intruiged by the newly encountered concept of JS, which is - treatment of Functions as inheritants of Object; 
 		Pray use this pattern far more extensively throughout the library in v1.1. 
 
-	9.25. Name-abstraction: 	
+	7.25. Name-abstraction: 	
 
 		An interesting pattern that oneself has stumbled upon whilst doing the library's refactoring: 
 
@@ -538,7 +526,7 @@ It gets changed actively.
 		In the context of the user's application, it (at the same level as Interfaces) would permit greater diversity and flexibiilty in the final alias-space, 
 			and particularly the user's decisions impact upon it (considering also the usage of the library for this purpose, that is...). 
 		
-	9.26. PrecomputedFunction
+	7.26. PrecomputedFunction
 
 		A function abstract wrapper-class that looks something like this (rough sketch, the actual structure for value-storage would probably be different and more flexible than the native JS object + the '.bind', '.call' and all the other methods would be defined as well...): 
 
@@ -602,15 +590,14 @@ It gets changed actively.
 		ANOTHER BIG NOTE: 
 			See, whether there are any cases, when the 'unoptimized' (without the lookup table) versions of methods/functions are actually quicker; 
 			If (sometimes) that is the case (see when, how they change/progress) - 
-
 	
-	9.27. Matters of data-exposition and encapsulation within the library's design: 
+	7.27. Matters of data-exposition and encapsulation within the library's design: 
 
 		Frequently, one stumbled upon cases when it was not quite clear whether to let some piece of function's definition (its' template) 
 			remain open (to change, reading) or closed (whether to expose it). 
 		Think on it deeply for each and every single case in the library... (for now, the rule of thumb is to generalize as hard as possible). 
 
-	9.28. Type-assertion
+	7.28. Type-assertion
 
 		Another major feature that the library is lacking desperately is type-assertion (or an alternative form of type-checking/type-conversion). 
 
@@ -631,12 +618,12 @@ It gets changed actively.
 
 		NOTE: as more and more one does work on the project's testing, the more dire does the wish for Type-assertion present self...; 
 
-	9.29. Uniting 'macros' and types: 
+	7.29. Uniting 'macros' and types: 
 
 		One was (for some time)	 considering getting rid of the 'macros' part of the package, decomposing all that is inside it heavily, and putting inside the 'types'. 
 		Also, the concept of a 'macro' is far less consistent with the library's essential image and nature, than that of a type. 
 	
-	9.30. Native JS Generators
+	7.30. Native JS Generators
 
 		Was thinking of generalizing the shape of a native JS 'Generator' function (the 'function*' syntax). 
 		One could simply re-create its shape, but the proper 'yield'-imitation additionally requires the preservation of the variables' states. 
@@ -666,7 +653,7 @@ It gets changed actively.
 		The downside of this implementation is that, while preserving the pattern desired, it still requires some code-changes in order to work with already created 'function*' functions. 
 		Also, it won't work with the current CLASS macro definition...
 	
-	9.31. Domain extensions? 
+	7.31. Domain extensions? 
 
 		Due to the vast changes in the library's general style, oneself was considering for its domains to change as well. 
 			For now, while defining and enabling the ability to interact with general types, its "most direct/immediate" applications do not travel far beyond stated in the README.md file. 
@@ -675,7 +662,7 @@ It gets changed actively.
 
 			These 'more applied' bits would adhere to the same stylistic "standard" as that set by the rest of the library and will serve, largely, as a mere addition related to the rest of the thing. 
 		
-	9.32. Programming Style
+	7.32. Programming Style
 
 		Some of the objectives related to the ensuring of the unity of style of library were not yet achieved (due to size and time matters). 
 		The v1.0 has some wonderful examples of what is desired 
@@ -684,7 +671,7 @@ It gets changed actively.
 					context of the package...), 
 		but also that of uncompleted bits and parts; 
 	
-	9.33. Debugging
+	7.33. Debugging
 
 		This, largely, relates to the 'printing' API part of the note in question. 
 		The process of debugging apps written with the usage of the library's current typesystem is an absolute pain. 
@@ -693,7 +680,7 @@ It gets changed actively.
 		Create proper printing and debugging APIs for it (ones that would permit accessing particular pieces of type's data, without the necessity of knowing the entirety of it...); 
 		[Also - create a complete debugger - withe namespaces and so forth. DO NOT RELY UPON console.log. THERE MUST BE PROPER REPRESENTATION MEANS IN PLACE INSTEAD OF THIS...]
 	
-	9.34. Method signature information. 
+	7.34. Method signature information. 
 
 		Another small funny thing, that'd be nice to have in the library. 
 		Objects that collect/contain information regarding particular type instances that can later be used generally. 
@@ -734,7 +721,7 @@ It gets changed actively.
 		This way, no need to require for the MethodSignature additionally (as a separate Interface), however, it also opens possibilities to type errors introduction (due to missing signature when it is required...); 
 		For that, an additional type can be created, so as to track the presence of signature and throw early; 
 	
-	9.35. Code Cleanup
+	7.35. Code Cleanup
 
 		Besides, stylistic changes, one would love to clear all the redundant comments and all such undesired items. 
 		Check for things that are redundant/over-specific, repeating definitions, delete them (after having generalized and refactored), or keep as a part of the alias-space. 
@@ -742,7 +729,7 @@ It gets changed actively.
 		Also - introduce global aliasing of non-generalizable, or default, naming constants (such as ["keys", "values"] for 'Object.') into the library; 
 		Try to use varnames (identifiers) as much as possible and abstract from particular; 
 	
-	9.36. On replacing TEMPLATEs with TableFunctions: 
+	7.36. On replacing TEMPLATEs with TableFunctions: 
 
 		The concept of templates can (largely) be replaced with 'TableFunctions', so as to reduce the memory-usage/unneeded copying, when doing: 
 
@@ -751,7 +738,7 @@ It gets changed actively.
 		Then, the only meaning of pre-saving would be semantical (no memory over-usage);  	
 		Think deeper on the matter of precise definition (and the way that it would incorporate TableFunction);
 	
-	9.37. Naming conventions. 
+	7.37. Naming conventions. 
 
 		The "issue" of naming conventions was (still) fairly uresolved by the time that the v1.0 version was getting finished. 
 		Current decisions in its regard: 
@@ -768,7 +755,7 @@ It gets changed actively.
 		Question [2]: (Possibly?) Rethink the library names; 
 			Re-read through them (yet again), then pray decide...
 	
-	9.38. Error-handling
+	7.38. Error-handling
 
 		This is (in effect), the expansion of the 'type-assertion' v1.1 todo; 
 		Summarily, one needs: 
@@ -782,7 +769,7 @@ It gets changed actively.
 			5. It must allow for arbitrary Callstacks; 
 				5.1. For this - IMPLEMENT THE CALLSTACK STRUCTURE of a Debug module (maybe, make into another package, or make a part of the current thing...); 
 			
-	9.39. Recursive 'general' types and their finitization; 
+	7.39. Recursive 'general' types and their finitization; 
 		For the 'finite' function - given a function, it constructs an alterante one, which is a wrapping of the original into 
 			a transform of one type into another. 
 
@@ -794,7 +781,7 @@ It gets changed actively.
 		The [2] is actually a special case of [1] (due to the fact that if one were to allow for arbitrary transformations, 
 			an unlimitedly-recursive type-transform could be added to the desired template of 'finite' and, thus, solve the [2]); 
 		
-	9.40. The '.function' repetition; 
+	7.40. The '.function' repetition; 
 		Some templated functions (currently) have an extremely inconvinient structure, like the following - 
 		
 			a() - the template; 
@@ -805,7 +792,7 @@ It gets changed actively.
 		Think about how they could be changed to just a 'a().function() - call', like the usual; 
 		This, PARTICUARLY, relates to the mdaarrsearch.mjs functions (namely, the findDeepUnfilledArr and others);  
 	
-	9.41. Functional-like declarative programming and the current GeneralArray/InfiniteCounter; 
+	7.41. Functional-like declarative programming and the current GeneralArray/InfiniteCounter; 
 
 		Currently, most of their code (if one neglects the 'alias' bits), are written in a predominantly imperative/procedural styles; 
 			That's not good. One would seek to rewrite them in terms of functional approach. For example: 
@@ -822,20 +809,20 @@ It gets changed actively.
 			However, more intricate ones (such as this) pose a little more of a conondrum. 
 			Anyways, do it later. 
 		
-	9.42. No more 'selective' feature-addition; 
+	7.42. No more 'selective' feature-addition; 
 
 		In places such as, for instance, 'GeneralArray.loop()' (where there is ability to have 'end' as a function with dynamic value - function that returns a function), 
 			one can see an example of so-called 'selective feature introduction'. 
 		In short - a feature that applies to a particularly chosen class of objects/items of the library, whilst it just as well could to others, yet it doesn't. 	
 		That sort of thing ought to be rooted out from the library entirely. The library must possess a singular and consistent (here - in the sense of features) style. 
 				
-	9.43. Non-templated classes; 
+	7.43. Non-templated classes; 
 
 		Another observation obtained from looking more closely at 'CLASS'es - the result is ALWAYS, NECESSERILY, a template; 
 		That is not (as of itself) a design limitation, however, having to do '.function()' manually does look (somewhat) ugly and unwanted; 
 		In v1.1 - definitely do something about it; 
 	
-	9.44. About using objects as the native-JS mean of defining the library's items... 
+	7.44. About using objects as the native-JS mean of defining the library's items... 
 
 		It's not a terribly good choice. Maps are far more suitable; 
 
@@ -844,7 +831,7 @@ It gets changed actively.
 		
 		The point 2. is ESPECIALLY important due to the matter of 'Interfaces' - one could even make names that are themselves objects using them; 
 	
-	9.45. IDEA: Make library objects into functions with properties, that are defined as 'a: a() = a'; 
+	7.45. IDEA: Make library objects into functions with properties, that are defined as 'a: a() = a'; 
 
 		The beauty of the concept is that its implementation allows for creation of syntax-level compatibility layer 
 			for various things, such as: 
@@ -861,7 +848,7 @@ It gets changed actively.
 		SIDENOTE 2: due to limitations of native JS's objects, there exist (in particular situations) prefereable ways of working with the library's types; 
 		SIDENOTE 3: after this change, the library has ("officially") deserved a status of 'function-only-consisting' ;D (because, literally, everything is a function in it...); 
 	
-	9.46. Computation contexts; 
+	7.46. Computation contexts; 
 
 		They are generalizations of 'Callable's: 
 
@@ -878,18 +865,18 @@ It gets changed actively.
 		COMPUTATION CONTEXTS ELEGANTLY GENERALIZE THE TEMPLATES!!!!
 		REPLACE/GENERALIZE IMPLEMENTATION OF TEMPLATES WITH COMPUTATION CONTEXTS!!!
 	
-	9.47. Make the 'Defaults' easily configurable; 
+	7.47. Make the 'Defaults' easily configurable; 
 
 		Provide interfaces for changing their values easily (and globally); 
 		Possibly, create a whole 'Space' class for that - a VariableSpace, for instance...; 
 		[And have the library export various default versions with varying values for the 'Defaults']; 
 	
-	9.48. Testing thoroughness; 
+	7.48. Testing thoroughness; 
 
 		Some of the tests that were considered 'trivial' (such as certain checks of general structure classes implementations when using different comparisons) were skipped initially. 
 		When writing tests for v1.1. and later - do no such thing...
 	
-	9.49. Create a separate library term for the first (zero-th) argument of the 'GeneralArray.class', and the ACCORDING MODEL-FUNCTIONS!!!
+	7.49. Create a separate library term for the first (zero-th) argument of the 'GeneralArray.class', and the ACCORDING MODEL-FUNCTIONS!!!
 
 		Currently, the 'GeneralArray.class' is (extremely) under-used and is simply not good enough for actual application. 
 		Problem is - there's no way to SEPARATELY create the array of the desired 'type'/'kind'/(inner '.array'-structure), and THEN pass it to the '.class'
@@ -922,13 +909,13 @@ It gets changed actively.
 				2. inherit(a, A) - returns 'a' - the interface, which inherits all the things from A; 
 		]
 
-	9.50. Generalize 'composition's to work with context-ed functions...: 
+	7.50. Generalize 'composition's to work with context-ed functions...: 
 
 		What it says in the title; 
 		Sometimes, a function needed for composition is available ONLY in the context, from which the composition is being run; 
 		So, one would want some AtRequest datatype specifically for representation of these situations in the library's code...; 
 	
-	9.51. Unelegant from type-polymorphisms standpoint-of-view code: 
+	7.51. Unelegant from type-polymorphisms standpoint-of-view code: 
 
 		Sometimes (especially in 'low-level' places), the library requires checking the type of a primitive; 
 		Those checks range from very pretty and laconic ('is.arr(x)') to slightly ugly and overloaded ('is.obj(x) && !is.arr(x)'); 
@@ -939,8 +926,73 @@ It gets changed actively.
 		
 		One decides to look in the direction of '2.'; 
 		Create more such examples of types, define means of quick creation of theirs (effectively - working with types as with sets: union, complement, and so forth...); 
+	
+	7.52. Add better support for platform- and standard-dependent aspects of the library. 
+		For instance, the native ecmascript String uses the UTF-16 standard. 
+		The JS has within the String class methods for more intimate working with it.
+	
+	7.53. Re-consider the general structures used for implementation of type-classes such as UnlimitedString, UnlimitedMap and UnlimitedSet; 
 
-10. List of general methods to be present within v1.1: 
+		Currently, EXTENSIONs are used; 
+		However, one would love to instead use: 
+
+			1. Template-s for the template-variables on the classes; 
+			2. Interface-s for name-fluidity (and enumerations of methods); 
+			3. Some 'inheritance' structure _NOT_ external to the parent classes (like the way that EXTENSION is) [a sort of 'classobj.[inherit/extend](...)' method]; 
+			4. Treatment of EXTENSION-like parentclass-variables as a set of wrapper functions (that being - no repetition of the 'wrapper' structure); 
+			5. No more of 'transform's - same as 4., with 'wrappers'; 
+			6. PROPER PARENT-OBJECT REFERENCING! 
+				No more of the StaticThisTransform (that's the purpose it's been serving so far...); 
+				There must be a general structure just for that; 
+				Namely, this: 
+
+					A = {B: {p: A, ...}}
+					A.B.p == A
+				
+				It is encountered ALL OVER THE PLACE in the library; 
+				Extremely useful construct, for which there's no simpler way in JS; 
+			7. No more symbols/methods separation (generalize both, then make into one EVERYWHERE); 
+			8. No more property-method separation (define special types for that, generalize, separation must be type-based); 
+		
+	7.54. Violent usage of {}-based types; 
+
+		Due to the fact that the lower-level information regarding the {} (such as adress and scope), 
+		is hidden, it's possible to create non-compromisable implementations of type systems with their help;  
+		Let this be used MOST extensively. Literally, the entire library's typesystem would be based off this allocation-uniqueness over the refCompare. 
+		
+		This way, one'd be able to reproducably distinct one type from another within a given typesystem; 
+		Types, hence, within the given const-context, would be nothing more than a set of different 
+		constructor-objects/functions/methods, to which a refCompare-unique 'type-id' has been assigned. 
+		
+		This way a question of an object's 'types' would become nothing more than looking up an array of different object-constants; 
+		On this, the vast generalization of all already present in the math-expressions.js would be based; 
+
+		Generally, the 'separation'	is now done ONLY via types; Inter-type operations are defined on a type level, 
+		and type-inheritance is present (so as to allow for one type to have all/certain features of another); 
+
+		A VERY general default type system is present as an export (the wide extension/continuation of the current one), 
+		as well as mighty tools for creation of user-defined TypeSystems;
+	
+	7.55. IDEA: breaking up the math-expressions.js on a set of different derivative libraries, that would then get imported into it; 
+
+		Break it into: 
+
+			1. typesystems - for creating typesystems, alias systems, debugging and everything else; 
+				Note: has a continuation-style version and one that is not; 
+			2. abstract - a typesystem based off 'typesystem' (the current 'default'); 
+				2.1. (submodule) abstract.algorithms - for algorithms for the default typesystem;
+					(Here, things such as Stack, orders and such are going)
+				Has a continuation-style version and one that isn't; 
+	
+	7.56. The general System class; Let the structures be written in an easily generalizable template-manner; 
+
+		A System/Context would be a kind of an interface, defining a set of key-value pairs, such that 
+			the values are (all) of possession of set properties (by which the system is defined); 
+			Additionally, the passed values would all be functions of a context (so, their final in-context values would/could depend upon the context, to which they've been passed); 
+		There'd be different kinds of in-library Systems-aliases, all based off different functions/predicates (TypeSystem, AliasContext); 
+		They'd all be basd off a 'MapInteraface'-like object (Map, UnlimitedMap are examples - must be properties 'values()', 'keys()', 'set()', 'get()'); 
+	
+8. List of general methods to be present within v1.1: 
 
 	Some good ideas for methods that are certainly to be included into v1.1 [note - all of their appropriate versions (namely, with different orders of computation contexts, and so forth, are given there as-are...)]:
 
