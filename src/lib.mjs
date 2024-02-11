@@ -897,7 +897,7 @@ export const CLASS = (ptemplate = {}) => {
 
 			// TODO: this thing does not (generally) expect a TEMPLATE-method (an object in type, not a result of a 'TEMPLATE(...).function'); Pray think of those, and how one'd love to have them implemented...
 			for (const x in this.methods) {
-				// ! THIS IS BAD. AGAIN, THE 'EXTENSION' variables' values must be made into a 'properties' case; 
+				// ! THIS IS BAD. AGAIN, THE 'EXTENSION' variables' values must be made into a 'properties' case;
 				if ("names" in this && this.names.includes(x)) continue
 				// ! THIS IS A HACK [with this.methods[x] being an Array in cases such as, for example, EXTENSION...]. ACCEPTABLE ONLY TEMPORARILY! FIX IT...
 				const isarr = is.arr(this.methods[x])
@@ -4317,6 +4317,7 @@ garrays.TypedArray = CLASS({
 })
 
 // ^ IDEA: use 'UnlimitedSets' instead of the 'GeneralArrays' as models for keys; That'll enable one to be certain that there's no space 'wasted' on unavailable keys (+ it's clenaer from design perspective);
+// * Make a note of this somewhere - the current API ALREADY ALLOWS FOR IT [theoretically]! The only possible issues may be related to the templates' shape (and the things used from there...);
 export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	const sh1 = (key, _this, f, args = [], name = "keys") => {
 		const ind = _this.this.this[name].firstIndex(key)
@@ -4324,7 +4325,9 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			return _this.this.this.this.class.template.unfound
 		return f(ind, ...args)
 	}
-	const TT = alarray.native.generate(2).map(T)
+	const [TT, II] = [T, ID].map((f) =>
+		alarray.native.generate(2).map(alinative.function.const(f))
+	)
 	const NAMESLIST = ["keys", "values"]
 	return EXTENSION(parentclass, {
 		defaults: {
@@ -4343,7 +4346,11 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return sh1(key, this, this.this.this.values.read)
 			}),
 			write: _FUNCTION(function (key, value) {
-				sh1(key, this, this.this.this.values.write, [value])
+				const tres = sh1(key, this, this.this.this.values.write, [value])
+				if (refCompare(tres, this.this.this.this.class.template.unfound)) {
+					this.this.this.keys.pushback(key)
+					this.this.this.values.pushback(value)
+				}
 				return this.this
 			}),
 			deleteKey: _FUNCTION(function (key = this.this.this.keys.read()) {
@@ -4351,12 +4358,16 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				sh1(key, this, this.this.this.keys.delete)
 				return this.this
 			}),
-			deleteValues: _FUNCTION(function (values) {
-				for (const v of values) {
-					const inds = this.this.this.values.indexesOf(v)
-					this.this.this.keys.multcall("delete", inds)
-					this.this.this.keys.multcall("delete", inds)
-				}
+			deleteValues: _FUNCTION(function (
+				values = this.this.this.class.parentclass.static.empty()
+			) {
+				for (const v of values)
+					NAMESLIST.forEach((name) =>
+						this.this.this[name].multcall(
+							"delete",
+							this.this.this.values.indexesOf(v)
+						)
+					)
 				return this.this
 			}),
 			suchthat: _FUNCTION(function (
@@ -4374,56 +4385,51 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				)
 				return this.this
 			}),
-			copy: _FUNCTION(function (
-				f = alarray.native.generate(2).map(alinative.function.const(ID)),
-				isclass = false,
-				template = isclass
-					? this.this.this.this.class
-					: this.this.this.this.class.template
-			) {
+			copy: _FUNCTION(function (f = II, isclass = false, template) {
 				return this.this.this.this.class.class(
-					this.this.this.keys.copy(f[0], isclass, template),
-					this.this.this.values.copy(f[1], isclass, template)
+					...NAMESLIST.map(
+						(name, i) =>
+							this.this.this[name].copy(f[i], isclass, template).array
+					)
 				)
 			}),
 			copied: refactor.classes.copied(),
-			map: _FUNCTION(function (
-				f = ID,
-				isclass = false,
-				template = isclass
-					? this.this.this.this.class
-					: this.this.this.this.class.template
-			) {
+			map: _FUNCTION(function (f = II, isclass = false, template) {
 				this.this.this = this.copy(f, isclass, template).this
 				return this.this
 			}),
 			deleteKeys: _FUNCTION(function (
 				keys = this.this.this.this.class.parentclass.static.empty()
 			) {
-				for (const k of keys) {
-					const inds = this.this.this.keys.indexesOf(k)
-					this.this.this.values.multcall("delete", inds)
-					this.this.this.keys.multcall("delete", inds)
-				}
+				for (const k of keys)
+					NAMESLIST.reverse().forEach((name) =>
+						this.this.this[name].multcall(
+							"delete",
+							this.this.this.keys.indexesOf(k)
+						)
+					)
 				return this.this
 			}),
 			multcall: refactor.classes.multcall,
+			// ? Such a pair (n-tuple) of items (here, predicates) ought to be given their own type, maybe?
 			every: _FUNCTION(function (predicates = TT) {
-				return (
-					this.this.this.keys.every(predicates[0]) &&
-					this.this.this.values.every(predicates[1])
+				return this.this.this.keys.every(
+					(key, keyind) =>
+						predicates[0](key) &&
+						predicates[1](this.this.this.values.read(keyind))
 				)
 			}),
 			any: _FUNCTION(function (predicates = TT) {
-				return (
-					this.this.this.keys.any(predicates[0]) ||
-					this.this.this.values.any(predicates[1])
+				return this.this.this.keys.any(
+					(key, keyind) =>
+						predicates[0](key) &&
+						predicates[1](this.this.this.values.read(keyind))
 				)
 			})
 		},
 		symbols: {
 			iterator: function* () {
-				for (const x of this.this.this.values) yield x
+				for (const x of this.this.this.keys) yield [x, this.read(x)]
 			}
 		},
 		static: (() => {

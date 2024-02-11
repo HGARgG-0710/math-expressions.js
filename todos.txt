@@ -1,5 +1,5 @@
 This is a temporary general project todos list. 
-It gets changed actively. 
+It gets changed and revised actively. 
 
 1. Documentation
 
@@ -1000,3 +1000,4 @@ It gets changed actively.
 		2. wrapper - REWORK WRAPPERS INTO A STRUCTURE! Proper, separate self-contained ___named___ structure, that is intended more for passing around, rather than using as a template; 
 			For these kinds of purposes, create cases, when same template object is NOT referenced; 
 			Either a new one is created (once a thing has been edited), or it is only referenced in non-changing cases... (CREATE MEANS OF TRACKING CHANGE IN A DIFFERENT OBJECT - IF AN OBJECT HAS BEEN CHANGED, THEN ALL OF ITS 'DEPENDEES ARE CHANGED AS WELL!'); 
+		3. Pair-s, Triple-s, N-Tuples: a set of abstractions' definitions for representations of arrays of static (statically known) length; 
