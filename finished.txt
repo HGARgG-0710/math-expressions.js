@@ -10,9 +10,9 @@ List of files in 'tests/', that have been successfully run;
 7. InfiniteCounter.mjs
 8. Pointer.mjs
 9. garrays.mjs [mostly, still need UnlimitedString and TypedArray]; 
-10. uset.mjs
+10. uset.mjs [complete the running - 1 class completed (general)]
 11. typeConst.mjs
-12. umap.mjs
+12. umap.mjs [complete the running - 1 class completed (general)]
 
 Left to test (arbitrary order): 
 

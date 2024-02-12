@@ -323,9 +323,9 @@ export const alinative = {
 					? (i) => this.template.in[i] || ID
 					: alinative.function.const(this.template.in)
 				return this.template.inarr
-					? (...vals) =>
+					? (...vals) => this.template.out(f(vals.map((x, i) => inofi(i)(x))))
+					: (...vals) =>
 							this.template.out(f(...vals.map((x, i) => inofi(i)(x))))
-					: (...vals) => this.template.out(f(vals.map((x, i) => inofi(i)(x))))
 			})
 		}).function,
 		condfunc: (cond, elseval) => (f) => (x) => cond() ? f(x) : elseval,
@@ -2055,7 +2055,7 @@ export const naarray = {
 
 export const string = {
 	strmethod: alinative.function.wrapper({
-		in: alinative.string.stoa,
+		in: [alinative.string.stoa],
 		out: alinative.string.atos
 	}).function,
 	replace: {}
@@ -4465,7 +4465,9 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			basestr: " "
 		},
 		properties: {
-			currindex: alinative.function.const(0)
+			currindex: function (_ustrarr, index = 0) {
+				return index
+			}
 		},
 		// ? Refactor the 'methods' with 'OBJECT(...(methods' names), ...(methods' list).map(_FUNCTION))'?
 		methods: {
@@ -4497,35 +4499,21 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 				if (this.this.this.this.class.is(useparator)) {
-					// ! This thing re-appears throughout the class twice! Pray refactor...
+					// ! This piece of code re-appears throughout the class twice (indexesOf and 'split')! Refactor...
 					let prevcounter = this.init()
 					let currcounter = this.init()
 					let backupcounter = this.init()
 					let hasBroken = false
 					const first = useparator.read(useparator.init())
 
-					// ! Pray generalize and re-scope this thing later...
-					const FUNC = _FUNCTION(function (strarr, prevcounter, currcounter) {
-						return strarr.pushback(
-							this.copied("slice", [prevcounter, currcounter])
-						)
-					})
-
 					for (
 						;
-						lesser(currcounter.length().get(), this.length().get());
+						lesser(currcounter, this.length().get());
 						currcounter = next(currcounter)
 					) {
-						while (!refCompare(this.read(currcounter), first)) continue
+						if (!refCompare(this.read(currcounter), first)) continue
 						backupcounter = next(backupcounter)
-						while (
-							!this.this.this.this.class.parentclass.template.icclass.template.comparison(
-								backupcounter,
-								useparator.tototalindex()
-							)
-						) {
-							// ! ISSUE [general]: with the passed instances of recursive classes - decide which parts of them are to be passed, how they should be read, and so on...
-							// * Current decision: by the 'this.this.this->.class' part... [the inner, that is...];
+						while (lesser(backupcounter, useparator.length().get())) {
 							if (
 								this.read(currcounter.jumpDirection(backupcounter)) !=
 								useparator.read(backupcounter)
@@ -4536,18 +4524,19 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							backupcounter = next(backupcounter)
 						}
 
-						if (!hasBroken) {
-							FUNC.bind(this)(strarr, prevcounter, currcounter)
-							prevcounter = native.deepCopy(currcounter)
-						}
-						hasBroken = false
+						if (!hasBroken)
+							strarr.pushback(
+								this.copied("slice", [prevcounter, currcounter])
+							)
 						currcounter = currcounter.jumpDirection(backupcounter)
+						if (!hasBroken) prevcounter = currcounter
 						backupcounter = this.init()
+						hasBroken = false
 						continue
 					}
 
 					// * The last one is also needed due to the fact that the 'end' is 'open' in the sense that there is no more separators after it (hence, it follows that the end may also be equal to "");
-					FUNC.bind(this)(strarr, prevcounter, currcounter)
+					strarr.pushback(this.copied("slice", [prevcounter, currcounter]))
 				}
 				return strarr
 			}),
@@ -4561,34 +4550,36 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					.copied("slice", [this.init(), previous(ind)])
 					.keys())
 					final = final.jumpDirection(
-						alinative.number.fromNumber(genarr.read(x).length)
+						alinative.number
+							.fromNumber({ icclass: final.class })
+							.function(this.this.this.genarr.read(x).length)
 					)
 				return final.jumpDirection(alinative.number.fromNumber().function(subind))
 			}),
 			finish: refactor.classes.finish,
-			go: _FUNCTION(function (index) {
+			go: _FUNCTION(function (index = this.init()) {
 				const nind = this.fromtotalindex(index)
 				this.this.this.genarr.currindex = nind[0]
 				this.this.this.currindex = nind[1]
 				return this.this
 			}),
-			fromtotalindex: _FUNCTION(function (index) {
+			fromtotalindex: _FUNCTION(function (index = this.init()) {
 				let present = this.init()
 				let inarrind = this.init()
-				let currstr = ""
+				let currstrlen = this.init()
 				for (const x of this.genarr.copy((str) =>
-					alinative.number.fromNumber(str.length)
+					alinative.number.fromNumber().function(str.length)
 				)) {
 					inarrind = next(inarrind)
-					currstr = x
+					currstrlen = x
 					present = present.jumpDirection(x)
 					if (greateroe(present, index)) break
 				}
 				return [
-					inarrind,
-					currstr.length -
+					inarrind.previous(),
+					currstrlen.map(InfiniteCounter(addnumber())).value -
 						present.difference(index).map(
-							// ! make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
+							// ? make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
 							InfiniteCounter(addnumber())
 						).value
 				]
@@ -4608,7 +4599,14 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			read: _FUNCTION(function (index = this.init()) {
-				return this.copied("symbolic", []).genarr.read(index)
+				return general.fix(
+					[this.this.this.genarr, this.this.this],
+					alarray.native.generate(2).map(alinative.function.const("currindex")),
+					() => {
+						this.go(index)
+						return this.currelem().get()
+					}
+				)
 			}),
 			write: _FUNCTION(function (index, value) {
 				general.fix(
@@ -4637,7 +4635,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						return this.this.this.genarr
 							.currelem()
 							.set(
-								alinative.string.sreplaceIndex(
+								string.replace.sreplaceIndex(
 									this.this.this.genarr.currelem().get(),
 									this.this.this.currindex,
 									char
@@ -4673,8 +4671,9 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return {
 					get: () => {
 						return this.tototalindex(
-							this.this.this.genarr.length().get(),
+							this.this.this.genarr.length().get().difference(this.one()),
 							this.this.this.genarr.read(this.this.this.genarr.finish())
+								.length
 						)
 					},
 					set: (
@@ -4741,15 +4740,16 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			copy: _FUNCTION(function (f = ID) {
-				const emptystr = this.this.this.this.class.class()
-				emptystr.this.genarr = this.this.this.genarr.copy()
-				for (const x of emptystr.keys())
-					emptystr.write(x, f(emptystr.read(x), x, emptystr))
-				return emptystr
+				return this.this.this.this.class.class(this.this.this.genarr.copy().array)
 			}),
+			// ? Make a GeneralArray out of it instead?
 			keys: function* () {
-				let curr = this.init()
-				for (; lesser(curr, this.length().get()); curr = next(curr)) yield curr
+				for (
+					let curr = this.init();
+					lesser(curr, this.length().get());
+					curr = next(curr)
+				)
+					yield curr
 			},
 			isEmpty: _FUNCTION(function () {
 				for (const x of this.this.this.genarr)
@@ -4870,7 +4870,12 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			const R = {}
 
 			R.fromString = _FUNCTION(function (str = "") {
-				return this.this.class(str)
+				return this.this.class(
+					this.this.parentclass.static.fromArray([str]).array
+				)
+			}).bind(R)
+			R.empty = _FUNCTION(function () {
+				return this.fromString()
 			}).bind(R)
 
 			return R

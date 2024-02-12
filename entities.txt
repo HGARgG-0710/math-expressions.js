@@ -227,6 +227,3 @@ This file is also used for documentation, and name-collision-related work...
 	10. predicates
 	11. variables
 	12. aliases
-
-
-? Question: does self want to add 'macros' or 'refactor' to the list in question [not entirely certain as to how they ought to be tested...]? 

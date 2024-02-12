@@ -1,58 +1,104 @@
 // * Testing of the UnlimitedString
 
-import { UnlimitedString } from "../src/modules/exports/types.mjs"
-import { testmultcases as tmc, multtestobjmethod as mtom, testOn } from "./test.mjs"
+import { UnlimitedString, arrays } from "../src/modules/exports/types.mjs"
+import {
+	testmultcases as tmc,
+	multtestobjmethod as mtom,
+	testOn,
+	testobjmethod as tom
+} from "./test.mjs"
 
-tmc([undefined].map(UnlimitedString), (ustrclass) => {
-	// ! Create instances for it (2-3 will do)
-	tmc([], (ustring) => {
-		// ! Add arguments... (where needed/wanted)
-		testOn(
-			ustring,
+const outstr = (x) => {
+	console.log()
+	for (const e of x.genarr) console.log(e)
+	console.log()
+}
+const outarr = (x) => {
+	console.log(x.array.map((x) => (typeof x === "object" ? x.genarr.array : x)))
+}
+
+tmc(
+	["LastIndexArray", "DeepArray", "CommonArray"].map((x) =>
+		UnlimitedString(arrays[x]())
+	),
+	(ustrclass) => {
+		tmc(
 			[
-				"split",
-				"tototalindex",
-				"fromtotalindex",
-				"init",
-				"finish",
-				"go",
-				"begin",
-				"end",
-				"read",
-				"write",
-				"concat",
-				"currelem",
-				"next",
-				"previous"
+				ustrclass.static.fromString("ABABAALALASIFJJJJJJJLO"),
+				ustrclass.class(
+					ustrclass.parentclass.static.fromArray([
+						"141234",
+						"???",
+						"What about this?"
+					]).array
+				)
 			],
-			[]
+			(ustring) => {
+				outstr(ustring)
+				tom(ustring, "copy", [], false, outstr)
+				mtom(
+					ustring.copy(),
+					"split",
+					[
+						"A",
+						"4",
+						"about",
+						ustrclass.static.fromString("???"),
+						ustrclass.static.fromString("AALALASI")
+					].map((x) => [x]),
+					[],
+					outarr
+				)
+				// ! Add arguments... (where needed/wanted)
+				throw new Error("That's where we stop!")
+				testOn(
+					ustring,
+					[
+						// "read",
+						// "write",
+						// "tototalindex",
+						// "fromtotalindex",
+						// "init",
+						// "finish",
+						// "go",
+						// "begin",
+						// "end",
+						// "concat",
+						// "currelem",
+						// "next",
+						// "previous"
+					],
+					[[]],
+					[],
+					outstr
+				)
+				testOn(ustring.length(), ["get", "set"], [])
+				testOn(
+					ustring,
+					[
+						"insert",
+						"remove",
+						"join",
+						"reverse",
+						"map",
+						"copy",
+						"isEmpty",
+						"sort",
+						"isSorted",
+						"indexesOf",
+						"includes",
+						"order",
+						"symbolic",
+						"pushback",
+						"pushfront"
+					],
+					[]
+				)
+				tmc(ustring)
+				tmc(ustring.keys())
+				testOn(ustring, ["suchthat", "any", "every", "forEach", "multcall"], [])
+			}
 		)
-		testOn(ustring.length(), ["get", "set"], [])
-		testOn(
-			ustring,
-			[
-				"copied",
-				"insert",
-				"remove",
-				"join",
-				"reverse",
-				"map",
-				"copy",
-				"isEmpty",
-				"sort",
-				"isSorted",
-				"indexesOf",
-				"includes",
-				"order",
-				"symbolic",
-				"pushback",
-				"pushfront"
-			],
-			[]
-		)
-		tmc(ustring)
-		tmc(ustring.keys())
-		testOn(ustring, ["suchthat", "any", "every", "forEach", "multcall"], [])
-	})
-	test(ustrclass.static.fromString)
-})
+		test(ustrclass.static.empty)
+	}
+)
