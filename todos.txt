@@ -680,6 +680,15 @@ It gets changed and revised actively.
 		Create proper printing and debugging APIs for it (ones that would permit accessing particular pieces of type's data, without the necessity of knowing the entirety of it...); 
 		[Also - create a complete debugger - withe namespaces and so forth. DO NOT RELY UPON console.log. THERE MUST BE PROPER REPRESENTATION MEANS IN PLACE INSTEAD OF THIS...]
 	
+		Things to be present in the debugging (testing) API: 
+
+			1. A method for (explicit) generation of a type example using a 'random' function (such as, for instance, a PRNG); 
+				1.1. It would take the function, then (based on the user's definition), would use it to choose one of a set of possible values (or a value fitting another, more general, given pattern); 
+			2. Alias-based (as always, declarative method-system of definitions); 
+			3. Ability to flexibly define various type-outputting options; 
+			4. LOTS of defaults for the predefined typesystems of the library; 
+			5. Ability to work with recursively defined types (example - an UnlmitedMap/GeneralArray/other-collection-class of InfiniteCounters/TrueInteger-s/other-collections); 
+	
 	7.34. Method signature information. 
 
 		Another small funny thing, that'd be nice to have in the library. 

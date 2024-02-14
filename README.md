@@ -35,11 +35,7 @@ computational power is still (sadly) limited (so, the library's first two of the
 There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
 in one of the nearest future versions.
 
-Correspondently, some of the fundamental macro-API of it is not (as of yet) quite well-determeined, so may have a noticeable degree of 'edginess' and 'sketchiness' (which the future versions also aim to remedy). Although finally some aspects of its progress direction are already decided, the library still has a long way to develop.
-
-Note: the v1.0 version is the very-very first major release. While employing the library anywhere in practice, it's important to understand that, despite far more extensive testing efforts than before (as well as better understanding of its purpose and goals), it still may have bugs, incompletenesses, some few doubtful early-stage design decisions and other such qualities which could prevent one to be able to apply it with the benefit of full usage of all its potential benefits. Between v1.0 and v1.1, intermediate releases related to fixing such small design difficulties or minor issues may be anticipated. Due to all that, the usage of the v1.0 is still (by far) not wholly recommended in applications where reliability, generality and speed are of any sufficient priority. (Particular difficulties are related to optimization matters.) Issues reports are appreciated.
-
-In view of all that, the present version ought be viewed as nothing more than a basic sketch of what the library intends to be in the future.
+Note: despite far greater degree of clarity as to the package's direction development, this is still (technically) a pre-release. That being, the project in question SHOULD NOT YET BE CONSIDERED TO BE COMPLETED OR READY FOR EXPLOITATION. This is merely a proof-of-concept, a very early sketch, that (hopefully) will grow into something far larger, more coherent and useful. Issues reports are appreciated. 
 
 ## Installation
 
@@ -98,7 +94,7 @@ The package uses ES modules.
 
 ## Current Status
 
-It is currently in testing, documentation and polishing stages (v1.0).
+Testing, documentation of v1.0. 
 
 The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...).
 

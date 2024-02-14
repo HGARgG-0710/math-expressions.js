@@ -237,7 +237,8 @@ export const alinative = {
 		atos(x = []) {
 			return x.join("")
 		},
-		fcc: String.fromCharCode
+		fcc: String.fromCharCode,
+		cca: (x, i = 0) => x.charCodeAt(i)
 	},
 
 	array: {
@@ -4460,7 +4461,9 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parent, {
 		defaults: {
-			empty: "",
+			// ! UTILIZE IT PROPERLY! FOR NOW - ONLY LIMITED USE...;
+			comparison: refCompare,
+			tintclass: general.DEFAULT_TINTCLASS,
 			unfound: undefined,
 			basestr: " "
 		},
@@ -4552,7 +4555,14 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					final = final.jumpDirection(
 						alinative.number
 							.fromNumber({ icclass: final.class })
-							.function(this.this.this.genarr.read(x).length)
+							.function(
+								((a) =>
+									is.udef(a)
+										? alinative.function.const(1)()
+										: alinative.function.index("length")(a))(
+									this.this.this.genarr.read(x)
+								)
+							)
 					)
 				return final.jumpDirection(alinative.number.fromNumber().function(subind))
 			}),
@@ -4593,8 +4603,11 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			) {
 				const newstr = this.this.this.this.class.class()
 				this.go(beginning)
-				for (; lesser(this.tototalindex(), end); next(this))
-					newstr.pushback(this.currelem().get())
+				for (; lesseroe(this.tototalindex(), end); next(this)) {
+					// ? This 'auto-optimization' gets rid of the internal spces, when slicing the string (improves future speed overall, and so forth), but is it really desired? Consider, pray...;
+					const ce = this.currelem().get()
+					if (ce) newstr.pushback(ce)
+				}
 				this.this.this = (orderly ? (x) => x.order() : ID)(newstr).this
 				return this.this
 			}),
@@ -4619,17 +4632,23 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				)
 				return this.this
 			}),
-			concat: _FUNCTION(function (ustring) {
-				if (is.str(ustring)) return this.pushback(ustring)
-				this.this.this.genarr.concat(ustring.genarr)
+			concat: _FUNCTION(function (
+				ustring = this.this.this.this.class.static.empty()
+			) {
+				if (is.str(ustring)) this.pushback(ustring)
+				else this.this.this.genarr.concat(ustring.genarr)
 				return this.this
 			}),
 			currelem: _FUNCTION(function () {
 				return {
 					get: () => {
-						return this.this.this.genarr.currelem().get()[
-							this.this.this.currindex
-						]
+						const tres = this.this.this.genarr.currelem().get()
+						// TODO: generalize this construction throughout, pray... - type-defaulting (allowing "undefined" operations upon a certain type, by means of replacing them with an ID/other-function);
+						return (
+							!is.str(tres)
+								? alinative.function.const(udef)
+								: (x) => tres[x]
+						)(this.this.this.currindex)
 					},
 					set: (char) => {
 						return this.this.this.genarr
@@ -4644,24 +4663,52 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 			}),
+			// ! PROBLEM: THE OUT-OF-BOUND CASES ARE NOT DEFINED GENERALLY!
+			// * Here, one will use the 'undefined' for it (due to the obvious type discrepancy, it makes great sense), but typically - the 'missing' value for indexation IS NOT GENERALIZED (add in the v1.1);
+			// * And something like 'unfound' CANNOT BE USED due to the matter of difference between purposes of the two constants (the 'missing' one is a value, while 'unfound' is an index...);
 			next: _FUNCTION(function () {
-				if (
-					this.this.this.genarr.currelem().get().length >
-					this.this.this.currindex
-				)
-					return this.this.this.genarr.currelem().get()[
-						++this.this.this.currindex
-					]
+				if (is.str(this.this.this.genarr.currelem().get())) {
+					if (!this.this.this.genarr.currelem().get().length) {
+						while (!this.this.this.genarr.currelem().get().length) {
+							next(this.this.this.genarr)
+							this.this.this.currindex = 0
+						}
+						return this.this.this.genarr.currelem().get()[
+							this.this.this.currindex
+						]
+					}
+					if (
+						this.this.this.genarr.currelem().get().length >
+						this.this.this.currindex
+					)
+						return this.this.this.genarr.currelem().get()[
+							++this.this.this.currindex
+						]
+				}
 				next(this.this.this.genarr)
-				return this.this.this.genarr
-					.currelem()
-					.get()[(this.this.this.currindex = 0)]
+				// ^ NOTE: IF ONE HAS THE 'MISSING VALUE' OF THE GENERAL-ARRAY CLASS TO BE A NATIVE JS STRING, THEN THE FUNCTION WOULD WORK WITH IT AS-IS! (Return the result in terms of the value for the missing string!);
+				const tres = this.this.this.genarr.currelem().get()
+				return (
+					!is.str(tres) ? alinative.function.const(udef) : (x) => tres[x]
+				)((this.this.this.currindex = 0))
 			}),
 			previous: _FUNCTION(function () {
-				if (this.this.this.currindex > 0)
-					return this.this.this.genarr.currelem().get()[
-						--this.this.this.currindex
-					]
+				if (is.str(this.this.this.genarr.currelem().get())) {
+					if (!this.this.this.genarr.currelem().get().length) {
+						while (!this.this.this.genarr.currelem().get().length) {
+							previous(this.this.this.genarr)
+							this.this.this.currindex =
+								this.this.this.genarr.currelem().get().length - 1
+						}
+						return this.this.this.genarr.currelem().get()[
+							this.this.this.currindex
+						]
+					}
+					if (this.this.this.currindex > 0)
+						return this.this.this.genarr.currelem().get()[
+							--this.this.this.currindex
+						]
+				}
 				this.this.this.genarr.previous()
 				return this.this.this.genarr
 					.currelem()
@@ -4692,17 +4739,25 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				}
 			}),
 			copied: refactor.classes.copied(),
-			insert: _FUNCTION(function (index, value) {
+			insert: _FUNCTION(function (
+				index = this.init(),
+				value = this.this.this.this.class.template.basestr
+			) {
 				this.this.this = this.copied("slice", [this.init(), index.previous()])
 					.concat(value)
 					.concat(this.copied("slice", [index])).this
 				return this.this
 			}),
-			remove: _FUNCTION(function (index) {
-				return this.slice(index, index)
+			// ? Was appearing somewhere already? (refactoring?);
+			remove: _FUNCTION(function (index = this.init()) {
+				this.this.this = this.copied("slice", [
+					this.init(),
+					index.previous()
+				]).concat(this.slice(index.next())).this
+				return this.this
 			}),
 			join: _FUNCTION(function (
-				separator,
+				separator = this.this.this.this.class.template.basestr,
 				frequency = alinative.function.const(
 					this.this.this.this.class.parentclass.template.icclass.static.one()
 				),
@@ -4726,13 +4781,18 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						cfreq = frequency(inserted)
 					}
 				}
-				this.this.this = (order ? (x) => x.order() : ID)(r).this
+				this.this.this = (order ? (x) => x.order() : ID)(
+					this.this.this.this.class(r.array)
+				).this
 				return this.this
 			}),
 			reverse: _FUNCTION(function () {
 				this.this.this.genarr.reverse()
-				for (x in this.this.this.genarr)
-					this.write(x, x.split("").reverse().join(""))
+				for (const x of this.this.this.genarr.keys())
+					this.this.this.genarr.write(
+						x,
+						this.this.this.genarr.read(x).split("").reverse().join("")
+					)
 				return this.this
 			}),
 			map: _FUNCTION(function (f = ID) {
@@ -4740,7 +4800,9 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			copy: _FUNCTION(function (f = ID) {
-				return this.this.this.this.class.class(this.this.this.genarr.copy().array)
+				const emptystr = this.this.this.this.class.static.empty()
+				for (const k of this.keys()) emptystr.write(k, f(this.read(k), k, this))
+				return emptystr
 			}),
 			// ? Make a GeneralArray out of it instead?
 			keys: function* () {
@@ -4766,51 +4828,52 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			) {
 				return comparison(this.copied("sort", [predicate]), this.this.this)
 			}),
-			indexesOf: _FUNCTION(function (ustring, halt = false, haltAfter = Infinity) {
-				const indexes = this.this.this.this.class.parentclass.class()
+			indexesOf: _FUNCTION(function (
+				ustring = this.this.this.this.class.template.basestr,
+				halt = false,
+				haltAfter = Infinity
+			) {
 				if (is.str(ustring))
-					return this.indexesOf(this.this.this.this.class.class(ustring))
+					return this.indexesOf(
+						this.this.this.this.class.static.fromString(ustring),
+						halt,
+						haltAfter
+					)
 				if (this.this.this.this.class.is(ustring)) {
-					// ! NOTE: (partially) the same code as in the 'split'; Pray, after further work on it - refactor...
+					const indexes = this.this.this.this.class.parentclass.class()
+					// ? NOTE: (partially) the same code as in the 'split'; (Possibly) If it's really the same, and can be refactored elegantly - do that...;
 					let currcounter = this.init()
 					let backupcounter = this.init()
 					let hasBroken = false
-					const first = useparator.read(useparator.init())
-
+					const first = ustring.read(ustring.init())
 					for (
 						;
-						lesser(currcounter.length().get(), this.length().get());
+						lesser(currcounter, this.length().get());
 						currcounter = next(currcounter)
 					) {
 						if (halt && greateroe(indexes.length().get(), haltAfter)) break
-						while (!refCompare(this.read(currcounter), first)) continue
+						if (!refCompare(this.read(currcounter), first)) continue
 						backupcounter = next(backupcounter)
-						while (
-							!this.this.this.this.class.parentclass.template.icclass.template.comparison(
-								backupcounter,
-								useparator.tototalindex()
-							)
-						) {
+						while (!backupcounter.equal(ustring.length().get())) {
 							if (
 								this.read(currcounter.jumpDirection(backupcounter)) !=
-								useparator.read(backupcounter)
+								ustring.read(backupcounter)
 							) {
 								hasBroken = true
 								break
 							}
 							backupcounter = next(backupcounter)
 						}
-
 						if (!hasBroken) indexes.pushback(currcounter)
 						hasBroken = false
 						currcounter = currcounter.jumpDirection(backupcounter)
 						backupcounter = this.init()
 						continue
 					}
+					return indexes
 				}
-				return indexes
 			}),
-			firstIndex: _FUNCTION(function (ustring) {
+			firstIndex: _FUNCTION(function (ustring = "") {
 				const indexes = this.indexesOf(ustring, true, this.one())
 				if (greateroe(indexes.length().get(), this.init()))
 					return indexes.read(this.init())
@@ -4819,6 +4882,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			includes: refactor.classes.includes,
 			// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 			// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
+			// ! Due to memory- and time- concerns, this does not get a test (yet) - tested only in >=v1.1;
 			order: _FUNCTION(function () {
 				const newstr = this.copy()
 				let bigind = this.init()
