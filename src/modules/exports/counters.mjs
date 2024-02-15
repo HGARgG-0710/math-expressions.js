@@ -3,7 +3,6 @@ export {
 	addnumber,
 	multnumber,
 	arrayCounter,
-	objCounter,
 	recursiveCounter,
 	numberCounter,
 	orderCounter,

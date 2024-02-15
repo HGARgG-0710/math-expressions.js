@@ -454,9 +454,9 @@ It gets changed and revised actively.
 	7.22. More of the 'specific' types-API (and not only): 
 
 		For instance, the entirety of the library provides merely 2 (!!!) options for an UnlimitedArray construction (LastIndexArray and DeepArray). 
-		There must be more. 
+		There have to be more. 
 
-		Same goes for counters, only the arrayCounter, objCounter and recursiveCounter (+its special cases) are really infinite. 
+		Same goes for counters, only the arrayCounter and recursiveCounter (+its special cases) are really infinite (objCounter is just a '.reverse()' of arrayCounter...). 
 		IDEA: polynomialCounter/naryCounter - effectively an orderArray, in which the values are changed in accordance to an n-ary representation of a given counter ([0] -> [1] -> ... -> [n-1] -> [0, 1] -> ... [n - 1, 1] -> [0, 2] -> ... -> [n - 1, n - 1, 0] -> [0, 0, 1] -> ...); With recursion - that being, one either applies the same pattern for recursion ([a...] -> [[a...]] -> ...), or a different one... (consider); 
 		Must decide on more different 'specific' structures to use for the general library interfaces...
 
@@ -500,6 +500,11 @@ It gets changed and revised actively.
 		Try to solve the issue that has appeared during the work on the modular aspects of the package (namely - try to 'flatten' all the imports/exports), so that 
 			none need to recursively import...
 		If that is (after all) not possible, keep the 'lib.mjs' as-is. 
+	
+		IDEA [for a solution]: use functions-wrappers and 'atRequest' all the way; 
+			Similarly, wrap the entire modules into it + do the 'import's only in the scopes, where they're needed, 
+				instead of importing at the highest level; 
+			[Id est - use the dynamic imports - 'await import(...)', plus - adding a touch of asynchronous programming into the thing...]; 
 	
 	7.24. Functions as objects
 
@@ -948,7 +953,8 @@ It gets changed and revised actively.
 			1. Template-s for the template-variables on the classes; 
 			2. Interface-s for name-fluidity (and enumerations of methods); 
 			3. Some 'inheritance' structure _NOT_ external to the parent classes (like the way that EXTENSION is) [a sort of 'classobj.[inherit/extend](...)' method]; 
-			4. Treatment of EXTENSION-like parentclass-variables as a set of wrapper functions (that being - no repetition of the 'wrapper' structure); 
+				3.1. Subnote: The 'parent-variables' will remain, will just get treated differentl; 
+			4. Treatment of EXTENSION-like parentclass-variables as a set of wrapper functions (that being - no repetition of the 'wrapper' structure in the EXTENSION '.function' constructor); 
 			5. No more of 'transform's - same as 4., with 'wrappers'; 
 			6. PROPER PARENT-OBJECT REFERENCING! 
 				No more of the StaticThisTransform (that's the purpose it's been serving so far...); 
@@ -962,6 +968,8 @@ It gets changed and revised actively.
 				Extremely useful construct, for which there's no simpler way in JS; 
 			7. No more symbols/methods separation (generalize both, then make into one EVERYWHERE); 
 			8. No more property-method separation (define special types for that, generalize, separation must be type-based); 
+			9. No more 'static/methods' separation - EVERYTHING is a dynamically-obtained class instance item, that would work (depending) on the presence of such an instance or its absence (that being - ALLOW THE RUNNNING OF THE METHODS __WITHOUT__ any value for 'this' - for that, create yet anoter Interface...); 
+			10. Generalization of 'recursive' - instead of behaving like a flag upon a structure for creating instances of classes, it gets its own named definition (for creation of structures that are responsible for 'this.this.this'-handling, while the Clases only unite the whole thing, by providing user with the corresponding Interfaces); 
 		
 	7.54. Violent usage of {}-based types; 
 
@@ -1000,6 +1008,17 @@ It gets changed and revised actively.
 			Additionally, the passed values would all be functions of a context (so, their final in-context values would/could depend upon the context, to which they've been passed); 
 		There'd be different kinds of in-library Systems-aliases, all based off different functions/predicates (TypeSystem, AliasContext); 
 		They'd all be basd off a 'MapInteraface'-like object (Map, UnlimitedMap are examples - must be properties 'values()', 'keys()', 'set()', 'get()'); 
+	
+	7.57. Making the library asynchronous; 
+
+		Re-create it to make EVERYTHING an asynchronous function; 
+		Due to: 
+
+			1. Would allow for extension of library's domains; 
+			2. Would be (probably) required for the planned use of dynamic imports (to support modularity); 
+			3. Would cause the library to be able to work faster in environments (use-cases) that permit asynchronous programming;
+		
+		ANYWAYS, DO IT. 
 	
 8. List of general methods to be present within v1.1: 
 

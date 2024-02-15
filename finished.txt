@@ -17,7 +17,7 @@ List of files in 'tests/', that have been successfully run;
 Left to test (arbitrary order): 
 
 1. ustr.mjs
-2. numbers.mjs
+2. numbers.mjs [In progress - TrueInteger down]; 
 3. numeric.mjs
 4. string.mjs
 5. orders.mjs

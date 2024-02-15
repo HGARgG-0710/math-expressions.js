@@ -8,7 +8,6 @@ import {
 	addnumber,
 	multnumber,
 	arrayCounter,
-	objCounter,
 	numberCounter,
 	stringCounter,
 	circularCounter,
@@ -44,13 +43,6 @@ console.log(acounter)
 const actth = firstN(10000, acounter.generator(), acounter)
 console.log(actth)
 console.log(firstN(-9999, actth, acounter))
-console.log()
-
-const occounter = objCounter()
-console.log(occounter)
-const och = firstN(100, occounter.generator(), occounter)
-console.log(och)
-console.log(firstN(-98, och, occounter))
 console.log()
 
 const nccounter = numberCounter()

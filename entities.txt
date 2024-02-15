@@ -66,17 +66,16 @@ This file is also used for documentation, and name-collision-related work...
 		3.2. addnumber
 		3.3. multnumber
 		3.4. arrayCounter
-		3.5. objCounter
-		3.6. recursiveCounter
-		3.7. numberCounter
-		3.8. orderCounter
-		3.9. stringCounter
-		3.10. circularCounter
-		3.11. arrCircCounter
-		3.12. finiteCounter
-		3.13. cfromIcc
-		3.14. tintAdditive
-		3.15. tintMultiplicative
+		3.5. recursiveCounter
+		3.6. numberCounter
+		3.7. orderCounter
+		3.8. stringCounter
+		3.9. circularCounter
+		3.10. arrCircCounter
+		3.11. finiteCounter
+		3.12. cfromIcc
+		3.13. tintAdditive
+		3.14. tintMultiplicative
 	4. expressions.mjs
 		4.1. evaluate
 		4.2. Expression

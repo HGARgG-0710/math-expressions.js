@@ -25,4 +25,4 @@ export const generalCall = TEMPLATE({
 	}
 }).function
 
-generalCall.function("../test/")
+generalCall().function("../test/")

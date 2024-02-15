@@ -226,8 +226,7 @@ export const NAMED_TEMPLATE = (f, index, dinstance, classvar, rest = {}) =>
 export const alinative = {
 	number: {
 		numconvert: (x) => (isNaN(x) ? 0 : Number(x)),
-		negind: (x, arr) => (x < 0 ? arr.length + x : x),
-		nneg: (x) => (x < 0 ? -x : x)
+		negind: (x, arr) => (x < 0 ? arr.length + x : x)
 	},
 
 	string: {
@@ -545,9 +544,6 @@ const refactor = {
 		}),
 		two: _FUNCTION(function () {
 			return next(this.one())
-		}),
-		oneadd: _FUNCTION(function () {
-			return this.zero().add()
 		}),
 		twoadd: _FUNCTION(function () {
 			return this.one().add()
@@ -1497,6 +1493,8 @@ export const alarray = {
 	}).function
 }
 
+// ! GENERALIZE THE ARRAYCOUNTER TO A 'formCounter' (a counter, whose elements are forms...);
+// ^ GENERAL NOTE : in regard to the 'counters' of the library - they're not general enough. Require MANUAL ensurance of properties in regard to domain-integrity; Fix it somehow?
 // * Probably the "simplest" infinite counter one would have in JS is based off this generator;
 export const arrayCounter = GENERATOR({
 	defaults: {
@@ -1513,8 +1511,8 @@ export const arrayCounter = GENERATOR({
 	),
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
-		// ? What to do in that case? [arrayCounter HAS no negatives definition...]
-		if (!is.arr(a) || !obj.hasOwn(a, 0)) return { [this.template.label]: a }
+		if (!is.arr(a) || !obj.hasOwn(a, 0))
+			return { [this.template.label]: this.template.start }
 		return a[0]
 	},
 	range: _FUNCTION(function (a) {
@@ -1528,11 +1526,14 @@ export const arrayCounter = GENERATOR({
 
 general.DEFAULT_COUNTER = arrayCounter()
 alinative.number.iterations = TEMPLATE({
-	defaults: { iterated: general.DEFUAULT_COUNTER, defnum: 1 },
+	defaults: {
+		iterated: general.DEFUAULT_COUNTER,
+		defnum: 1
+	},
 	function: _FUNCTION(function (n = this.template.defnum) {
-		return repeatedApplication(
+		return stnative.repeatedApplication(
 			undefined,
-			nneg(n),
+			abs(n),
 			this.template.iterated[n > 0 ? "generator" : "inverse"]
 		)
 	})
@@ -1703,7 +1704,7 @@ export const InfiniteCounter = (() => {
 				return alterCurrent
 			}),
 			reverse: _FUNCTION(function () {
-				return this.zero().difference(this.this.this)
+				return this.zero().difference(this.this)
 			}),
 			copy: _FUNCTION(function () {
 				return this.this.this.this.class.class(this.this.this.value)
@@ -1714,7 +1715,7 @@ export const InfiniteCounter = (() => {
 			) {
 				x = x.map(this.this.this.this.class)
 				return comparison(
-					...[this.this.this, x].map(alinative.function.index("value"))
+					...[this.this, x].map(alinative.function.index("value"))
 				)
 			}),
 			zero: _FUNCTION(function () {
@@ -2477,33 +2478,6 @@ export function multnumber(template = {}, ntemplate = {}) {
 		...ntemplate
 	})
 }
-
-// ! GENERALIZE THE OBJCOUNTER AND ARRAYCOUNTER TO A 'formCounter' (a counter, whose elements are forms...);
-// ? What about recursiveCounter?
-// * Generalization of arrayCounter...
-export const objCounter = GENERATOR({
-	defaults: {
-		field: "",
-		start: null,
-		// ? Does one desire the refCompare? Or valueCompare to be the default?
-		comparison: refCompare
-	},
-	function: alinative.function.const(
-		_FUNCTION(function (a = this.template.start) {
-			if (!this.range(a)) this.template.start = a
-			return { [this.template.field]: a }
-		})
-	),
-	inverse: _FUNCTION(function (a) {
-		return a[this.template.field]
-	}),
-	range: _FUNCTION(function (a) {
-		return (
-			this.template.comparison(a, this.template.start) ||
-			(istype(a, "object") && this.range(this.inverse(a)))
-		)
-	})
-}).function
 
 // ? Generalize with the usage of 'forms'? [the present implementation uses the 'DEFAULT_FORM...'];
 // * A counter based on array recursion and finite orders;
@@ -4958,59 +4932,70 @@ export const tnumbers = {
 			methods: {
 				add: _FUNCTION(function (added = this.one()) {
 					return this.this.this.this.class.class(
-						this.this.this.value.jumpDirection(added.value)
+						this.this.this.value.jumpDirection(added.value).value
 					)
 				}),
 				multiply: _FUNCTION(function (multiplied = this.one()) {
 					return multiplied.value.class.static.whileloop(
 						multiplied.value,
-						(x) => x.add(this.this.this),
+						(_i, x) =>
+							x[multiplied.sign() ? "add" : "difference"](this.this.this),
 						multiplied.class.parentclass.class(),
+						multiplied.sign() ? next : previous,
 						undefined,
-						undefined,
-						this.this.this
+						this.zero()
 					)
 				}),
 				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
 				power: _FUNCTION(function (x = this.one()) {
-					if (!this.class.template.icclass.direction(x))
-						return TrueRatio(this.template.icclass).class([
-							this.class.template.icclass.static.one(),
-							this.power(x.reverse())
-						])
-					return repeatedApplication(
-						(y) => y.multiply(this.this.this),
-						x,
-						this.this.this
-					)
+					if (!x.sign())
+						return tnumbers
+							.TrueRatio(this.template.icclass)
+							.class([
+								this.class.template.icclass.static.one(),
+								this.power(x.reverse())
+							])
+					return repeatedApplication({
+						icclass: this.this.this.this.class.parentclass
+					}).function(this.one(), x.value, (y) => y.multiply(this.this))
 				}),
+				// * Note: not quite sure one is happy with this particular chosen 'mod' definition; The output sign depends directly on that of the input, while oneself would (instead) have it map into the {1, ..., n} set of positive integers REGARDLESS of signs...
 				modulo: _FUNCTION(function (d = this.one()) {
-					let curr = this.this.this.this.class.static.zero()
-					while (lesser((curr = curr.add(d)), this.this.this)) {}
-					return curr.difference(this.this.this)
+					if (this.sign() != d.sign()) return this.modulo(d.invadd())
+					let curr = this.zero()
+					const absval = this.abs()
+					const dabs = d.abs()
+					while (lesseroe((curr = curr.add(dabs)), absval)) {}
+					return d.difference(
+						(!this.sign() ? (x) => x.invadd() : ID)(curr.difference(absval))
+					)
 				}),
 				// * Returns the additive inverse
 				invadd: _FUNCTION(function () {
-					return this.this.this.this.class(
-						this.value.map(this.class.template.icclass.static.reverse()).value
+					return this.this.this.this.class.class(
+						this.this.this.value.reverse().value
 					)
+				}),
+				abs: _FUNCTION(function () {
+					return this.sign() ? this.this.copy() : this.this.invadd()
 				}),
 				// * Returns the multiplicative inverse (TrueRatio type);
 				invmult: _FUNCTION(function () {
-					return TrueRatio(this.this.this.this.class)(
-						this.this.this.this.class.static.one(),
-						this.this.this
-					)
+					return tnumbers
+						.TrueRatio(this.this.this.this.class)
+						.class(this.one(), this.this)
 				}),
 				compare: _FUNCTION(function (compared = this.zero()) {
 					return this.this.this.value.compare(compared.value)
 				}),
 				difference: _FUNCTION(function (d = this.one()) {
-					return this.this.this.add(d.invadd())
+					return this.add(d.invadd())
 				}),
 				// ? Generalize the 'divide' and 'roots'-kinds of methods to a uniform template-method 'inverse'? [GREAT IDEA! Where to put the method?]
-				divide: _FUNCTION(function (d) {
-					let r = this.this.this.this.class.class()
+				divide: _FUNCTION(function (d = this.one()) {
+					if (!this.sign()) return this.invadd().divide(d).invadd()
+					if (!d.sign()) return this.divide(d.invadd()).invadd()
+					let r = this.zero()
 					let copy = this.copy()
 					while (greateroe(copy, d)) {
 						copy = copy.difference(d)
@@ -5020,15 +5005,16 @@ export const tnumbers = {
 				}),
 				copy: _FUNCTION(function () {
 					return this.this.this.this.class.class(
-						native.copy.deepCopy(this.this.this.value.value)
+						this.this.this.value.copy().value
 					)
 				}),
 				// ! Think about generalizing methods-extensions like this one: (name) => (...x) => this[name](...x.map(alinative.function.index(name)))
 				equal: _FUNCTION(function (x = this.one()) {
 					return this.this.this.value.equal(x.value)
 				}),
+				// * Note: CANNOT FIND ROOTS OF NEGATIVES! [Because integers are not closed over them, yet the algorithm needs for it to be closed in order to have finite execution time...];
 				root: _FUNCTION(function (x = this.two(), ceil = false) {
-					let r = this.this.this.this.class.class()
+					let r = this.zero()
 					let temp
 					while (lesser((temp = r.power(x)), this.this)) r = r.add()
 					if (temp.equal(this.this) || ceil) return r
@@ -5037,27 +5023,38 @@ export const tnumbers = {
 				zero: _FUNCTION(function () {
 					return this.this.this.this.class.static.zero()
 				}),
-				one: refactor.classes.oneadd,
-				two: refactor.classes.twoadd
+				one: _FUNCTION(function () {
+					return this.this.this.this.class.static.one()
+				}),
+				two: refactor.classes.twoadd,
+				sign: _FUNCTION(function () {
+					return this.direction()
+				})
 			},
 			static: (() => {
 				const R = {}
 
 				R.zero = refactor.classes.zero.bind(R)
-				R.one = refactor.classes.oneadd.bind(R)
+				R.one = _FUNCTION(function () {
+					return this.this.class(this.this.parentclass.static.one().value)
+				}).bind(R)
 				R.two = refactor.classes.twoadd.bind(R)
 
 				// ! PROBLEM [general]: the CLASS and EXTENSION do __not__ currently handle templates in the '.static' field! Pray do something about it...
 				// ? Allow for '.static' extension?
 				R.fromNumber = _FUNCTION(function (num = 1) {
 					return this.this.class(
-						alinative.number.iterations({
-							iterated: this.this.parentclass.template
-						})(num)
+						alinative.number
+							.iterations({
+								iterated: this.this.parentclass.template
+							})
+							.function(num + (-1) ** (num < 0))
 					)
 				}).bind(R)
 
-				R.fromCounter = _FUNCTION(function (ic) {
+				R.fromCounter = _FUNCTION(function (
+					ic = this.this.parentclass.static.zero()
+				) {
 					return tnumbers.TrueInteger(ic.class).class(ic.value)
 				}).bind(R)
 
@@ -5065,7 +5062,7 @@ export const tnumbers = {
 			})(),
 			transform: general.StaticThisTransform,
 			recursive: true,
-			toextend: { methods: [], symbols: true },
+			toextend: { methods: true, symbols: true },
 			names: ["value"]
 		})
 	},
