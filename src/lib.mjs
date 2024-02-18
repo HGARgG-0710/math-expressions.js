@@ -461,6 +461,9 @@ const refactor = {
 	// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
 	// ? Later - try to redistribute all this somewhere accordingly?
 	classes: {
+		sign: _FUNCTION(function () {
+			return this.direction()
+		}),
 		empty: _FUNCTION(function (template = this.this.this.this.class.template) {
 			return this.this.this.this.class.static.empty(template)
 		}),
@@ -1728,7 +1731,7 @@ export const InfiniteCounter = (() => {
 			// ! SEMI-PROBLEM : the 'iterator's all have a different context from the rest of the methods - they GET COPIED AND REASSIGNED THEIR CONTEXT; So, for instance, it CAN work, one just needs to get rid or add a '.this' here and there
 			// TODO: [later, v1.1] try to find a way to bypass this (without the need to force user to abandon the pretty and universal 'for-of' syntax of GeneralArray iteration...);
 			iterator: function* () {
-				const [change, predicate] = this.direction()
+				const [predicate, change] = this.direction()
 					? [lesser, next]
 					: [greater, previous]
 				for (
@@ -4917,13 +4920,7 @@ export const tnumbers = {
 				}),
 				// * Raise 'this.this.this' to the integer power of 'x' (works with negatives too...);
 				power: _FUNCTION(function (x = this.one()) {
-					if (!x.sign())
-						return tnumbers
-							.TrueRatio(this.template.icclass)
-							.class([
-								this.class.template.icclass.static.one(),
-								this.power(x.reverse())
-							])
+					if (!x.sign()) return this.power(x.invadd()).invmult()
 					return repeatedApplication({
 						icclass: this.this.this.this.class.parentclass
 					}).function(this.one(), x.value, (y) => y.multiply(this.this))
@@ -4952,7 +4949,7 @@ export const tnumbers = {
 				invmult: _FUNCTION(function () {
 					return tnumbers
 						.TrueRatio(this.this.this.this.class)
-						.class(this.one(), this.this)
+						.class(...[this.one(), this.this].map((x) => x.value.value))
 				}),
 				compare: _FUNCTION(function (compared = this.zero()) {
 					return this.this.this.value.compare(compared.value)
@@ -4983,6 +4980,7 @@ export const tnumbers = {
 				}),
 				// * Note: CANNOT FIND ROOTS OF NEGATIVES! [Because integers are not closed over them, yet the algorithm needs for it to be closed in order to have finite execution time...];
 				root: _FUNCTION(function (x = this.two(), ceil = false) {
+					if (!x.sign()) return this.root(x.invadd()).invmult()
 					let r = this.zero()
 					let temp
 					while (lesser((temp = r.power(x)), this.this)) r = r.add()
@@ -4996,9 +4994,7 @@ export const tnumbers = {
 					return this.this.this.this.class.static.one()
 				}),
 				two: refactor.classes.twoadd,
-				sign: _FUNCTION(function () {
-					return this.direction()
-				})
+				sign: refactor.classes.sign
 			},
 			static: (() => {
 				const R = {}
@@ -5050,61 +5046,130 @@ export const tnumbers = {
 					)
 				}
 			},
-			methods: {
-				add: _FUNCTION(function (
-					addratio = this.this.this.this.class.static.one()
-				) {
-					return this.this.this.this.class.static.simplified(
-						this.this.this.this.class.class(
-							this.this.this.numerator
-								.multiply(addratio.denomenator)
-								.add(
-									addratio.numerator.multiply(
-										this.this.this.denomenator
-									)
-								),
-							this.this.this.denomenator.multiply(addratio.denomenator)
+			methods: () => {
+				const M = {
+					add: _FUNCTION(function (
+						addratio = this.this.this.this.class.static.one()
+					) {
+						return this.this.this.this.class.static.simplified(
+							this.this.this.this.class.class(
+								this.this.this.numerator
+									.multiply(addratio.denomenator)
+									.add(
+										addratio.numerator.multiply(
+											this.this.this.denomenator
+										)
+									),
+								this.this.this.denomenator.multiply(addratio.denomenator)
+							)
 						)
-					)
-				}),
-				multiply: _FUNCTION(function (
-					multratio = this.this.this.class.static.one()
-				) {
-					return this.this.this.this.class.class(
-						this.numerator.multiply(multratio.numenator),
-						this.denomenator.multiply(multratio.denomenator)
-					)
-				}),
-				invadd: _FUNCTION(function () {
-					return this.this.this.this.class.class(
-						this.this.this.numerator.invadd(),
-						this.this.this.denomenator
-					)
-				}),
-				invmult: _FUNCTION(function () {
-					return this.this.this.this.class.class(
-						...nameslist.map((x) => this.this.this[x]).reverse()
-					)
-				}),
-				isWhole: _FUNCTION(function () {
-					return this.this.this.denomenator.equal(
-						this.this.this.this.class.parentclass.static.one()
-					)
-				}),
-				copy: _FUNCTION(function () {
-					return this.this.this.this.class.class(
-						...nameslist.map((x) => this.this.this[x])
-					)
-				}),
-				naivesum: _FUNCTION(function (ratio = this.this.this.this.class.class()) {
-					return this.this.this.this.class.class(
-						...nameslist.map((x) => this.this.this[x].add(ratio[x]))
-					)
-				}),
-				// ? Wonder - how about allowing for extended-methods of this general form [using the parent class variable instances list];
-				equal: _FUNCTION(function (ratio = this.this.this.this.class.class()) {
-					return nameslist.every((x) => this.this.this[x].equal(ratio[x]))
-				})
+					}),
+					multiply: _FUNCTION(function (
+						multratio = this.this.this.class.static.one()
+					) {
+						return this.this.this.this.class.class(
+							this.numerator.multiply(multratio.numenator),
+							this.denomenator.multiply(multratio.denomenator)
+						)
+					}),
+					invadd: _FUNCTION(function () {
+						return this.this.this.this.class.class(
+							this.this.this.numerator.invadd(),
+							this.this.this.denomenator
+						)
+					}),
+					invmult: _FUNCTION(function () {
+						return this.this.this.this.class.class(
+							...nameslist.map((x) => this.this.this[x]).reverse()
+						)
+					}),
+					isWhole: _FUNCTION(function () {
+						return this.this.this.denomenator.equal(
+							this.this.this.this.class.parentclass.static.one()
+						)
+					}),
+					copy: _FUNCTION(function () {
+						return this.this.this.this.class.class(
+							...nameslist.map((x) => this.this.this[x].value.value)
+						)
+					}),
+					naivesum: _FUNCTION(function (
+						ratio = this.this.this.this.class.class()
+					) {
+						return this.this.this.this.class.class(
+							...nameslist.map((x) => this.this.this[x].add(ratio[x]))
+						)
+					}),
+					// ? Wonder - how about allowing for extended-methods of this general form [using the parent class variable instances list];
+					equal: _FUNCTION(function (
+						ratio = this.this.this.this.class.class()
+					) {
+						return nameslist.every((x) => this.this.this[x].equal(ratio[x]))
+					}),
+					direction: _FUNCTION(function () {
+						return refCompare(
+							...nameslist.map((name) => this.this.this[name].direction())
+						)
+					}),
+					sign: refactor.classes.sign,
+					abs: _FUNCTION(function () {
+						return this.this.this.this.class.class(
+							...nameslist.map(
+								(name) => this.this.this[name].abs().value.value
+							)
+						)
+					}),
+					power: _FUNCTION(function (r = this.one()) {
+						return this.this.this.this.class.class(
+							nameslist.map(
+								(name) =>
+									(this.this.this.this.class.is(r)
+										? (x) => x.power(r.numerator).root(r.denomenator)
+										: (x) => x.power(r))(this.this.this[name]).value
+										.value
+							)
+						)
+					}),
+					root: _FUNCTION(function (rv = this.one()) {
+						return this.power(rv.invmult())
+					}),
+					compare: _FUNCTION(function (ratio = this.one()) {
+						const signs = [this.this, ratio].map((x) => x.direction())
+						if (!refCompare(...signs)) return signs[0] > signs[1]
+						const abs = [this.this, ratio].map((x) => x.simplify().abs())
+						return abs[0].numerator
+							.multiply(abs[1].denomenator)
+							.compare(abs[0].denomenator.multiply(abs[1].numerator))
+					}),
+					divide: _FUNCTION(function (ratio = this.one()) {
+						return this.multiply(ratio.invmult())
+					}),
+					equal: _FUNCTION(function (ratio = this.one()) {
+						const simplified = [this.this, ratio].map((x) => x.simplify())
+						return (
+							simplified[0].numerator.equal(simplified[1].numerator) &&
+							simplified[1].denomenator.equal(simplified[1].denomenator)
+						)
+					}),
+					simplify: _FUNCTION(function () {
+						return this.this.this.this.class.static.simplified(this.this)
+					}),
+					difference: _FUNCTION(function (ratio = this.one()) {
+						return this.add(ratio.invadd())
+					}),
+					half: _FUNCTION(function () {
+						return this.two().invmult()
+					}),
+					third: _FUNCTION(function () {
+						return this.two().add().invmult()
+					})
+				}
+				for (const n of ["zero", "one", "two"])
+					M[n] = _FUNCTION(function () {
+						return this.this.this.this.class.static[n]()
+					})
+
+				return M
 			},
 			static: (() => {
 				const R = {}
@@ -5123,12 +5188,36 @@ export const tnumbers = {
 					return ratio
 				}).bind(R)
 
+				R.fromCounter = _FUNCTION(function (
+					counter = this.this.parentclass.parentclass.static.one()
+				) {
+					return this.this.class(
+						counter.value,
+						this.this.parentclass.parentclass.static.one().value
+					)
+				}).bind(R)
+
+				R.fromInteger = _FUNCTION(function (
+					integer = this.this.parentclass.static.one()
+				) {
+					return this.this.class(
+						integer.value.value,
+						this.this.parentclass.parentclass.static.one().value
+					)
+				}).bind(R)
+
+				for (const n of ["zero", "one", "two"])
+					R[n] = _FUNCTION(function () {
+						return this.this.class(
+							...[n, "one"].map((nn) => this.this.parentclass.static[nn]())
+						)
+					}).bind(R)
+
 				return R
 			})(),
 			transform: general.StaticThisTransform,
 			recursive: true,
-			// ! work more on this list...Decide if it ought to remain empty for the time being...;
-			toextend: { methods: [], symbols: true },
+			toextend: { methods: true, symbols: true },
 			names: nameslist
 		})
 	}

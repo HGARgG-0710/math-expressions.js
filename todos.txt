@@ -1120,7 +1120,20 @@ It gets changed and revised actively.
 					2. Map.has() is almost always faster than 'object' (only found exception - integer keys); 
 					3. Map works with object keys, while objects - don't (conclusion - use Map-s instead of objects more predominantly); 
 			3. Language of choice/runtime - NodeJS code (while CAN be optimized to work far better), is still more high level than, say, C/C++; 
-
+		
+	7.63. Add various elementary objects (extend the counters' concept); 
+		An example list (those that are definitely to be included, expand it...): 
+			1. Infinity, -Infinity
+				The JS standard implementation of 'Infinity' from IEEE754 doesn't look all too good:
+					1.797694*10**308 == Infinity
+				Algebraically, 'Infinity' from the library would have properties (on a given counter's values' set): 
+					x.jumpForward(Infinity) == Infinity; x < Infinity
+					x.jumpBackward(Infinity) == -Infinity; x < Infinity
+					Infinity.jumpForward(-Infinity) == 0; 
+				This way, 'Infinity' would be the sort of 'limit point' of a counter.
+				One would also love to be giving the user the power of defining the value for Infinity to be arbitrary (templated, counter-dependent), 
+					so as to be capable of 'finitizing' (explicitly limiting) certain otherwise unlimited/potentially-infinite constructions; 
+					
 8. List of general methods to be present within v1.1: 
 
 	Some good ideas for methods that are certainly to be included into v1.1 [note - all of their appropriate versions (namely, with different orders of computation contexts, and so forth, are given there as-are...)]:
