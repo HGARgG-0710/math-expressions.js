@@ -258,7 +258,7 @@ It gets changed and revised actively.
 					property: alinative.function.const(true), 
 				}, 
 				function: function (solution) {
-					return composition(FunctionCall(solution.copy((f) => (x) => !this.template.property(x) ? f() : x)))
+					return composition(FunctionCall(solution.copy((f) => (x) => !this.template.property(x) ? f(x) : x)))
 				}
 			}) 
 
@@ -269,7 +269,7 @@ It gets changed and revised actively.
 			Additionally, create more new aliases for different kinds of function-composition/"solution-construction" (for varying kinds of structures)...; 
 
 		This way, the previous example checked for accordance to the property on each step. One may (instead) define array-based solution-schemes like such 
-			(use arguments for )
+			(use arguments for more complex structures of FunctionCall); 
 		One could also generalize the 'scheme' as a part of the 'toProperty' definition, and then just use the desired one...
 
 		Due to the library's style, solutions to certain computational mathematical problems can be expressed very fluently, for instance (sketch, actual code probably requires a TrueInteger conversion): 
@@ -287,6 +287,10 @@ It gets changed and revised actively.
 			and then - generalization of the repeating element + replacement of non-repeating ones with the aliases. 
 		
 		That - is the "height and essence" of the library's programming style...; 
+
+		Also, ALL of the methods receive a powerful generalization in terms of working with 'particular values'; 
+		From now on (v1.1) - all the methods use property-predicates TO THE MAX. For instance, all the collection searches (indexesOf, linear and so on...) 
+			use predicates. One NEVER assumes a usage of one PARTICULAR predicate. Same goes for classes and their methods (good example - GeneralArray, bad example - UnlimitedString); 
 
 	7.15. Refactoring. 
 
@@ -354,11 +358,11 @@ It gets changed and revised actively.
 			It'll be ESPECIALLY fast for apps that reuse a lot of the same objects time-wise; 
 		
 		IDEA [for counters]: fix all the counters that rely upon native builtin JS methods, instead replace them with faster alternatives; 
-			EXCELLENT EXAMPLES - '.push->a[a.length]=y'; 
-			See how much the performance will increase...; 
-		
-		IDEA [for Array.includes]:
-			Replace all the Arrays.includes with 'Set.has()' (PARTICULARLY IN SIMPLE, FREQUENTLY-USED METHODS!!!)
+			Changing the '.push->[.length]=...' has made a noticeable difference upon performance; 
+			Look for more of these...; 
+			Also - rid the code of usage of methods that use allocation-deallocation; 
+			List: 
+				1. Replace all the Arrays.includes with 'Set.has()' (PARTICULARLY IN SIMPLE, FREQUENTLY-USED METHODS!!!)	
 		
 		IDEA [general]: 
 			scrutinize the native datatypes usage, make everything as performant as possible...
@@ -401,6 +405,10 @@ It gets changed and revised actively.
 			One (then) rewrites the library in such a fashion so as to utilize this particular optimization technique on every-single-step-of-the-way, BUT without needing to rewrite the methods in question; 
 			That (in particular), would pose a far more curious problem, as one would have to be also (somehow) specifying the particular point of exit for the function in question based on various external parameters... 
 			['Process' would prooooooooooooooobably require some modification/extension...]
+		
+		IDEA: use Maps for all counters from 1.1. on instead of objects, and Typed arrays instead of casual arrays for 'numberCounter' (generalize the 'recursiveCounter->formCounter' accordingly...); 
+			These'll be far more performant. 
+			For generalization of 'numberCounter' - just allow for an arbitrary collection class in the 'recursiveCounter' via generalization of it into 'formCounter', and creation of appropriate form templates (functions that return forms based on the user's template...); 
 
 		
 	7.19. Idea of atRequest (possibly, add to v1.1...): 
@@ -1020,6 +1028,99 @@ It gets changed and revised actively.
 		
 		ANYWAYS, DO IT. 
 	
+	7.58. IDEA: Caches; 
+
+		Implement the Caches classes for the PrecomputedFunction-s and Pools; 
+		They are, (effectively), a given Pool, which is used BY ALL the functions within a given context, and has a limited size; 
+		This allows the user to: 
+
+			1. Keep the performance more predicatable; 
+			2. Save up memory for memoization;
+
+		Naturally, in order to work properly, it'll need the Cache replacement algorithms implemented upon itself. 
+
+		PROBLEM: with the memory keeping - Cache, despite having a limited amount of objects, 
+			HAS TO also consider things like recursive structures, and so on, and so forth. 
+			This makes it more difficult for the user to see the ACTUAL MEMORY USED FOR IT... 
+
+			SO - pray consider how EXACTLY would one be limiting the Caches - memory-wise, or object-count-wise. 
+			Also - how are the recursive objects to be cached within the Pools [are their elements to be added as well? And so on, and so forth...
+				Agani - the usual 'when to copy' thing. Effectively, what one REALLY need is the ability to specify the passing structure (reference/pointer/copying/et-cetera) 
+				to the FUNCTION in question (like in C++, for instance...)]? 
+			
+				idea: for a solution - one way to limit and control the memory usage more efficiently is separation by types (then, the problem comes down to identifying the amount of memory taken up by the particular type...); 
+
+	7.59. BEAUTIFUL IDEA: PrecomputedCounters!
+
+		A beautiful, universal way for creation of UNIQUE counters INSTANCES based ENTIRELY off the library concepts of Precomputation and object allocation (refCompare-unique constants)!
+		Effectively, a PrecomputedCounter is a pair of fields pointing to the same PrecomputedFunction, that (on call) does the following: 
+
+			1. If, for the given constant, a value has already been assigned, then it returns this assigned value (standard precomputation procedure); 
+			2. Otherwise, ALLOCATE A NEW OBJECT, THAT GETS SAVED!
+		
+		This way, one can: 
+			
+			1. Easily create arbitrarily large cardinality-order-isomoprhic-to-integers sequences of objects; 
+			2. NOT NEED TO WORRY ABOUT COPYING!!!
+			3. MOST IMPORTANTLY - ________NOT_NEEEDDD_THE_RECURSION_!!!
+
+		So, with them, one can ACTUALLY HAVE A GENERAL, NON-CPS VERSION OF THE UNLIMITED-DATA-TYPES LIBRARY CLASSES!	
+		(Unfortunately, in order to make all the rest of the current API work, one still needs to re-do it in CPS, but THIS is golden!)
+
+		For programming languages with direct access to memory allocation procedures + memory comparison + a lacking limit on the amount of 
+			allowed memory for allocation (immediate usage of RAM), the concept can be implemented MOST intuitively; 
+			Good examples: C/C++; 
+		
+	7.60. IDEA: SelectivePrecomputedFunction; 
+
+		This is (essentially), a generalization of a 'precomputed function', which goes something like so (obviously, this is an unoptimized, and incomplete, sketch/idea but still...): 
+
+			export const SelectivePrecomputedFunction = TEMPLATE(
+				{
+					defaults: {
+						predicate: T
+					}, 
+					function: function (f) {
+						const cache = {}
+						return function (x) {
+							if (x in cache) return cache[x]
+							const computed = f(x)
+							if(predicate(x)) cache[x] = computed
+							return computed
+						}
+					}
+				}
+			).function
+		
+		Effectively, this allows to selectively cache certain objects; 
+		This particular construction gives the user IMMENSE depths for optimization of their apps due to usefullness of the caching, and ability to determine the need for it arbitrarily...; 
+	
+	7.61. IDEA: per-object caching: 
+
+		Create a Cache structure, which can be attached to certain Object-like structures that the library is to use as an Object/Map replacement...;
+		They are (effectively) per-object caches, that would work on the entirety of the object's method set (and that all the methods would have the access to); 
+
+		The Caches themselves would be able to access Pools (which oneself may make into a Cache itself?), and other Caches (so as to be able to optimize groups of objects in an ordered fashion...); 
+	
+	7.62. Reasons for library's immense slowness: 
+
+		The first and foremost are: 
+
+			1. The lack of caching, primarily in: 
+				1.1. Models for InfiniteCounters; 
+					Instead of caching the previous counter, and then doing a single call that is cached as well (and passing same counter values by reference, so that the checking is FAST), 
+						one calculates ALL THE PREVIOUS NEEDED COUNTERS!!! 
+					The overhead is insane. Add that to just HOW WIDESPREAD is their use throughout the library, and the efficiency lack is hardly a great surprise; 
+				1.2. Models for GeneralArrays (no memoization for values of indexation); 
+				1.3. Generally within any particular app (no allocation mechanism, no Caches, no Pools); 
+			2. Native type inefficiecies - lack of usage of optimal types for various operations, lack of efficient time tradeoffs for type conversions; 
+				An excellent example during v1.0alpha development was replacing the Array.includes with Set.has; Look for more such things. 
+				Currently noticed: 
+					1. 'a in object' has O(1) running time (instead of O(n) of Set.has()); 
+					2. Map.has() is almost always faster than 'object' (only found exception - integer keys); 
+					3. Map works with object keys, while objects - don't (conclusion - use Map-s instead of objects more predominantly); 
+			3. Language of choice/runtime - NodeJS code (while CAN be optimized to work far better), is still more high level than, say, C/C++; 
+
 8. List of general methods to be present within v1.1: 
 
 	Some good ideas for methods that are certainly to be included into v1.1 [note - all of their appropriate versions (namely, with different orders of computation contexts, and so forth, are given there as-are...)]:

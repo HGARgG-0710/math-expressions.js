@@ -9,12 +9,14 @@ export const generalCall = TEMPLATE({
 		dir: "",
 		command: (fname) => `node ${fname}`,
 		isdir: (fname) => fname.split(".").length === 1,
-		execopts: { stdio: "inherit" }
+		execopts: { stdio: "inherit" },
+		pref: console.log
 	},
 	function: function (dirname = this.template.dir) {
 		const read = readdirSync(dirname)
 		let r = null
 		for (const file of read) {
+			this.template.pref(file)
 			if (this.template.isdir(file)) {
 				r = this.function(file)
 				continue

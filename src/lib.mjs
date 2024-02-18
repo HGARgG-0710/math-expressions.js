@@ -67,8 +67,8 @@ export const object = {
 		const newobj = {}
 		for (const key in keys) newobj[keys[key]] = obj_[key]
 		if (id) {
-			const newkeys = obj.values(keys)
-			for (const key in obj_) if (!newkeys.includes(key)) newobj[key] = obj_[key]
+			const newkeys = new Set(obj.values(keys))
+			for (const key in obj_) if (!newkeys.has(key)) newobj[key] = obj_[key]
 		}
 		return newobj
 	},
@@ -211,7 +211,7 @@ const OFDKL = (obj, f, keylist = [], bind = false) => {
 const INTERSECTION = (a, b) => {
 	const f = []
 	for (const x of a)
-		for (const y of b) if (refCompare(x, y) && !f.includes(x)) f.push(x)
+		for (const y of b) if (refCompare(x, y) && !f.includes(x)) f[f.length] = x
 	return f
 }
 
@@ -424,6 +424,7 @@ export const cdieach = (x, i) => [x[i]]
 export const hasFunction = (x, m) => obj.hasOwn(x, m) && istype(x[m], "function")
 export const inarr = (x) => [x]
 
+// ! THESE TWO MUST GET THEIR OWN PROPER MODEL STRUCTURE IMPLEMENTATIONS (not just rely upon GeneralArray mindlessly...);
 export const Stack = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parentclass, {
 		toextend: { methods: [], symbols: true },
@@ -460,6 +461,9 @@ const refactor = {
 	// ! essential: before publishing or doing anything else - make another round through the ENTIRE codebase, checking for each and every single thing, refactoring madly...;
 	// ? Later - try to redistribute all this somewhere accordingly?
 	classes: {
+		empty: _FUNCTION(function (template = this.this.this.this.class.template) {
+			return this.this.this.this.class.static.empty(template)
+		}),
 		finish: _FUNCTION(function () {
 			return this.length().get().previous()
 		}),
@@ -470,7 +474,6 @@ const refactor = {
 			return this[go ? "go" : "read"](this.finish(), go ? TRUTH : undefined)
 		}),
 		suchthat: _FUNCTION(function (predicate = TRUTH) {
-			// ? After all - is it 'this.this' or 'this.this.this.this'? Repeat the deliberation in question with some greater diligence...
 			const subset = this.this.this.this.class.class()
 			for (const key of this.keys())
 				if (predicate(this.read(key), key, this, subset))
@@ -484,14 +487,11 @@ const refactor = {
 				this.copied("suchthat", [predicate]).length().get()
 			)
 		}),
-		every: _FUNCTION(function (
-			predicate = TRUTH,
-			comparison = this.this.this.this.class.template.icclass.template.comparison
-		) {
+		every: _FUNCTION(function (predicate = TRUTH) {
 			return this.copied("suchthat", [predicate])
 				.length()
 				.get()
-				.equal(this.length().get(), comparison)
+				.equal(this.length().get())
 		}),
 		forEach: _FUNCTION(function (method = VOID) {
 			for (const x of this.keys()) method(this.read(x), x, this)
@@ -576,14 +576,6 @@ const refactor = {
 	},
 
 	general: {
-		lengthSafeConcat: function (a, b) {
-			if (a.length >= MAX_STRING_LENGTH.get - b.length)
-				return [
-					a.concat(b.slice(0, MAX_STRING_LENGTH.get - a.length)),
-					b.slice(MAX_STRING_LENGTH.get - a.length)
-				]
-			return [a.concat(b)]
-		},
 		counterFrom: function (_labels = [], wrapper = ID) {
 			return TEMPLATE({
 				defaults: [
@@ -752,13 +744,14 @@ export function TEMPLATE(template = {}) {
 		_class[this.template.word] = (this.template.isthis ? (x) => x() : ID)(
 			this.template.function
 		).bind(_class)
+		this.template.tobind = new Set(this.template.tobind)
 		for (const x in this.template.rest)
 			_class[x] =
 				is.obj(this.template.rest[x]) && !is.arr(this.template.rest[x])
-					? (this.template.tobind.includes(x) ? object.boundObj : ID)({
+					? (this.template.tobind.has(x) ? object.boundObj : ID)({
 							...this.template.rest[x]
 					  })
-					: (this.template.tobind.includes(x) ? (y) => y.bind(tobind()) : ID)(
+					: (this.template.tobind.has(x) ? (y) => y.bind(tobind()) : ID)(
 							this.template.rest[x]
 					  )
 		return this.template.transform(_class, template)
@@ -818,10 +811,11 @@ export const finite = TEMPLATE({
 }).function
 
 export function NOREST(labels = [], btemplate = {}) {
+	labels = new Set(labels)
 	return function (template = {}) {
 		const X = { ...btemplate }
 		// ? refactor? [make a method for array disjunction...];
-		for (const a in template) if (!labels.includes(a)) X[a] = template[a]
+		for (const a in template) if (!labels.has(a)) X[a] = template[a]
 		X.rest = {}
 		// ! refactor!
 		for (const l of labels) if (l in template) X.rest[l] = template[l]
@@ -1149,6 +1143,10 @@ export const EXTENSION = (parentclass, template = {}) => {
 // * It's not good. For this sort of thing, one ought instead compare the ASTs of the functions in question;
 // TODO: once having implemented the JSONF and parser libraries for the 1.1 or 1.2 release of the library, pray do;
 // ? Wonder - how about trying to compare the 'prototypes' chains? (in particular - does the function work with the prototype of objects? Technically (from the code), ought to be - _valueCompare({a: b}, {__proto__: {a: b}}) == true)
+// ^ IDEA: implement its more general version - one for the Map (instead of x: typeof x == 'object'), and another yet - generalization of the two (it would work with arbitrary collection that implements the '.keys()' interface, instead of just 'objects', add an implementation of a special Interface for this...);
+// ^ IDEA: implement a generalization, which would only look for a particular set of fields in an object (that being, only certain fields would be rendered needed to determine this particular type of equivalence);
+// ? Optimize this further (without caching yet, only short-term for now)? [The Array->Set conversion has made a GREAT improvement...]
+// ! PROBLEM - this uses an array ('objs') for remembering recursion. Not good, it is only applicable to objects, which are MAX_ARRAY_LENGTH-deep, or less... (for this, generalize the thing...);
 export const valueCompare = TEMPLATE({
 	defaults: {
 		oneway: false
@@ -1157,17 +1155,14 @@ export const valueCompare = TEMPLATE({
 		const T = this
 		function TWOCASE(oneway = false, objs = []) {
 			return (a, b) => {
+				if (refCompare(a, b)) return true
 				if (!istype(a, typeof b)) return false
 				switch (typeof a) {
 					case "object":
 						if (oldCompare(a, null) || oldCompare(b, null))
 							return refCompare(a, b)
-						if (
-							!objs.some((x) =>
-								alinative.binary.dand(...[a, b].map((y) => x.includes(y)))
-							)
-						) {
-							objs.push([a, b])
+						if (!objs.some((x) => x.has(a) && x.has(b))) {
+							objs[objs.length] = new Set([a, b])
 							for (const a_ in a)
 								if (!TWOCASE(false, objs)(a[a_], b[a_])) return false
 							if (!oneway) return TWOCASE(true, objs)(b, a)
@@ -1189,7 +1184,7 @@ export const valueCompare = TEMPLATE({
 							...[a, b].map(alinative.object.rproperty("toString")())
 						)
 					default:
-						return refCompare(a, b)
+						return false
 				}
 			}
 		}
@@ -1217,7 +1212,7 @@ export const alarray = {
 				num((-1) ** step < 0) * (Number.isInteger(step) ? 1 : 10 ** -precision)
 			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
 			for (let i = start; proposition(i); i += step)
-				generated.push(nanumber.floor().function(i, precision))
+				generated[generated.length] = nanumber.floor().function(i, precision)
 			return generated
 		}
 	},
@@ -1611,7 +1606,7 @@ export const InfiniteCounter = (() => {
 				)
 			}),
 			direction: _FUNCTION(function () {
-				return this.this.this.this.class.static.direction(this)
+				return this.this.this.this.class.static.direction(this.this)
 			}),
 			// ^ Consider creating an alternative definition for InfiniteCounter or just a different part of the library -
 			compare: _FUNCTION(function (
@@ -1790,8 +1785,9 @@ export const copy = {
 	copyFunction: (() => {
 		// ^ IDEA [for a solution]: create a function for generation of functions like such based off objects [for instance: switch-case-like ones (objects, that is)!];
 		function typeTransform(x) {
-			if (["array", "arrayFlat"].includes(x)) return is.arr
-			if (["objectFlat", "object"].includes(x)) return is.obj
+			// TODO: refactor the constant expressions as well...;
+			if (new Set(["array", "arrayFlat"]).has(x)) return is.arr
+			if (new Set(["objectFlat", "object"]).has(x)) return is.obj
 			return (p) => istype(p, x)
 		}
 		return TEMPLATE({
@@ -1824,7 +1820,7 @@ export const nanumber = {
 			mod: 3
 		},
 		function: _FUNCTION(function (num = 0) {
-			const arr = String(num).split("")
+			const arr = str(num).split("")
 			let affecteds = ""
 			while (arr.length % this.template.mod > 0) affecteds += arr.shift()
 			arr.forEach((number, index) => {
@@ -1871,10 +1867,10 @@ object.objInherit(object, {
 		let returned = []
 		if (!first && prev.includes(object)) return returned
 		if (is.obj(object)) {
-			if (!first) prev.push(object)
+			if (!first) prev[prev.length] = object
 			for (const a in object)
 				if (is.obj(object[a]) && !prev.includes(object[a])) {
-					returned.push(object[a])
+					returned[returned.length] = object[a]
 					returned = returned.concat(this.subobjects(object[a], prev, false))
 				}
 		}
@@ -1908,9 +1904,10 @@ object.objInherit(object, {
 
 	gutInnerObjs(obj_ = {}, keys = obj.keys(obj_)) {
 		let gutted = {}
+		keys = new Set(keys)
 		const ok = obj.keys(obj_)
 		for (const y of ok) {
-			if (is.obj(obj_[y]) && keys.includes(y)) {
+			if (is.obj(obj_[y]) && keys.has(y)) {
 				gutted = { ...gutted, ...obj_[y] }
 				continue
 			}
@@ -1921,8 +1918,9 @@ object.objInherit(object, {
 
 	objEncircle(obj_, newkey, keys = []) {
 		const encircled = { [newkey]: {} }
+		keys = new Set(keys)
 		for (const y of obj.keys(obj_)) {
-			if (keys.includes(y)) {
+			if (keys.has(y)) {
 				encircled[newkey][y] = obj_[y]
 				continue
 			}
@@ -1948,13 +1946,14 @@ export const naarray = {
 		},
 
 		replaceIndexes: function (_arr, x, y, indexes = naarray.keys(_arr)) {
+			indexes = new Set(indexes)
 			return alarray.native
 				.split()
 				.function(_arr, x)
 				.map((seg, i, r) =>
 					(refCompare(i, r.length - 1)
 						? ID
-						: (t) => t.concat([indexes.includes(i) ? y : x]))(seg)
+						: (t) => t.concat([indexes.has(i) ? y : x]))(seg)
 				)
 				.flat()
 		},
@@ -1978,7 +1977,7 @@ export const naarray = {
 	keys(array = []) {
 		const keys = array.keys()
 		const fk = []
-		for (const k of keys) fk.push(k)
+		for (const k of keys) fk[fk.length] = k
 		return fk
 	},
 
@@ -2009,11 +2008,11 @@ export const naarray = {
 		const copied = []
 		for (let i = 0; i < a.length; ++i) {
 			if (i >= from && i <= to) {
-				copied.push(a.slice(from, to + 1))
+				copied[copied.length] = a.slice(from, to + 1)
 				i = to
 				continue
 			}
-			copied.push(a[i])
+			copied[copied.length] = a[i]
 		}
 		return copied
 	},
@@ -2261,7 +2260,7 @@ export const ponative = {
 					"+",
 					[],
 					alarray.native
-						.generate(0, nstr.length - 1)
+						.generate(0, nstr.length)
 						.map(
 							(i) =>
 								this.template.alphabet.indexOf(nstr[i]) *
@@ -2284,8 +2283,8 @@ export const ponative = {
 			while (!refCompare(n, 0)) {
 				const k = (n - (n % base ** i)) / base ** i
 				n -= k * base ** i
-				coefficients.push(k)
-				i--
+				coefficients[coefficients.length] = k
+				--i
 			}
 			return coefficients
 				.map(alinative.function.rindex(this.template.alphabet))
@@ -2357,6 +2356,7 @@ export const deftable = RECURSIVE_VARIABLE({
 	"&": general.recursiveOperation("&", alinative.binary.and, 0),
 	"|": general.recursiveOperation("|", alinative.binary.or, 0),
 	"%": general.recursiveOperation("%", alinative.binary.modulo, 1),
+	// ? Isn't this bugged? [Due to usage of 'dand' - see for oneself whether desired for rewriting...]
 	"&&": general.recursiveOperation("&&", alinative.binary.dand, false),
 	"||": general.recursiveOperation("||", alinative.binary.dor, false)
 })
@@ -2491,17 +2491,13 @@ export function recursiveCounter(template = {}) {
 			...template
 		},
 		range(x) {
-			// ! NOTE: places like these ARE NOT to be refactored using '.dand' or '.dor' - the functions do not provide the ability to avoid errors regarding pre-computation...
 			return (
 				is.arr(x) &&
-				alinative.binary.dand(
-					!!x.length,
-					x.every((y) =>
-						alinative.binary.dor(
-							...[
-								this.template.type,
-								(y) => alinative.binary.dand(is.arr(x), this.range(y))
-							].map(alinative.function.argscall(y))
+				!!x.length &&
+				x.every((y) =>
+					alinative.binary.dor(
+						...[this.template.type, (y) => is.arr(x) && this.range(y)].map(
+							alinative.function.argscall(y)
 						)
 					)
 				)
@@ -2562,11 +2558,11 @@ export function recursiveCounter(template = {}) {
 							.difference(indexes.length().get())
 							.previous(),
 						(value) => {
-							value.push([])
+							value[value.length] = []
 							return value[value.length - 1]
 						}
 					)
-					result.push(thisobject.template.lower)
+					result[result.length] = thisobject.template.lower
 					return x
 				}
 
@@ -2902,6 +2898,7 @@ export const classForm =
 export const circularCounter = (() => {
 	const final = {
 		defaults: {
+			form: general.DEFAULT_FORM,
 			values: [],
 			hop: 1
 		},
@@ -3473,11 +3470,7 @@ export const GeneralArray = (() => {
 					this.this.this = this.empty().this
 					return this
 				}),
-				empty: _FUNCTION(function (
-					template = this.this.this.this.class.template
-				) {
-					return this.this.this.this.class.static.empty(template)
-				}),
+				empty: refactor.classes.empty,
 				copy: _FUNCTION(function (
 					f = ID,
 					isclass = false,
@@ -3682,7 +3675,7 @@ export const GeneralArray = (() => {
 						return isend(this.this)
 					})
 				}),
-				sort: _FUNCTION(function (predicate) {
+				sort: _FUNCTION(function (predicate = T) {
 					this.this.this = sort
 						.merge({
 							predicate
@@ -4163,7 +4156,8 @@ garrays.DeepArray = function (template = {}, garrtemplate = {}) {
 						// ? General refactoring of these kinds of operations (namely - finding the multiindex of the first unfilled flat array in a recursive array, then getting access to it?);
 						let p = array.array
 						for (const x of flayer) p = daform.read(p, x)
-						daform.index(p).push(value)
+						const indexed = daform.index(p)
+						indexed[indexed.length] = value
 						return value
 					}
 				}
@@ -4432,6 +4426,7 @@ export const UnlimitedMap = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	})
 }
 
+// ^ NOTE: in v1.1, many of this thing's aspects are to be reconsidered...; [Namely, the way that writing/reading is done - it always prepends a '' in the internal string representation - can unnecessarily increase the internal array's length (and hence, affect performance noticeably..)];
 export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parent, {
 		defaults: {
@@ -4449,74 +4444,25 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 		// ? Refactor the 'methods' with 'OBJECT(...(methods' names), ...(methods' list).map(_FUNCTION))'?
 		methods: {
 			split: _FUNCTION(function (useparator = "") {
-				const strarr = this.this.this.this.class.parentclass.class()
-				if (is.str(useparator)) {
-					let carryover = ""
-					for (const str of this.this.this.genarr) {
-						const postsplit = str.split(useparator)
-						for (let i = 0; i < postsplit.length; ++i) {
-							if (!i) {
-								refactor.general
-									.lengthSafeConcat(carryover, postsplit[i])
-									.forEach(strarr.pushback)
-								continue
-							}
-							if (
-								refCompare(i, postsplit.length - 1) &&
-								!this.this.this.this.class.parentclass.template.icclass.template.comparison(
-									this.this.this.genarr.currindex,
-									this.this.this.genarr.finish()
-								)
-							) {
-								carryover = postsplit[i]
-								continue
-							}
-							strarr.pushback(postsplit[i])
-						}
-					}
+				if (is.str(useparator))
+					return this.split(
+						this.this.this.this.class.static.fromString(useparator)
+					)
+				if (useparator.isEmpty()) return this.copied("symbolic", []).genarr
+				const _this = this.copy()
+				const sliceIndexes = this.this.this.this.indexesOf(useparator)
+				const strarr = this.this.this.this.class.parentclass.static.empty()
+				let pind = this.init()
+				for (const ind of sliceIndexes) {
+					const copySlice = _this.copied("slice", [pind, ind])
+					strarr.pushback(copySlice)
+					_this.slice([ind])
+					pind = ind
 				}
-				if (this.this.this.this.class.is(useparator)) {
-					// ! This piece of code re-appears throughout the class twice (indexesOf and 'split')! Refactor...
-					let prevcounter = this.init()
-					let currcounter = this.init()
-					let backupcounter = this.init()
-					let hasBroken = false
-					const first = useparator.read(useparator.init())
-
-					for (
-						;
-						lesser(currcounter, this.length().get());
-						currcounter = next(currcounter)
-					) {
-						if (!refCompare(this.read(currcounter), first)) continue
-						backupcounter = next(backupcounter)
-						while (lesser(backupcounter, useparator.length().get())) {
-							if (
-								this.read(currcounter.jumpDirection(backupcounter)) !=
-								useparator.read(backupcounter)
-							) {
-								hasBroken = true
-								break
-							}
-							backupcounter = next(backupcounter)
-						}
-
-						if (!hasBroken)
-							strarr.pushback(
-								this.copied("slice", [prevcounter, currcounter])
-							)
-						currcounter = currcounter.jumpDirection(backupcounter)
-						if (!hasBroken) prevcounter = currcounter
-						backupcounter = this.init()
-						hasBroken = false
-						continue
-					}
-
-					// * The last one is also needed due to the fact that the 'end' is 'open' in the sense that there is no more separators after it (hence, it follows that the end may also be equal to "");
-					strarr.pushback(this.copied("slice", [prevcounter, currcounter]))
-				}
+				strarr.pushback(_this)
 				return strarr
 			}),
+			empty: refactor.classes.empty,
 			// * Note: this transformation is the reverse of the thing that all the functions working with the data of the string must perform upon the indexes passed by the user...
 			tototalindex: _FUNCTION(function (
 				ind = this.this.this.genarr.currindex,
@@ -4551,7 +4497,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				let present = this.init()
 				let inarrind = this.init()
 				let currstrlen = this.init()
-				for (const x of this.genarr.copy((str) =>
+				for (const x of this.this.this.genarr.copy((str) =>
 					alinative.number.fromNumber().function(str.length)
 				)) {
 					inarrind = next(inarrind)
@@ -4559,13 +4505,16 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					present = present.jumpDirection(x)
 					if (greateroe(present, index)) break
 				}
+				const isnewstrbeg = !equal(index, present)
 				return [
-					inarrind.previous(),
-					currstrlen.map(InfiniteCounter(addnumber())).value -
-						present.difference(index).map(
-							// ? make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
-							InfiniteCounter(addnumber())
-						).value
+					(isnewstrbeg ? previous : ID)(inarrind),
+					isnewstrbeg
+						? currstrlen.map(InfiniteCounter(addnumber())).value -
+						  present.difference(index).map(
+								// ? make an alias for that thing (generally, so that there is a way for shorthand of an reverse-conversion...);
+								InfiniteCounter(addnumber())
+						  ).value
+						: 0
 				]
 			}),
 			begin: refactor.classes.begin,
@@ -4575,36 +4524,39 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				end = this.finish(),
 				orderly = false
 			) {
-				const newstr = this.this.this.this.class.class()
-				this.go(beginning)
-				for (; lesseroe(this.tototalindex(), end); next(this)) {
-					// ? This 'auto-optimization' gets rid of the internal spces, when slicing the string (improves future speed overall, and so forth), but is it really desired? Consider, pray...;
-					const ce = this.currelem().get()
-					if (ce) newstr.pushback(ce)
-				}
-				this.this.this = (orderly ? (x) => x.order() : ID)(newstr).this
-				return this.this
+				return general.fix(
+					[this.this.this, this.this.this.genarr],
+					alarray.native.generate(2).map(alinative.function.const("currindex")),
+					() => {
+						const newstr = this.this.this.this.class.class()
+						this.go(beginning)
+						for (; lesseroe(this.tototalindex(), end); next(this)) {
+							// ? This 'auto-optimization' gets rid of the internal "", when slicing the string (improves future speed overall, and so forth), but is it really desired? Consider, pray...;
+							const ce = this.currelem().get()
+							if (ce) newstr.pushback(ce)
+						}
+						this.this.this = (orderly ? (x) => x.order() : ID)(newstr).this
+						return this.this
+					}
+				)
 			}),
 			read: _FUNCTION(function (index = this.init()) {
 				return general.fix(
 					[this.this.this.genarr, this.this.this],
 					alarray.native.generate(2).map(alinative.function.const("currindex")),
-					() => {
-						this.go(index)
-						return this.currelem().get()
-					}
+					() => this.go(index).currelem().get()
 				)
 			}),
 			write: _FUNCTION(function (index, value) {
-				general.fix(
+				return general.fix(
 					[this.this.this.genarr, this.this.this],
 					alarray.native.generate(2).map(alinative.function.const("currindex")),
 					() => {
 						this.go(index)
 						this.currelem().set(value)
+						return this.this
 					}
 				)
-				return this.this
 			}),
 			concat: _FUNCTION(function (
 				ustring = this.this.this.this.class.static.empty()
@@ -4691,6 +4643,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			length: _FUNCTION(function () {
 				return {
 					get: () => {
+						if (this.this.this.genarr.isEmpty()) return this.init()
 						return this.tototalindex(
 							this.this.this.genarr.length().get().difference(this.one()),
 							this.this.this.genarr.read(this.this.this.genarr.finish())
@@ -4733,7 +4686,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 			join: _FUNCTION(function (
 				separator = this.this.this.this.class.template.basestr,
 				frequency = alinative.function.const(
-					this.this.this.this.class.parentclass.template.icclass.static.one()
+					this.this.this.this.class.template.tintclass.static.one()
 				),
 				order = false
 			) {
@@ -4756,12 +4709,13 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					}
 				}
 				this.this.this = (order ? (x) => x.order() : ID)(
-					this.this.this.this.class(r.array)
+					this.this.this.this.class.class(r.array)
 				).this
 				return this.this
 			}),
 			reverse: _FUNCTION(function () {
 				this.this.this.genarr.reverse()
+				// ! THIS IS 'native.string.reverse()' here... (refactoring);
 				for (const x of this.this.this.genarr.keys())
 					this.this.this.genarr.write(
 						x,
@@ -4774,9 +4728,17 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			copy: _FUNCTION(function (f = ID) {
-				const emptystr = this.this.this.this.class.static.empty()
-				for (const k of this.keys()) emptystr.write(k, f(this.read(k), k, this))
-				return emptystr
+				return general.fix(
+					[this.this.this, this.this.this.genarr],
+					alarray.native.generate(2).map(alinative.function.const("currindex")),
+					() => {
+						this.go(this.init())
+						const emptystr = this.this.this.this.class.static.empty()
+						for (const k of this.keys())
+							emptystr.write(k, f(this.read(k), k, this))
+						return emptystr
+					}
+				)
 			}),
 			// ? Make a GeneralArray out of it instead?
 			keys: function* () {
@@ -4792,16 +4754,21 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					if (!refCompare(x, "")) return false
 				return true
 			}),
-			sort: _FUNCTION(function (predicate) {
-				return this.split("").genarr.sort.merge().function(predicate)
+			sort: _FUNCTION(function (predicate = T) {
+				this.this.this = this.this.this.this.class.class(
+					this.split("").sort(predicate).array
+				).this
+				return this.this
 			}),
 			// * Note: the complexity of answering the question of whether the thing in question is sorted is THE SAME as performing the sorting itself. So, it's only useful if you need to keep the array in question UNCHANGED by the sorting!
-			isSorted: _FUNCTION(function (
-				predicate,
-				comparison = this.this.this.this.class.parentclass.comparison
-			) {
-				return comparison(this.copied("sort", [predicate]), this.this.this)
-			}),
+			// ! TAKING OUT (for the same reasons as the GeneralArray version...);
+			// isSorted: _FUNCTION(function (
+			// 	predicate,
+			// 	comparison = this.this.this.this.class.parentclass.comparison
+			// ) {
+			// 	return comparison(this.copied("sort", [predicate]), this.this.this)
+			// }),
+			// ? Unoptimized algortihm? Look for fixes, if any...;
 			indexesOf: _FUNCTION(function (
 				ustring = this.this.this.this.class.template.basestr,
 				halt = false,
@@ -4817,17 +4784,14 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 					const indexes = this.this.this.this.class.parentclass.class()
 					// ? NOTE: (partially) the same code as in the 'split'; (Possibly) If it's really the same, and can be refactored elegantly - do that...;
 					let currcounter = this.init()
-					let backupcounter = this.init()
 					let hasBroken = false
-					const first = ustring.read(ustring.init())
-					for (
-						;
-						lesser(currcounter, this.length().get());
-						currcounter = next(currcounter)
-					) {
-						if (halt && greateroe(indexes.length().get(), haltAfter)) break
-						if (!refCompare(this.read(currcounter), first)) continue
-						backupcounter = next(backupcounter)
+					const first = ustring.read()
+					while (lesser(currcounter, this.length().get())) {
+						if (!refCompare(this.read(currcounter), first)) {
+							currcounter = next(currcounter)
+							continue
+						}
+						let backupcounter = this.init()
 						while (!backupcounter.equal(ustring.length().get())) {
 							if (
 								this.read(currcounter.jumpDirection(backupcounter)) !=
@@ -4838,27 +4802,29 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 							}
 							backupcounter = next(backupcounter)
 						}
-						if (!hasBroken) indexes.pushback(currcounter)
+						if (!hasBroken) {
+							indexes.pushback(currcounter)
+							currcounter = currcounter.jumpDirection(backupcounter)
+							if (halt && greateroe(indexes.length().get(), haltAfter))
+								break
+						}
 						hasBroken = false
-						currcounter = currcounter.jumpDirection(backupcounter)
-						backupcounter = this.init()
-						continue
+						currcounter = next(currcounter)
 					}
 					return indexes
 				}
 			}),
 			firstIndex: _FUNCTION(function (ustring = "") {
 				const indexes = this.indexesOf(ustring, true, this.one())
-				if (greateroe(indexes.length().get(), this.init()))
-					return indexes.read(this.init())
+				if (greateroe(indexes.length().get(), this.init())) return indexes.read()
 				return this.this.this.this.class.template.unfound
 			}),
 			includes: refactor.classes.includes,
 			// Shall change the entirety of the UnlimitedString's order in such a way, so as to maximize the sizes of the finite Strings that compose the UnlimitedString;
 			// * Most memory- and that-from-the-standpoint-of-execution, efficient option;
-			// ! Due to memory- and time- concerns, this does not get a test (yet) - tested only in >=v1.1;
+			// ! Due to memory- and time- concerns, this does not get a (proper) test - checked for 'UnlimitedString s: s.length > MAX_STRING_LENGTH' only in >=v1.1;
 			order: _FUNCTION(function () {
-				const newstr = this.copy()
+				const newstr = this.empty()
 				let bigind = this.init()
 				let smallind = 0
 				for (const x of this) {
@@ -4867,7 +4833,7 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 						smallind = 0
 						newstr.pushback("")
 					}
-					newstr.write(biding, newstr.read(bigind) + x)
+					newstr.write(bigind, this.read(bigind) + x)
 					++smallind
 				}
 				this.this.this = newstr.this
@@ -4882,7 +4848,10 @@ export const UnlimitedString = (parent = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			pushback: _FUNCTION(function (ustring) {
-				if (is.str(ustring)) return this.this.this.genarr.pushback(ustring)
+				if (is.str(ustring)) {
+					this.this.this.genarr.pushback(ustring)
+					return this.this
+				}
 				return this.concat(ustring)
 			}),
 			pushfront: _FUNCTION(function (ustring) {
@@ -5356,7 +5325,7 @@ export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 				return this.this
 			}),
 			firstIndex: _FUNCTION(function (v) {
-				return this.indexesOf(v, true, this.one())
+				return this.indexesOf(v, true, this.one()).read()
 			}),
 			indexesOf: _FUNCTION(function (v, halt = false, haltAfter = Infinity) {
 				if (this.this.this.children.isEmpty())
@@ -5601,6 +5570,7 @@ export const UnlimitedSet = (parentclass = general.DEFAULT_GENARRCLASS) => {
 			) {
 				return this.suchthat((x) => !uset.ni(x))
 			}),
+			empty: refactor.classes.empty(),
 			// ^ Another absolutely marvelous method taken out of v1.0; Reason - in order to consistently (and cleanly) ensure subset-uniqueness (and without rewriting the algorithm in a 'hacky' ad-hoc manner), one has to first implement the GeneralArray equivalences (which are scheduled for v1.1);
 			// subsets: _FUNCTION(function (fix = false) {
 			// 	if (fix) this.fix()
@@ -6355,14 +6325,12 @@ export const sort = {
 						const newarr = t.object().empty()
 						let fc = t.object().init(),
 							sc = t.object().init()
-						let ffit = true,
-							sfit = true
+						let ffit = lesser(fc, ca.length().get()),
+							sfit = lesser(sc, fn.length().get())
 
 						while (
-							((sfit = lesser(sc, fn.length().get())) &&
-								lesseroe(fc, ca.length().get())) ||
-							((ffit = lesser(fc, ca.length().get())) &&
-								lesseroe(sc, fn.length().get()))
+							(sfit && lesseroe(fc, ca.length().get())) ||
+							(ffit && lesseroe(sc, fn.length().get()))
 						) {
 							// ? Oughtn't one be using 'mergeForm.read' instead of the GeneralArray class methods? [yes, later - fix that as well...]
 							let m = {}
@@ -6381,6 +6349,9 @@ export const sort = {
 								m = secarrel
 								sc = next(sc)
 							}
+
+							ffit = ffit && lesser(fc, ca.length().get())
+							sfit = sfit && lesser(sc, fn.length().get())
 
 							newarr.pushback(m)
 						}
@@ -6695,20 +6666,23 @@ export const integer = {
 	allFactors: TEMPLATE({
 		defaults: {
 			icclass: general.DEFAULT_ICCLASS,
-			tintclass: general.DEFAULT_TINTCLASS
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (number = this.template.tintclass.class()) {
 			// ? Question [general]: shall one be 'saving' the time like this, or not? (this way, a little less time is required for the performance due to reduced garbage collection, but the memory occupied gets to be used constantly throughout the function, WITHOUT any de- and re-allocations)
 			const z = this.template.icclass.static.zero()
 
-			const factors = [othis.template.icclass.static.one()]
+			const factors = this.template.genarrclass.fromArray([
+				this.template.icclass.static.one()
+			])
 			const l = number.divide(this.template.icclass.static.two()())
 			for (
 				let currFactor = this.template.icclass.static.two()();
 				greateroe(l, currFactor);
 				currFactor.add()
 			)
-				if (number.modulo(currFactor).equal(z)) factors.push(currFactor)
+				if (number.modulo(currFactor).equal(z)) factors.pushback(currFactor)
 			return factors
 		}
 	}).function,
@@ -6797,7 +6771,9 @@ export const integer = {
 					nterms.previous(),
 					minval
 				))
-					res.push(this.template.genarrclass.static.fromArray([i]).concat(r))
+					res.pushback(
+						this.template.genarrclass.static.fromArray([i]).concat(r)
+					)
 			return res
 		}
 	}).function,
@@ -6903,7 +6879,11 @@ export const alnumber = {
 			const gotten = this.template.genarrclass.fromArray([
 				this.template.genarrclass.static.fromArray([startRatio, endRatio])
 			])
-			for (let i = this.template.icclass.class(); i < iterations; i = next(i)) {
+			for (
+				let i = this.template.icclass.class();
+				lesser(i, iterations);
+				i = next(i)
+			) {
 				gotten.pushback(this.template.genarrclass.static.empty())
 				for (
 					let j = this.template.icclass.class();
@@ -6912,7 +6892,7 @@ export const alnumber = {
 				) {
 					gotten.read(next(i)).pushback(gotten.read(i).read(j))
 					if (lesser(j, previous(gotten.read(i).length().get())))
-						gotten.read(next(i)).push(
+						gotten.read(next(i)).pushback(
 							gotten
 								.read(i)
 								.read(j)

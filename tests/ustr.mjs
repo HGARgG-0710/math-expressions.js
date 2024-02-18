@@ -1,12 +1,19 @@
 // * Testing of the UnlimitedString
 
+import { refCompare } from "../src/modules/exports/comparisons.mjs"
 import { native } from "../src/modules/exports/aliases.mjs"
-import { UnlimitedString, arrays } from "../src/modules/exports/types.mjs"
+import { addnumber } from "../src/modules/exports/counters.mjs"
+import {
+	UnlimitedString,
+	arrays,
+	InfiniteCounter
+} from "../src/modules/exports/types.mjs"
 import {
 	testmultcases as tmc,
 	multtestobjmethod as mtom,
 	testOn,
-	testobjmethod as tom
+	testobjmethod as tom,
+	test
 } from "./test.mjs"
 
 const outstr = (x) => {
@@ -97,60 +104,103 @@ tmc(
 				)
 				testOn(ustring.currelem(), ["get", "set"], [[[]], [["KKF"]]], false)
 				tom(ustring.length(), "get", [], false, outval)
-				mtom(
+				testOn(
 					ustring,
-					"includes",
-					[["a"], ["?"], [ustring.class.static.fromString("FAB")]],
+					["includes", "isEmpty"],
+					[[["a"], ["?"], [ustring.class.static.fromString("FAB")]], [[]]],
 					[]
 				)
 				mtom(
 					ustring.length(),
 					"set",
 					[
-						// ! works, BUT TOO SLOOOOWWW! [make a notice about just how slow the 'UnlimitedString' class really is...];
-						// [ustring.length().get().previous().previous()],
+						[ustring.length().get().previous().previous()],
 						[ustring.length().get().next().next()]
 					],
 					[],
 					outstr
 				)
-				// ! Add arguments... (where needed/wanted)
 				testOn(
 					ustring,
 					[
 						"copied",
-						// ! (these two) works, but WAAAAAY too long (again, cause - 'symbolic' and TERRIBLY un-optimized code...);
-						// "insert"
-						// "remove"
-						"reverse",	
-						// * currently tested (REQUIRES WORK WITH TrueIntegers); 
+						// ^ The UnlimitedString class needs the caching MOST OF ALL - so slow it's practically dysfunctional... (even though the code DOES WORK, but can be so much better from performance standpoint);
+						"insert",
+						"remove",
+						"reverse",
 						"join",
-						// "map",
-						// "copy",
-						// "isEmpty",
-						// "sort",
-						// "isSorted",
-						// "indexesOf",
-						// "symbolic",
-						// "pushback",
-						// "pushfront",
+						"map",
+						"symbolic",
+						"sort",
+						"pushback",
+						"pushfront",
+						"order"
 					],
 					[
-						[["slice", [ustring.init(), ustring.two().next().next()]]], 
-						// [[ustring.two(), "Tereereii"]]	
-						// [[], [ustring.finish()]], 	
+						[["slice", [ustring.init(), ustring.two().next().next()]]],
+						[[ustring.two(), "Tereereii"]],
+						[[], [ustring.finish()]],
+						[[]],
+						[["ta_"]],
+						[[(k) => native.string.fcc(native.string.cca(k) + 42)], []],
+						[[]],
+						[[(x, y) => native.string.cca(x) > native.string.cca(y)]],
+						["kkkjl?", "ataara", "bubub"].map((x) => [x]),
+						["ffaa", "lululu", "1341324"].map((x) => [x]),
 						[[]]
-						// [[]], 
 					],
 					[],
 					outstr
 				)
-				throw new Error("That's where we stop!")
+				// ? Later - change these predicates-arguments to something else?
+				mtom(ustring, "indexesOf", [["A"]], [], (x) => {
+					for (const y of x) outval(y.map(InfiniteCounter(addnumber())))
+				})
 				tmc(ustring)
-				tmc(ustring.keys())
-				testOn(ustring, ["suchthat", "any", "every", "forEach", "multcall"], [])
+				tmc(ustring.keys(), outval)
+				testOn(
+					ustring,
+					["any", "every"],
+					[
+						[
+							[(x) => native.string.cca(x) > 1000],
+							[(x) => refCompare(x.toLowerCase(), "a")]
+						],
+						[
+							[(x) => native.string.cca(x) < 1000],
+							[(x) => !refCompare(x.toLowerCase(), "b")]
+						]
+					],
+					[]
+				)
+				// ! In testing:
+				testOn(
+					ustring,
+					["suchthat", "forEach", "multcall"],
+					[
+						[[(x) => native.string.cca(x) > native.string.cca("h")]],
+						[[(x) => console.log(x)]],
+						[
+							[
+								"write",
+								[
+									[ustring.init(), "Trurualsj"],
+									[ustring.finish(), "akaiol"],
+									[ustring.init().next(), "Rta"]
+								],
+								true
+							]
+						]
+					],
+					[],
+					outstr
+				)
+				mtom(ustring, "firstIndex", [["J"], ["ALAABABA"]], [], (x) => {
+					if (x) outval(x)
+					else console.log(x)
+				})
 			}
 		)
-		test(ustrclass.static.empty)
+		test(ustrclass.static.empty, [], false, outstr)
 	}
 )
