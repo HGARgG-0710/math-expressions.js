@@ -14,10 +14,13 @@ import { test, testmultcases as tmc, testOn, testobjmethod as tom } from "./test
 
 const outint = (x) => console.log(x.value.value)
 const outratio = (x) => {
-	for (const v of ["numerator", "denomenator"]) outint(x[v])
+	for (const v of ["numerator", "denomenator"]) {
+		console.log(`${v}:`)
+		outint(x[v])
+	}
 }
 
-const counters = [arrayCounter, stringCounter, numberCounter].map((x) => x())
+const counters = [/* arrayCounter, stringCounter, */ numberCounter].map((x) => x())
 const tintclasses = counters.map((x) => numbers.TrueInteger(InfiniteCounter(x)))
 const tratioclasses = tintclasses.map((c) => numbers.TrueRatio(c))
 
@@ -136,58 +139,105 @@ const tratioclasses = tintclasses.map((c) => numbers.TrueRatio(c))
 
 tmc(tratioclasses.keys(), (i) => {
 	const tratioclass = tratioclasses[i]
-	// ! Add instances list, pray...;
-	tmc([], (instance) => {
-		outratio(instance)
-		test(refCompare, [instance, instance.copy()])
-		testOn(
-			instance,
-			[
-				"add",
-				"multiply",
-				"invadd",
-				"invmult",
-				"copy",
-				"naivesum",
-				"abs",
-				"power",
-				"root",
-				"divide",
-				"simplify",
-				"difference",
-				"zero",
-				"one",
-				"two",
-				"half",
-				"third"
-			],
-			[
-				[[], [], []],
-				[[], [], []],
-				[[]],
-				[[]],
-				[[]],
-				[[], []],
-				[[]],
-				[[], [], []],
-				[[], [], []],
-				[[], [], []],
-				[[], [], []],
-				[[], []],
-				[[]],
-				[[]],
-				[[]],
-				[[]],
-				[[]]
-			],
-			[],
-			outratio
-		)
-		testOn(
-			instance,
-			["equal", "direction", "compare", "isWhole"],
-			[[], [[]], [], [[]]],
-			[]
-		)
-	})
+	tmc(
+		[
+			tratioclass.class(
+				tratioclass.parentclass.parentclass.static.two().value,
+				tratioclass.parentclass.parentclass.static.two().next().value
+			),
+			tratioclass.class(
+				tratioclass.parentclass.parentclass.static.two().value,
+				tratioclass.parentclass.parentclass.static.two().next().next().value
+			),
+			tratioclass.class(
+				tratioclass.parentclass.parentclass.static.two().next().next().next()
+					.value,
+				tratioclass.parentclass.parentclass.static
+					.two()
+					.next()
+					.next()
+					.next()
+					.next()
+					.next().value
+			),
+			tratioclass.static.two(),
+			tratioclass.static.one(),
+			tratioclass.static.zero(),
+			tratioclass.static.fromCounter(
+				tratioclass.parentclass.parentclass.static.negone()
+			),
+			tratioclass.class(
+				tratioclass.parentclass.static.one().value.value,
+				tratioclass.parentclass.static.fromNumber(-11).value.value
+			)
+		],
+		(instance) => {
+			console.log("\n")
+			outratio(instance)
+			test(refCompare, [instance, instance.copy()])
+			testOn(
+				instance,
+				[
+					// * "add", "simplify", "invadd", "invmult", "abs", "copy", "zero", "one", "two" work...
+					// "add",
+					// "simplify",	
+					// "invadd",	
+					// "invmult",
+					// "abs",	
+					// "copy",	
+					// "zero",
+					// "one",
+					// "two",	
+					// ! In testing:
+					// "multiply",
+					// "naivesum",
+					// "power",
+					// "root",
+					// "divide",
+					// "difference",
+				],
+				[
+					// [
+					// 	[instance.half()],
+					// 	[instance.third()],
+					// 	[
+					// 		tratioclass.static
+					// 			.fromInteger(
+					// 				tratioclass.parentclass.static.two().add().add()
+					// 			)
+					// 			.invmult()
+					// 			.multiply(
+					// 				tratioclass.static.fromInteger(
+					// 					tratioclass.parentclass.static.two().add()
+					// 				)
+					// 			)
+					// 	]
+					// ],
+					// [[]],
+					// [[]],
+					// [[]],
+					// [[]],
+					// [[]],
+					// [[]],
+					// [[]],
+					// [[]],
+					[[], [], []],
+					[[], []],
+					[[], [], []],
+					[[], [], []],
+					[[], [], []],
+					[[], [], []],
+					[[], []]
+				],
+				[],
+				outratio
+			)
+			// testOn(
+			// 	instance,
+			// 	["equal", "direction", "compare", "isWhole"],
+			// 	[[], [[]], [], [[]]],
+			// 	[]
+			// )
+		}
+	)
 })

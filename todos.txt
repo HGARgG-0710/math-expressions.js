@@ -1143,3 +1143,4 @@ It gets changed and revised actively.
 			For these kinds of purposes, create cases, when same template object is NOT referenced; 
 			Either a new one is created (once a thing has been edited), or it is only referenced in non-changing cases... (CREATE MEANS OF TRACKING CHANGE IN A DIFFERENT OBJECT - IF AN OBJECT HAS BEEN CHANGED, THEN ALL OF ITS 'DEPENDEES ARE CHANGED AS WELL!'); 
 		3. Pair-s, Triple-s, N-Tuples: a set of abstractions' definitions for representations of arrays of static (statically known) length; 
+		4. '.equal()' on EVERY class - not only just the InfiniteCounters, and number classes, collections as well - GeneralArray, UnlimitedString, ...; Due to its lacking, becomes more difficult to compare arrays directly (no alias...); 

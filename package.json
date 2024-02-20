@@ -1,7 +1,7 @@
 {
 	"name": "math-expressions.js",
-	"version": "1.0.0",
-	"description": "math-expressions.js is an abstract-types JavaScript library, distributed via NPM  ",
+	"version": "1.0.0alpha",
+	"description": "math-expressions.js is an abstract-types JavaScript library, distributed via NPM.",
 	"main": "src/math-expressions.mjs",
 	"type": "module",
 	"scripts": {
@@ -15,7 +15,11 @@
 		"expressions",
 		"algorithms",
 		"infinite",
-		"arrays"
+		"arrays", 
+		"maps", 
+		"unlimited", 
+		"abstract", 
+		"typesystems"
 	],
 	"author": "hgargg-0710",
 	"license": "MIT",

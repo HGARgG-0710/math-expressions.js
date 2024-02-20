@@ -35,7 +35,7 @@ computational power is still (sadly) limited (so, the library's first two of the
 There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
 in one of the nearest future versions.
 
-Note: despite far greater degree of clarity as to the package's direction development, this is still (technically) a very early alpha pre-release. That being, the project in question SHOULD NOT YET BE CONSIDERED TO BE COMPLETED OR READY FOR EXPLOITATION. This is merely a proof-of-concept, a preliminary sketch, that (hopefully) will grow into something far larger, more coherent and useful. Issues reports are appreciated. Some of the difficulties experienced by the current project version are listed in the wikis.
+Note: despite far greater degree of clarity as to the package's direction of development, this is still a very early alpha pre-release. That being, the project in question SHOULD NOT YET BE CONSIDERED TO BE COMPLETED OR READY FOR EXPLOITATION. This is merely a proof-of-concept, a preliminary sketch, that (hopefully) will grow into something far larger, more coherent and useful. Issues reports are appreciated. Some of the difficulties experienced by the current project version are listed in the wikis.
 
 ## Installation
 
@@ -49,6 +49,7 @@ Install math-expressions.js using npm:
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
 <!-- TODO: apart from the Wiki, add a separate page with 'Current Problems (are to get solved in future releases)' -->
 
+(Presently absent)
 [Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki)
 
 The library also supports basic in-editor JSDoc documentation (as of present - yet undone).

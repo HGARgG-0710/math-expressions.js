@@ -4943,7 +4943,7 @@ export const tnumbers = {
 					)
 				}),
 				abs: _FUNCTION(function () {
-					return this.sign() ? this.this.copy() : this.this.invadd()
+					return this.sign() ? this.copy() : this.invadd()
 				}),
 				// * Returns the multiplicative inverse (TrueRatio type);
 				invmult: _FUNCTION(function () {
@@ -4952,6 +4952,10 @@ export const tnumbers = {
 						.class(...[this.one(), this.this].map((x) => x.value.value))
 				}),
 				compare: _FUNCTION(function (compared = this.zero()) {
+					if (!("value" in compared.value)) {
+						console.log(this.this.this.value.value)
+						console.log(compared.value.value)
+					}
 					return this.this.this.value.compare(compared.value)
 				}),
 				difference: _FUNCTION(function (d = this.one()) {
@@ -5031,6 +5035,8 @@ export const tnumbers = {
 			names: ["value"]
 		})
 	},
+	// ? a little too too thin on the aliases?
+	// ? transform the TrueIntegers to TrueRatio-s on input for methods? [allows greater compatibility between classes type-wise...];
 	TrueRatio: function (parentclass = general.DEFAULT_TINTCLASS) {
 		const nameslist = ["numerator", "denomenator"]
 		return EXTENSION(parentclass, {
@@ -5046,47 +5052,58 @@ export const tnumbers = {
 					)
 				}
 			},
-			methods: () => {
+			methods: (() => {
 				const M = {
 					add: _FUNCTION(function (
 						addratio = this.this.this.this.class.static.one()
 					) {
-						return this.this.this.this.class.static.simplified(
-							this.this.this.this.class.class(
+						// TODO: bug in 'simplify' - doesn't fix cases such as '9/9'...; 
+						return this.this.this.this.class
+							.class(
 								this.this.this.numerator
 									.multiply(addratio.denomenator)
 									.add(
 										addratio.numerator.multiply(
 											this.this.this.denomenator
 										)
-									),
+									).value.value,
 								this.this.this.denomenator.multiply(addratio.denomenator)
+									.value.value
 							)
-						)
+							.simplify()
 					}),
 					multiply: _FUNCTION(function (
 						multratio = this.this.this.class.static.one()
 					) {
-						return this.this.this.this.class.class(
-							this.numerator.multiply(multratio.numenator),
-							this.denomenator.multiply(multratio.denomenator)
-						)
+						return this.this.this.this.class
+							.class(
+								...nameslist.map(
+									(name) =>
+										this.this.this[name].multiply(multratio[name])
+											.value.value
+								)
+							)
+							.simplify()
 					}),
 					invadd: _FUNCTION(function () {
 						return this.this.this.this.class.class(
-							this.this.this.numerator.invadd(),
-							this.this.this.denomenator
+							this.this.this.numerator.invadd().value.value,
+							this.this.this.denomenator.value.value
 						)
 					}),
 					invmult: _FUNCTION(function () {
 						return this.this.this.this.class.class(
-							...nameslist.map((x) => this.this.this[x]).reverse()
+							...nameslist
+								.map((x) => this.this.this[x].value.value)
+								.reverse()
 						)
 					}),
 					isWhole: _FUNCTION(function () {
-						return this.this.this.denomenator.equal(
-							this.this.this.this.class.parentclass.static.one()
-						)
+						return this.this.this
+							.simplify()
+							.denomenator.equal(
+								this.this.this.this.class.parentclass.static.one()
+							)
 					}),
 					copy: _FUNCTION(function () {
 						return this.this.this.this.class.class(
@@ -5097,7 +5114,9 @@ export const tnumbers = {
 						ratio = this.this.this.this.class.class()
 					) {
 						return this.this.this.this.class.class(
-							...nameslist.map((x) => this.this.this[x].add(ratio[x]))
+							...nameslist.map(
+								(x) => this.this.this[x].add(ratio[x]).value.value
+							)
 						)
 					}),
 					// ? Wonder - how about allowing for extended-methods of this general form [using the parent class variable instances list];
@@ -5170,7 +5189,7 @@ export const tnumbers = {
 					})
 
 				return M
-			},
+			})(),
 			static: (() => {
 				const R = {}
 
@@ -5180,8 +5199,10 @@ export const tnumbers = {
 						? "numerator"
 						: "denomenator"
 					const l = refCompare(m, "numerator") ? "denomenator" : "numerator"
-					for (const x of integer.allFactors().function(m))
-						if (this.this.parentclass.class().equal(ratio[l].modulo(x))) {
+					for (const x of integer.allFactors().function(ratio[l]))
+						if (
+							this.this.parentclass.static.zero().equal(ratio[m].modulo(x))
+						) {
 							ratio[m] = ratio[m].divide(x)
 							ratio[l] = ratio[l].divide(x)
 						}
@@ -5209,7 +5230,9 @@ export const tnumbers = {
 				for (const n of ["zero", "one", "two"])
 					R[n] = _FUNCTION(function () {
 						return this.this.class(
-							...[n, "one"].map((nn) => this.this.parentclass.static[nn]())
+							...[n, "one"].map(
+								(nn) => this.this.parentclass.static[nn]().value.value
+							)
 						)
 					}).bind(R)
 
@@ -6759,19 +6782,27 @@ export const integer = {
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (number = this.template.tintclass.class()) {
-			// ? Question [general]: shall one be 'saving' the time like this, or not? (this way, a little less time is required for the performance due to reduced garbage collection, but the memory occupied gets to be used constantly throughout the function, WITHOUT any de- and re-allocations)
-			const z = this.template.icclass.static.zero()
+			if (!number.sign()) {
+				const pr = this.function(number.invadd())
+				pr.pushfront(this.template.tintclass.static.one().invadd())
+				return pr
+			}
 
-			const factors = this.template.genarrclass.fromArray([
-				this.template.icclass.static.one()
+			// ! BAD! WHEN CACHING COMES - GET RID OF!
+			const z = this.template.tintclass.static.zero()
+			const factors = this.template.genarrclass.static.fromArray([
+				this.template.tintclass.static.one()
 			])
-			const l = number.divide(this.template.icclass.static.two()())
+			const l = number.divide(
+				number.class.static.fromCounter(this.template.icclass.static.two())
+			)
 			for (
-				let currFactor = this.template.icclass.static.two()();
+				let currFactor = this.template.tintclass.static.two();
 				greateroe(l, currFactor);
-				currFactor.add()
+				currFactor = currFactor.add()
 			)
 				if (number.modulo(currFactor).equal(z)) factors.pushback(currFactor)
+			factors.pushback(number)
 			return factors
 		}
 	}).function,
