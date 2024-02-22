@@ -1510,7 +1510,7 @@ export const arrayCounter = GENERATOR({
 	// ? How about a default argument for this one? [Generally - pray look for such "unresolved" tiny things, such as missing default arguments' values];
 	inverse: function (a) {
 		if (!is.arr(a) || !obj.hasOwn(a, 0))
-			return { [this.template.label]: this.template.start }
+			return { [this.template.label]: this.range(a) ? a : this.template.start }
 		return a[0]
 	},
 	range: _FUNCTION(function (a) {
@@ -1643,7 +1643,7 @@ export const InfiniteCounter = (() => {
 					ic,
 					nextf,
 					comparison,
-					this.this.this.this.class.class()
+					this.this.this.this.class.static.zero()
 				)
 			}),
 			jumpDirection: _FUNCTION(function (
@@ -4952,10 +4952,6 @@ export const tnumbers = {
 						.class(...[this.one(), this.this].map((x) => x.value.value))
 				}),
 				compare: _FUNCTION(function (compared = this.zero()) {
-					if (!("value" in compared.value)) {
-						console.log(this.this.this.value.value)
-						console.log(compared.value.value)
-					}
 					return this.this.this.value.compare(compared.value)
 				}),
 				difference: _FUNCTION(function (d = this.one()) {
@@ -4982,7 +4978,7 @@ export const tnumbers = {
 				equal: _FUNCTION(function (x = this.one()) {
 					return this.this.this.value.equal(x.value)
 				}),
-				// * Note: CANNOT FIND ROOTS OF NEGATIVES! [Because integers are not closed over them, yet the algorithm needs for it to be closed in order to have finite execution time...];
+				// ! Note [currently]: THIS CANNOT FIND ROOTS OF NEGATIVES! [Because integers are not closed over them, yet the algorithm needs for it to be closed in order to have finite execution time...];
 				root: _FUNCTION(function (x = this.two(), ceil = false) {
 					if (!x.sign()) return this.root(x.invadd()).invmult()
 					let r = this.zero()
@@ -5046,7 +5042,7 @@ export const tnumbers = {
 					constructor: alarray.native.generate(2).map(
 						alinative.function.const(
 							_FUNCTION(function () {
-								return this.parentclass.static.one()
+								return this.parentclass.static.one().value.value
 							})
 						)
 					)
@@ -5057,7 +5053,6 @@ export const tnumbers = {
 					add: _FUNCTION(function (
 						addratio = this.this.this.this.class.static.one()
 					) {
-						// TODO: bug in 'simplify' - doesn't fix cases such as '9/9'...; 
 						return this.this.this.this.class
 							.class(
 								this.this.this.numerator
@@ -5138,15 +5133,19 @@ export const tnumbers = {
 							)
 						)
 					}),
+					// todo: THE RATIONAL-CHECK HERE IS FLAWED! SUPPOSED TO USE '.is', BUT THAT IS COMPROMISED (DUE TO HOW UNRELIABLE IT IS FROM THE SIMILAR-CLASS-STRUCTURE STANDPOINT...); [And the fact that it don't really fit in here...];
 					power: _FUNCTION(function (r = this.one()) {
+						const ratiovals = nameslist.map((name) => {
+							return (
+								r.numerator && r.denomenator
+									? (x) => x.power(r.numerator).root(r.denomenator)
+									: (x) => x.power(r)
+							)(this.this.this[name])
+						})
+						if (!ratiovals[0].value || !ratiovals[1].value)
+							return ratiovals[0].divide(ratiovals[1])
 						return this.this.this.this.class.class(
-							nameslist.map(
-								(name) =>
-									(this.this.this.this.class.is(r)
-										? (x) => x.power(r.numerator).root(r.denomenator)
-										: (x) => x.power(r))(this.this.this[name]).value
-										.value
-							)
+							...ratiovals.map((x) => x.value.value)
 						)
 					}),
 					root: _FUNCTION(function (rv = this.one()) {
@@ -5156,15 +5155,15 @@ export const tnumbers = {
 						const signs = [this.this, ratio].map((x) => x.direction())
 						if (!refCompare(...signs)) return signs[0] > signs[1]
 						const abs = [this.this, ratio].map((x) => x.simplify().abs())
-						return abs[0].numerator
-							.multiply(abs[1].denomenator)
-							.compare(abs[0].denomenator.multiply(abs[1].numerator))
+						return (
+							signs[0] ? greateroe : lesseroe
+						)(abs[0].numerator.multiply(abs[1].denomenator), abs[0].denomenator.multiply(abs[1].numerator))
 					}),
 					divide: _FUNCTION(function (ratio = this.one()) {
 						return this.multiply(ratio.invmult())
 					}),
 					equal: _FUNCTION(function (ratio = this.one()) {
-						const simplified = [this.this, ratio].map((x) => x.simplify())
+						const simplified = [this, ratio].map((x) => x.simplify())
 						return (
 							simplified[0].numerator.equal(simplified[1].numerator) &&
 							simplified[1].denomenator.equal(simplified[1].denomenator)
@@ -5193,20 +5192,26 @@ export const tnumbers = {
 			static: (() => {
 				const R = {}
 
-				R.simplified = _FUNCTION(function (ratio) {
-					ratio = ratio.copy()
+				R.simplified = _FUNCTION(function (ratio = this.one()) {
+					const isn = !ratio.sign()
+					ratio = ratio.abs()
 					const m = greateroe(ratio.numerator, ratio.denomenator)
 						? "numerator"
 						: "denomenator"
 					const l = refCompare(m, "numerator") ? "denomenator" : "numerator"
-					for (const x of integer.allFactors().function(ratio[l]))
-						if (
-							this.this.parentclass.static.zero().equal(ratio[m].modulo(x))
+					const factors = integer.allFactors().function(ratio[l])
+					factors.slice(factors.one())
+					for (const x of factors)
+						while (
+							this.this.parentclass.static
+								.zero()
+								.equal(ratio[m].modulo(x)) &&
+							this.this.parentclass.static.zero().equal(ratio[l].modulo(x))
 						) {
 							ratio[m] = ratio[m].divide(x)
 							ratio[l] = ratio[l].divide(x)
 						}
-					return ratio
+					return (isn ? (x) => x.invadd() : ID)(ratio)
 				}).bind(R)
 
 				R.fromCounter = _FUNCTION(function (
@@ -6802,7 +6807,8 @@ export const integer = {
 				currFactor = currFactor.add()
 			)
 				if (number.modulo(currFactor).equal(z)) factors.pushback(currFactor)
-			factors.pushback(number)
+			if (greater(number, this.template.tintclass.static.one()))
+				factors.pushback(number)
 			return factors
 		}
 	}).function,

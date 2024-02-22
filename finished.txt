@@ -14,29 +14,29 @@ List of files in 'tests/', that have been successfully run;
 11. typeConst.mjs
 12. umap.mjs [complete the running - 1 class completed (general)]
 13. ustr.mjs
+14. numbers.mjs [In progress - TrueInteger down]; 
 
 Left to test (arbitrary order): 
 
-1. numbers.mjs [In progress - TrueInteger down]; 
-2. numeric.mjs
-3. string.mjs
-4. orders.mjs
-5. variables.mjs
-6. aliases.mjs
-7. predicates.mjs
-8. integer.mjs
-9. algarray.mjs
-10. mdarrsearch.mjs
-11. structure.mjs
-12. Stack.mjs
-13. sort.mjs
-14. search.mjs
-15. farey.mjs
-16. expressions.mjs
-17. Graph.mjs
-18. heaps.mjs
-19. BindableFunction.mjs
-20. TreeNode.mjs
-21. forms.mjs
-22. inf.mjs
-23. integrity.mjs
+1. numeric.mjs
+2. string.mjs
+3. orders.mjs
+4. variables.mjs
+5. aliases.mjs
+6. predicates.mjs
+7. integer.mjs
+8. algarray.mjs
+9. mdarrsearch.mjs
+10. structure.mjs
+11. Stack.mjs
+12. sort.mjs
+13. search.mjs
+14. farey.mjs
+15. expressions.mjs
+16. Graph.mjs
+17. heaps.mjs
+18. BindableFunction.mjs
+19. TreeNode.mjs
+20. forms.mjs
+21. inf.mjs
+22. integrity.mjs

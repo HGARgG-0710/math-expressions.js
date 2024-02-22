@@ -623,13 +623,14 @@ It gets changed and revised actively.
 		
 		Also, one could tinker with the type-inheritance idea. So, for example (sketchy pseud-code...): 
 
-			Type(x).inherit = function (y) {
-				return Type([...y, x])
+			Type<x>.inherit = function (y = []) {
+				return Type<[...y, x]>
 			}
 		
 		As a simple example. 
 
 		NOTE: as more and more one does work on the project's testing, the more dire does the wish for Type-assertion present self...; 
+		NOTE: reminder - a TYPE CONVERSION IS ESSENTIAL! Similiarly, the ability to control the precise type-functions for in-/out- of a given class/type method..; The type structure ought to be separate from the Class structure, yet be capable of working with it..; 
 
 	7.29. Uniting 'macros' and types: 
 
