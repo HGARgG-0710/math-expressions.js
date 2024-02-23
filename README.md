@@ -47,12 +47,8 @@ Install math-expressions.js using npm:
 ## Documentation
 
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
-<!-- TODO: apart from the Wiki, add a separate page with 'Current Problems (are to get solved in future releases)' -->
-
-(Presently absent)
-[Wikis on GitHub repo](https://github.com/HGARgG-0710/math-expressions.js/wiki)
-
-The library also supports basic in-editor JSDoc documentation (as of present - yet undone).
+For now, the package lacks documentation. 
+When the API somewhat stabilizes, it will be added to the project's repository's Wiki. 
 
 ## Source
 
@@ -76,15 +72,13 @@ A brief repository organization guide:
             -   variables.mjs - various
         -   macros.mjs - module which provides exported macros (and which are also extensively used by the rest of the package's code)
     -   test.mjs (file that executes the 'test's in a certain given order; based upon a local file ignored by the 'git')
--   tests/\* - the tests' directory, within which for each and every abstraction and definition of the library has a test (thematically ordered, some are identical to the source files' names); If you find documentation absent/confusing, this may be the place to check out for further explanation.
+-   tests/\* - the tests' directory, within which for each and every abstraction and definition of the library has a test (thematically ordered, some are identical to the source files' names); 
 -   README.md - this file
 -   LICENSE - the MIT license
 -   todos.txt - text file with unfinished 'TODO's of more general nature
 -   package.json - the JSON file with information needed by the npm
 -   entities.txt - text file with library entities (possibly temporary)
 -   currtodo.txt - file with currently considered development problems of the project (temporary)
-
-For examples of library's usage, one may want to see the 'tests' directory or the documentation.
 
 ## Modules
 
@@ -94,7 +88,7 @@ The package uses ES modules.
 
 ## Current Status
 
-Testing, documentation of v1.0alpha.
+Testing of v1.0alpha.
 
 The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...).
 

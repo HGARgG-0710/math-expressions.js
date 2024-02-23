@@ -9,34 +9,32 @@ List of files in 'tests/', that have been successfully run;
 6. number.mjs
 7. InfiniteCounter.mjs
 8. Pointer.mjs
-9. garrays.mjs [mostly, still need UnlimitedString and TypedArray]; 
+9. garrays.mjs
 10. uset.mjs [complete the running - 1 class completed (general)]
 11. typeConst.mjs
 12. umap.mjs [complete the running - 1 class completed (general)]
 13. ustr.mjs
-14. numbers.mjs [In progress - TrueInteger down]; 
+14. numbers.mjs; 
+15. numeric.mjs
 
 Left to test (arbitrary order): 
 
-1. numeric.mjs
-2. string.mjs
-3. orders.mjs
-4. variables.mjs
-5. aliases.mjs
-6. predicates.mjs
-7. integer.mjs
-8. algarray.mjs
-9. mdarrsearch.mjs
-10. structure.mjs
-11. Stack.mjs
-12. sort.mjs
-13. search.mjs
-14. farey.mjs
-15. expressions.mjs
-16. Graph.mjs
-17. heaps.mjs
-18. BindableFunction.mjs
-19. TreeNode.mjs
-20. forms.mjs
-21. inf.mjs
-22. integrity.mjs
+1. string.mjs
+2. orders.mjs
+3. variables.mjs
+4. integer.mjs
+5. algarray.mjs
+6. mdarrsearch.mjs
+7. structure.mjs
+8. Stack.mjs
+9. sort.mjs
+10. search.mjs
+11. farey.mjs
+12. expressions.mjs
+13. Graph.mjs
+14. heaps.mjs
+15. BindableFunction.mjs
+16. TreeNode.mjs
+17. forms.mjs
+18. inf.mjs
+19. integrity.mjs

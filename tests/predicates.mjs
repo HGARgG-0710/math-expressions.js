@@ -1,1 +1,0 @@
-// * Test of the contents of the 'predicates.mjs' file

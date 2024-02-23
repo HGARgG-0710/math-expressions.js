@@ -82,7 +82,7 @@ tmc(tintclasses.keys(), (i) => {
 						tintclass.static.fromNumber(1),
 						tintclass.static.fromNumber(-2),
 						!instance.equal(instance.zero()) ? instance : instance.add()
-					],
+					].map((x) => [x]),
 					[[]],
 					[[]],
 					[[]],

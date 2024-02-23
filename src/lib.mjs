@@ -2136,37 +2136,45 @@ export const defaultAlphabet = VARIABLE(
 )
 
 export const polystring = TEMPLATE({
-	defaults: {
-		alphabet: defaultAlphabet.get,
-		ustrclass: general.DEFAULT_USTRCLASS,
-		tintclass: general.DEFAULT_TINTCLASS,
-		icclass: general.DEFAULT_ICCLASS
-	},
-	function: _FUNCTION(function (counter = this.template.icclass.class()) {
-		const converted = this.template.tintclass.fromCounter(
-			this.template.alphabet.length().get()
-		)
-
-		let copy = counter.copy()
-		const representation = this.template.ustrclass.class()
-		const copyZero = copy.class.class()
-
-		for (
-			let index = this.template.icclass.static.zero();
-			greateroe(copy, copyZero);
-			index = next(index)
-		) {
-			const modulo = this.template.tintclass.static
-				.fromCounter(copy)
-				.modulo(
-					converted.power(this.template.tintclass.static.fromCounter(index))
-				)
-			representation.write(index, this.template.alphabet.read(modulo))
-			copy = copy.add(modulo.invadd())
+	defaults: [
+		function () {
+			return {
+				ustrclass: general.DEFAULT_USTRCLASS,
+				tintclass: general.DEFAULT_TINTCLASS,
+				icclass: general.DEFAULT_ICCLASS
+			}
+		},
+		function () {
+			return { alphabet: this.template.genarrclass.static.fromArray(["0", "1"]) }
+			// ! RETURN BACK LATER!
+			// return {
+			// 	alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
+			// }
 		}
+	],
+	function: alinative.function.const(
+		_FUNCTION(function (integer = this.template.tintclass.class()) {
+			// ! Explicit caching! bad
+			const convertedN = this.template.tintclass.static.fromCounter(
+				this.template.alphabet.length().get()
+			)
+			const representation = this.template.ustrclass.static.empty()
 
-		return representation
-	})
+			for (
+				let index = this.template.icclass.static.zero();
+				greater(integer, this.template.tintclass.static.zero());
+				index = next(index)
+			) {
+				const modulo = integer.modulo(convertedN)
+				representation.write(index, this.template.alphabet.read(modulo.value))
+				integer = integer.difference(modulo)
+				integer = integer.divide(convertedN)
+			}
+
+			return representation.reverse()
+		})
+	),
+	isthis: true
 }).function
 
 export const fromPolystring = TEMPLATE({
@@ -2177,25 +2185,31 @@ export const fromPolystring = TEMPLATE({
 			genarrclass: general.DEFAULT_GENARRCLASS
 		}),
 		_FUNCTION(function () {
-			return { alphabet: this.template.genarrclass.static.empty() }
+			return {
+				alphabet: this.template.genarrclass.static.fromArray(["0", "1"])
+			}
+			// ! RETURN BACK!
+			// return { alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get) }
 		})
 	],
 	function: alinative.function.const(
 		_FUNCTION(function (ustr = this.template.ustrclass.class()) {
-			const r = this.template.tintclass.class()
-			let i = ustr.init()
-			for (k of ustr.keys())
-				r.add(
-					this.tintclass.static
+			let r = this.template.tintclass.class()
+			// ! manual length-caching. bad;
+			const len = this.template.tintclass.static.fromCounter(
+				this.template.alphabet.length().get()
+			)
+			const uslenmone = ustr.length().get().previous()
+			for (const k of ustr.keys())
+				r = r.add(
+					this.template.tintclass.static
 						.fromCounter(this.template.alphabet.firstIndex(ustr.read(k)))
 						.multiply(
-							this.template.tintclass.static
-								.fromCounter(k)
-								.power(
-									this.template.tintclass.static
-										.fromCounter(ustr.length().get())
-										.difference(i)
+							len.power(
+								this.template.tintclass.static.fromCounter(
+									uslenmone.jumpReverse(k)
 								)
+							)
 						)
 				)
 			return r
@@ -2209,17 +2223,23 @@ export const fromPolystring = TEMPLATE({
 export const sameLength = TEMPLATE({
 	defaults: [
 		refactor.defaults.polyd1,
-		_FUNCTION(function () {
-			return { alphabet: this.template.genarrclass.static.empty() }
-		})
+		function () {
+			return {
+				alphabet: this.template.genarrclass.static.fromArray(["0", "1"])
+				// ! RETURN BACK LATER!
+				// alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
+			}
+		}
 	],
 	function: alinative.function.const(
 		_FUNCTION(function (strs = this.template.genarrclass.static.empty()) {
-			const endsize = (this.template.shrink ? min : max)().function(
-				strs.copy((str) => str.length().get())
-			)
-			for (const str of strs)
-				str.length().set(endsize, { basestr: this.template.alphabet.read() })
+			const copy = strs.copy((str) => str.length().get())
+			const endsize = (this.template.shrink ? min : max)().function(copy)
+			for (const str of strs) {
+				str.reverse()
+				str.length().set(endsize, this.template.alphabet.read())
+				str.reverse()
+			}
 			return endsize
 		})
 	),
@@ -2229,45 +2249,58 @@ export const sameLength = TEMPLATE({
 export const baseconvert = TEMPLATE({
 	defaults: [
 		refactor.defaults.polyd1,
-		_FUNCTION(function () {
+		function () {
 			return {
-				alphabetfrom: this.template.genarrclass.static.empty(),
-				alphabetto: this.template.genarrclass.static.empty(),
+				alphabetfrom: this.template.genarrclass.static.fromArray(["0", "1"]),
+				// ! return back!
+				// alphabetfrom: this.template.genarrclass.static.fromArray(
+				// 	defaultAlphabet.get
+				// ),
+				alphabetto: this.template.genarrclass.static.fromArray([
+					"0",
+					"1",
+					"2",
+					"3"
+				]),
 				empty: this.template.ustrclass.class()
 			}
-		})
+		}
 	],
-	function: _FUNCTION(function (numstr = this.tepmlate.empty) {
-		return polystring({
-			...this.template,
-			alphabet: this.template.alphabettos
-		}).function(
-			fromPolystring({
+	function: alinative.function.const(
+		_FUNCTION(function (numstr = this.template.empty) {
+			return polystring({
 				...this.template,
-				alphabet: this.template.alphabetfrom
-			}).function(numstr)
-		)
-	})
+				alphabet: this.template.alphabetto
+			}).function(
+				fromPolystring({
+					...this.template,
+					alphabet: this.template.alphabetfrom
+				}).function(numstr)
+			)
+		})
+	),
+	isthis: true
 }).function
 
+// ?[this doesn't use 'finite'? why?];
 export const ponative = {
 	// * Brings whatever is given within the given base to base 10;
 	fromPolystring: TEMPLATE({
 		defaults: {
-			alphabet: defaultAlphabet.get,
+			alphabet: /* defaultAlphabet.get */ ["0", "1"],
 			defstr: ""
 		},
 		function: _FUNCTION(function (nstr = this.template.defstr) {
-			return expressions.evaluate(
-				expressions.Expression(
+			return evaluate().function(
+				Expression(
 					"+",
 					[],
 					alarray.native
-						.generate(0, nstr.length)
+						.generate(0, nstr.length - 1)
 						.map(
 							(i) =>
 								this.template.alphabet.indexOf(nstr[i]) *
-								alphabet.length ** i
+								this.template.alphabet.length ** (nstr.length - 1 - i)
 						)
 				)
 			)
@@ -2277,19 +2310,18 @@ export const ponative = {
 	// * Brings whatever in base 10 to whatever in whatever base is given...
 	polystring: TEMPLATE({
 		defaults: {
-			alphabet: defaultAlphabet
+			alphabet: /* defaultAlphabet.get */ ["0", "1"]
 		},
 		function: _FUNCTION(function (n) {
 			const coefficients = []
 			const base = this.template.alphabet.length
-			let i = Math.floor(Math.log(n) / Math.log(base))
-			while (!refCompare(n, 0)) {
-				const k = (n - (n % base ** i)) / base ** i
-				n -= k * base ** i
-				coefficients[coefficients.length] = k
-				--i
+			for (let i = 0; n > 0; i++) {
+				coefficients.push(n % base)
+				n -= coefficients[coefficients.length - 1]
+				n /= base
 			}
 			return coefficients
+				.reverse()
 				.map(alinative.function.rindex(this.template.alphabet))
 				.join("")
 		})
@@ -2298,22 +2330,21 @@ export const ponative = {
 	// * Convert a numeric string in one base to a base string in another;
 	baseconvert: TEMPLATE({
 		defaults: {
-			alphabet: defaultAlphabet,
-			from: 2,
-			to: 16
+			alphabetto: defaultAlphabet.get,
+			alphabetfrom: ["0", "1"]
+			// alphabetfrom: defaultAlphabet.get,
 		},
 		function: _FUNCTION(function (
 			a,
 			basefrom = this.template.from,
 			baseto = this.template.to
 		) {
-			return native
-				.polystring({ alphabet: this.template.alphabet })
+			return ponative
+				.polystring({ alphabet: this.template.alphabetto })
 				.function(
-					native.fromPolystring({ alphabet: this.template.alphabet })(
-						a,
-						basefrom
-					),
+					ponative
+						.fromPolystring({ alphabet: this.template.alphabetfrom })
+						.function(a, basefrom),
 					baseto
 				)
 		})
@@ -3824,7 +3855,7 @@ export const countrecursive = TEMPLATE({
 					? expressions
 							.uevaluate()
 							.function(
-								expressions.Expression(
+								Expression(
 									"+",
 									[],
 									this.template.form.index(array).copy(this.function)
@@ -4251,7 +4282,7 @@ garrays.CommonArray = function (template = {}, garrtemplate = {}) {
 		}),
 		elem: _FUNCTION(function (arr) {
 			return arr
-				.array[arr.currindex.map(InfiniteCounter(addnumber(this.this.tepmlate))).value]
+				.array[arr.currindex.map(InfiniteCounter(addnumber(this.this.template))).value]
 		}),
 		isEnd: _FUNCTION(function (arr) {
 			return (
@@ -6220,8 +6251,8 @@ export const sort = {
 		) {
 			const polyconverted = garr
 				.copy(this.template.tintclass.static.fromCounter)
-				.map(numeric.toPolystring(this.template).function)
-			const maxsize = numeric.sameLength(this.template).function(polyconverted)
+				.map(toPolystring(this.template).function)
+			const maxsize = sameLength(this.template).function(polyconverted)
 			// ? Generalize the usage of 'refCompare' here?
 			const toorder = (ordered, i) =>
 				this.template.alphabet
@@ -6818,15 +6849,8 @@ export const integer = {
 			tintclass: general.DEFAULT_TINTCLASS
 		},
 		function: function (number = this.template.tintclass.class()) {
-			return expressions
-				.uevaluate()
-				.function(
-					expressions.Expression(
-						"+",
-						[],
-						integer.allFactors(this.template)(number)
-					)
-				)
+			return uevaluate()
+				.function(Expression("+", [], integer.allFactors(this.template)(number)))
 				.equal(number)
 		}
 	}).function,
@@ -6848,9 +6872,7 @@ export const integer = {
 			)
 				numbers.pushback(i)
 
-			return expressions
-				.uevaluate()
-				.function(expressions.Expression("*", [], numbers))
+			return expressions.uevaluate().function(Expression("*", [], numbers))
 		}
 	}).function,
 
@@ -6860,8 +6882,8 @@ export const integer = {
 		},
 		function: function (n, k) {
 			return (
-				expressions.uevaluate()(
-					expressions.Expression(
+				uevaluate().function(
+					Expression(
 						"*",
 						[],
 						array

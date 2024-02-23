@@ -1134,6 +1134,101 @@ It gets changed and revised actively.
 				This way, 'Infinity' would be the sort of 'limit point' of a counter.
 				One would also love to be giving the user the power of defining the value for Infinity to be arbitrary (templated, counter-dependent), 
 					so as to be capable of 'finitizing' (explicitly limiting) certain otherwise unlimited/potentially-infinite constructions; 
+
+	7.64. IDEA: Static-valued templates: 
+		
+		Effectively, they are a simplification of the TEMPLATE macro to the previous (initial) level of: 
+
+			{
+				template: {...}, 
+				function: function (...) {
+					// ... [Direct interaction with 'this.template...']; 
+				}
+			}
+		
+		But combined with a minor quirk - a singular copy of a function is used for them (shared), which is RE-BOUND accordingly 
+			(For this, create an implementation of a RebindableFunction class, which would be used by ALL instances of 'SharedTemplate' - the static-template) ; 
+		This could come in handy as a: 
+			
+			1. powerful memory-optimization of certain types-structures-implementations inside the library; 
+			2. application for a Re-conceptualization of a 'template' (example - when using templated Types, one stores the type ONCE, because that's how many there is of that type in copies, conceptually speaking, THEN - reuse it all around with a given template (to, say, find out, whether the given thing is of the type in question...)); 
+
+		Only times when it's NOT applicable are those requiring: 
+
+			1. Internal recursive scope-analysis of the function in question (it'll be too fluid); 
+			2. Instantiation of particulars (functions), ability to distinct between templates based solely on them...; 
+
+	7.65. IDEA: demolishing CLASSes, the '.is' and 'instanceof' for them: 
+
+		Currently, CLASSes lack usefulness, for: 
+
+			1. A lot of template-unrelated data gets copied EACH TIME one creates a class with new template (which can really be replaced with a Static-value (Shared) Templates - look above - with far greater efficiency); 
+			2. The '.is' does not work effectively for type-assertion (so, there's NO such thing as a 'pure Type' inside the library currently - there must be...); 
+			3. Classes serve n-o purpose whatsoever, save for means of storing semantically related methods (.static) and property-copying; 
+			4. The structures used for Objects-definitions within the library are poorly optimized...; 
+		
+		Another priority of the v1.1 would be getting rid of them; 
+	
+	7.66. Re-conceptualization of Objects in math-expressions.js v1.1: 
+
+		1. Use 'Map' instead of native JS 'Object'; 
+		2. Make them ALL Interfaces; 
+		3. [Consequent of 2., there's Interface.map] Principle of 'Every Object is a Class' - that is, the object in question can *ALWAYS* be copied as-is, and modified after (hence, the far more 'classic' OOP object-instantiation); 
+		4. NO-MORE CLASSES! From now on, only types; 
+		5. INTRODUCE PRIVATE PROPERTIES! 
+			Things such as 'Type-Identifier' (the object used for identification of that particular class), MUST be private, 
+				also - the 'Type.is(...)' function is an UnBindable (see 9.67), so that there's a way to ensure the type's consistency;
+			Generally, the properites divide onto 'public' and 'private', none others; 
+			IDEA: introduce a type specifically for property-identifiers; 
+		6. Introduce constants (unchangeable variables)
+	
+	7.67. IDEA: UnBindable functions - they are those, that are permanently bound to a given spot and CANNOT BE rebound again; 
+
+		This can be done in 2 ways at least in JS (see which one fits better): 
+
+			1. f.bind() for a 'regular' JS function - creates a bound function that cannot be re-bound; 
+			2. Is:
+
+				UnBindable = function (f, scope) {
+					return function (...args) {
+						f.call(scope, ...args)
+					}
+				}
+			
+			The second one is more general, and works with library's other function-classes...; 
+	
+	7.68. Library restructuring. 
+
+		The old modules set for the library no longer does the job. Outline of the previous notes: 
+
+			Remove: 
+
+				- macros.mjs
+				- ?predicates.mjs [merge with aliases.mjs]
+				- ?aliases.mjs [merge with predicates.mjs]
+
+			Add: 
+
+				- typesystems.mjs (might potentially become an independent package, if large enough...); 
+				- function.mjs (for functions-related things - function classes such as BindableFunction, and so forth...); 
+				- object.mjs (for the library's Object class [NAME IT DIFFERENTLY, SO AS TO AVOID COLLISION WITH NATIVE JS!]); 
+				- type.mjs (for the Type definition); 
+				- interface.mjs (for the Interface definition);
+				- ?types/ (instead of the 'types.mjs', one creates this - a directory with each one definition separate... Also, many of the things from the v1.0alpha go here - altered/unaltered...); 
+
+			Extend+Restructure: 
+
+				- types.mjs (immensely so, possibly - decompose it? Too large a file... Yes, decompose); 
+				- lib.mjs (using 'await import' and async functions, one fixes the need for this...); 
+			
+	7.69. IDEA: array representations for finite types; 
+
+		Simple - effectively, they are types 'X', such that there's a set 'S_X' that: 'forall t: X.is(t) <-> S_X.has(t)'; 
+		An alternative is also using the 'finiteCounters'...; 
+		Just a mean for intuitive construction of finite types; 
+
+		GENERALLY - allow for arbitrary predicate-based types (instead of ones that are 'memory-allocation'-based (which is just a special case)); 
+		They would allow for functionality that the Classes sought (and failed) to provide, and that the '{}'-allocation can't. 
 					
 8. List of general methods to be present within v1.1: 
 
@@ -1145,3 +1240,6 @@ It gets changed and revised actively.
 			Either a new one is created (once a thing has been edited), or it is only referenced in non-changing cases... (CREATE MEANS OF TRACKING CHANGE IN A DIFFERENT OBJECT - IF AN OBJECT HAS BEEN CHANGED, THEN ALL OF ITS 'DEPENDEES ARE CHANGED AS WELL!'); 
 		3. Pair-s, Triple-s, N-Tuples: a set of abstractions' definitions for representations of arrays of static (statically known) length; 
 		4. '.equal()' on EVERY class - not only just the InfiniteCounters, and number classes, collections as well - GeneralArray, UnlimitedString, ...; Due to its lacking, becomes more difficult to compare arrays directly (no alias...); 
+
+9. Sketch-list of things to generalize (a reminder for v1.1): 
+	9.1. Forms, Vector, Expression, FunctionCall, Pointer, GENERATOR <- Interface; 

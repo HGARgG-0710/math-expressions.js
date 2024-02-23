@@ -1,3 +1,0 @@
-The file with currently sought expressions for fixing/replacement... [walk-throughs the code...]
-
-1. property: (replace all the appropriate function calls with it...); 

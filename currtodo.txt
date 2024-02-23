@@ -18,10 +18,9 @@ This file contains currently pursued short-term TODOs and self-created tasks for
 		Also - the way that the final NPM package gets assembled (via 'npm pack') - check that it's possible to import it via the 'node_modules' (one of the previous versions was extremely poorly tested in this particular regard, so from now on one does this for every single package...); 
 		CHECK THAT IT'S USABLE WITH DENO!!!
 
-2. Documentation: 	
+2. Documentation [for v1.1.]: 	
 	There are two versions - one for the 'GitHub Wiki' (after making the repository public again), another - the in-editor (it contains references to the full GitHub wiki docs + short introductory descriptions) kind. 
-
-	NOTE: base the GitHub documentation on the tests that are present + actively employ the 'entities.txt' list; 
+	NOTE: base the GitHub documentation on the tests, be thorough;
 
 3. Extension of package domains: 
 
