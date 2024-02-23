@@ -7024,7 +7024,7 @@ export const alnumber = {
 			endRatio = this.template.tratioclass.class(),
 			iterations = this.template.icclass.class()
 		) {
-			const gotten = this.template.genarrclass.fromArray([
+			const gotten = this.template.genarrclass.static.fromArray([
 				this.template.genarrclass.static.fromArray([startRatio, endRatio])
 			])
 			for (
@@ -7032,14 +7032,20 @@ export const alnumber = {
 				lesser(i, iterations);
 				i = next(i)
 			) {
+				console.log("\n\ni:")
+				console.log(i.value)
+				console.log("\n")
 				gotten.pushback(this.template.genarrclass.static.empty())
 				for (
 					let j = this.template.icclass.class();
 					lesser(j, gotten.read(i).length().get());
 					j = next(j)
 				) {
+					console.log("j:")
+					console.log(j.value)
+					console.log()
 					gotten.read(next(i)).pushback(gotten.read(i).read(j))
-					if (lesser(j, previous(gotten.read(i).length().get())))
+					if (lesser(j, gotten.read(i).finish()))
 						gotten.read(next(i)).pushback(
 							gotten
 								.read(i)

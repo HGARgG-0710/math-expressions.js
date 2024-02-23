@@ -16,6 +16,7 @@ List of files in 'tests/', that have been successfully run;
 13. ustr.mjs
 14. numbers.mjs; 
 15. numeric.mjs
+16. farey.mjs
 
 Left to test (arbitrary order): 
 
@@ -29,12 +30,11 @@ Left to test (arbitrary order):
 8. Stack.mjs
 9. sort.mjs
 10. search.mjs
-11. farey.mjs
-12. expressions.mjs
-13. Graph.mjs
-14. heaps.mjs
-15. BindableFunction.mjs
-16. TreeNode.mjs
-17. forms.mjs
-18. inf.mjs
-19. integrity.mjs
+11. expressions.mjs
+12. Graph.mjs
+13. heaps.mjs
+14. BindableFunction.mjs
+15. TreeNode.mjs
+16. forms.mjs
+17. inf.mjs
+18. integrity.mjs

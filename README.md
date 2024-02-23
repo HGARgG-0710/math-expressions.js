@@ -47,8 +47,9 @@ Install math-expressions.js using npm:
 ## Documentation
 
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
-For now, the package lacks documentation. 
-When the API somewhat stabilizes, it will be added to the project's repository's Wiki. 
+<!-- todo: MOST BASIC DOCS! -->
+For now, the package lacks coherent and strict documentation, however, most basic 
+When the API somewhat stabilizes, the project's repository's Wiki will be altered accordingly. 
 
 ## Source
 
@@ -82,7 +83,7 @@ A brief repository organization guide:
 
 ## Modules
 
-The package uses ES modules.
+For now, the package only works with ES modules.
 
 <!-- TODO: add support for CommonJS modules - after testing, compile to CJS with tsc and add the appropriate 'export-require' fields into the 'package.json' file, decide which extensions one'd rather use... -->
 

@@ -1229,6 +1229,17 @@ It gets changed and revised actively.
 
 		GENERALLY - allow for arbitrary predicate-based types (instead of ones that are 'memory-allocation'-based (which is just a special case)); 
 		They would allow for functionality that the Classes sought (and failed) to provide, and that the '{}'-allocation can't. 
+	
+	7.70. Counter re-conceptualization: 
+
+		They will include: 	
+
+			1. 'comparisons' - these will NO LONGER be attached to InfiniteCounter-s;
+			2. range+directions - generalization of the 2-case function-inverse (sometimes, one may want more than one inverse for more elaborate orders, create such examples, their implementations...); 
+			3. counter-cache - cache with all the computed values of a counter, used only if no Pool is provided; 
+			4. pool-pointer - could be Null, pointer to a single memory Pool; 
+		
+		Also, it'll be possible to easily construct counters using Sets (instead of writing a 'range'-functions, just give values for it in a set); 
 					
 8. List of general methods to be present within v1.1: 
 
