@@ -1328,11 +1328,13 @@ export const alarray = {
 					? (inds) => lesser(inds.length().get(), haltAfter)
 					: TRUTH
 				let currind = search.linear(this.template).function(el, arr)
+				let c = arr.init()
 				while (!refCompare(currind, this.template.unfound) && cond(inds)) {
-					inds.pushback(currind)
+					inds.pushback(currind.jumpDirection(c))
 					currind = search
 						.linear(this.template)
 						.function(el, arr.delete(currind))
+					c = next(c)
 				}
 				return inds
 			})
@@ -3005,91 +3007,6 @@ export const finiteCounter = (() => {
 	}).function
 })()
 
-export const linear = TEMPLATE({
-	defaults: {
-		reflexive: true
-	},
-	function: _FUNCTION(function (
-		array = this.template.genarrclass.static.empty(),
-		reflexive = this.template.reflexive
-	) {
-		// ^ NOTE: these can be easily generalized...
-		return reflexive
-			? (a, b) => lesseroe(...[a, b].map(array.firstIndex))
-			: (a, b) => lesser(...[a, b].map(array.firstIndex))
-	})
-}).function
-
-// "fixes" a linear order, by means of excluding all the repeating elements from it...
-// ? DOESN'T THIS JUST GET RID OF REPETITIONS??? [pray consider, whether to do something about it - ensureSet, fixLinear and algorithms.array.norepetitions seem all to do the exactly same thing, even though for different purposes...];
-// ^ IDEA: a method for deleting (n>1)th appearences of any item (either particularly given, or arbitrary belonging to the initial structure) in forms (generalization of the 'ensureSet' in regard to recursive structures);
-// * Currently, in plans, to generalize the 'norepetions' to include ensureSet and fixLinear, then re-do those as aliases of 'norepetitions'...
-export const fixLinear = TEMPLATE({
-	defaults: {
-		genarrclass: general.DEFAULT_GENARRCLASS
-	},
-	function: _FUNCTION(function (array = this.template.genarrclass.static.empty()) {
-		const copy = array.copy()
-		for (let i = copy.init(); lesser(i, copy.length().get()); i = next(i)) {
-			const x = copy.copied("slice", [next(i)])
-			while (x.includes(copy.read(i)))
-				copy.slice(undefined, next(i)).concat(x.delval(copy.read(i)))
-		}
-		return copy
-	})
-}).function
-
-export const nonlinear = TEMPLATE({
-	defaults: {
-		reflexive: true
-	},
-	function: _FUNCTION(function (
-		array = this.template.genarrclass.static.empty(),
-		reflexive = this.template.reflexive
-	) {
-		const f = reflexive ? lesseroe : lesser
-		return (a, b) => {
-			const binds = array.indexes(b)
-			return array.indexes(a).every((x) => binds.every((y) => f(x, y)))
-		}
-	})
-}).function
-
-// ! ISSUEEEEEE: this doesn't work with native JS arrays yet it is called with them. WHAT-TO-DO? WHAT-USAGE-WAS-EVEN-INTENDED? [idea 1 for resolution: use the 'CommonArray()' as the target form for the present special case of the recursiveCounter... instead...];
-export const most = TEMPLATE({
-	defaults: {
-		genarrclass: general.DEFAULT_GENARRCLASS
-	},
-	function: _FUNCTION(function (
-		garr = this.template.genarrclass.static.empty(),
-		comparison = this.template.comparison
-	) {
-		let most = garr.read()
-		for (const x of garr) if (comparison(x, most)) most = x
-		return most
-	})
-}).function
-
-// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
-export function min(template = {}) {
-	return most({
-		comparison: lesser,
-		...template
-	})
-}
-export function max(template = {}) {
-	return most({
-		comparison: greater,
-		...template
-	})
-}
-
-// * Constructs an infinte order from given Infinite Counter class;
-export function ofromIcc(icclass = general.DEFAULT_ICCLASS, reflexive = true) {
-	const f = reflexive ? lesseroe : lesser
-	return (x, y) => f(icclass.class(x), icclass.class(y))
-}
-
 // ? 'Ensurer' somehow feels like a bit of a hack (largely, because it makes necessery the addition of the list of methods to be checked... See if want to do anything about it.)
 export const Ensurer = (_class, predicate = T, responses = {}) => {
 	const X = {}
@@ -3968,6 +3885,95 @@ export const garrays = {
 }
 
 general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
+
+// ? Suggestion: connect the constructed orders with domains on which they are defined by the user? Generally, create a type of Order?
+export const linear = TEMPLATE({
+	defaults: {
+		reflexive: true,
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: _FUNCTION(function (
+		array = this.template.genarrclass.static.empty(),
+		reflexive = this.template.reflexive
+	) {
+		// ^ NOTE: these can be easily generalized...
+		const f = reflexive ? lesseroe : lesser
+		return (a, b) => f(...[a, b].map((x) => array.firstIndex(x)))
+	})
+}).function
+
+// "fixes" a linear order, by means of excluding all the repeating elements from it...
+// ? DOESN'T THIS JUST GET RID OF REPETITIONS??? [pray consider, whether to do something about it - ensureSet, fixLinear and algorithms.array.norepetitions seem all to do the exactly same thing, even though for different purposes...];
+// ^ IDEA: a method for deleting (n>1)th appearences of any item (either particularly given, or arbitrary belonging to the initial structure) in forms (generalization of the 'ensureSet' in regard to recursive structures);
+// * Currently, in plans, to generalize the 'norepetions' to include ensureSet and fixLinear, then re-do those as aliases of 'norepetitions'...
+export const fixLinear = TEMPLATE({
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: _FUNCTION(function (array = this.template.genarrclass.static.empty()) {
+		const copy = array.copy()
+		for (let i = copy.init(); lesser(i, copy.length().get()); i = next(i)) {
+			const x = copy.copied("slice", [next(i)])
+			while (x.includes(copy.read(i)))
+				copy.slice(undefined, i).concat(x.delval(copy.read(i)))
+		}
+		return copy
+	})
+}).function
+
+// ? check if this describes all possible nonlinear relationships on Z! If not, add more stuff to the 'orders' module...;
+export const nonlinear = TEMPLATE({
+	defaults: {
+		reflexive: true,
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: _FUNCTION(function (
+		array = this.template.genarrclass.static.empty(),
+		reflexive = this.template.reflexive
+	) {
+		const f = reflexive ? lesseroe : lesser
+		return (a, b) => {
+			const binds = array.indexesOf(b)
+			return array.indexesOf(a).every((x) => binds.every((y) => f(x, y)))
+		}
+	})
+}).function
+
+// ! ISSUEEEEEE: this doesn't work with native JS arrays yet it is called with them. WHAT-TO-DO? WHAT-USAGE-WAS-EVEN-INTENDED? [idea 1 for resolution: use the 'CommonArray()' as the target form for the present special case of the recursiveCounter... instead...];
+export const most = TEMPLATE({
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS,
+		comparison: general.DEFAULT_COMPARISON
+	},
+	function: _FUNCTION(function (
+		garr = this.template.genarrclass.static.empty(),
+		comparison = this.template.comparison
+	) {
+		let most = garr.read()
+		for (const x of garr) if (comparison(x, most)) most = x
+		return most
+	})
+}).function
+
+// * For the 'min'/'max' of a lineraly ordered set of InfiniteCounters;
+export function min(template = {}) {
+	return most({
+		comparison: lesser,
+		...template
+	})
+}
+export function max(template = {}) {
+	return most({
+		comparison: greater,
+		...template
+	})
+}
+
+// * Constructs an infinte order from given Infinite Counter class;
+export function ofromIcc(icclass = general.DEFAULT_ICCLASS, reflexive = true) {
+	const f = reflexive ? lesseroe : lesser
+	return (x, y) => f(icclass.class(x), icclass.class(y))
+}
 
 export const dim = TEMPLATE({
 	defaults: {
@@ -7032,18 +7038,12 @@ export const alnumber = {
 				lesser(i, iterations);
 				i = next(i)
 			) {
-				console.log("\n\ni:")
-				console.log(i.value)
-				console.log("\n")
 				gotten.pushback(this.template.genarrclass.static.empty())
 				for (
 					let j = this.template.icclass.class();
 					lesser(j, gotten.read(i).length().get());
 					j = next(j)
 				) {
-					console.log("j:")
-					console.log(j.value)
-					console.log()
 					gotten.read(next(i)).pushback(gotten.read(i).read(j))
 					if (lesser(j, gotten.read(i).finish()))
 						gotten.read(next(i)).pushback(

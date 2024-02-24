@@ -1204,8 +1204,8 @@ It gets changed and revised actively.
 			Remove: 
 
 				- macros.mjs
-				- ?predicates.mjs [merge with aliases.mjs]
-				- ?aliases.mjs [merge with predicates.mjs]
+				- ?predicates.mjs [merge with aliases.mjs, or redo completely]
+				- ?aliases.mjs [merge with predicates.mjs, or redo completely using 'typesystems']
 
 			Add: 
 
@@ -1214,12 +1214,13 @@ It gets changed and revised actively.
 				- object.mjs (for the library's Object class [NAME IT DIFFERENTLY, SO AS TO AVOID COLLISION WITH NATIVE JS!]); 
 				- type.mjs (for the Type definition); 
 				- interface.mjs (for the Interface definition);
+				- types/order.mjs (module for working with order type and according functions)
 				- ?types/ (instead of the 'types.mjs', one creates this - a directory with each one definition separate... Also, many of the things from the v1.0alpha go here - altered/unaltered...); 
 
 			Extend+Restructure: 
 
 				- types.mjs (immensely so, possibly - decompose it? Too large a file... Yes, decompose); 
-				- lib.mjs (using 'await import' and async functions, one fixes the need for this...); 
+				- lib.mjs (using 'await import' and async functions, one fixes the need for this, re-modularizes the whole thing again...); 	
 			
 	7.69. IDEA: array representations for finite types; 
 
@@ -1240,6 +1241,13 @@ It gets changed and revised actively.
 			4. pool-pointer - could be Null, pointer to a single memory Pool; 
 		
 		Also, it'll be possible to easily construct counters using Sets (instead of writing a 'range'-functions, just give values for it in a set); 
+	
+	7.71. IDEA: introduce more definition types; 
+
+		They are (effectively) things like Order(s) (predicates constructed in a certain fashion, that have a domain attached), 
+			Predicates (n-variable functions into the {0, 1} set), other stuff. 
+		See what exactly does one desire to be adding a separate type for...; 
+		
 					
 8. List of general methods to be present within v1.1: 
 
