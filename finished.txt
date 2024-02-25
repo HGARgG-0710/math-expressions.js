@@ -18,23 +18,23 @@ List of files in 'tests/', that have been successfully run;
 15. numeric.mjs
 16. farey.mjs
 17. orders.mjs
+18. string.mjs
 
 Left to test (arbitrary order): 
 
-1. string.mjs
-2. variables.mjs
-3. integer.mjs
-4. algarray.mjs
-5. mdarrsearch.mjs
-6. structure.mjs
-7. Stack.mjs
-8. sort.mjs
-9. search.mjs
-10. expressions.mjs
-11. Graph.mjs
-12. heaps.mjs
-13. BindableFunction.mjs
-14. TreeNode.mjs
-15. forms.mjs
-16. inf.mjs
-17. integrity.mjs
+1. variables.mjs
+2. integer.mjs
+3. algarray.mjs
+4. mdarrsearch.mjs
+5. structure.mjs
+6. Stack.mjs
+7. sort.mjs
+8. search.mjs
+9. expressions.mjs
+10. Graph.mjs
+11. heaps.mjs
+12. BindableFunction.mjs
+13. TreeNode.mjs
+14. forms.mjs
+15. inf.mjs
+16. integrity.mjs

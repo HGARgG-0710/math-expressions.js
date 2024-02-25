@@ -10,7 +10,7 @@ const toencirc = [1234, "Sigmund", false, true]
 const toencircl = ["ppparrrrr", true, 1095554, 11, aliases.sym("jjj"), {}, [], [34455]]
 const n = ["f34", "eedd", "ffda", "kp", "ffda", false, null, undefined]
 
-formatOut(undefined, [
+formatOut("", [
 	() => {
 		test(array.replace.replaceIndex, [arr, 3, "Wonder what it's like out there?"])
 		test(array.replace.replaceIndex, [arr, 0, "Wonder what it's like out there?"])
@@ -20,14 +20,12 @@ formatOut(undefined, [
 		test(array.replace.replaceIndexes, [arr, false, true])
 	},
 	() =>
-		test(array.replace.replaceArr, [
+		test(array.replace.replacePredicate, [
 			arr,
 			(x) => arr.includes(x) && x !== false,
 			aliases.native.function.const(42)
 		]),
-
 	() => test(array.replace.replaceIndexesMult, [arr, [2, 3], ["100", {}]]),
-
 	() => test(array.replace.replaceMany, [arr, [true, false, 334], [0, 1, 12]]),
 	() => {
 		test(array.arrEncircle, [toencirc, 1, 2])

@@ -782,7 +782,8 @@ export const finite = TEMPLATE({
 	defaults: {
 		definseq: [false],
 		defout: false,
-		integer: false
+		integer: false,
+		inarr: false
 	},
 	function: _FUNCTION(function (
 		f,
@@ -807,7 +808,7 @@ export const finite = TEMPLATE({
 			.wrapper({
 				out: tout(out),
 				in: is.arr(inseq) ? inseq.map(tin) : tin(inseq),
-				inarr: true
+				inarr: this.template.inarr
 			})
 			.function(f)
 	})
@@ -1479,7 +1480,7 @@ export const alarray = {
 		) {
 			const farr = array.empty()
 			let prev = array.init()
-			for (let x = array.one(); lesser(x, array.length().get()); ) {
+			for (let x = array.init(); lesser(x, array.length().get()); ) {
 				if (this.template.comparison(separator, array.read(x))) {
 					farr.pushback(array.copied("slice", [prev, x.previous()]))
 					x = next(x)
@@ -1488,6 +1489,7 @@ export const alarray = {
 				}
 				x = next(x)
 			}
+			farr.pushback(array.copied("slice", [prev]))
 			return farr
 		})
 	}).function
@@ -1958,7 +1960,7 @@ export const naarray = {
 				.map((seg, i, r) =>
 					(refCompare(i, r.length - 1)
 						? ID
-						: (t) => t.concat([indexes.has(i) ? y : x]))(seg)
+						: (t) => t.concat([indexes.has(i) ? y : x]))(seg.array)
 				)
 				.flat()
 		},
@@ -1971,7 +1973,7 @@ export const naarray = {
 		// TODO [for the future] - develop (far more largely) the usage and immidiate construction of predicates (example [from which to make special cases]: (predicate) => (x) => (y) => predicate(x, y))
 		// ! In particular, add more generality to methods and base most the things (especially the searching operations and such) on the predicates instead of particular values/keys and so on...; Replace the '.comparisons' in this matter...;
 		// * Replaces values within an array and returns the obtained copy...
-		replaceArr: function (array, p, transformation = ID) {
+		replacePredicate: function (array, p, transformation = ID) {
 			const resArray = copy.flatCopy(array)
 			for (let i = 0; i < array.length; ++i)
 				if (p(array[i])) resArray[i] = transformation(array[i])
@@ -1980,9 +1982,8 @@ export const naarray = {
 	},
 
 	keys(array = []) {
-		const keys = array.keys()
 		const fk = []
-		for (const k of keys) fk[fk.length] = k
+		for (const k of array.keys()) fk[fk.length] = k
 		return fk
 	},
 
@@ -2026,7 +2027,7 @@ export const naarray = {
 	// ! This can be optimized [repeated 'evaluate()'];
 	arrEncircleMult(arr = [], coors = []) {
 		return stnative.repeatedApplication(copy.flatCopy(arr), coors.length, (r, i) =>
-			this.arrEncircle(
+			naarray.arrEncircle(
 				r,
 				...coors[i].map(
 					(x) =>
@@ -2059,6 +2060,7 @@ export const naarray = {
 	}).function
 }
 
+// ! BUG ! with using the 'strmethod' representation - due to the fcact that strings are transformed to arrays symbol-by-symbol, it's impossible to do things like 'replaceIndexes(str, "..." [more than 1], "..." (any length))'; with accent being on the search string's length; THIS MUST BE FIXED!
 export const string = {
 	strmethod: alinative.function.wrapper({
 		in: [alinative.string.stoa],
@@ -4281,21 +4283,22 @@ garrays.CommonArray = function (template = {}, garrtemplate = {}) {
 	const T = { offset: 0, ...template }
 	return GeneralArray({
 		this: { template: T },
-		newvalue: _FUNCTION(function (arr, value) {
+		newvalue: function (arr, value) {
 			return (arr.array[
 				arr.currindex.map(InfiniteCounter(addnumber(this.this.template))).value
 			] = value)
-		}),
-		elem: _FUNCTION(function (arr) {
-			return arr
-				.array[arr.currindex.map(InfiniteCounter(addnumber(this.this.template))).value]
-		}),
-		isEnd: _FUNCTION(function (arr) {
+		},
+		elem: function (arr) {
+			return arr.array[
+				arr.currindex.map(InfiniteCounter(addnumber(this.this.template))).value
+			]
+		},
+		isEnd: function (arr) {
 			return (
 				arr.array.length <=
 				arr.currindex.map(InfiniteCounter(addnumber(this.this.template))).value
 			)
-		}),
+		},
 		icclass: InfiniteCounter(addnumber(T)),
 		...garrtemplate
 	})
