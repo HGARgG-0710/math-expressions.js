@@ -4,6 +4,7 @@ export const {
 	fix,
 	StaticThisTransform,
 	recursiveOperation,
+	recursiveGeneral, 
 	finiteobj,
 	DEFAULT_ICCLASS,
 	DEFAULT_GENARRCLASS,

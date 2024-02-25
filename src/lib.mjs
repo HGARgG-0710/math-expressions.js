@@ -668,6 +668,18 @@ export const general = {
 				: nullval
 		})
 	},
+	recursiveGeneral(opname, binaryver, nullval) {
+		return _FUNCTION(function (args) {
+			return greateroe(args.length().get(), args.two())
+				? binaryver(
+						args.read(),
+						this.get[opname](args.copied("slice", [args.one()]))
+				  )
+				: !args.isEmpty()
+				? args.read()
+				: nullval
+		})
+	},
 	finiteobj: function (
 		target = {},
 		names = [],
@@ -1269,7 +1281,7 @@ export const alarray = {
 					}
 					return ensureSet(inter)
 				}
-				return this.function(arrs[0], this.function(arrs.slice(1)))
+				return this.function(arrs[0], this.function(...arrs.slice(1)))
 			})
 		),
 		isthis: true
@@ -1450,7 +1462,9 @@ export const alarray = {
 			f: ID
 		},
 		function: _FUNCTION(function (...args) {
-			return array.intersection(this.template).function(args.map(this.template.f))
+			return alarray
+				.intersection(this.template)
+				.function(...args.map(this.template.f))
 		})
 	}).function,
 	concat: TEMPLATE({
@@ -2393,27 +2407,11 @@ export const deftable = RECURSIVE_VARIABLE({
 	"<<": general.recursiveOperation("<<", alinative.binary.lshift, 0),
 	"&": general.recursiveOperation("&", alinative.binary.and, 0),
 	"|": general.recursiveOperation("|", alinative.binary.or, 0),
+	// ! PROBLEM : this is bugged. What kind of a modulo does one want instead? [Suggestion - use a function for the argument of 'refursiveOperation']?
 	"%": general.recursiveOperation("%", alinative.binary.modulo, 1),
 	// ? Isn't this bugged? [Due to usage of 'dand' - see for oneself whether desired for rewriting...]
 	"&&": general.recursiveOperation("&&", alinative.binary.dand, false),
 	"||": general.recursiveOperation("||", alinative.binary.dor, false)
-})
-export const udeftable = RECURSIVE_VARIABLE({
-	"+": general.recursiveOperation("+", (a, b) => a.add(b)),
-	"-": _FUNCTION(function (...args) {
-		return this.get["+"](
-			...(args.length ? [args[0]].concat(args.slice(1).map((x) => x.invadd())) : [])
-		)
-	}),
-	// ! the '/' division must return a TrueRation-al value;
-	"#": _FUNCTION(function (...args) {
-		return (
-			args.length >= 2 ? (x) => x.divide(this.get["*"](...args.slice(1))) : ID
-		)(args[0])
-	}),
-	"*": general.recursiveOperation("*", (a, b) => a.multiply(b)),
-	"**": general.recursiveOperation("**", (a, b) => a.power(b)),
-	"%": general.recursiveOperation("%", (a, b) => a.modulo(b))
 })
 
 // % This is the 'expressions' main expression-evaluation function;
@@ -2435,24 +2433,6 @@ export const evaluate = TEMPLATE({
 export function Expression(operator = "", expressions = [], objects = []) {
 	return { operator, expressions, objects }
 }
-
-export const uevaluate = TEMPLATE({
-	defaults: {
-		deftable: udeftable
-	},
-	function: _FUNCTION(function (expression) {
-		if (
-			greateroe(
-				expression.expressions.class.parentclass.template.icclass.static.zero(),
-				expression.expressions.length().get()
-			)
-		)
-			return this.template.table.read(expression.operator)(
-				expression.expressions.map(this.function)
-			)
-		return this.template.table.read(expression.operator)(expression.objects)
-	})
-}).function
 
 // * Generalization of the 'Expression':
 export function composition(fcall) {
@@ -5294,6 +5274,63 @@ export const tnumbers = {
 general.DEFAULT_TINTCLASS = tnumbers.TrueInteger()
 general.DEFAULT_TRATIOCLASS = tnumbers.TrueRatio()
 
+export const udeftable = RECURSIVE_VARIABLE({
+	"+": general.recursiveGeneral(
+		"+",
+		(a, b) => a.add(b),
+		general.DEFAULT_TINTCLASS.static.zero()
+	),
+	"-": _FUNCTION(function (args) {
+		return this.get["+"](
+			...(greater(args.length().get(), args.init())
+				? [args.read()].concat(args.slice(args.one()).map((x) => x.invadd()))
+				: [])
+		)
+	}, general.DEFAULT_TINTCLASS.static.zero()),
+	// ! the '/' division must return a TrueRation-al value;
+	"#": _FUNCTION(function (args) {
+		return (
+			greateroe(args.length().get(), args.two())
+				? (x) => x.divide(this.get["*"](args.copied("slice", [args.one()])))
+				: ID
+		)(args[0])
+	}, general.DEFAULT_TINTCLASS.static.zero()),
+	"*": general.recursiveGeneral(
+		"*",
+		(a, b) => a.multiply(b),
+		general.DEFAULT_TINTCLASS.static.one()
+	),
+	"**": general.recursiveGeneral(
+		"**",
+		(a, b) => a.power(b),
+		general.DEFAULT_TINTCLASS.static.one()
+	),
+	// ! BUGGED! SAME PROBLEM AS WITH THE 'deftable...';
+	"%": general.recursiveGeneral(
+		"%",
+		(a, b) => a.modulo(b),
+		general.DEFAULT_TINTCLASS.static.one()
+	)
+})
+
+export const uevaluate = TEMPLATE({
+	defaults: {
+		table: udeftable.get
+	},
+	function: _FUNCTION(function (expression) {
+		if (
+			greater(
+				expression.expressions.length().get(),
+				expression.expressions.class.template.icclass.static.zero()
+			)
+		)
+			return this.template.table.read(expression.operator)(
+				expression.expressions.map(this.function)
+			)
+		return this.template.table[expression.operator](expression.objects)
+	})
+}).function
+
 // Utilizes the fact that JS passes objects by reference;
 export const Pointer = TEMPLATE({
 	defaults: { label: "", nullptr: undefined },
@@ -6308,7 +6345,7 @@ export const sort = {
 			for (const b of buckets.keys())
 				buckets.write(b, this.template.sortingf(buckets.read(b)))
 
-			return array.concat(this.template).function(buckets)
+			return alarray.concat(this.template).function(buckets)
 		}),
 		isthis: true
 	}).function,
@@ -6730,24 +6767,25 @@ export const integer = {
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (tint = this.template.tintclass.class()) {
-			const tintc = tint.copy()
 			const factors = this.template.genarrclass.class()
 			for (
 				let currDivisor = this.template.tintclass.static.two();
-				lesser(this.template.icclass.static.one(), tintc);
+				lesser(this.template.tintclass.static.one(), tint);
 				currDivisor = currDivisor.add(
-					this.template.icclass.static
+					this.template.tintclass.static
 						.two()
 						.difference(
-							currDivisor.equal(this.template.icclass.static.two())
-								? this.template.icclass.static.one()
-								: this.template.icclass.static.zero()
+							this.template.tintclass.static[
+								currDivisor.equal(this.template.tintclass.static.two())
+									? "one"
+									: "zero"
+							]()
 						)
 				)
 			) {
-				while (divides(number, currDivisor)) {
+				while (tint.modulo(currDivisor).equal(tint.zero())) {
 					factors.pushback(currDivisor)
-					tintc = tintc.divide(currDivisor)
+					tint = tint.divide(currDivisor)
 				}
 			}
 			return factors
@@ -6759,27 +6797,31 @@ export const integer = {
 			icclass: general.DEFAULT_ICCLASS
 		},
 		function: function (x) {
-			return greateroe(
-				this.template.icclass.static.two(),
-				integer.factorOut(this.template)(x).length().get()
+			return equal(
+				this.template.icclass.static.one(),
+				integer.factorOut(this.template).function(x).length().get()
 			)
 		}
 	}).function,
 
 	multiples: TEMPLATE({
-		defaults: { includezero: false },
+		defaults: {
+			includezero: false,
+			tintclass: general.DEFAULT_TINTCLAS,
+			step: general.DEFAULT_ICCLASS.static.one()
+		},
 		function: function (
 			n = this.template.tintclass.static.one(),
 			range = this.template.tintclass.static.one()
 		) {
 			return alarray
-				.generate(this.template)
+				.generate({ ...this.template, ic: false })
 				.function(
-					(this.template.includezero ? ID : next)(n.zero()).value,
+					(this.template.includezero ? ID : (x) => x.add())(n.zero()).value,
 					range.value,
 					this.template.step
 				)
-				.map((a) => this.template.tintclass.static.fromCounter(a).multiply(n))
+				.map((a) => this.template.tintclass.class(a).multiply(n))
 		}
 	}).function,
 
@@ -6791,23 +6833,25 @@ export const integer = {
 			n = this.template.tintclass.static.one(),
 			x = this.template.tintclass.static.one()
 		) {
-			return number.multiples(n, x.difference().divide(n))
+			return integer.multiples(this.template).function(n, x.difference().divide(n))
 		}
 	}).function,
 
 	lcm: TEMPLATE({
 		defaults: {},
 		function: function (...nums) {
-			return orders.min(this.template).function(integer.commonMultiples(...nums))
+			return min(this.template).function(
+				integer.commonMultiples(this.template).function(...nums)
+			)
 		}
 	}).function,
 
 	lcd: TEMPLATE({
 		defaults: {},
 		function: function (...nums) {
-			return orders
-				.min(this.template)
-				.function(integer.commonDivisors(this.template)(...nums))
+			return min(this.template).function(
+				integer.commonDivisors(this.template).function(...nums)
+			)
 		}
 	}).function,
 
@@ -6816,7 +6860,10 @@ export const integer = {
 			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (...tints) {
-			return integer.commonDivisors(this.template).function(tints).isEmpty()
+			return integer
+				.commonDivisors(this.template)
+				.function(...tints)
+				.isEmpty()
 		}
 	}).function,
 
@@ -6855,11 +6902,18 @@ export const integer = {
 
 	isPerfect: TEMPLATE({
 		defaults: {
-			tintclass: general.DEFAULT_TINTCLASS
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
 		function: function (number = this.template.tintclass.class()) {
 			return uevaluate()
-				.function(Expression("+", [], integer.allFactors(this.template)(number)))
+				.function(
+					Expression(
+						"+",
+						this.template.genarrclass.static.empty(),
+						integer.allFactors(this.template).function(number).delete()
+					)
+				)
 				.equal(number)
 		}
 	}).function,
@@ -6881,26 +6935,33 @@ export const integer = {
 			)
 				numbers.pushback(i)
 
-			return expressions.uevaluate().function(Expression("*", [], numbers))
+			return uevaluate().function(
+				Expression("*", this.template.genarrclass.static.empty(), numbers)
+			)
 		}
 	}).function,
 
 	binomial: TEMPLATE({
 		defaults: {
-			tintclass: general.DEFAULT_TINTCLASS
+			tintclass: general.DEFAULT_TINTCLASS,
+			genarrclass: general.DEFAULT_GENARRCLASS
 		},
-		function: function (n, k) {
-			return (
-				uevaluate().function(
+		function: function (n, k = this.template.tintclass.static.one()) {
+			return uevaluate()
+				.function(
 					Expression(
 						"*",
-						[],
-						array
-							.generate(this.template.tintclass.static.zero(), k.previous())
-							.map(n.difference)
+						this.template.genarrclass.static.empty(),
+						alarray
+							.generate(this.template)
+							.function(
+								this.template.tintclass.static.zero().value,
+								k.difference().value
+							)
+							.map((x) => n.difference(this.template.tintclass.class(x)))
 					)
-				) / this.factorial(k)
-			)
+				)
+				.divide(integer.factorial(this.template).function(k))
 		}
 	}).function,
 
@@ -6922,7 +6983,7 @@ export const integer = {
 					this.template.genarrclass.static.fromArray([endval])
 				])
 			const res = this.template.genarrclass.static.empty()
-			for (let i = minval; i < endval.difference(minval); i = i.add())
+			for (let i = minval; lesseroe(i, endval.difference(minval)); i = i.add())
 				for (const r of this.function(
 					endval.difference(i),
 					nterms.previous(),
@@ -6938,27 +6999,45 @@ export const integer = {
 	commonDivisors: TEMPLATE({
 		defaults: {},
 		function: function (...tints) {
-			return array
-				.common({ f: integer.factorOut, ...this.template })
-				.function(tints)
+			return alarray
+				.common({
+					f: integer.factorOut(this.template).function,
+					...this.template
+				})
+				.function(...tints)
 		}
 	}).function,
 
 	commonMultiples: TEMPLATE({
-		defaults: {},
+		defaults: {
+			// ? Increase? [the very first library's prototypes had it as 100...];
+			range: general.DEFAULT_TINTCLASS.static.fromNumber(10)
+		},
 		function: function (...nums) {
-			return array
+			return alarray
 				.common({
-					f: (x) => integer.native.multiples(x, this.template.range)
+					f: (x) =>
+						integer.multiples(this.template).function(x, this.template.range)
 				})
-				.function(nums)
+				.function(...nums)
 		}
 	}).function,
 
 	primesBefore: TEMPLATE({
-		defaults: { icclass: general.DEFAULT_ICCLASS },
+		defaults: {
+			icclass: general.DEFAULT_ICCLASS,
+			tintclass: general.DEFAULT_TINTCLASS
+		},
 		function: function (x = this.template.icclass.class()) {
-			return array.generate(this.template)(x).suchthat(integer.isPrime)
+			return alarray
+				.generate({ ...this.template, ic: false })
+				.function(x.previous())
+				.map((x) =>
+					this.template.tintclass.static.fromCounter(
+						this.template.icclass.class(x)
+					)
+				)
+				.suchthat(integer.isPrime(this.template).function)
 		}
 	}).function
 }
@@ -6971,7 +7050,7 @@ integer.native.commonDivisors = function (...nums) {
 integer.native.commonMultiples = TEMPLATE({
 	defaults: { range: 100 },
 	function: function (...nums) {
-		return array.native
+		return alarray.native
 			.common({ f: (x) => integer.native.multiples(x, this.template.range) })
 			.function(nums)
 	}

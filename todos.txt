@@ -1247,7 +1247,17 @@ It gets changed and revised actively.
 		They are (effectively) things like Order(s) (predicates constructed in a certain fashion, that have a domain attached), 
 			Predicates (n-variable functions into the {0, 1} set), other stuff. 
 		See what exactly does one desire to be adding a separate type for...; 
-		
+	
+	7.72. IDEA: use the Symbol.prototype.toPrimitive, 
+
+		To allow for a more natural mean of conversion between library and native JS types; 
+		So, instead of something like: 
+
+			InfiniteCounter(...).class(...).boolean()
+
+		One does: 
+
+			!!InfiniteCounter(...).class(...)
 					
 8. List of general methods to be present within v1.1: 
 
