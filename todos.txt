@@ -1172,7 +1172,16 @@ It gets changed and revised actively.
 	7.66. Re-conceptualization of Objects in math-expressions.js v1.1: 
 
 		1. Use 'Map' instead of native JS 'Object'; 
-		2. Make them ALL Interfaces; 
+			PROBLEM: 'Map' are still objects as-of-self, and in order for the functions to work with them as they did with 
+				Objects, they must treat 'Map' as an Object. Hence, a major restructuring of the way that the 'this' concept of objects is utilized must be performed: 
+
+					1. Instead of Object-'this'-based functions, make a ThisMethod type (inheriting from Method), that would pass the argument of a 'this' as the given function's first argument; 
+					2. This way, 'binding' it won't really be a thing, all that would be required is calling with a different argument - there would be the according '.bind' method (switches the value for '.this' that gets passed); 
+					3. The Method type would have the '.copy()' method for proper imitation of function copying; Problem is - the call of it's implementation would take up one stack frame (so, it's better suited for the Returnless version...);
+					4. 'binding' a method won't copy it anymore (so, one has to do 'const nm = method.copy().bind(newcontext)'); 
+					5. The 'set/get' methods and Interfaces' 'keylists' will be used instead of '[]/[]=' and particular property names; 
+
+		2. Turn them ALL into Interfaces; 
 		3. [Consequent of 2., there's Interface.map] Principle of 'Every Object is a Class' - that is, the object in question can *ALWAYS* be copied as-is, and modified after (hence, the far more 'classic' OOP object-instantiation); 
 		4. NO-MORE CLASSES! From now on, only types; 
 		5. INTRODUCE PRIVATE PROPERTIES! 

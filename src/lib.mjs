@@ -700,7 +700,10 @@ export const general = {
 							TEMPLATE({
 								defaults: ftemplates[x] || {
 									genarrclass: garrays.CommonArray(),
-									icclass: InfiniteCounter(addnumber())
+									icclass: InfiniteCounter(addnumber()),
+									tintclass: tnumbers.TrueInteger(
+										InfiniteCounter(addnumber())
+									)
 								},
 								function: f
 							}).function
@@ -714,7 +717,6 @@ export const general = {
 					insequences[x]
 				)(...args)
 			})
-
 		return newobj
 	},
 
@@ -803,19 +805,27 @@ export const finite = TEMPLATE({
 		inseq = this.template.definseq
 	) {
 		const fu = this.template.integer
-			? ID
-			: general.DEFAULT_TINTCLASS.static.fromCounter
+			? general.DEFAULT_TINTCLASS.static.fromCounter
+			: ID
 		// ? Does one want to save these somewhere additionally or simply keep here as-is? [may be useful for the user...];
 		const tin = (out) =>
-			refCompare(out, true)
-				? fu(alinative.number.fromNumber)
+			refCompare(out, -1)
+				? (x) =>
+						general.DEFAULT_TINTCLASS.static.fromCounter(
+							InfiniteCounter(addnumber()).class(x)
+						)
+				: refCompare(out, true)
+				? (x) => fu(InfiniteCounter(addnumber()).class(x))
 				: refCompare(out, false)
 				? garrays.CommonArray().class
 				: ID
 		const tout = (out) =>
-			out
-				? (x) => x.map(InfiniteCounter(addnumber()).class).value
-				: (x) => x.copied("switchclass", [garrays.CommonArray()]).array
+			refCompare(out, true)
+				? (x) => x && x.map(InfiniteCounter(addnumber())).value
+				: refCompare(out, false)
+				? (x) => x && x.copied("switchclass", [garrays.CommonArray()]).array
+				: ID
+
 		return alinative.function
 			.wrapper({
 				out: tout(out),
@@ -2439,7 +2449,7 @@ export function composition(fcall) {
 	return (...args) => {
 		return fcall.f(
 			...integer.native
-				.generate(native.number.max([fcall.functions.length, fcall.args.length]))
+				.generate(nanumber.max([fcall.functions.length, fcall.args.length]))
 				.map((x) => {
 					// ! PROBLEM - does ___not__ currently allow for things like: (a,b,c) => d(a, e(b, f, g(c))); Fix that...
 					// ^ IDEA [for a solution]: create a special Interface/signature for this with an array of GeneralArrays for setting (recursively) indexes to a given value from 'typeConst', other arguments get replaced with user's values (Pre-Calling); Then, one repeats the procedure of replacement, this time with the user's final arguments (the Final-Calling);
@@ -7061,6 +7071,7 @@ const methNames = [
 	"isPrime",
 	"multiples",
 	"multiplesBefore",
+	"primesBefore",
 	"lcm",
 	"lcd",
 	"areCoprime",
@@ -7070,7 +7081,6 @@ const methNames = [
 	"binomial",
 	"sumRepresentations"
 ]
-const mt = methNames.map(TRUTH)
 
 // ! PROBLEM: the '{integer: true}' here. IT MUST BE ASSIGNED INDIVIDUALLY [for 'sumRepresentations' and such, in particular...];
 // ? Add this '[true, ...]' information to specialized objects designed for storing method signature-related items? [Consider making a Method type/class/Interface...];
@@ -7079,7 +7089,16 @@ integer.native = {
 	...general.finiteobj(
 		integer,
 		methNames,
-		{ integer: true },
+		alarray.native
+			.generate(4)
+			.map(alinative.function.const({ integer: true }))
+			.concat([{ integer: false }])
+			.concat(
+				alarray.native
+					.generate(methNames.length - 6)
+					.map(alinative.function.const({ integer: true }))
+			)
+			.concat([{ integer: false }]),
 		[
 			[true],
 			[true],
@@ -7088,17 +7107,31 @@ integer.native = {
 			true,
 			true,
 			true,
+			true,
 			[true],
 			[true],
 			[true],
 			[true, true],
-			[true, true, true]
+			[-1, true, -1]
 		],
-		mt,
-		mt
+		[
+			false,
+			null,
+			false,
+			false,
+			false,
+			true,
+			true,
+			null,
+			false,
+			null,
+			true,
+			true,
+			false
+		],
+		methNames.map(TRUTH)
 	)
 }
-integer.native.primesBefore = finite().function(integer.primesBefore)
 
 export const alnumber = {
 	farey: TEMPLATE({
@@ -7212,13 +7245,13 @@ alarray.native = {
 		[
 			false,
 			[false],
-			[false, undefined, undefined, true],
-			[false, undefined, true],
+			[false, null, null, true],
+			[false, null, true],
 			[false, false],
 			[false, false],
 			false,
 			[false],
-			[false, undefined]
+			[false, null]
 		],
 		arrmethNames.map(FALLACY),
 		arrmethNames.map(TRUTH)
