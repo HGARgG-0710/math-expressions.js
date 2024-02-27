@@ -6581,66 +6581,82 @@ export const search = {
 		defaults: {
 			defelem: undefined,
 			unfound: undefined,
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			comparison: general.DEFAULT_COMPARISON
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
 			garr = this.template.genarrclass.static.empty()
 		) {
 			const c = garr.copied("pushback", [sought])
-			for (
-				let i = garr.init();
-				!this.template.comparison(c.read(i), sought);
-				i = next(i)
-			) {}
+			let i = garr.init()
+			for (; !this.template.comparison(c.read(i), sought); i = next(i)) {}
 			return this.template.comparison(garr.length().get(), i)
 				? this.template.unfound
 				: i
 		})
 	}).function,
 	exponential: TEMPLATE({
-		// ! set the 'defaults' to have the 'factor' as '.fromNumber(2)' by default;
-		defaults: {
-			defelem: undefined,
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: _FUNCTION(function (
-			sought = this.template.defelem,
-			garr = this.template.genarrclass.static.empty()
-		) {
-			let i = this.template.tintclass.class()
-			let p
-			for (
-				;
-				lesser(i.value, garr.length().get());
-				p = i, i = i.multiply(this.template.factor)
-			)
-				if (this.predicate(garr.read(i), sought)) break
-			return search
-				.binary(this.template)
-				.function(
-					sought,
-					garr.copied("slice", [p, i].map(alinative.function.index("value")))
+		defaults: [
+			function () {
+				return {
+					defelem: undefined,
+					genarrclass: general.DEFAULT_GENARRCLASS,
+					icclass: general.DEFAULT_ICCLASS,
+					tintclass: general.DEFAULT_TINTCLASS,
+					predicate: general.DEFAULT_PREDICATE
+				}
+			},
+			function () {
+				return { factor: this.template.tintclass.static.two() }
+			}
+		],
+		function: alinative.function.const(
+			_FUNCTION(function (
+				sought = this.template.defelem,
+				garr = this.template.genarrclass.static.empty()
+			) {
+				let i = this.template.tintclass.static.one()
+				let p = this.template.tintclass.static.zero()
+				for (
+					;
+					lesser(i.value, garr.length().get());
+					p = i, i = i.multiply(this.template.factor)
 				)
-		})
+					if (this.template.predicate(sought, garr.read(i.value))) break
+				return p.add(
+					this.template.tintclass.static.fromCounter(
+						search
+							.binary(this.template)
+							.function(
+								sought,
+								garr.copied(
+									"slice",
+									[p, i].map(alinative.function.index("value"))
+								)
+							)
+					)
+				).value
+			})
+		),
+		isthis: true
 	}).function,
 	interpolation: TEMPLATE({
 		defaults: {
 			defelem: undefined,
 			comparison: general.DEFAULT_COMPARISON,
 			unfound: undefined,
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			tintclass: general.DEFAULT_TINTCLASS
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
 			garr = this.template.genarrclass.static.empty(),
 			original = true
 		) {
-			if (greateroe(this.template.icclass.static.zero(), garr.length().get()))
-				return this.template.unfound
+			if (garr.isEmpty()) return this.template.unfound
 
-			// ! Issue - with using the 'value' for the TrueInteger; Pray consider more carefully its design in regard to cases like these...;
-			const initint = this.template.tintlclass.static.fromCounter(garr.init())
+			const initint = this.template.tintclass.static.fromCounter(garr.init())
 			const finishint = this.template.tintclass.static.fromCounter(garr.finish())
 
 			const interpolated = initint.add(
@@ -6648,20 +6664,24 @@ export const search = {
 					.difference(initint)
 					.divide(
 						this.template
-							.predicate(garr.read(finishint))
+							.predicate(garr.read(garr.finish()))
 							.difference(this.template.predicate(garr.read()))
 					)
-					.multiply(this.template.predicate(sought).difference(garr.read()))
+					.multiply(
+						this.template
+							.predicate(sought)
+							.difference(this.template.predicate(garr.read()))
+					)
 			)
 			const inelem = garr.index(interpolated)
-			if (this.template.comparison(inelem, sought)) return interpolated
+			if (this.template.comparison(sought, inelem)) return interpolated
 			return (original ? (x) => x.value : ID)(
 				interpolated.add(
 					this.function(
 						sought,
 						garr.copied(
 							"slice",
-							this.template.predicate(inelem, sought)
+							this.template.predicate(sought, inelem)
 								? [garr.init(), previous(interpolated)]
 								: [next(interpolated)]
 						),
@@ -6674,36 +6694,54 @@ export const search = {
 	jump: typeConst((FORBIDDEN) => {
 		FORBIDDEN = FORBIDDEN[0]
 		return TEMPLATE({
-			defaults: { defelem: undefined, genarrclass: general.DEFAULT_GENARRCLASS },
+			defaults: {
+				defelem: undefined,
+				genarrclass: general.DEFAULT_GENARRCLASS,
+				comparison: general.DEFAULT_COMPARISON,
+				predicate: general.DEFAULT_PREDICATE,
+				unfound: undefined,
+				tintclass: general.DEFAULT_TINTCLASS
+			},
 			function: _FUNCTION(function (
 				sought = this.template.defelem,
 				garr = this.template.genarrclass.static.empty()
 			) {
-				const sqrtlen = this.template.tintclass.class(garr.length().get()).root()
+				const sqrtlen = this.template.tintclass.static
+					.fromCounter(garr.length().get())
+					.root()
 				let tempres = FORBIDDEN
 				for (
-					let i = this.tintclass.class();
-					lesser(i, garr.length().get());
+					let i = this.template.tintclass.class();
+					lesser(i.value, garr.length().get());
 					i = i.add(sqrtlen)
 				) {
+					// ! MANUAL CACHING! BAD! FIX IN V1.1....;
 					const curr = garr.read(i)
 					if (
-						((...x) =>
-							alinative.function.dor(
-								[this.template.predicate, this.template.comparison].map(
-									alinative.function.rexparr(x)
-								)
-							))(curr, sought)
+						this.template.predicate(sought, curr) ||
+						this.template.comparison(sought, curr)
 					) {
 						tempres = i
 						break
 					}
 				}
 				if (refCompare(tempres, FORBIDDEN)) return this.template.unfound
-				return search.linear(this.template)(
-					garr.copied(
-						"slice",
-						[i.difference(sqrtlen), i].map((x) => x.value)
+				return (
+					tempres.compare(sqrtlen)
+						? tempres.difference(sqrtlen)
+						: tempres.zero()
+				).jumpDirection(
+					search.linear(this.template).function(
+						sought,
+						garr.copied(
+							"slice",
+							[
+								tempres.compare(sqrtlen)
+									? tempres.difference(sqrtlen)
+									: tempres.zero(),
+								tempres
+							].map((x) => x.value)
+						)
 					)
 				)
 			})
@@ -6713,7 +6751,8 @@ export const search = {
 		defaults: {
 			defelem: undefined,
 			unfound: undefined,
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			comparison: general.DEFAULT_COMPARISON
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
@@ -6728,41 +6767,39 @@ export const search = {
 	binary: TEMPLATE({
 		defaults: {
 			defelem: undefined,
-			comparison: general.DEFAULT_COMPARISON,
+			predicate: general.DEFAULT_PREDICATE,
 			unfound: undefined,
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			tintclass: general.DEFAULT_TINTCLASS,
+			comparison: general.DEFAULT_COMPARISON
 		},
 		function: _FUNCTION(function (
 			sought = this.template.defelem,
-			garr = this.template.genarrclass.static.empty(),
-			original = true
+			garr = this.template.genarrclass.static.empty()
 		) {
-			if (greateroe(this.template.icclass.static.zero(), garr.length().get()))
-				return this.template.unfound
+			if (garr.isEmpty()) return this.template.unfound
 			const lenint = this.template.tintclass.static.fromCounter(garr.length().get())
 			const middleind = lenint
-				.divide(this.template.icclass.static.two())
-				.add(
-					btic(
+				.difference(
+					alinative.boolean.btic(
 						lenint
-							.modulo(this.template.icclass.static.two())
-							.equal(this.template.icclass.static.one())
+							.modulo(this.template.tintclass.static.two())
+							.equal(this.template.tintclass.static.one()),
+						this.template.tintclass
 					)
 				)
+				.divide(this.template.tintclass.static.two()).value
 			const midelem = garr.index(middleind)
 			if (this.template.comparison(midelem, sought)) return middleind
-			return (original ? (x) => x.value : ID)(
-				middleind.add(
-					this.function(
-						sought,
-						garr.copied(
-							"slice",
-							this.template.predicate(midelem, sought)
-								? [garr.init(), previous(middleind)]
-								: [next(middleind)]
-						),
-						false
-					)
+			const islesser = this.template.predicate(sought, midelem)
+			return (islesser ? ID : (x) => middleind.jumpDirection(x).next())(
+				this.function(
+					sought,
+					garr.copied(
+						"slice",
+						islesser ? [garr.init(), previous(middleind)] : [next(middleind)]
+					),
+					false
 				)
 			)
 		})
@@ -6817,7 +6854,7 @@ export const integer = {
 	multiples: TEMPLATE({
 		defaults: {
 			includezero: false,
-			tintclass: general.DEFAULT_TINTCLAS,
+			tintclass: general.DEFAULT_TINTCLASS,
 			step: general.DEFAULT_ICCLASS.static.one()
 		},
 		function: function (

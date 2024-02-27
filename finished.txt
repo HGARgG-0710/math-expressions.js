@@ -20,6 +20,7 @@ List of files in 'tests/', that have been successfully run;
 17. orders.mjs
 18. string.mjs
 19. integer.mjs
+20. search.mjs
 
 Left to test (arbitrary order): 
 
@@ -28,12 +29,11 @@ Left to test (arbitrary order):
 3. structure.mjs
 4. NTreeNode.mjs
 5. sort.mjs
-6. search.mjs
-7. expressions.mjs
-8. Graph.mjs
-9. heaps.mjs
-10. BindableFunction.mjs
-11. TreeNode.mjs
-12. forms.mjs
-13. inf.mjs
-14. integrity.mjs
+6. expressions.mjs
+7. Graph.mjs
+8. heaps.mjs
+9. BindableFunction.mjs
+10. TreeNode.mjs
+11. forms.mjs
+12. inf.mjs
+13. integrity.mjs
