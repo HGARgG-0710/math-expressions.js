@@ -1288,6 +1288,7 @@ It gets changed and revised actively.
 				That is, all the builtin classes, such as Map, Set, and others, are given their own appropriate 
 				equality definitions as well;
 				For the 'typeof'-defined types, the 'valueCompare' is performed...; 
+		7. An alias for recursive usage of '.map' function, other builtins... (particularly for Arrays); 
 
 9. Sketch-list of things to generalize (a reminder for v1.1): 
 	9.1. Forms, Vector, Expression, FunctionCall, Pointer, GENERATOR <- Interface; 

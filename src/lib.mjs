@@ -1234,8 +1234,7 @@ export const alarray = {
 			}
 			const generated = []
 			const upper =
-				end +
-				num((-1) ** step < 0) * (Number.isInteger(step) ? 1 : 10 ** -precision)
+				end + (-1) ** (step < 0) * (Number.isInteger(step) ? 1 : 10 ** -precision)
 			const proposition = step > 0 ? (i) => i < upper : (i) => i > upper
 			for (let i = start; proposition(i); i += step)
 				generated[generated.length] = nanumber.floor().function(i, precision)
@@ -7297,7 +7296,7 @@ alarray.native = {
 			[false],
 			[false, null]
 		],
-		arrmethNames.map(FALLACY),
+		[false, false, false, false, null, false, false, false],
 		arrmethNames.map(TRUTH)
 	)
 }

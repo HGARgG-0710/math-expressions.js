@@ -27,17 +27,18 @@ const outdarr = (x) => {
 	console.log("---\n")
 }
 
+const f = (b) => (b ? native.function.index("native") : id)
+
 // ! TEST FOR THE 'native' as well!
-tmc([id /* , native.function.index("native") */], (f) => {
-	const scope = f(array)	
+tmc([false, true], (bool) => {
+	const scope = f(bool)(array)
+	const sf = bool ? id : genarrclass.static.fromArray
 	testOn(
 		scope,
+		["permutations" ,"split"],
 		[
-			/* "permutations", "split"*/
-		],
-		[
-			// [[genarrclass.static.fromArray([10, 443, 39])]],
-			// [[genarrclass.static.fromArray([13, 331, 11, 29, 77, 331, 331, 331]), 331]]
+			[[[10, 443, 39]]].map((x) => x.map((x) => x.map(sf))),
+			[[[13, 331, 11, 29, 77, 331, 331, 331], 331]].map((x) => [sf(x[0]), x[1]])
 		],
 		{},
 		outdarr
@@ -46,67 +47,82 @@ tmc([id /* , native.function.index("native") */], (f) => {
 	testOn(
 		scope,
 		[
-			/* "generate", "indexesOf", "norepetitions", "join", "concat"*/
+			"intersection",
+			"generate",
+			"indexesOf",
+			"norepetitions",
+			// ! NOTE: 'native.join' and 'native.concat' DO NOT WORK YET... That is due to the fact of just how immensely broken the type system of the library is as of 1.0alpha;
+			// "join",
+			// "concat"
 		],
 		[
-			// [
-			// 	[1, 11, 3],
-			// 	[9, -2, -1]
-			// ].map((x) => x.map(native.number.fromNumber({ icclass }).function)),
-			// [
-			// 	[genarrclass.static.fromArray([10, 33, 234, 33, 33, 10]), 33],
-			// 	[genarrclass.static.fromArray([10, 11], 199)]
-			// ],
-			// [
-			// 	[genarrclass.static.fromArray([10, 11, 12, 10, 13, 14]), 10],
-			// 	[genarrclass.static.fromArray([1, 2, 3, 4, 5, 7, 9, 9, 9]), 2]
-			// ],
-			// [
-			// 	[
-			// 		genarrclass.static.fromArray([
-			// 			genarrclass.static.fromArray([123, 4432, 10292]),
-			// 			genarrclass.static.fromArray([990, "asfa", "Siijla", null]),
-			// 			genarrclass.static.fromArray([true])
-			// 		])
-			// 	],
-			// 	[
-			// 		genarrclass.static.fromArray([
-			// 			genarrclass.static.fromArray([0, 1, 0, 0, 0, 1]),
-			// 			genarrclass.static.fromArray([0, 10, "T", null]),
-			// 			genarrclass.static.fromArray([0, 0, false, null, 0])
-			// 		]),
-			// 		genarrclass.static.fromArray([null, true, false])
-			// 	]
-			// ],
-			// [
-			// 	[
-			// 		genarrclass.static.fromArray([
-			// 			genarrclass.static.fromCounter(
-			// 				native.number.fromNumber({ icclass }).function(10)
-			// 			),
-			// 			genarrclass.static.fromArray(["bababaBABAbA", false, true]),
-			// 			genarrclass.static.fromArray([1, 2, 1, 0])
-			// 		])
-			// 	]
-			// ]
+			[
+				[
+					[120, 443, "sa"],
+					[9804, 120, 443],
+					[false, null, 120, 443, 443, null]
+				]
+			].map((x) => x.map(bool ? id : genarrclass.static.fromArray)),
+			[
+				[1, 11, 3],
+				[9, -2, -1]
+			].map((x) =>
+				x.map(bool ? id : native.number.fromNumber({ icclass }).function)
+			),
+			[
+				[[10, 33, 234, 33, 33, 10], 33],
+				[[10, 11], 199]
+			].map((x) => [sf(x[0]), x[1]]),
+			[
+				[[10, 11, 12, 10, 13, 14], 10],
+				[[1, 2, 3, 4, 5, 7, 9, 9, 9], 2]
+			].map((x) => [sf(x[0]), x[1]]),
+			[
+				[
+					[
+						genarrclass.static.fromArray([123, 4432, 10292]),
+						genarrclass.static.fromArray([990, "asfa", "Siijla", null]),
+						genarrclass.static.fromArray([true])
+					]
+				],
+				[
+					[
+						genarrclass.static.fromArray([0, 1, 0, 0, 0, 1]),
+						genarrclass.static.fromArray([0, 10, "T", null]),
+						genarrclass.static.fromArray([0, 0, false, null, 0])
+					],
+					[null, true, false]
+				]
+			].map((x) => x.map(sf)),
+			[
+				[
+					genarrclass.static.fromArray([
+						genarrclass.static.fromCounter(
+							native.number.fromNumber({ icclass }).function(10)
+						),
+						genarrclass.static.fromArray(["bababaBABAbA", false, true]),
+						genarrclass.static.fromArray([1, 2, 1, 0])
+					])
+				]
+			]
 		],
-		{},
+		array.native.generate(6).map((x) => (x === 2 && bool ? false : {})),
 		outarr
 	)
 
-	// mtom(
-	// 	scope,
-	// 	"isSub",
-	// 	[
-	// 		[
-	// 			genarrclass.static.fromArray([2, 1]),
-	// 			genarrclass.static.fromArray([1, 2, 3])
-	// 		],
-	// 		[
-	// 			genarrclass.static.fromArray([2, 1, 11]),
-	// 			genarrclass.static.fromArray([1, 2, 3])
-	// 		]
-	// 	],
-	// 	{}
-	// )
+	mtom(
+		scope,
+		"isSub",
+		[
+			[
+				[2, 1],
+				[1, 2, 3]
+			],
+			[
+				[2, 1, 11],
+				[1, 2, 3]
+			]
+		].map((x) => x.map(sf)),
+		{}
+	)
 })
