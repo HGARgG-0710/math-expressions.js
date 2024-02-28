@@ -1246,8 +1246,6 @@ export const alarray = {
 	// ! THE 'finite' is not currently suited to transform methods such as this... PRAY FIX IT... [allow for arguments-arrays transformations..., such as here...];
 	intersection: TEMPLATE({
 		defaults: [
-			// ! ISSUE [about the 'finite' again] - what to do with cases such as this - when the default 'genarrclass' is given, whereas it must be finite (CommonArray?);
-			// ^ 'finite' does permit the usage of arbitrary templates... Could just create a 'general.[something...]' property for storing the Defualt 'Finitization' template, which can then be used where needed via spread {...general.[whatever], ...{(rest of the good things)}};
 			function () {
 				return {
 					comparison: general.DEFAULT_COMPARISON,
@@ -1295,32 +1293,6 @@ export const alarray = {
 			})
 		),
 		isthis: true
-	}).function,
-	permutations: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
-		function: _FUNCTION(function (array = this.template.genarrclass.static.empty()) {
-			if (equal(array.one(), array.length().get()))
-				return this.template.genarrclass.static.fromArray([array.copy()])
-
-			const pprev = this.function(
-				array.copied("slice", [array.init(), array.finish().previous()])
-			)
-			const l = array.end(false)
-			const pnext = this.template.genarrclass.static.empty()
-
-			for (const i of pprev.keys())
-				for (
-					let j = pprev.init();
-					lesseroe(j, pprev.read(i).length().get());
-					j = next(j)
-				)
-					pnext.pushback(pprev.read(i).copied("insert", [j, l]))
-
-			return pnext
-		})
 	}).function,
 	indexesOf: TEMPLATE({
 		defaults: [
@@ -1371,21 +1343,27 @@ export const alarray = {
 					comparison: general.DEFAULT_COMPARISON,
 					copy: false,
 					genarrclass: general.DEFAULT_GENARRCLASS,
-					icclass: general.DEFAULT_ICCLASS
+					icclass: general.DEFAULT_ICCLASS,
+					defelem: undefined
 				}
 			}),
 			_FUNCTION(function () {
 				return {
-					tokeep: this.template.icclass.static.zero()
+					tokeep: this.template.icclass.static.one()
 				}
 			})
 		],
 		function: alinative.function.const(
-			_FUNCTION(function (arr, el, tokeep = this.template.tokeep) {
+			_FUNCTION(function (
+				arr = this.template.genarrclass.empty(),
+				el = this.template.defelem,
+				tokeep = this.template.tokeep
+			) {
 				const firstMet = alarray.indexesOf(this.template).function(arr, el)
-				const pred = (a, i) =>
-					lesser(firstMet.firstIndex(i).map(tokeep.class), tokeep) ||
-					!this.template.comparison(a, el)
+				const pred = (_a, i) =>
+					!firstMet.includes(i, this.template.comparison) ||
+					lesser(firstMet.firstIndex(i, this.template.comparison), tokeep)
+
 				return (
 					this.template.copy
 						? (x) => x.copied("suchthat", [pred])
@@ -1394,20 +1372,6 @@ export const alarray = {
 			})
 		),
 		isthis: true
-	}).function,
-	isSub: TEMPLATE({
-		// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
-		defaults: {
-			comparison: general.DEFAULT_COMPARISON
-		},
-		function: _FUNCTION(function (
-			arrsub,
-			arr = this.template.genarrclass.static.empty()
-		) {
-			for (const x of arrsub)
-				if (!arr.any((y) => this.template.comparison(x, y))) return false
-			return true
-		})
 	}).function,
 	join: TEMPLATE({
 		defaults: [
@@ -1441,32 +1405,6 @@ export const alarray = {
 		),
 		isthis: true
 	}).function,
-	generate: TEMPLATE({
-		defaults: {
-			icclass: general.DEFAULT_ICCLASS,
-			genarrclass: general.DEFAULT_GENARRCLASS,
-			ic: false
-		},
-		function: _FUNCTION(function (
-			start,
-			end,
-			step = this.template.icclass.static.one()
-		) {
-			if (refCompare(arguments.length, 1)) {
-				end = start
-				start = this.template.icclass.static.one()
-			}
-			const generated = this.template.genarrclass.static.empty()
-			const proposition = (
-				(f) => (i) =>
-					f(i, end)
-			)(step.direction() ? lesseroe : greateroe)
-			const wrap = this.template.ic ? ID : alinative.function.index("value")
-			for (let i = start; proposition(i); i = i.jumpDirection(step))
-				generated.pushback(wrap(i))
-			return generated
-		})
-	}).function,
 	common: TEMPLATE({
 		defaults: {
 			f: ID
@@ -1475,21 +1413,6 @@ export const alarray = {
 			return alarray
 				.intersection(this.template)
 				.function(...args.map(this.template.f))
-		})
-	}).function,
-	concat: TEMPLATE({
-		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
-		},
-		function: _FUNCTION(function (arrays = this.template.genarrclass.static.empty()) {
-			if (arrays.length().get().equal(arrays.one())) return arrays.read()
-			if (arrays.length().get().equal(arrays.two()))
-				return arrays.read().concat(arrays.read(arrays.one()))
-			// ? refactor using repeatedApplication?
-			let r = arrays.read()
-			for (const x of arrays.copied("slice", [arrays.one()]))
-				r = this.function(this.template.genarrclass.static.fromArray([r, x]))
-			return r
 		})
 	}).function,
 	split: TEMPLATE({
@@ -3877,6 +3800,90 @@ export const garrays = {
 }
 
 general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
+
+alarray.permutations = TEMPLATE({
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	// ? In cases such as these (when there are 2 or more ways of doing exactly the same thing) - ought '.static.empty()' or '.class()' be called?
+	function: _FUNCTION(function (array = this.template.genarrclass.static.empty()) {
+		if (equal(array.one(), array.length().get()))
+			return this.template.genarrclass.static.fromArray([array.copy()])
+
+		const pprev = this.function(
+			array.copied("slice", [array.init(), array.finish().previous()])
+		)
+		const l = array.end(false)
+		const pnext = this.template.genarrclass.static.empty()
+
+		for (const i of pprev.keys())
+			for (
+				let j = pprev.init();
+				lesseroe(j, pprev.read(i).length().get());
+				j = next(j)
+			)
+				pnext.pushback(pprev.read(i).copied("insert", [j, l]))
+
+		return pnext
+	})
+}).function
+alarray.generate = TEMPLATE({
+	defaults: {
+		icclass: general.DEFAULT_ICCLASS,
+		genarrclass: general.DEFAULT_GENARRCLASS,
+		ic: false
+	},
+	function: _FUNCTION(function (
+		start = this.template.icclass.static.one(),
+		end = this.template.icclass.static.one(),
+		step = this.template.icclass.static.one()
+	) {
+		if (refCompare(arguments.length, 1)) {
+			end = start
+			start = this.template.icclass.static.one()
+		}
+		const generated = this.template.genarrclass.static.empty()
+		const proposition = (
+			(f) => (i) =>
+				f(i, end)
+		)(step.direction() ? lesseroe : greateroe)
+		const wrap = this.template.ic ? ID : alinative.function.index("value")
+		for (let i = start; proposition(i); i = i.jumpDirection(step))
+			generated.pushback(wrap(i))
+		return generated
+	})
+}).function
+alarray.concat = TEMPLATE({
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: _FUNCTION(function (arrays = this.template.genarrclass.static.empty()) {
+		if (arrays.isEmpty()) return arrays.empty()
+		if (arrays.length().get().equal(arrays.one())) return arrays.read()
+		if (arrays.length().get().equal(arrays.two()))
+			return arrays.read().concat(arrays.read(arrays.one()))
+		// ? refactor using repeatedApplication?
+		let r = arrays.read()
+		for (const x of arrays.copied("slice", [arrays.one()]))
+			r = this.function(this.template.genarrclass.static.fromArray([r, x]))
+		return r
+	})
+}).function
+alarray.isSub = TEMPLATE({
+	// ! Refactor also the usage of the 'defaults' like here - give the commonly appearing objects names and then, copy them each time {...DefaultsName};
+	defaults: {
+		genarrclass: general.DEFAULT_GENARRCLASS,
+		comparison: general.DEFAULT_COMPARISON
+	},
+	function: _FUNCTION(function (
+		arrsub = this.template.genarrclass.static.empty(),
+		arr = this.template.genarrclass.static.empty()
+	) {
+		for (const x of arrsub)
+			if (!arr.any((y) => this.template.comparison(x, y))) return false
+		return true
+	})
+}).function
 
 // ? Suggestion: connect the constructed orders with domains on which they are defined by the user? Generally, create a type of Order?
 export const linear = TEMPLATE({

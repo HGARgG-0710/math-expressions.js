@@ -1278,6 +1278,16 @@ It gets changed and revised actively.
 			Either a new one is created (once a thing has been edited), or it is only referenced in non-changing cases... (CREATE MEANS OF TRACKING CHANGE IN A DIFFERENT OBJECT - IF AN OBJECT HAS BEEN CHANGED, THEN ALL OF ITS 'DEPENDEES ARE CHANGED AS WELL!'); 
 		3. Pair-s, Triple-s, N-Tuples: a set of abstractions' definitions for representations of arrays of static (statically known) length; 
 		4. '.equal()' on EVERY class - not only just the InfiniteCounters, and number classes, collections as well - GeneralArray, UnlimitedString, ...; Due to its lacking, becomes more difficult to compare arrays directly (no alias...); 
+		5. algorithm of 'universalEquality': 
+			[binary version]
+			5.0. Check if types of the two are the same; 
+			5.1. If there's an '.equal' method, then return 'a.equal(b)'
+			5.2. If there isn't, return their 'nativeCompare'; 
+		6. 'nativeCompare' - extension of valueCompare: 
+			Instead of dividing the builtin types via 'typeof', one also adds the 'instanceof': 
+				That is, all the builtin classes, such as Map, Set, and others, are given their own appropriate 
+				equality definitions as well;
+				For the 'typeof'-defined types, the 'valueCompare' is performed...; 
 
 9. Sketch-list of things to generalize (a reminder for v1.1): 
 	9.1. Forms, Vector, Expression, FunctionCall, Pointer, GENERATOR <- Interface; 

@@ -48,7 +48,7 @@ Install math-expressions.js using npm:
 
 <!-- * Planned: each version has its own documentation... Though stuff >= 0.8 is marked as 'not recommended for use (bugs)' -->
 <!-- todo: MOST BASIC DOCS! -->
-For now, the package lacks coherent and strict documentation, however, most basic 
+For now, the package lacks coherent and strict documentation, however, most basic information is available on its [GitHub Wiki](https://github.com/HGARgG-0710/math-expressions.js/wiki).
 When the API somewhat stabilizes, the project's repository's Wiki will be altered accordingly. 
 
 ## Source
