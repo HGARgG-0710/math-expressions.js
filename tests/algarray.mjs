@@ -1,14 +1,12 @@
 // * Tests related to the 'algorithms.array' algorithms
 
-import { obj, id, native, is } from "../src/modules/exports/aliases.mjs"
+import { id, native, is } from "../src/modules/exports/aliases.mjs"
 import { numberCounter } from "../src/modules/exports/counters.mjs"
-import { arrays, numbers, InfiniteCounter } from "../src/modules/exports/types.mjs"
+import { arrays, InfiniteCounter } from "../src/modules/exports/types.mjs"
 import { array } from "../src/modules/exports/algorithms.mjs"
 import { testmultcases as tmc, multtestobjmethod as mtom, testOn } from "./test.mjs"
 
-const { TrueInteger } = numbers
 const icclass = InfiniteCounter(numberCounter())
-const tintclass = TrueInteger()
 const { LastIndexArray } = arrays
 const genarrclass = LastIndexArray()
 
@@ -29,13 +27,12 @@ const outdarr = (x) => {
 
 const f = (b) => (b ? native.function.index("native") : id)
 
-// ! TEST FOR THE 'native' as well!
 tmc([false, true], (bool) => {
 	const scope = f(bool)(array)
 	const sf = bool ? id : genarrclass.static.fromArray
 	testOn(
 		scope,
-		["permutations" ,"split"],
+		["permutations", "split"],
 		[
 			[[[10, 443, 39]]].map((x) => x.map((x) => x.map(sf))),
 			[[[13, 331, 11, 29, 77, 331, 331, 331], 331]].map((x) => [sf(x[0]), x[1]])
@@ -50,7 +47,7 @@ tmc([false, true], (bool) => {
 			"intersection",
 			"generate",
 			"indexesOf",
-			"norepetitions",
+			"norepetitions"
 			// ! NOTE: 'native.join' and 'native.concat' DO NOT WORK YET... That is due to the fact of just how immensely broken the type system of the library is as of 1.0alpha;
 			// "join",
 			// "concat"

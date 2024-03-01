@@ -1267,6 +1267,27 @@ It gets changed and revised actively.
 		One does: 
 
 			!!InfiniteCounter(...).class(...)
+	
+	7.73. On Predicate-s: 
+
+		They are, currently, poorly-defined on the library level; 
+		No way to be certain of a particular predicate's properties + not all the algorithms work for all the desired classes of properties on a given predicate; 
+		IDEA: introduce predicate-changing (early-sketch-example - constructing a reflexive predicate from the given one): 
+
+
+			function property(vals, comparison = refCompare) {
+				return !vals.length || (comparison(vals[0], vals[1]) && property(vals.slice(1), comparison))
+			}
+
+			function reflexive (predicate, comparison = refCompare) {
+				return function (...args) {
+					if (property(args, comparison)) 
+						return true
+					return predicate(...args)
+				}
+			}
+		
+		Create A LOAD of such different properties/general-collection implementations...; 
 					
 8. List of general methods to be present within v1.1: 
 

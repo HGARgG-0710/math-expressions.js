@@ -615,7 +615,7 @@ const refactor = {
 		maxkey(garr) {
 			return obj.hasOwn(this.template, "maxkey")
 				? this.template.maxkey
-				: orders.most({ comparison: this.template.predicate })(
+				: most({ comparison: this.template.subpredicate }).function(
 						garr.copy(this.template.predicate)
 				  )
 		}
@@ -1381,7 +1381,7 @@ export const alarray = {
 			},
 			function () {
 				return {
-					separators: this.template.genarrclass.static.fromArray([undefined])
+					separators: this.template.genarrclass.static.fromArray([])
 				}
 			}
 		],
@@ -6301,7 +6301,6 @@ export const sort = {
 				return {
 					ustrclass: general.DEFAULT_USTRCLASS,
 					genarrclass: general.DEFAULT_GENARRCLASS,
-					tintclass: general.DEFAULT_TINTCLASS
 				}
 			},
 			function () {
@@ -6312,8 +6311,8 @@ export const sort = {
 			garr = this.template.genarrclass.static.empty()
 		) {
 			const polyconverted = garr
-				.copy(this.template.tintclass.static.fromCounter)
-				.map(toPolystring(this.template).function)
+				.copy(this.template.predicate)
+				.map(polystring(this.template).function)
 			const maxsize = sameLength(this.template).function(polyconverted)
 			// ? Generalize the usage of 'refCompare' here?
 			const toorder = (ordered, i) =>
@@ -6321,6 +6320,7 @@ export const sort = {
 					.copy((l) => ordered.suchthat((y) => refCompare(y.read(i), l)))
 					.suchthat((x) => !x.isEmpty())
 					.join()
+			// ? Use repeatedApplication
 			let ordered = polyconverted.copy()
 			for (const x of maxsize) ordered = toorder(ordered, x)
 			return ordered
@@ -6332,32 +6332,37 @@ export const sort = {
 			function () {
 				return {
 					genarrclass: general.DEFAULT_GENARRCLASS,
+					icclass: general.DEFAULT_ICCLASS,
 					tintclass: general.DEFAULT_TINTCLASS,
-					sortingf: sort.merge(this.template).function
+					sortingf: this.function
 				}
 			},
 			function () {
 				return {
-					buckets: this.template.tintclass.static.two()
+					buckets: this.template.icclass.static.two()
 				}
 			}
 		],
 		function: alinative.function.const(function (
-			garr = this.this.this.genarrclass.static.empty(),
+			garr = this.template.genarrclass.static.empty(),
 			bucketsnum = this.template.buckets
 		) {
-			const k = general.maxkey.bind(this)(garr)
-			const buckets = this.this.this.genarrclass
+			if (garr.isEmpty()) return garr
+			const k = refactor.general.maxkey.bind(this)(garr)
+			const buckets = this.template.genarrclass.static
 				.fromCounter(bucketsnum)
-				.map(garr.empty())
+				.map(garr.empty)
 
-			for (const x of garr)
-				buckets.write(
-					this.template.tinclass.static
-						.fromCounter(bucketsnum)
-						.multiply(this.template.predicate(x).divide(k), x)
-				)
-
+			for (const x of garr.keys()) 
+				buckets
+					.read(
+						this.template.tintclass.static
+							.fromCounter(bucketsnum)
+							.multiply(this.template.predicate(garr.read(x), x, garr))
+							.divide(k).value
+					)
+					.pushback(garr.read(x))
+						
 			for (const b of buckets.keys())
 				buckets.write(b, this.template.sortingf(buckets.read(b)))
 
@@ -6368,14 +6373,14 @@ export const sort = {
 	counting: TEMPLATE({
 		defaults: {
 			genarrclass: general.DEFAULT_GENARRCLASS,
-			predicate: lesser
+			predicate: general.DEFAULT_PREDICATE
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			// * note: it's FAR more efficient for the user to provide the '.maxkey' on their own instead of having to calculate it...;
 			const k = general.maxkey.bind(this)(garr)
 			const count = this.template.genarrclass.static
 				.fromCounter(next(k))
-				.map(alinative.function.const(k.class.init()))
+				.map(k.class.init)
 			const output = garr.copy(alinative.function.const(udef))
 
 			for (const x of garr) {
@@ -6383,104 +6388,95 @@ export const sort = {
 				count.write(j, next(count.read(j)))
 			}
 
-			for (let i = k.one(); !lesser(i, next(k)); i = next(i))
+			for (let i = k.one(); lesseroe(i, k); i = next(i))
 				count.write(i, count.read(i).jumpDirection(count.read(i.previous())))
 
 			for (let i = garr.finish(); greateroe(i, garr.init()); i = previous(i)) {
 				const j = this.template.predicate(garr.read(i))
-				output.write(count.read(j).previous(), garr.read(i))
+				count.write(j, count.read(j).previous())
+				output.write(count.read(j), garr.read(i))
 			}
 
 			return output
 		}
 	}).function,
+	// ! PROBLEM: DOES NOT work with reflexive linear order predicates - will add the middle item TWICE per a call (those, that have 'predicate(x, x) == true');
+	// ? Choose proper order-orientation for 'predicate' variables that are passed...;
 	quick: TEMPLATE({
 		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			predicate: general.DEFAULT_PREDICATE
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
-			if (
-				greateroe(
-					this.template.genarrclass.static.two().next(),
-					garr.length().get()
-				)
-			) {
-				if (greateroe(this.template.icclass.static.one(), garr.length().get()))
-					return garr
-				const X = () => {
-					if (
-						this.template.predicate(
-							garr.read(this.template.icclass.static.one()),
-							garr.read()
-						)
-					)
-						garr.swap(
-							this.template.icclass.static.zero(),
-							this.template.icclass.one()
-						)
+			if (greateroe(garr.two().next(), garr.length().get())) {
+				if (greateroe(garr.one(), garr.length().get())) return garr
+				const X = (x = garr.init(), y = garr.one()) => {
+					if (!this.template.predicate(garr.read(x), garr.read(y)))
+						garr.swap(x, y)
 				}
 				X()
-				if (greateroe(this.template.icclass.static.two(), garr.length().get()))
-					return garr
-				if (
-					this.template.predicate(
-						garr.read(this.template.icclass.static.one()),
-						garr.read(this.template.icclass.static.two())
-					)
-				)
-					garr.swap(
-						this.template.icclass.static.one(),
-						this.template.icclass.static.two()
-					)
-				X()
+				if (greateroe(garr.two(), garr.length().get())) return garr
+				X(garr.one(), garr.two())
+				X(garr.init(), garr.two())
 				return garr
 			}
 
-			// ! future improvements - make the 'MIDDLE_ELEMENT' equal something more efficient...;
-			const MIDDLE_ELEMENT = garr.read(garr.finish())
-			return this.function(
+			const MIDDLE_ELEMENT = garr.read(
+				general.DEFAULT_TINTCLASS.static
+					.fromCounter(garr.finish())
+					.divide(general.DEFAULT_TINTCLASS.static.fromCounter(garr.two()))
+					.value
+			)
+
+			const prev = this.function(
 				garr.copied("suchthat", [
-					(x) => this.template.predicate(MIDDLE_ELEMENT, x)
+					(x) => this.template.predicate(x, MIDDLE_ELEMENT)
 				])
 			)
-				.pushback(MIDDLE_ELEMENT)
-				.concat(
-					this.function(
-						garr.copied("suchthat", [
-							(x) => this.template.predicate(x, MIDDLE_ELEMENT)
-						])
-					)
+			prev.pushback(MIDDLE_ELEMENT)
+			return prev.concat(
+				this.function(
+					garr.copied("suchthat", [
+						(x) => this.template.predicate(MIDDLE_ELEMENT, x)
+					])
 				)
+			)
 		}
 	}).function,
+	// ? Pray see if this is optimal...
 	insertion: TEMPLATE({
 		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			predicate: general.DEFAULT_PREDICATE
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
+			const resarr = garr.empty()
+			let hasBroken
+			if (!garr.isEmpty()) resarr.pushback(garr.read())
 			for (let i = garr.one(); lesser(i, garr.length().get()); i = next(i)) {
-				for (let j = garr.init(); lesser(j, i); j = next(j)) {
-					if (this.template.predicate(garr.read(i), garr.read(j))) continue
-					garr.insert(j, garr.read(i))
+				hasBroken = false
+				let j = garr.init()
+				for (; lesser(j, resarr.length().get()); j = next(j)) {
+					if (!this.template.predicate(garr.read(i), resarr.read(j))) continue
+					hasBroken = true
+					resarr.insert(j, garr.read(i))
 					break
 				}
+				if (!hasBroken) resarr.insert(j, garr.read(i))
 			}
-			return garr
+			return resarr
 		}
 	}).function,
 	bubble: TEMPLATE({
 		defaults: {
-			genarrclass: general.DEFAULT_GENARRCLASS
+			genarrclass: general.DEFAULT_GENARRCLASS,
+			predicate: general.DEFAULT_PREDICATE
 		},
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			garr = garr.copy()
 			for (let i = garr.init(); lesser(i, garr.length().get()); i = next(i))
-				for (
-					let j = garr.init();
-					lesser(j, garr.length().get().jumpReverse(i));
-					j = next(j)
-				)
+				for (let j = next(i); lesser(j, garr.length().get()); j = next(j))
 					if (!this.template.predicate(garr.read(i), garr.read(j)))
 						garr.swap(i, j)
 			return garr
@@ -6493,7 +6489,7 @@ export const sort = {
 		function: function (garr = this.template.genarrclass.static.empty()) {
 			const listArr = garr.copy()
 			const sorted = garr.empty()
-			const f = orders.most({ comparison: this.template.predicate })
+			const f = most({ comparison: this.template.predicate }).function
 			for (const _t of garr) {
 				const extreme = f(listArr)
 				sorted.pushback(extreme)
@@ -7314,7 +7310,7 @@ export const tintAdditive = refactor.general.counterFrom(
 ).function
 
 // ? Add tint-based counters for other operations as well? [same goes for the native JS Number...];
-export const tintMultiplicative = (() => {
+export const tintMultiplicative = () => {
 	const X = refactor.general.counterFrom(
 		["multiply", "divide"],
 		tnumbers.TrueInteger().static.fromCounter
@@ -7327,4 +7323,4 @@ export const tintMultiplicative = (() => {
 		}
 	})
 	return X.function
-})()
+}
