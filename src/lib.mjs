@@ -3684,15 +3684,13 @@ export const countrecursive = TEMPLATE({
 			)
 			.jumpDirection(
 				this.template.form.is(array)
-					? expressions
-							.uevaluate()
-							.function(
-								Expression(
-									"+",
-									[],
-									this.template.form.index(array).copy(this.function)
-								)
+					? uevaluate().function(
+							Expression(
+								"+",
+								[],
+								this.template.form.index(array).copy(this.function)
 							)
+					  )
 					: this.template.icclass.zero()
 			)
 	})
