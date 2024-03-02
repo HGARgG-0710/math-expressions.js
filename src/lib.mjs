@@ -902,13 +902,14 @@ export const CLASS = (ptemplate = {}) => {
 
 			if (this.recursive) {
 				V = {
-					[this.classref]: this,
 					[this.selfname]: {
 						...V
 					}
 				}
 				V[this.selfname][this.subselfname] = V
 			}
+
+			V[this.classref] = this
 
 			const K = this.recursive ? V[this.selfname] : V
 
@@ -5377,39 +5378,45 @@ export const InfiniteArray = CLASS({
 		}),
 		write: _FUNCTION(function (i, v) {
 			const x = this.f
-			this.f = function (I) {
+			this.f = _FUNCTION(function (I = this.class.template.icclass.class()) {
 				if (I.equal(i)) return v
 				return x(I)
-			}
+			}).bind(this)
 			return this
 		}),
 		subarr: _FUNCTION(function (predicate = TRUTH) {
-			x = this.f
+			const x = this.f
 			this.f = _FUNCTION(function (i = this.class.template.icclass.class()) {
-				let subind = this.class.template.icclass.class()
+				let subind = this.class.template.icclass.static.negone()
 				let fi = this.class.template.icclass.class()
-				while (!subind.equal(i)) {
-					if (predicate(x(i), i)) subind = next(subind)
+				while (true) {
+					if (predicate(x(fi), fi)) subind = next(subind)
+					if (subind.equal(i)) break
 					fi = next(fi)
 				}
-				return this.f(fi)
-			})
+				return x(fi)
+			}).bind(this)
 			return this
 		}),
 		copy: _FUNCTION(function () {
 			return this.class.class(this.f)
 		}),
 		copied: refactor.classes.copied(),
-		map: _FUNCTION(function (g) {
+		map: _FUNCTION(function (g = id) {
 			const x = this.f
-			this.f = _FUNCTION(function (i) {
+			this.f = _FUNCTION(function (i = this.class.template.icclass.class()) {
 				return g(x(i))
-			})
+			}).bind(this)
 			return this
 		}),
-		slice: _FUNCTION(function (inind, enind) {
+		slice: _FUNCTION(function (inind = this.init(), enind) {
+			if (!enind) {
+				enind = inind
+				inind = this.init()
+			}
 			const genarr = this.class.template.genarrclass.static.empty()
-			for (let i = inind; lesser(i, enind); i = next(i)) genarr.pushback(this.f(i))
+			for (let i = inind; lesser(i, enind); i = next(i))
+				genarr.pushback(this.read(i))
 			return genarr
 		}),
 		init: _FUNCTION(function () {
@@ -6300,7 +6307,7 @@ export const sort = {
 			function () {
 				return {
 					ustrclass: general.DEFAULT_USTRCLASS,
-					genarrclass: general.DEFAULT_GENARRCLASS,
+					genarrclass: general.DEFAULT_GENARRCLASS
 				}
 			},
 			function () {
@@ -6353,7 +6360,7 @@ export const sort = {
 				.fromCounter(bucketsnum)
 				.map(garr.empty)
 
-			for (const x of garr.keys()) 
+			for (const x of garr.keys())
 				buckets
 					.read(
 						this.template.tintclass.static
@@ -6362,7 +6369,7 @@ export const sort = {
 							.divide(k).value
 					)
 					.pushback(garr.read(x))
-						
+
 			for (const b of buckets.keys())
 				buckets.write(b, this.template.sortingf(buckets.read(b)))
 
