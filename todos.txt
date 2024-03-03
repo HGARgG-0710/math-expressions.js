@@ -1288,6 +1288,13 @@ It gets changed and revised actively.
 			}
 		
 		Create A LOAD of such different properties/general-collection implementations...; 
+	
+	7.74. Better 'Form' design! 
+
+		They are (currently) very loosely-defined. 
+		More of precise structure - which methods are needed (necessary/essential), others are defined in terms of them; 
+		The final methods are given as a separate object that is utilized by the 'Form' structure; 
+	
 					
 8. List of general methods to be present within v1.1: 
 

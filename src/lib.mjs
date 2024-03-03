@@ -2706,7 +2706,8 @@ export const form = (
 	read = (x, i) => x.read(i),
 	write = (x, i, v) => x.write(i, v),
 	keys = (x) => x.keys(),
-	init = (x) => x.init()
+	init = (x) => x.init(),
+	length = (x) => x.length().get()
 ) => {
 	// ? Should one be using the 'arrow-functions' like that, or will 'form->this+function' be a more prefereable option?
 	const X = { new: _new, is, index, isomorphic }
@@ -2715,7 +2716,7 @@ export const form = (
 	X.read = (x, i = X.init(x)) => read(X.index(x), i)
 	X.write = (x, i, v) => write(X.index(x), i, v)
 	X.keys = (x) => keys(X.index(x))
-	X.copy = (x, f) => copy(X.index(x), f)
+	X.length = (x) => length(X.index(x))
 	return X
 }
 
@@ -2752,8 +2753,8 @@ export function constForm(
 	}, n)
 }
 
-export function propertyForm(contentsname = "", defaultval = {}) {
-	return constForm("", contentsname, false, defaultval)
+export function propertyForm(contentsname = "", defaultval = {}, ...rest) {
+	return constForm("", contentsname, false, defaultval, ...rest)
 }
 
 export const objectForm = form(
@@ -2770,7 +2771,8 @@ export const objectForm = form(
 	(x, i) => x[i],
 	(x, i, v) => (x[i] = v),
 	obj.keys,
-	(x) => obj.keys(x)[0]
+	(x) => obj.keys(x)[0],
+	(x) => obj.keys(x).length
 )
 export const arrayForm = form(
 	arr,
@@ -2781,11 +2783,13 @@ export const arrayForm = form(
 	(x, i = 0) => x[i],
 	(x, i, v) => (x[i] = v),
 	naarray.keys,
-	alinative.function.const(0)
+	alinative.function.const(0),
+	(x) => x.length
 )
 
 general.DEFAULT_FORM = arrayForm
 
+// ! note: slightly flawed - the 'keys' is poor defined - too great a type variety there; Be more concrete regarding its contents + attach the information of comparison to their mutual type (type of one of them...); 
 export const structure = TEMPLATE({
 	defaults: {
 		form: general.DEFAULT_FORM,
@@ -3672,30 +3676,6 @@ export const garrayForm = classForm(GeneralArray)
 export const treeForm = (parentclass = general.DEFAULT_GENARRCLASS) =>
 	classForm(TreeNode(parentclass), alinative.function.index("children"))
 
-export const countrecursive = TEMPLATE({
-	defaults: {
-		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
-		form: general.DEFAULT_FORM
-	},
-	function: _FUNCTION(function (array = this.form.new()) {
-		return alinative.number
-			.fromNumber({ icclass: this.template.icclass })(
-				this.template.predicate(array)
-			)
-			.jumpDirection(
-				this.template.form.is(array)
-					? uevaluate().function(
-							Expression(
-								"+",
-								[],
-								this.template.form.index(array).copy(this.function)
-							)
-					  )
-					: this.template.icclass.zero()
-			)
-	})
-}).function
-
 // Counts all the array-elements within a multi-dimensional array;
 export function arrElems(template = {}) {
 	// ? .. Let function-related aliases like this one be repositioned into the 'expressions.mjs' codefile;
@@ -3703,21 +3683,23 @@ export function arrElems(template = {}) {
 		(
 			(a, b) => (y) =>
 				a(y).difference(b(y))
-		)([totalElems, nonArrElems].map((t) => t(template)))(x)
+		)(...[totalElems, nonArrElems].map((t) => t(template).function))(x)
 }
 
 // Counts all non-array elements within a multidimensional array passed... [recursively so]
 export function nonArrElems(template = {}) {
+	template.form = template.form || general.DEFAULT_FORM
 	return countrecursive({
-		predicate: negate(is.arr),
+		predicate: (x) => num(!is.arr(x) && !template.form.is(x)),
 		...template
 	})
 }
 
 // Counts all the elements within a multi-dimensional array (including the arrays themselves...)
 export function totalElems(template = {}) {
+	template.form = template.form || general.DEFAULT_FORM
 	return countrecursive({
-		predicate: (x) => (is.arr(x) ? x.length : 0),
+		predicate: (x) => num(!template.form.is(x)),
 		...template
 	})
 }
@@ -3798,6 +3780,67 @@ export const garrays = {
 }
 
 general.DEFAULT_GENARRCLASS = garrays.LastIndexArray()
+
+export const countrecursive = TEMPLATE({
+	defaults: {
+		// ^ IDEA [for an application of a refactoring technique]: create such 'DEFAULT' template-variable values for every single one recurring element of the library, so that different pieces may use them (not only classes, but items like forms, predicates and so on...)
+		form: general.DEFAULT_FORM,
+		icclass: general.DEFAULT_ICCLASS,
+		genarrclass: general.DEFAULT_GENARRCLASS
+	},
+	function: _FUNCTION(function (something = this.template.form.new()) {
+		// console.log("\n?")
+		// console.log(something)
+		// console.log(this.template.form.is(something))
+		// console.log(this.template.predicate(something))
+		if (this.template.form.is(something)) {
+			// console.log("\n!!")
+			// console.log(
+			// 	this.template.form.flatmap(something, (x) => this.template.form.is(x))
+			// )
+			// console.log(
+			// 	(() => {
+			// 		// ! AGAIN! The need for 'GeneralArray.static.fromForm' method...; Also - FORM-CONVERSION!!!;
+			// 		const garr = this.template.genarrclass.class()
+			// 		for (const x of this.template.form.index(
+			// 			this.template.form.flatmap(something, this.function)
+			// 		))
+			// 			garr.pushback(x)
+			// 		return garr
+			// 	})().array.map((x) => x.value)
+			// )
+			// console.log("SIEGBRAU!")
+		}
+		const t = alinative.number
+			.fromNumber({ icclass: this.template.icclass })
+			.function(this.template.predicate(something))
+			.jumpDirection(
+				this.template.form.is(something)
+					? uevaluate().function(
+							Expression(
+								"jumpDirection",
+								this.template.genarrclass.class(),
+								(() => {
+									// ! AGAIN! The need for 'GeneralArray.static.fromForm' method...; Also - FORM-CONVERSION!!!;
+									const garr = this.template.genarrclass.class()
+									for (const x of this.template.form.index(
+										this.template.form.flatmap(
+											something,
+											this.function
+										)
+									))
+										garr.pushback(x)
+									return garr
+								})()
+							)
+					  )
+					: this.template.icclass.static.zero()
+			)
+		// console.log("RETURNED!")
+		// console.log(t.value)
+		return t
+	})
+}).function
 
 alarray.permutations = TEMPLATE({
 	defaults: {
@@ -4122,9 +4165,10 @@ export const recursiveSetting = TEMPLATE({
 	) {
 		if (!fields.isEmpty()) {
 			const indexed = recursiveIndexation(this.template).function(
+				object,
 				fields.copied("slice", [fields.init(), fields.finish().previous()])
 			)
-			this.template.form.write(indexed, fields.read(fiends.finish()))
+			this.template.form.write(indexed, fields.read(fields.finish()))
 		}
 		return object
 	})
@@ -5325,6 +5369,11 @@ export const udeftable = RECURSIVE_VARIABLE({
 		"%",
 		(a, b) => a.modulo(b),
 		general.DEFAULT_TINTCLASS.static.one()
+	),
+	jumpDirection: general.recursiveGeneral(
+		"jumpDirection",
+		(a, b) => a.jumpDirection(b),
+		general.DEFAULT_ICCLASS.class()
 	)
 })
 

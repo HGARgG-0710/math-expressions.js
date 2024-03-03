@@ -24,13 +24,11 @@ List of files in 'tests/', that have been successfully run;
 21. algarray.mjs
 22. sort.mjs [except for heapSort]
 23. infarr.mjs; 
+24. structure.mjs
 
 Left to test (arbitrary order): 
 
-1. structure.mjs
-2. NTreeNode.mjs
-3. Graph.mjs
-4. heaps.mjs
-5. TreeNode.mjs
-6. forms.mjs
-7. integrity.mjs
+1. NTreeNode.mjs
+2. Graph.mjs
+3. heaps.mjs
+4. TreeNode.mjs
