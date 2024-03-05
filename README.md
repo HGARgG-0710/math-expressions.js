@@ -35,6 +35,10 @@ computational power is still (sadly) limited (so, the library's first two of the
 There are, however, plans for the addition of this feature (and the consequent rewriting of the library)
 in one of the nearest future versions.
 
+The (future intended, not current) general style used by the library can be adequately described as a structure-based mesh of 
+functional/declarative, which heavily relies on aliasing, composition, caching and 'abstractedness' of expressions 
+(closeness to the 'idealistic' pure mathematical form of expression). 
+
 Note: despite far greater degree of clarity as to the package's direction of development, this is still a very early alpha pre-release. That being, the project in question SHOULD NOT YET BE CONSIDERED TO BE COMPLETED OR READY FOR EXPLOITATION. This is merely a proof-of-concept, a preliminary sketch, that (hopefully) will grow into something far larger, more coherent and useful. Issues reports are appreciated. Some of the difficulties experienced by the current project version are listed in the wikis.
 
 ## Installation
@@ -83,18 +87,18 @@ A brief repository organization guide:
 
 ## Modules
 
-For now, the package only works with ES modules.
+For now, the package only works with ES modules (to be remedied in the future).
 
 <!-- TODO: add support for CommonJS modules - after testing, compile to CJS with tsc and add the appropriate 'export-require' fields into the 'package.json' file, decide which extensions one'd rather use... -->
 
 ## Current Status
 
-Testing of v1.0alpha.
+The (early preview) 1.0alpha version has been released.
 
-The previous versions all had terrible amount of bugs due to not having been tested thoroughly enough (though later ones have slightly less...).
+The previous versions had served as a playground (of sorts), and only with this does the project finally start to truly find itself. 
 
 From version 1.0alpha onwards, oneself explicitly breaks backward compatibility for versions <=0.8, as well as all the future ones.
-All of these versions are independent from one another (so, one has to be extremely specific regarding the version of the package).
+All of these versions are independent from one another (so, one has to be extremely specific regarding the used version of the package).
 
 This way, oneself would not be 'bound' by keeping code that run on different version of the library alive, allowing for far more vast area of
 experementation, new ideas, refactoring and code simplification. It also permits one to fix the elements of the library that are [for whatever reasons]

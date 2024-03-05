@@ -1,3 +1,4 @@
+// ? What to do with this file (considering running times, at the moment, it's fairly useless...); 
 import { execSync } from "child_process"
 import { readdirSync } from "fs"
 import { TEMPLATE } from "./modules/macros.mjs"
