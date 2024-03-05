@@ -25,10 +25,3 @@ List of files in 'tests/', that have been successfully run;
 22. sort.mjs [except for heapSort]
 23. infarr.mjs; 
 24. structure.mjs
-
-Left to test (arbitrary order): 
-
-1. NTreeNode.mjs
-2. Graph.mjs
-3. heaps.mjs
-4. TreeNode.mjs

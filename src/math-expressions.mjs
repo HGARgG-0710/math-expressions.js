@@ -1,6 +1,6 @@
 /**
- * * math-expressions.js API source code main exported file, version 1.0
- * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2023
+ * * math-expressions.js API source code main exported file, version 1.0alpha
+ * @copyright HGARgG-0710 (Igor Kuznetsov), 2020-2024
  */
 
 export * from "./modules/macros.mjs"

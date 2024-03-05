@@ -1,8 +1,5 @@
 // * The library's source code file (due to ESM's almost total ineffectiveness in handling anyhow complex recursive imports, the library's inner representation format was changed)
 
-// ? [for v1.1? maybe, not do at all?] CREATE CLEAR DEFINITION FOLLOWING IN THIS FILE - LET DIFFERENT MODULES BE DISTINGUISHABLE SOMEHOW...
-// ! FIX THE ERRORS RELATED TO SOME MISSING TEMPLATE-PROPERTIES AT RUNTIME [examples: 'no defaults.parentclass for an EXTENSION']
-
 // ? Create a 'types.native' for types that extend the native JS types functionality directly? (the BindableFunction is a wonderful candidate for it...);
 
 // ^ idea: how about seeking to minimize the number of class methods? For instance, getting rid of things like 'next()', instead replacing them with definition of 'jump()' with default being such, so as to mimic 'next'? (Consider, whether this general design pattern ought to become part of the library's style in v1.1. or later...)
@@ -5532,6 +5529,10 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 	)(_class)
 }
 
+// ! NOTE: this doesn't work properly yet (consider a sketch...); 
+// ^ Defining Problem for testing is lack of proper libary type/semantics/terminology for the argument of 'children' (it's supposed to be an argument of GeneralArray, YET, one NEEDS the '.copy')
+// * more precisely - the inability to 'replace' the value of the empty array there with anything general (as this is a Template-dependent variable, not an element of a given GeneralArray model...); SO IT'S NOT EMPLOYABLE HERE...
+// Due to this, heaps (too) remain untested...; 
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parentclass, {
 		defaults: {
@@ -5937,7 +5938,7 @@ export const NTreeNode = TEMPLATE({
 			}
 		}
 	],
-	function: alinative.function.const(function (parentclass = this.parentclass) {
+	function: alinative.function.const(function (parentclass = this.template.parentclass) {
 		return Ensurer(
 			parentclass,
 			(_r, _this) =>
@@ -5977,6 +5978,7 @@ export const NTreeNode = TEMPLATE({
 // ^ NOTE: this class also allows for finite computation of infinitely large graphs;
 // ^ NOTE: the verticies in the graph DON'T HAVE TO BE CONNECTED - one can use one Graph instance as a combination of two unrelated graphs
 // ? Add some such 'concat/combine/unite/union' method for it, then?
+// ! Untested in 1.0alpha too, for it feels like (slightly) too early (employing a lot of presently undefined library concepts, such as States...); 
 export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parentclass, {
 		defaults: [
