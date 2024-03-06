@@ -1302,6 +1302,58 @@ It gets changed and revised actively.
 		
 		note: Using '.valueOf' to return the value of the thing for primitives + make the thing into a 'State' that never changes and returns the value of the Reactive... (so as for functions to be able to use the thing like a state); 
 		note: sad that, apparently, JS doesn't allow setting up some manner of a 'Symbol.get' function for changing the obtained (used) value of the object. It would have been PRICELESS for writing wrapper-types; 
+	
+	6.77. IDEA: add the ability to create overloades of methods: 
+
+		An 'OverloadedMethod' type, which would inherit from Method, and would (effectively) be composed of a set of methods, 
+		that would each be triggered by a given predicate over a tuple of passed arguments' types...; 
+
+			p1(t1, ..., tn1) -> overload1, 	
+			p2(t1, ..., tn2) -> overload2, 
+			...	
+			pm(t1, ..., tnm) -> overloadm, 
+
+		?Unite with the overloads.js...; 
+	
+	6.78. IDEA: fluid typing! 
+
+		Effectively, a type that includes two predicates: 
+
+			{
+				isfluid: (x: any) => boolean, 
+				isstatic: (x: any) => boolean
+			}
+		
+		They define it's two 'sections', with 'is' being defined as: 
+
+			fluidType.is := (x) => fluidType.isfluid(x) || fluidType.isstatic(x)
+		
+		With the difference being, that 'isstatic' is given by the actual 'typeConst'-information, 
+			while 'isfluid' is arbitrary (user-defined). 
+		
+		Fluid types allow for a FAR more beautiful, free and formal (simultaniously) type-transformations, 
+			and "type-evolution"! 
+		It allows to do certain things, that TypeScript's typesystem, say, doesn't allow; 
+
+	6.79. Extend the number of type-construction and predicate-construction means: 
+
+		This involves things like: 
+
+			or(p1, p2) := (...x) => p1(...x) || p2(...x) // naturally, rewritten as 'composition((x, y) => x || y, p1, p2)'; 
+			and(p1, p2) := (...x) => p1(...x) && p2(...x)
+		
+		for predicates, and for types: 
+
+			1. Ability to construct from an array-like structure, set, or a different kind of collection; 
+			2. Ability to construct from a predicate; 
+			3. Ability to construct from a typeConst; 
+			4. Ability to create recursive types (for instance, as in TypeScript: [X, X].is = (x) => Array.is(x) && x.length === 2 && x.every(X.is), BUT VIA PREDICATE-CONSTRUCTION, AND COMPOSITIONS!); 
+		
+		A final Type (not FluidType, mind...) has the structure: 
+
+			1. is (.names[0]) - final predicate, that is used for determining whether something is of this type; 
+			2. new (.names[1]) - a constructor-method of given number of arguments (ArgumentSignature), that returns an object of (supposedly) given type; 
+				Optionally, it can be typechecked as well (type-asserted); 
 					
 7. List of general methods to be present within v1.1: 
 
@@ -1325,6 +1377,7 @@ It gets changed and revised actively.
 				For the 'typeof'-defined types, the 'valueCompare' is performed...; 
 		7. An alias for recursive usage of '.map' function, other builtins... (particularly for Arrays); 
 		8. A 'difference()' algorithm implementation for nested structures (a structure, containing, the information regarding the fields' absence from a given object in relation to another... If they are the same, then the object is empty...); 
+		9. UnlimitedMap.inverse() - generally, object.inverse() - for an object {[a]: [b]} returns {[b]: [a]}; (isn't this already a part of the library???); 
 
 8. Sketch-list of things to generalize (a reminder for v1.1): 
 	8.1. Forms, Vertex, Expression, FunctionCall, Pointer, GENERATOR <- Interface; 
