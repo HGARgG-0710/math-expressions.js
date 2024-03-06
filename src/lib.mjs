@@ -2093,11 +2093,9 @@ export const polystring = TEMPLATE({
 			}
 		},
 		function () {
-			return { alphabet: this.template.genarrclass.static.fromArray(["0", "1"]) }
-			// ! RETURN BACK LATER!
-			// return {
-			// 	alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
-			// }
+			return {
+				alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
+			}
 		}
 	],
 	function: alinative.function.const(
@@ -2134,10 +2132,8 @@ export const fromPolystring = TEMPLATE({
 		}),
 		_FUNCTION(function () {
 			return {
-				alphabet: this.template.genarrclass.static.fromArray(["0", "1"])
+				alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
 			}
-			// ! RETURN BACK!
-			// return { alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get) }
 		})
 	],
 	function: alinative.function.const(
@@ -2173,9 +2169,7 @@ export const sameLength = TEMPLATE({
 		refactor.defaults.polyd1,
 		function () {
 			return {
-				alphabet: this.template.genarrclass.static.fromArray(["0", "1"])
-				// ! RETURN BACK LATER!
-				// alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
+				alphabet: this.template.genarrclass.static.fromArray(defaultAlphabet.get)
 			}
 		}
 	],
@@ -2199,11 +2193,9 @@ export const baseconvert = TEMPLATE({
 		refactor.defaults.polyd1,
 		function () {
 			return {
-				alphabetfrom: this.template.genarrclass.static.fromArray(["0", "1"]),
-				// ! return back!
-				// alphabetfrom: this.template.genarrclass.static.fromArray(
-				// 	defaultAlphabet.get
-				// ),
+				alphabetfrom: this.template.genarrclass.static.fromArray(
+					defaultAlphabet.get
+				),
 				alphabetto: this.template.genarrclass.static.fromArray([
 					"0",
 					"1",
@@ -2235,7 +2227,7 @@ export const ponative = {
 	// * Brings whatever is given within the given base to base 10;
 	fromPolystring: TEMPLATE({
 		defaults: {
-			alphabet: /* defaultAlphabet.get */ ["0", "1"],
+			alphabet: defaultAlphabet.get,
 			defstr: ""
 		},
 		function: _FUNCTION(function (nstr = this.template.defstr) {
@@ -2258,7 +2250,7 @@ export const ponative = {
 	// * Brings whatever in base 10 to whatever in whatever base is given...
 	polystring: TEMPLATE({
 		defaults: {
-			alphabet: /* defaultAlphabet.get */ ["0", "1"]
+			alphabet: defaultAlphabet.get
 		},
 		function: _FUNCTION(function (n) {
 			const coefficients = []
@@ -2279,8 +2271,7 @@ export const ponative = {
 	baseconvert: TEMPLATE({
 		defaults: {
 			alphabetto: defaultAlphabet.get,
-			alphabetfrom: ["0", "1"]
-			// alphabetfrom: defaultAlphabet.get,
+			alphabetfrom: defaultAlphabet.get
 		},
 		function: _FUNCTION(function (
 			a,
@@ -2786,7 +2777,7 @@ export const arrayForm = form(
 
 general.DEFAULT_FORM = arrayForm
 
-// ! note: slightly flawed - the 'keys' is poor defined - too great a type variety there; Be more concrete regarding its contents + attach the information of comparison to their mutual type (type of one of them...); 
+// ! note: slightly flawed - the 'keys' is poor defined - too great a type variety there; Be more concrete regarding its contents + attach the information of comparison to their mutual type (type of one of them...);
 export const structure = TEMPLATE({
 	defaults: {
 		form: general.DEFAULT_FORM,
@@ -2968,18 +2959,6 @@ export const stnative = {
 		return r
 	}
 }
-
-// _? Generalize? [the user won't need that much for the "manual" cases, only when doing something meta; Do later...]
-// ? The 'print' is gone... Does oneself still want to keep it here?
-// ! commented out for now (not present in the v1.0 release, decide what to do with it later...);
-/* export const HIERARCHY = function (hierarr = []) {
-	return stnative.repeatedApplication(
-		TEMPLATE(hierarr[hierarr.length - 1]),
-		hierarr.length - 1,
-		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
-		-2
-	)
-} */
 
 // ^ IDEA [suggestion]: create GeneralArray models, that'd allow writing on negative (!.direction()) indexes? [And fix the way that 'length' is defined, maybe?];
 // * Possibly, replace the single 'length()' with two other functions - 'maxind' and 'minind'; They'd be defined in the same fashion as the 'length', but 'maxind=length' as with current length, whilst the 'minind' would work in the opposite direction...;
@@ -5529,10 +5508,10 @@ export const InfiniteString = (parentclass = general.DEFAULT_INFARR, ensure = fa
 	)(_class)
 }
 
-// ! NOTE: this doesn't work properly yet (consider a sketch...); 
+// ! NOTE: this doesn't work properly yet (consider a sketch...);
 // ^ Defining Problem for testing is lack of proper libary type/semantics/terminology for the argument of 'children' (it's supposed to be an argument of GeneralArray, YET, one NEEDS the '.copy')
 // * more precisely - the inability to 'replace' the value of the empty array there with anything general (as this is a Template-dependent variable, not an element of a given GeneralArray model...); SO IT'S NOT EMPLOYABLE HERE...
-// Due to this, heaps (too) remain untested...; 
+// Due to this, heaps (too) remain untested...;
 export const TreeNode = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parentclass, {
 		defaults: {
@@ -5938,7 +5917,9 @@ export const NTreeNode = TEMPLATE({
 			}
 		}
 	],
-	function: alinative.function.const(function (parentclass = this.template.parentclass) {
+	function: alinative.function.const(function (
+		parentclass = this.template.parentclass
+	) {
 		return Ensurer(
 			parentclass,
 			(_r, _this) =>
@@ -5978,7 +5959,7 @@ export const NTreeNode = TEMPLATE({
 // ^ NOTE: this class also allows for finite computation of infinitely large graphs;
 // ^ NOTE: the verticies in the graph DON'T HAVE TO BE CONNECTED - one can use one Graph instance as a combination of two unrelated graphs
 // ? Add some such 'concat/combine/unite/union' method for it, then?
-// ! Untested in 1.0alpha too, for it feels like (slightly) too early (employing a lot of presently undefined library concepts, such as States...); 
+// ! Untested in 1.0alpha too, for it feels like (slightly) too early (employing a lot of presently undefined library concepts, such as States...);
 export const Graph = (parentclass = general.DEFAULT_GENARRCLASS) => {
 	return EXTENSION(parentclass, {
 		defaults: [
@@ -7274,29 +7255,6 @@ export const READONLY = (x) =>
 		get: x
 	})
 
-// ? Has no in-library use. Still keep?
-// % See how it fares in v1.1, after introduction of Interfaces, then - if it has come to become redundant, delete, otherwise - uncomment and, if needed, repair/refactor;
-/* export function INHERIT(x, X) {
-	return {
-		template: {
-			inherited: X,
-			defchild: x,
-			this: null
-		},
-		f: function (target = this.template.defchild) {
-			const _class = {
-				template: {
-					...target.defaults(this.template.this)
-				},
-				...target.rest
-			}
-			this.template.inherited.template.this = _class
-			_class[target.word] = this.template.inherited.f
-			return x.transform(_class)
-		}
-	}
-} */
-
 export function DEOBJECT(object = {}) {
 	return ["keys", "values"].map((x) => obj[x](object))
 }
@@ -7311,7 +7269,7 @@ export function OBJECT(keys = [], values = []) {
 }
 
 export function NOMODULE(moduleobj) {
-	return OBJECT(Object.keys(moduleobj), Object.values(moduleobj))
+	return OBJECT(...DEOBJECT(moduleobj))
 }
 
 const arrmethNames = [

@@ -2,38 +2,9 @@ These are the outlines of the documentation (work-sketch...):
 
 	The documenation consists of: 
 
-		1. The terminology section. 
-			It includes definitions of various library terms, needed to understand means of its functioning. 
-			Also houses notation explanation. 
-			Examples (to be added): 
-
-			1. Template
-			2. Class
-			3. Type (note two definitions - 1. A set of objects defined by the same class [current, to be cut out in v1.1.]; 2. A defined structure in a program, whose purpose is to provide methods sharing certain similarities an easy way of their identification. Tool for object-structuring, a set of items. [Not currently present, will replace 1. in v1.1]); 
-			4. Callable (Function generalization, note that it is not yet a library entity); 
-			5. Object
-			6. Alias
-			7. Function (Composition of other functions, or elementary); 
-			8. Unlimited (one that is not restricted in some way numerically)
-			9. General (such so as to serve as a 'mother'-structure for others, non-elementary, composite)
-			10. Infinite (meaning - extending in at least one direction indefinitely, infinitely-computable)
-			11. Macro (note that they are to be cut out; commands-styled functions used for representation of higher typesystem elements); 
-			12. Native (equivalent of 'builtin'/out-of-the-box in context of language)
-			13. Variable (note, that it is to undergo change - to allow for flexible ('State') variables, not only the static ones, as currently); 
-			14. Form
-			15. Comparison (predicates of two variables, potentially symmetric); 
-			16. Counter
-		
-			Note that the vocabulary for v1.1 is likely to grow (considerably)
-
-		2. The list of items (definitions). 
+		1. The list of items (exports). 
 			As-is enumeration of library items. Each gets its own page.
-		3. The list of modules; 
-			Each gets its own page, enumeration of things that it contains. 
-		4. Pages for _each_ item. 
+		2. Pages for _each_ item. 
 			They would contain a brief description, a link to the source and tests examples (if any). 
 			ONLY THAT! NO STUFF REGARDING PRECISE WORKFLOW OR GIMMICKS/ISSUES-WITH-CURRENT-DEFINITION, NOTHING MORE THAN THAT. 
 			NOT FOR THE V1.0ALPHA!
-		5. General information page; 
-			Involves the description of the capabilities of the package and other things. 
-		6 (?). Current Issues page - include there everything...; 

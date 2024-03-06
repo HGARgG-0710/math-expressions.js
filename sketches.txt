@@ -1,0 +1,33 @@
+Pieces of code that may be used in the future as a sketch for something, or just thrown out. 
+
+
+/* export function INHERIT(x, X) {
+	return {
+		template: {
+			inherited: X,
+			defchild: x,
+			this: null
+		},
+		f: function (target = this.template.defchild) {
+			const _class = {
+				template: {
+					...target.defaults(this.template.this)
+				},
+				...target.rest
+			}
+			this.template.inherited.template.this = _class
+			_class[target.word] = this.template.inherited.f
+			return x.transform(_class)
+		}
+	}
+} */
+
+
+/* export const HIERARCHY = function (hierarr = []) {
+	return stnative.repeatedApplication(
+		TEMPLATE(hierarr[hierarr.length - 1]),
+		hierarr.length - 1,
+		(r, i) => INHERIT(hierarr[hierarr.length - i], r),
+		-2
+	)
+} */

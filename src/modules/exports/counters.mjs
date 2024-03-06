@@ -10,7 +10,7 @@ export {
 	circularCounter,
 	arrCircCounter,
 	finiteCounter,
-	cfromIcc,
+	cfromIcc as fromIcc,
 	tintAdditive,
 	tintMultiplicative
 } from "../../lib.mjs"
