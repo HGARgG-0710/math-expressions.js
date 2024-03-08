@@ -1354,6 +1354,67 @@ It gets changed and revised actively.
 			1. is (.names[0]) - final predicate, that is used for determining whether something is of this type; 
 			2. new (.names[1]) - a constructor-method of given number of arguments (ArgumentSignature), that returns an object of (supposedly) given type; 
 				Optionally, it can be typechecked as well (type-asserted); 
+			
+	6.80. A truly CRUCIAL note on implementation of Type.is, for types using local constants; 
+
+		A type's 'is' method MUST NOT be copiable, because this is the ONLY public interface, that enables one to 
+			check whether a particular object is of given type. Now, being in possession of such an interface, 
+			it's ESSENTIAL that it's unique to that type. 
+
+		HOWEVER, in certain situations, copying may be desired/required, so for this, one creates yet another parameter, 
+			determining the 'compromisability'  of a type. 
+		Hence, there are: 
+
+			1. Type(s) - either compromisable or non-compromisable (given when defining a type); 
+			2. UncompromisableType - a non-compromisable type; 
+			3. CompromisableType - a compromisable type; 
+
+		Thus, the UncompromisableType-s have their 'is' methods UNCOPIABLE, while CompromisableType-s don't. 
+		A program, containing ONLY UncompromisableType-s is far more purer/simpler in the sense of uniqueness of a 
+			type reference and constructors. [This way, it's possible to create constant connections between constructors and '.is' methods]; 
+		
+		For implementation of UncompromisableType, one has to have an UnCopiableFunction wrapper-type, 
+			as well as SingleReferenceMethod type. 
+		
+		Now a Callable-composition of these two leaves (almost) no room for error, HOWEVER...
+		There is still an issue of elementary reproducability. 
+		For instance, if a function were to be PRECISELY re-done, even WITHOUT the means of 
+			reading (referencing)/copying the underlying '.is' method, an UncompromisableType still may be compromisable in practice. 
+			HOWEVER, that is by definition impossible to do with UncompromisableType-s that use typeConst definitions (so, indeed, they __are__ TRULY uncompromisable). 
+			The purely-predicate-based Types are, however, reproducable. 
+			[So are their constructors].
+
+		The constructors in UncompromisableType-s are also UnCopiableFunction-s and SingleReferenceMethod-s, while in CompromisableType-s - not. 
+	
+	6.81. UnCopiableFunction (UnCopiableMethod) wrapper-type: 
+
+		Simple - it's a function (method) with no 'copy' method on it.
+		It CANNOT be copied fundamentally, only referenced. 
+	
+	6.82. SingleReferenceMethod wrapper-type: 
+
+		A type that ENSURES that no other object, apart from the given parent object 
+			may successfully reference and execute it; 
+		
+		Early sketch of an implementation: 
+
+			function SingleReferenceMethod(f, parentobj) {	
+				const nf = function (...args) {
+					if (o.f.owners.length > 1) throw new Error("Cannot have multiple owners of a SingleReferenceMethod-type object. ")
+					return f(...args)
+				}
+				const o = {
+					f: nf
+				}
+				nf.owners.push(parentobj)
+				return nf
+			}
+		
+		The way it works, is, when setting a value to an 'object' of the library, 
+			the object of type of Property CARRIES the reference to its current parent;
+		Reassigning it, means either copying (which clears the parents list), or adding a new parent; 
+		This would (in the end), inheriting from a Property type, which would handle the 'owners' values; 
+		So, one would generalize this to a SingleReferenceProperty; 
 					
 7. List of general methods to be present within v1.1: 
 
