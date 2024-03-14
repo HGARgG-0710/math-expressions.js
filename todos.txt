@@ -1415,6 +1415,49 @@ It gets changed and revised actively.
 		Reassigning it, means either copying (which clears the parents list), or adding a new parent; 
 		This would (in the end), inheriting from a Property type, which would handle the 'owners' values; 
 		So, one would generalize this to a SingleReferenceProperty; 
+	
+	6.83. IDEA: StructuredForm + its usage for general definition of composition and Callables: 
+
+		A StructuredForm is yet another kind of 'form', that one would define in the new version of the library. 
+		It is (in a sense) unique, as presents in self a wrapper permitting the construction of arbitrarily complex/deep
+			recursive structures (forms), with attached layer-by-layer-signature; 
+		So, instead of having: 
+
+			Interface(...) := () => ({
+				form: Form, 
+				else: ... // the structure
+			})
+		
+		One would have a general structure, based off recursive Interfaces, 
+			that would also make up a Form, that could be generalied to give particular Interfaces: 
+
+			StructuredForm (interface) := Form(...) // usage of given interface to define the structure of the StructuredForm(...) type; 
+
+		Then, one could use a particular structure of: 
+
+			StructuredForm(X) := {
+				function: MethodType, // here, a MethodType is just some arbitrary method type
+				args: StructuredForm(X) 
+			}
+		
+		for defining a layer of a single FunctionCall! 
+		Thus, the FunctionCall just becomes a case of StructuredForm; 
+		It can be used upon same algorithms as all other forms + one gains the benefit of intuitive access 
+			to its elements and their linear ordering (via multi-indexes); 
+		
+	6.84. 'orders' submodule - a frequent task to generalize - linearization of an unlimited finite set of multiindexes;
+		Effectively, create simple predefined aliases implementations within the library that would 
+			describe how can a given finite unlimited set of multi-indexes (generalization of GeneralArrays of InfiniteCounters), 
+				be linearly ordered; 
+		Namely - construct explicitly general means of complete enumeration of possible such linear orderings (unlimited finite number always).
+		(note: very curious; the 'direct' approach with using 'permutations+linear' gives the result, however, 
+			it also takes hell of a lot of time to finish, and requires computation of ALL of the orderings, of which there are many); 
+		ALSO - crucial - create implementation for obtaining the precise list of multiindexes for all elements particularly given recursive structure
+			(a Form, most likely); 
+	6.85. Suggestion - generalize the "multiindex"es to a separate type? 
+		They have lingered around the entire concept of recursive indexation, recursive structures, forms, and Trees 
+			for so very long throughout the library's conceptual existence, that it would only feel natural to add them... 
+		Pray do, this is a wonderful idea!
 					
 7. List of general methods to be present within v1.1: 
 
