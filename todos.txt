@@ -1458,6 +1458,20 @@ It gets changed and revised actively.
 		They have lingered around the entire concept of recursive indexation, recursive structures, forms, and Trees 
 			for so very long throughout the library's conceptual existence, that it would only feel natural to add them... 
 		Pray do, this is a wonderful idea!
+	6.86. About Callable-s and recursion: 	
+
+		CRUCIAL NOTE: the Callable's concept must be re-thought in such a fashion so as to allow self-reference; 
+					  One could add a special 'token/constant' for this, such that would be easily identifiable; 
+					  Also, in forms for definitions of composite Callables, one must allow for Call objects in places of arguments
+					  	(representations of 'expanding' the Array-return of the given object into Arguments array); 
+					  Then, one can do things like (pseudo-code): 
+
+		const factorial(n) = (function () {
+			const THIS = {}
+			return Callable(THIS).function(FormName([FormName([Switch, [(args) => args[0] > 1, FormName(product, [(args) => args[0], FormName(THIS, [(args) => args[0] - 1])]), () => 0]])], [Integer])); 
+		})()
+
+		Naturally, the 'THIS' part is replaced by appropriate incapsulated typeConst call...; 
 					
 7. List of general methods to be present within v1.1: 
 
